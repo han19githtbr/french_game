@@ -302,7 +302,7 @@ export default function Frase() {
               }
             }}
           >
-            🎉 Parabéns! Você completou o tema!
+            🎉 Parabéns! Você acertou tudo!
           </motion.div>
         </motion.div>
       )}
