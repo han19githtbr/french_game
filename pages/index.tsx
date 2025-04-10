@@ -16,7 +16,7 @@ export default function Home() {
     if (!session) {
       const intervalId = setInterval(() => {
         setCurrentIndex((prevIndex) => (prevIndex + 1) % title.length);
-      }, 100); // Ajuste a velocidade do brilho (ms)
+      }, 150); // Ajuste a velocidade do brilho (ms)
       return () => clearInterval(intervalId);
     }
   }, [session, title.length]);
