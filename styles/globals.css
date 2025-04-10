@@ -10,6 +10,7 @@
   --color-red: #e6382d;
   --color-yellow: #ffc700;
   --color-blue: #6f9de2;
+  --color-lightblue: #4958fc;
   --color-purple: #9871f3;
 
   --color-danger: #f05d6c;
@@ -47,3 +48,4 @@ select option {
 select option:hover {
   background-color: #374151; /* Cor de fundo ao passar o mouse (opcional) */
 }
+

@@ -1,22 +1,57 @@
 import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/router'
+import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+
 
 export default function Home() {
   const { data: session } = useSession()
   const router = useRouter()
+  const title = "Aprenda Francês jogando";
+  const [animatedTitle, setAnimatedTitle] = useState("");
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+
+  useEffect(() => {
+    if (!session) {
+      const intervalId = setInterval(() => {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % title.length);
+      }, 100); // Ajuste a velocidade do brilho (ms)
+      return () => clearInterval(intervalId);
+    }
+  }, [session, title.length]);
+
+  useEffect(() => {
+    if (!session) {
+      let newAnimatedTitle = "";
+      for (let i = 0; i < title.length; i++) {
+        newAnimatedTitle += (i === currentIndex) ?
+          `<span style="color: lightblue; text-shadow: 0 0 14px lightblue;">${title[i]}</span>` :
+          `<span style="color: white;">${title[i]}</span>`;
+      }
+      setAnimatedTitle(newAnimatedTitle);
+    } else {
+      setAnimatedTitle(title); // Se estiver logado, mostra o título normal
+    }
+  }, [currentIndex, session, title]);
+
 
   if (session) {
     router.push('/game')
     return null
   }
 
+
   return (
     <div className="h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500 to-pink-500 text-white">
-      <h1 className="text-4xl font-bold mb-8 text-center">Aprenda Francês com Estilo Ghibli</h1>
+      <h1
+        className="text-4xl font-bold mb-8 text-center"
+        dangerouslySetInnerHTML={{ __html: animatedTitle }}
+      />
       
       <button
         onClick={() => signIn('google')}
-        className="flex items-center gap-3 bg-transparent text-white font-semibold px-6 py-3 rounded-lg shadow-md hover:shadow-xl transition duration-300"
+        className="flex items-center gap-3 bg-transparent border border-blue text-white font-semibold px-6 py-3 rounded-lg shadow-md hover:shadow-xl transition duration-300 cursor-pointer"
       >
         <svg className="w-6 h-6" viewBox="0 0 533.5 544.3">
           <path
