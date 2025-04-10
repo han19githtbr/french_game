@@ -227,7 +227,7 @@ export default function Game() {
           className="w-64 bg-gradient-to-br border border-blue text-blue font-semibold py-3 px-6 rounded-md shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-lg cursor-pointer **text-center**"
           value={theme}
         >
-          <option value="">Escolha um tema</option>
+          <option value="">Escolha uma opção</option>
           {themes.map(t => (
             <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
           ))}

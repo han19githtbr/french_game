@@ -7,16 +7,20 @@ const allImages = {
     { url: '/ghibli/familia/família.png', title: 'Famille' },
     { url: '/ghibli/familia/casa.png', title: 'Maison' },
     { url: '/ghibli/familia/sopa.png', title: 'Soupe' },
+    { url: '/ghibli/familia/almoço.png', title: 'Dîner' },
   ],
   'natureza': [
     { url: '/ghibli/natureza/árvore.png', title: 'Arbre' },
     { url: '/ghibli/natureza/floresta.png', title: 'Forêt' },
     { url: '/ghibli/natureza/mar.png', title: 'Mer' },
+    { url: '/ghibli/natureza/deserto.png', title: 'Désert' },
+    { url: '/ghibli/natureza/montanha.png', title: 'Montagne' },
   ],
   'turismo': [
     { url: '/ghibli/turismo/aeroporto.png', title: 'Aéroport' },
     { url: '/ghibli/turismo/por do sol.png', title: 'Coucher du soleil' },
     { url: '/ghibli/turismo/aviao.png', title: 'Avion' },
+    { url: '/ghibli/turismo/helicoptero.png', title: 'Hélicoptère' },
   ],
   'animais': [
     { url: '/ghibli/animais/cachorro.png', title: 'Chien' },
@@ -25,6 +29,7 @@ const allImages = {
     { url: '/ghibli/animais/peixe.png', title: 'Poisson' },
     { url: '/ghibli/animais/cobra.png', title: 'Serpent' },
     { url: '/ghibli/animais/urso.png', title: 'Ours' },
+    { url: '/ghibli/animais/leao.png', title: 'Lion' },
   ],
   'tecnologia': [
     { url: '/ghibli/tecnologia/satelite.png', title: 'Satellite' },
@@ -34,6 +39,8 @@ const allImages = {
   'gastronomia': [
     { url: '/ghibli/gastronomia/bolo.png', title: 'Gâteau' },
     { url: '/ghibli/gastronomia/legumes.png', title: 'Légumes' },
+    { url: '/ghibli/gastronomia/arroz.png', title: 'Riz' },
+    { url: '/ghibli/gastronomia/pimenta.png', title: 'Piment' },
   ]
 }
 

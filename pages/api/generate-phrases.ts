@@ -7,16 +7,20 @@ const allImages = {
     { url: '/frases/familia/família.png', title: 'La famille est réunie' },
     { url: '/frases/familia/casa.png', title: 'Quelle jolie maison!' },
     { url: '/frases/familia/sopa.png', title: 'Tu dois manger ta soupe!' },
+    { url: '/frases/familia/almoço.png', title: 'La famille se réunit pour dîner!' },
   ],
   'natureza': [
     { url: '/frases/natureza/árvore.png', title: 'Il y a quelqu\'un sous l\'arbre' },
     { url: '/frases/natureza/floresta.png', title: 'En route vers la forêt!' },
     { url: '/frases/natureza/mar.png', title: 'La mer est calme aujourd\'hui' },
+    { url: '/frases/natureza/deserto.png', title: 'Une journée dans le désert' },
+    { url: '/frases/natureza/montanha.png', title: 'Devant nous se dresse une haute montagne' },
   ],
   'turismo': [
     { url: '/frases/turismo/aeroporto.png', title: 'Je suis déjà à l\'Aéroport' },
     { url: '/frases/turismo/por do sol.png', title: 'Quel beau coucher de soleil!' },
     { url: '/frases/turismo/aviao.png', title: 'Je connais le pilote de cet avion' },
+    { url: '/frases/turismo/helicoptero.png', title: 'Tu as déjà piloté un hélicoptère?' },
   ],
   'animais': [
     { url: '/frases/animais/cachorro.png', title: 'C\'est mon chien' },
@@ -25,6 +29,7 @@ const allImages = {
     { url: '/frases/animais/peixe.png', title: 'Le poisson est riche en vitamines' },
     { url: '/frases/animais/cobra.png', title: 'Ce serpent est venimeux' },
     { url: '/frases/animais/urso.png', title: 'L\'Ours est un animal sauvage' },
+    { url: '/frases/animais/leao.png', title: 'Le lion est le roi de la jungle' },
   ],
   'tecnologia': [
     { url: '/frases/tecnologia/satelite.png', title: 'Les satellites sont de grandes inventions' },
@@ -34,6 +39,8 @@ const allImages = {
   'gastronomia': [
     { url: '/frases/gastronomia/bolo.png', title: 'C\'est l\'heure de couper le gâteau!' },
     { url: '/frases/gastronomia/legumes.png', title: 'Les légumes sont riches en fer' },
+    { url: '/frases/gastronomia/arroz.png', title: 'Je vais déguster un plat de riz!' },
+    { url: '/frases/gastronomia/pimenta.png', title: 'Il faut consomner le piment avec modération!' },
   ]
 }
 
