@@ -16,7 +16,7 @@ const allImages = {
   'turismo': [
     { url: '/ghibli/turismo/aeroporto.png', title: 'Aéroport' },
     { url: '/ghibli/turismo/por do sol.png', title: 'Coucher du soleil' },
-    { url: '/ghibli/turismo/aviao.png', title: 'Avião' },
+    { url: '/ghibli/turismo/aviao.png', title: 'Avion' },
   ],
   'animais': [
     { url: '/ghibli/animais/cachorro.png', title: 'Chien' },
