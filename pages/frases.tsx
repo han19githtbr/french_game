@@ -193,7 +193,7 @@ export default function Frase() {
         transition={{ duration: 0.6 }}
         className="text-4xl font-bold mb-8 mt-26 text-center drop-shadow-md"
       >
-        🎮 Aprenda a construir frases em Francês
+        🎮 Construa frases em Francês
       </motion.h1>
 
       <div className="flex flex-col items-center space-y-6">
