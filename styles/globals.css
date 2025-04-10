@@ -1,0 +1,49 @@
+/*@tailwind base;
+@tailwind components;
+@tailwind utilities;*/
+@import "tailwindcss";
+
+@theme {
+  --color-*: initial;
+
+  --color-green: #88ff00;
+  --color-red: #e6382d;
+  --color-yellow: #ffc700;
+  --color-blue: #6f9de2;
+  --color-purple: #9871f3;
+
+  --color-danger: #f05d6c;
+
+  --color-gray-100: #dae4f2;
+  --color-gray-200: #c8d0da;
+  --color-gray-300: #95a1b1;
+  --color-gray-400: #6f7d90;
+  --color-gray-500: #2a313c;
+  --color-gray-600: #21252c;
+  --color-gray-700: #191d24;
+  --color-gray-800: #13161b;
+  --color-gray-900: #0f1216;
+
+  --font-heading: var(--font-oxanium);
+  --font-sans: var(--font-montserrat);
+
+  --radius-xl: 0.625rem;
+}
+
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #111827;
+  color: white;
+  margin: 0;
+  padding: 0;
+}
+
+select option {
+  background-color: #111827; /* Use a cor de fundo desejada (a mesma do seu background principal) */
+  color: rgb(35, 138, 211); /* Cor do texto das opções */
+}
+
+select option:hover {
+  background-color: #374151; /* Cor de fundo ao passar o mouse (opcional) */
+}
