@@ -3,11 +3,11 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { ChevronLeft, Trash2 } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
-import { signOut, useSession } from 'next-auth/react'
+//import { signOut, useSession } from 'next-auth/react'
 
 export default function ResultsPage() {
   const [progress, setProgress] = useState<{ round: number, correct: number }[]>([])
-  const { data: session } = useSession()
+  //const { data: session } = useSession()
   const router = useRouter()
 
   const [isLogoutVisible, setIsLogoutVisible] = useState(false);
@@ -30,6 +30,11 @@ export default function ResultsPage() {
     // Se o mouse entrar no botão de logout, cancela o timeout de desaparecimento
     clearTimeout(logoutTimeoutId as NodeJS.Timeout);
   };
+
+  /*const handleLogout = async () => {
+    await signOut();
+    
+  };*/
 
   useEffect(() => {
     const saved = localStorage.getItem('progress')
@@ -54,7 +59,7 @@ export default function ResultsPage() {
           className="fixed flex border border-blue items-center bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75 mt-16 cursor-pointer">
           <ChevronLeft className="mr-2" color="blue" /> Voltar ao jogo
         </button>
-        {session?.user && (
+        {/**{session?.user && (
           <div
             className="fixed right-4 z-50"
             onMouseEnter={handleMouseEnter}
@@ -70,10 +75,10 @@ export default function ResultsPage() {
               }`}
               onMouseEnter={handleLogoutMouseEnter} // Impede o desaparecimento ao entrar no botão
             >
-              <button onClick={() => signOut()} className="hover:text-red-600 cursor-pointer">Logout</button>
+              <button onClick={handleLogout} className="hover:text-red-600 cursor-pointer">Logout</button>
             </div>
           </div>
-        )}
+        )}**/}
       </div>      
       
       <h1 className="text-3xl font-bold mt-16 mb-4 text-center">Seu Progresso</h1>
