@@ -73,8 +73,8 @@ export default function ResultsPage() {
                 <span>Jogada {p.round}</span>
                 <span>
                   {p.correct} acertos
-                  {p.correct === 4 && <FaMedal color="gold" className="inline-block ml-2" />}
-                  {p.correct === 3 && <FaMedal color="silver" className="inline-block ml-2" />}
+                  {p.correct === 4 && <FaMedal color="gold" className="inline-block ml-2 medalha-brilho-ouro" />}
+                  {p.correct === 3 && <FaMedal color="silver" className="inline-block ml-2 medalha-brilho-prata" />}
                 </span>
               </div>
             ))}

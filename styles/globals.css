@@ -40,6 +40,26 @@ body {
   padding: 0;
 }
 
+.medalha-brilho-ouro {
+  animation: brilhoPiscandoOuro 1.5s infinite alternate;
+}
+
+.medalha-brilho-prata {
+  animation: brilhoPiscandoPrata 1.5s infinite alternate;
+}
+
+@keyframes brilhoPiscandoOuro {
+  0% { filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.8)); } /* Brilho inicial */
+  50% { filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.2)); } /* Brilho mais fraco */
+  100% { filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.8)); } /* Retorna ao brilho inicial */
+}
+
+@keyframes brilhoPiscandoPrata {
+  0% { filter: drop-shadow(0 0 5px rgba(192, 192, 192, 0.8)); } /* Brilho inicial */
+  50% { filter: drop-shadow(0 0 15px rgba(192, 192, 192, 0.2)); } /* Brilho mais fraco */
+  100% { filter: drop-shadow(0 0 5px rgba(192, 192, 192, 0.8)); } /* Retorna ao brilho inicial */
+}
+
 select option {
   background-color: #111827; /* Use a cor de fundo desejada (a mesma do seu background principal) */
   color: rgb(35, 138, 211); /* Cor do texto das opções */
@@ -49,3 +69,18 @@ select option:hover {
   background-color: #374151; /* Cor de fundo ao passar o mouse (opcional) */
 }
 
+@keyframes progress-flash {
+  0% {
+    background-color: green;
+  }
+  50% {
+    background-color: limegreen;
+  }
+  100% {
+    background-color: green;
+  }
+}
+
+.animate-progress-flash {
+  animation: progress-flash 1s infinite alternate;
+}

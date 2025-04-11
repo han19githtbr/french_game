@@ -7,8 +7,17 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 import { FaMedal } from 'react-icons/fa';
 
 
+interface Progress {
+  round: number;
+  correct_phrase: number;
+}
+
+
 export default function ResultsPage() {
-  const [progress_phrases, setProgressPhrases] = useState<{ round: number, correct_phrase: number }[]>([])
+  //const [progress_phrases, setProgressPhrases] = useState<{ round: number, correct_phrase: number }[]>([])
+  const [progress_phrases, setProgressPhrases] = useState<Progress[]>([]);
+  const [currentProgress, setCurrentProgress] = useState(0);
+  const [isFlashing, setIsFlashing] = useState(false);
   //const { data: session } = useSession()
   const router = useRouter()
 
@@ -41,16 +50,39 @@ export default function ResultsPage() {
   useEffect(() => {
     const saved = localStorage.getItem('progress_phrases')
     if (saved) {
-      setProgressPhrases(JSON.parse(saved))
+      const parsed: Progress[] = JSON.parse(saved);
+      setProgressPhrases(parsed);
+      if (parsed.length > 0) {
+        setCurrentProgress(parsed[parsed.length - 1].correct_phrase);
+        setIsFlashing(parsed[parsed.length - 1].correct_phrase === 4);
+      } else {
+        setCurrentProgress(0);
+        setIsFlashing(false);
+      }
     }
   }, []);
+
+  useEffect(() => {
+    if (progress_phrases.length > 0) {
+      const lastProgress = progress_phrases[progress_phrases.length - 1].correct_phrase;
+      setCurrentProgress(lastProgress);
+      setIsFlashing(lastProgress === 4);
+    } else {
+      setCurrentProgress(0);
+      setIsFlashing(false);
+    }
+  }, [progress_phrases]);
 
   const clearProgress = () => {
     localStorage.removeItem('progress_phrases');
     setProgressPhrases([]);
+    setCurrentProgress(0);
+    setIsFlashing(false);
   };
 
   const bestRound = progress_phrases.reduce((prev, curr) => (curr.correct_phrase > prev.correct_phrase ? curr : prev), { round: 0, correct_phrase: 0 })
+
+  const progressPercentage = (currentProgress / 4) * 100;
 
   return (
     <div className="min-h-screen bg-slate-900 text-white p-6">
@@ -85,6 +117,22 @@ export default function ResultsPage() {
       
       <h1 className="text-3xl font-bold mt-30 mb-4 text-center">Seu Progresso</h1>
       
+      {/* Barra de Progresso */}
+      <div className="mb-6 max-w-md mx-auto">
+        <div className="bg-gray-800 rounded-full h-4 relative overflow-hidden">
+          <div
+            className={`bg-green h-full rounded-full transition-all duration-500 ease-out absolute left-0 top-0 ${
+              isFlashing ? 'animate-progress-flash' : ''
+            }`}
+            style={{ width: `${progressPercentage}%` }}
+          ></div>
+          <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-sm font-semibold">
+            {currentProgress} / 4
+          </span>
+        </div>
+        <p className="text-sm text-gray-400 mt-1 text-center">Progresso para a Medalha de Ouro</p>
+      </div>
+
       {progress_phrases.length === 0 ? (
         <p className="text-center text-gray-400">Você ainda não fez nenhuma jogada.</p>
       ) : (
@@ -98,8 +146,8 @@ export default function ResultsPage() {
               <span>Jogada {p.round}</span>
               <span>
                 {p.correct_phrase} acertos
-                {p.correct_phrase === 4 && <FaMedal color="gold" className="inline-block ml-2" />}
-                {p.correct_phrase === 3 && <FaMedal color="silver" className="inline-block ml-2" />}
+                {p.correct_phrase === 4 && <FaMedal color="gold" className="inline-block ml-2 medalha-brilho-ouro" />}
+                {p.correct_phrase === 3 && <FaMedal color="silver" className="inline-block ml-2 medalha-brilho-prata" />}
               </span>
             </div>
             ))}
