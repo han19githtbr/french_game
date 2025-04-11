@@ -42,7 +42,7 @@ const allImages = {
   'animais': [
     { url: '/frases/animais/cachorro.png', title: 'C\'est mon chien' },
     { url: '/frases/animais/gato.png', title: 'Ce chat, c\'est celui de Julien' },
-    { url: '/frases/animais/elefante.png', title: 'Je n\'ai pas peur des eléphants' },
+    { url: '/frases/animais/elefante.png', title: 'Je n\'ai pas peur des éléphants' },
     { url: '/frases/animais/peixe.png', title: 'Le poisson est riche en vitamines' },
     { url: '/frases/animais/cobra.png', title: 'Ce serpent est venimeux' },
     { url: '/frases/animais/urso.png', title: 'L\'Ours est un animal sauvage' },
