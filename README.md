@@ -67,3 +67,7 @@ npm cache clean --force
 ## Instalar canvas-confetti para animacoes
 
 npm install canvas-confetti
+
+
+## Para 
+

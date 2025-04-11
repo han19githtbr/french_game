@@ -1,10 +1,14 @@
+/*'use client'*/
+
 import { useEffect, useState } from 'react'
+import { ablyClient } from '../lib/ably'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import { Check, X } from 'lucide-react'
 import { motion , AnimatePresence} from 'framer-motion'
 import { saveProgress } from './results'
 import { LockClosedIcon } from '@heroicons/react/24/solid';
+import { io } from 'socket.io-client'
 
 //import successSound from '/sounds/success.mp3';
 
@@ -27,6 +31,15 @@ type Result = {
   correct: boolean
   selected: string
 }
+
+type Player = {
+  clientId: string
+  name: string
+}
+
+type ShowNotification = {
+  name: string
+} | null
 
 const lockMessageVariants = {
   initial: { opacity: 0, y: 10 },
@@ -60,6 +73,9 @@ export default function Game() {
 
   const [successSound, setSuccessSound] = useState<HTMLAudioElement | null>(null);
 
+  const [playersOnline, setPlayersOnline] = useState<Player[]>([])
+  const [showNotification, setShowNotification] = useState<Player | null>(null)
+
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -82,6 +98,68 @@ export default function Game() {
       setIsFrasesUnlocked(true);
     }
   }, [correctAnswersCount]);
+
+  
+  /*useEffect(() => {
+    const socket = io({
+      path: '/api/socketio',
+    })
+
+    if (session?.user?.name) {
+      socket.emit('userJoined', session.user.name)
+    }
+
+    socket.on('userJoined', (name: string) => {
+      if (name !== session?.user?.name) {
+        setShowNotification({ name })
+        setTimeout(() => setShowNotification(null), 4000)
+      }
+    })
+
+    return () => {
+      socket.disconnect()
+    }
+  }, [session?.user?.name])*/
+
+  
+  useEffect(() => {
+    const presenceChannel = ablyClient.channels.get('game-room')
+  
+    const name = session?.user?.name || 'Anônimo'
+    const clientId = ablyClient.auth.clientId || Math.random().toString(36).substring(2, 9)
+  
+    // Entra na presença
+    presenceChannel.presence.enter({ name, clientId })
+  
+    // Atualiza lista de quem está online
+    const syncPresence = async () => {
+      const members = await presenceChannel.presence.get()
+      const players = members.map((member: any) => ({
+        name: member.data.name,
+        clientId: member.clientId,
+      }))
+      setPlayersOnline(players)
+    }
+  
+    // Escuta entrada de novos jogadores
+    presenceChannel.presence.subscribe('enter', (member: any) => {
+      const newPlayer = { name: member.data.name, clientId: member.clientId }
+      if (member.clientId !== clientId) {
+        setShowNotification(newPlayer)
+        setTimeout(() => setShowNotification(null), 3000)
+      }
+      syncPresence()
+    })
+  
+    presenceChannel.presence.subscribe('leave', syncPresence)
+    syncPresence()
+  
+    return () => {
+      presenceChannel.presence.leave()
+      presenceChannel.presence.unsubscribe()
+    }
+  }, [session])
+  
   
   const handleMouseEnter = () => {
     clearTimeout(logoutTimeoutId as NodeJS.Timeout); // Limpa qualquer timeout pendente
@@ -229,6 +307,19 @@ export default function Game() {
         </div>
       )}
 
+      <AnimatePresence>
+        {showNotification && (
+          <motion.div
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -30 }}
+            className="fixed top-5 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-2xl shadow-xl z-50"
+          >
+            🎮 {showNotification.name} entrou no jogo!
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
       <motion.h1 
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }} 
