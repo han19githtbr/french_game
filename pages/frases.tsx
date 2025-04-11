@@ -24,6 +24,10 @@ const animalSounds: Record<string, string> = {
   'Ce cheval, c\'est celui de mon frère': '/sounds/horse.mp3',
   'Ce perroquet, c\'est celui de mon voisin': '/sounds/parrot.mp3',
   'Cet oiseau est très beau': '/sounds/bird.mp3',
+  'Fais attention aux crocodiles!': '/sounds/alligator.mp3',
+  'Ce gorille est très docile': '/sounds/gorila.mp3',
+  'Ce mouton a perdu sa troupe': '/sounds/sheep.mp3',
+  'Ce canard est celui de ma tante!': '/sounds/duck.mp3',
 }
 
 type Result = {

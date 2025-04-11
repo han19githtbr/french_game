@@ -9,6 +9,7 @@ const allImages = {
     { url: '/frases/familia/sopa.png', title: 'Tu dois manger ta soupe!' },
     { url: '/frases/familia/almoço.png', title: 'La famille se réunit pour dîner!' },
     { url: '/frases/familia/piquenique.png', title: 'Dimanche c\'est le jour d\'une pique-nique en famille' },
+    { url: '/frases/familia/mae.png', title: 'Ma soeur est enceinte de six mois' },
   ],
   'natureza': [
     { url: '/frases/natureza/árvore.png', title: 'Il y a quelqu\'un sous l\'arbre' },
@@ -19,6 +20,12 @@ const allImages = {
     { url: '/frases/natureza/deserto.png', title: 'Une journée dans le désert' },
     { url: '/frases/natureza/pescar.png', title: 'Jean aime pêcher durant la journée' },
     { url: '/frases/natureza/rio.png', title: 'Tout près de chez moi, il y a une rivière' },
+    { url: '/frases/natureza/chuva.png', title: 'Il pleut sans arrêt depuis ce matin' },
+    { url: '/frases/natureza/dormir.png', title: 'Paul aime dormir au son de la pluie' },
+    { url: '/frases/natureza/pescar.png', title: 'Jean aime pêcher durant la journée' },
+    { url: '/frases/natureza/rio.png', title: 'Tout près de chez moi, il y a une rivière' },
+    { url: '/frases/natureza/estrelas.png', title: 'Le soir, j\'aime regarder les étoiles' },
+    { url: '/frases/natureza/mangas.png', title: 'Ce manguier, c\'est celui du voisin' },
   ],
   'turismo': [
     { url: '/frases/turismo/aeroporto.png', title: 'Je suis déjà à l\'Aéroport' },
@@ -27,6 +34,10 @@ const allImages = {
     { url: '/frases/turismo/helicoptero.png', title: 'Tu as déjà piloté un hélicoptère?' },
     { url: '/frases/turismo/navio.png', title: 'Ce navire, c\'est celui que j\'ai vu hier' },
     { url: '/frases/turismo/ponte.png', title: 'Il y a un enfant sur le pont' },
+    { url: '/frases/turismo/cristo.png', title: 'La statue du Christ Rédempteur se trouve au Brésil' },
+    { url: '/frases/turismo/bandeira_haitiana.png', title: 'Le drapeau haïtien est un symbole de liberté' },
+    { url: '/frases/turismo/estatua_liberdade.png', title: 'La statue de la liberté est connue dans le monde entier' },
+    { url: '/frases/turismo/torre_eiffel.png', title: 'La Tour Eiffel se trouve en France' },
   ],
   'animais': [
     { url: '/frases/animais/cachorro.png', title: 'C\'est mon chien' },
@@ -40,6 +51,10 @@ const allImages = {
     { url: '/frases/animais/papagaio.png', title: 'Ce perroquet, c\'est celui de mon voisin' },
     { url: '/frases/animais/passaro.png', title: 'Cet oiseau est très beau' },
     { url: '/frases/animais/tubarao.png', title: 'J\'ai déjà vu un requin' },
+    { url: '/frases/animais/crocodilo.png', title: 'Fais attention aux crocodiles!' },
+    { url: '/frases/animais/gorila.png', title: 'Ce gorille est très docile' },
+    { url: '/frases/animais/ovelha.png', title: 'Ce mouton a perdu sa troupe' },
+    { url: '/frases/animais/pato.png', title: 'Ce canard est celui de ma tante!' },
   ],
   'tecnologia': [
     { url: '/frases/tecnologia/satelite.png', title: 'Les satellites sont de grandes inventions' },
@@ -48,6 +63,8 @@ const allImages = {
     { url: '/frases/tecnologia/cinema.png', title: 'J\'aime aller au cinéma' },
     { url: '/frases/tecnologia/elevador.png', title: 'Je suis dans l\'ascenseur' },
     { url: '/frases/tecnologia/televisao.png', title: 'Le soir, je regarde souvent la télévision' },
+    { url: '/frases/tecnologia/drone.png', title: 'Ce drone controle toute la zone' },
+    { url: '/frases/tecnologia/foguete.png', title: 'Cette fusée a été lancée l\'année dernière' },
   ],
   'gastronomia': [
     { url: '/frases/gastronomia/bolo.png', title: 'C\'est l\'heure de couper le gâteau!' },
@@ -59,6 +76,10 @@ const allImages = {
     { url: '/frases/gastronomia/ovos_fritos.png', title: 'Des oeufs frits pour le petit déjeuner' },
     { url: '/frases/gastronomia/salada.png', title: 'Il est recommendé de manger des salades' },
     { url: '/frases/gastronomia/suco.png', title: 'J\'aime boire du jus d\'orange' },
+    { url: '/frases/gastronomia/abacate.png', title: 'Cet avocat a l\'air délicieux!' },
+    { url: '/frases/gastronomia/peixe_frito.png', title: 'Le poisson frit, c\'est mon plat préféré!' },
+    { url: '/frases/gastronomia/salsichas.png', title: 'Marie n\'aime pas les saucisses.' },
+    { url: '/frases/gastronomia/lasanha.png', title: 'Les lasagnes me donnent l\'eau à la bouche!' },
   ]
 }
 

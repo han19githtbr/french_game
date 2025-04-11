@@ -7,8 +7,9 @@ const allImages = {
     { url: '/ghibli/familia/família.png', title: 'Famille' },
     { url: '/ghibli/familia/casa.png', title: 'Maison' },
     { url: '/ghibli/familia/sopa.png', title: 'Soupe' },
-    { url: '/ghibli/familia/almoço.png', title: 'Dîner' },
-    { url: '/ghibli/familia/piquenique.png', title: 'Pique-nique' },
+    { url: '/ghibli/familia/almoço.png', title: 'Dîner en famille' },
+    { url: '/ghibli/familia/piquenique.png', title: 'Pique-nique en famille' },
+    { url: '/ghibli/familia/mae.png', title: 'Une femme enceinte' },
   ],
   'natureza': [
     { url: '/ghibli/natureza/árvore.png', title: 'Arbre' },
@@ -18,6 +19,10 @@ const allImages = {
     { url: '/ghibli/natureza/montanha.png', title: 'Montagne' },
     { url: '/ghibli/natureza/pescar.png', title: 'Pêcher' },
     { url: '/ghibli/natureza/rio.png', title: 'Rivière' },
+    { url: '/ghibli/natureza/chuva.png', title: 'La pluie' },
+    { url: '/ghibli/natureza/dormir.png', title: 'Il pleut' },
+    { url: '/ghibli/natureza/estrelas.png', title: 'Les étoiles' },
+    { url: '/ghibli/natureza/mangas.png', title: 'Un manguier' },
   ],
   'turismo': [
     { url: '/ghibli/turismo/aeroporto.png', title: 'Aéroport' },
@@ -39,6 +44,10 @@ const allImages = {
     { url: '/ghibli/animais/papagaio.png', title: 'Perroquet' },
     { url: '/ghibli/animais/passaro.png', title: 'Oiseau' },
     { url: '/ghibli/animais/tubarao.png', title: 'Requin' },
+    { url: '/ghibli/animais/crocodilo.png', title: 'Crocodile' },
+    { url: '/ghibli/animais/gorila.png', title: 'Gorille' },
+    { url: '/ghibli/animais/ovelha.png', title: 'Mouton' },
+    { url: '/ghibli/animais/pato.png', title: 'Canard' },
   ],
   'tecnologia': [
     { url: '/ghibli/tecnologia/satelite.png', title: 'Satellite' },
@@ -47,6 +56,8 @@ const allImages = {
     { url: '/ghibli/tecnologia/cinema.png', title: 'Salle de cinéma' },
     { url: '/ghibli/tecnologia/elevador.png', title: 'Ascenseur' },
     { url: '/ghibli/tecnologia/televisao.png', title: 'Télévision' },
+    { url: '/ghibli/tecnologia/drone.png', title: 'Drone' },
+    { url: '/ghibli/tecnologia/foguete.png', title: 'Fusée' },
   ],
   'gastronomia': [
     { url: '/ghibli/gastronomia/bolo.png', title: 'Gâteau' },
@@ -58,6 +69,10 @@ const allImages = {
     { url: '/ghibli/gastronomia/ovos_fritos.png', title: 'Des oeufs frits' },
     { url: '/ghibli/gastronomia/salada.png', title: 'Salade' },
     { url: '/ghibli/gastronomia/suco.png', title: 'Jus d\'orange' },
+    { url: '/ghibli/gastronomia/abacate.png', title: 'Avocat' },
+    { url: '/ghibli/gastronomia/lasanha.png', title: 'Lasagne' },
+    { url: '/ghibli/gastronomia/peixe_frito.png', title: 'Du poisson frit' },
+    { url: '/ghibli/gastronomia/salsichas.png', title: 'Des saucisses' },
   ]
 }
 

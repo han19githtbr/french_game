@@ -27,6 +27,10 @@ const animalSounds: Record<string, string> = {
   'Cheval': '/sounds/horse.mp3',
   'Perroquet': '/sounds/parrot.mp3',
   'Oiseau': '/sounds/bird.mp3',
+  'Crocodile': '/sounds/alligator.mp3',
+  'Gorille': '/sounds/gorila.mp3',
+  'Mouton': '/sounds/sheep.mp3',
+  'Canard': '/sounds/duck.mp3',
 }
 
 type Result = {
