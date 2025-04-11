@@ -4,6 +4,8 @@ import { useRouter } from 'next/router'
 import { ChevronLeft, Trash2 } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 //import { signOut, useSession } from 'next-auth/react'
+import { FaMedal } from 'react-icons/fa';
+
 
 export default function ResultsPage() {
   const [progress_phrases, setProgressPhrases] = useState<{ round: number, correct_phrase: number }[]>([])
@@ -90,12 +92,16 @@ export default function ResultsPage() {
           <div className="max-w-md mx-auto space-y-4 mb-8">
             {progress_phrases.map((p, i) => (
               <div
-                key={i}
-                className={`bg-white text-black p-4 rounded-xl shadow-md flex justify-between items-center ${p.correct_phrase === bestRound.correct_phrase ? 'border-2 border-yellow-400' : ''}`}
-              >
-                <span>Jogada {p.round}</span>
-                <span>{p.correct_phrase} acertos</span>
-              </div>
+              key={i}
+              className={`bg-white text-black p-4 rounded-xl shadow-md flex justify-between items-center ${p.correct_phrase === bestRound.correct_phrase ? 'border-2 border-yellow-400' : ''}`}
+            >
+              <span>Jogada {p.round}</span>
+              <span>
+                {p.correct_phrase} acertos
+                {p.correct_phrase === 4 && <FaMedal color="gold" className="inline-block ml-2" />}
+                {p.correct_phrase === 3 && <FaMedal color="silver" className="inline-block ml-2" />}
+              </span>
+            </div>
             ))}
           </div>
 
