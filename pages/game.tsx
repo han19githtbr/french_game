@@ -10,6 +10,19 @@ import { LockClosedIcon } from '@heroicons/react/24/solid';
 
 const themes = ['família', 'natureza', 'turismo', 'animais', 'tecnologia', 'gastronomia']
 
+const animalSounds: Record<string, string> = {
+  'Chien': '/sounds/cachorro.mp3',
+  'Chat': '/sounds/gato.mp3',
+  'Eléphant': '/sounds/elefante.mp3',
+  'Lion': '/sounds/lion.mp3',
+  'Poisson': '/sounds/fish.mp3',
+  'Serpent': '/sounds/snake.mp3',
+  'Ours': '/sounds/bear.mp3',
+  'Cheval': '/sounds/horse.mp3',
+  'Perroquet': '/sounds/parrot.mp3',
+  'Oiseau': '/sounds/bird.mp3',
+}
+
 type Result = {
   correct: boolean
   selected: string
@@ -119,9 +132,11 @@ export default function Game() {
   }
 
   const checkAnswer = (index: number, userAnswer: string) => {
+    playAnimalSound(images[index].title)
+    
     const correct = images[index].title.toLowerCase() === userAnswer.toLowerCase()
     const alreadyCorrect = results[index]?.correct
-  
+    
     if (correct && !alreadyCorrect && correctSound) correctSound.play()
     if (!correct && wrongSound) wrongSound.play()
 
@@ -141,7 +156,7 @@ export default function Game() {
     //saveProgress(correctCount);
 
     saveProgress(currentCorrectCount);
-
+    
     // Se errou alguma imagem, mostra botão para recomeçar
     if (hasWrong) {
       setShowRestart(true)
@@ -167,6 +182,15 @@ export default function Game() {
     }
   };
 
+  const playAnimalSound = (title: string) => {
+    if (theme !== 'animais') return; // só toca se for o tema "animais"
+    const soundPath = animalSounds[title]
+    if (soundPath) {
+      const audio = new Audio(soundPath)
+      audio.play().catch(err => console.error('Erro ao tocar som do animal:', err))
+    }
+  }
+  
 
   const handleFrasesClick = () => {
     if (isFrasesUnlocked) {
@@ -293,7 +317,7 @@ export default function Game() {
               initial={{ opacity: 0, scale: 0.9 }} 
               animate={{ opacity: 1, scale: 1 }} 
               transition={{ duration: 0.3, delay: index * 0.1 }}
-              className="bg-transparent text-black p-4 rounded-2xl shadow-2xl w-[280px] transition transform hover:scale-105"
+              className="bg-transparent text-black p-4 rounded-2xl flex-grow shadow-2xl max-w-[280px] transition transform hover:scale-105"
             >
               <img src={img.url} alt="imagem" className="w-full h-48 object-cover rounded-xl" />
               <div className="mt-2">Escolha o título correto:</div>

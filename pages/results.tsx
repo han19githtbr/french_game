@@ -3,11 +3,11 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { ChevronLeft, Trash2 } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
-//import { signOut, useSession } from 'next-auth/react'
+import { FaMedal } from 'react-icons/fa';
 
 export default function ResultsPage() {
   const [progress, setProgress] = useState<{ round: number, correct: number }[]>([])
-  //const { data: session } = useSession()
+  
   const router = useRouter()
 
   const [isLogoutVisible, setIsLogoutVisible] = useState(false);
@@ -31,11 +31,7 @@ export default function ResultsPage() {
     clearTimeout(logoutTimeoutId as NodeJS.Timeout);
   };
 
-  /*const handleLogout = async () => {
-    await signOut();
-    
-  };*/
-
+  
   useEffect(() => {
     const saved = localStorage.getItem('progress')
     if (saved) {
@@ -59,26 +55,7 @@ export default function ResultsPage() {
           className="fixed flex border border-blue items-center bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75 mt-10 cursor-pointer">
           <ChevronLeft className="mr-2" color="blue" /> Voltar ao jogo
         </button>
-        {/**{session?.user && (
-          <div
-            className="fixed right-4 z-50"
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-          >
-            <div className="flex items-center gap-2 cursor-pointer mt-16">
-              <span className="text-white font-medium hidden sm:inline">{session.user.name}</span>
-              <img src={session.user.image || ''} alt="Avatar" className="w-8 h-8 rounded-full border border-white" />
-            </div>
-            <div
-              className={`absolute border border-blue right-0 mt-2 text-black py-2 px-4 rounded shadow-lg z-10 ${
-                isLogoutVisible ? 'block' : 'hidden'
-              }`}
-              onMouseEnter={handleLogoutMouseEnter} // Impede o desaparecimento ao entrar no botão
-            >
-              <button onClick={handleLogout} className="hover:text-red-600 cursor-pointer">Logout</button>
-            </div>
-          </div>
-        )}**/}
+        
       </div>      
       
       <h1 className="text-3xl font-bold mt-30 mb-4 text-center">Seu Progresso</h1>
@@ -94,7 +71,11 @@ export default function ResultsPage() {
                 className={`bg-white text-black p-4 rounded-xl shadow-md flex justify-between items-center ${p.correct === bestRound.correct ? 'border-2 border-yellow-400' : ''}`}
               >
                 <span>Jogada {p.round}</span>
-                <span>{p.correct} acertos</span>
+                <span>
+                  {p.correct} acertos
+                  {p.correct === 4 && <FaMedal color="gold" className="inline-block ml-2" />}
+                  {p.correct === 3 && <FaMedal color="silver" className="inline-block ml-2" />}
+                </span>
               </div>
             ))}
           </div>
@@ -130,7 +111,6 @@ export default function ResultsPage() {
     </div>
   )
 }
-
 
 // Função para salvar progresso após cada rodada
 export const saveProgress = (correct: number) => {
