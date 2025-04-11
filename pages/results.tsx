@@ -5,8 +5,18 @@ import { ChevronLeft, Trash2 } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { FaMedal } from 'react-icons/fa';
 
+
+interface Progress {
+  round: number;
+  correct: number;
+}
+
+
 export default function ResultsPage() {
-  const [progress, setProgress] = useState<{ round: number, correct: number }[]>([])
+  //const [progress, setProgress] = useState<{ round: number, correct: number }[]>([])
+  const [progress, setProgress] = useState<Progress[]>([]);
+  const [currentProgress, setCurrentProgress] = useState(0);
+  const [isFlashing, setIsFlashing] = useState(false);
   
   const router = useRouter()
 
@@ -35,16 +45,41 @@ export default function ResultsPage() {
   useEffect(() => {
     const saved = localStorage.getItem('progress')
     if (saved) {
-      setProgress(JSON.parse(saved))
+      const parsed: Progress[] = JSON.parse(saved);
+      setProgress(parsed);
+      if (parsed.length > 0) {
+        setCurrentProgress(parsed[parsed.length - 1].correct);
+        setIsFlashing(parsed[parsed.length - 1].correct === 4);
+      } else {
+        setCurrentProgress(0);
+        setIsFlashing(false);
+      }
     }
   }, []);
+
+
+  useEffect(() => {
+    if (progress.length > 0) {
+      const lastProgress = progress[progress.length - 1].correct;
+      setCurrentProgress(lastProgress);
+      setIsFlashing(lastProgress === 4);
+    } else {
+      setCurrentProgress(0);
+      setIsFlashing(false);
+    }
+  }, [progress]);
+
 
   const clearProgress = () => {
     localStorage.removeItem('progress');
     setProgress([]);
+    setCurrentProgress(0);
+    setIsFlashing(false);
   };
 
   const bestRound = progress.reduce((prev, curr) => (curr.correct > prev.correct ? curr : prev), { round: 0, correct: 0 })
+
+  const progressPercentage = (currentProgress / 4) * 100;
 
   return (
     <div className="min-h-screen bg-slate-900 text-white p-6">
@@ -60,6 +95,22 @@ export default function ResultsPage() {
       
       <h1 className="text-3xl font-bold mt-30 mb-4 text-center">Seu Progresso</h1>
       
+      {/* Barra de Progresso */}
+      <div className="mb-6 max-w-md mx-auto">
+        <div className="bg-gray-800 rounded-full h-4 relative overflow-hidden">
+          <div
+            className={`bg-green h-full rounded-full transition-all duration-500 ease-out absolute left-0 top-0 ${
+              isFlashing ? 'animate-progress-flash' : ''
+            }`}
+            style={{ width: `${progressPercentage}%` }}
+          ></div>
+          <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-sm font-semibold">
+            {currentProgress} / 4
+          </span>
+        </div>
+        <p className="text-sm text-gray-400 mt-1 text-center">Progresso para a Medalha de Ouro</p>
+      </div>
+
       {progress.length === 0 ? (
         <p className="text-center text-gray-400">Você ainda não fez nenhuma jogada.</p>
       ) : (
