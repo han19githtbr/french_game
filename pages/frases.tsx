@@ -1,32 +1,44 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { createAblyClient } from '../lib/ably'
+import type * as Ably from 'ably'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/router'
 //import { Button } from '@/components/ui/button'
 import { Check, X, ChevronLeft } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { saveProgress } from './phrases_results'
 
 
 const themes = ['família', 'natureza', 'turismo', 'animais', 'tecnologia', 'gastronomia']
 
+
 const animalSounds: Record<string, string> = {
-  'Chien': '/sounds/cachorro.mp3',
-  'Chat': '/sounds/gato.mp3',
-  'Eléphant': '/sounds/elefante.mp3',
-  'Lion': '/sounds/lion.mp3',
-  'Poisson': '/sounds/fish.mp3',
-  'Requin': '/sounds/fish.mp3',
-  'Serpent': '/sounds/snake.mp3',
-  'Ours': '/sounds/bear.mp3',
-  'Cheval': '/sounds/horse.mp3',
-  'Perroquet': '/sounds/parrot.mp3',
-  'Oiseau': '/sounds/bird.mp3',
+  'C\'est mon chien': '/sounds/cachorro.mp3',
+  'Ce chat, c\'est celui de Julien': '/sounds/gato.mp3',
+  'Je n\'ai pas peur des eléphants': '/sounds/elefante.mp3',
+  'Le lion est le roi de la jungle': '/sounds/lion.mp3',
+  'Le poisson est riche en vitamines': '/sounds/fish.mp3',
+  'J\'ai déjà vu un requin': '/sounds/fish.mp3',
+  'Ce serpent est venimeux': '/sounds/snake.mp3',
+  'L\'Ours est un animal sauvage': '/sounds/bear.mp3',
+  'Ce cheval, c\'est celui de mon frère': '/sounds/horse.mp3',
+  'Ce perroquet, c\'est celui de mon voisin': '/sounds/parrot.mp3',
+  'Cet oiseau est très beau': '/sounds/bird.mp3',
 }
 
 type Result = {
   correct_phrase: boolean
   selected: string
 }
+
+type Player = {
+  clientId: string
+  name: string
+}
+
+type ShowNotification = {
+  name: string
+} | null
 
 const lockMessageVariants = {
   initial: { opacity: 0, y: 10 },
@@ -35,6 +47,7 @@ const lockMessageVariants = {
 };
 
 export default function Frase() {
+  const imageRefs = useRef<(HTMLDivElement | null)[]>([])
   const { data: session, status } = useSession()
   const router = useRouter()
 
@@ -48,12 +61,19 @@ export default function Frase() {
   const [images, setImages] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   
-  const [results, setResults] = useState<Record<number, Result>>({});
+  //const [results, setResults] = useState<Record<number, Result>>({});
+  const [results, setResults] = useState<(Result | null)[]>([]);
   const [round, setRound] = useState(1);
+  const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
 
   const [correctSound, setCorrectSound] = useState<HTMLAudioElement | null>(null)
   const [wrongSound, setWrongSound] = useState<HTMLAudioElement | null>(null)
   const [successSound, setSuccessSound] = useState<HTMLAudioElement | null>(null);
+
+  const [playersOnline, setPlayersOnline] = useState<Player[]>([])
+  const [showNotification, setShowNotification] = useState<Player | null>(null)
+
+  const [ablyClient, setAblyClient] = useState<Ably.Realtime | null>(null)
 
 
   useEffect(() => {
@@ -72,7 +92,73 @@ export default function Frase() {
     if (theme) loadImages()
   }, [theme, round])
 
+  useEffect(() => {
+    if (!showCongrats && images.length > 0) {
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 500); // Pequeno delay para garantir que novas imagens renderizem
+    }
+  }, [showCongrats, images]);
   
+  useEffect(() => {
+    if (!session) return
+  
+    const clientId = session.user?.email || Math.random().toString(36).substring(2, 9)
+    const client = createAblyClient(clientId)
+    setAblyClient(client)
+  
+    return () => {
+      client.close()
+    }
+  }, [session])
+
+  useEffect(() => {
+    if (!ablyClient || !session) return
+  
+    const presenceChannel = ablyClient.channels.get('game-room')
+    const name = session.user?.name || 'Anônimo'
+    const clientId = ablyClient.auth.clientId!
+  
+    const onConnected = () => {
+      presenceChannel.presence.enter({ name })
+  
+      // Atualiza lista de quem está online
+      const syncPresence = async () => {
+        const members = await presenceChannel.presence.get()
+        const players = members.map((member: any) => ({
+          name: member.data.name,
+          clientId: member.clientId,
+        }))
+        setPlayersOnline(players)
+      }
+  
+      presenceChannel.presence.subscribe('enter', (member: any) => {
+        const newPlayer = { name: member.data.name, clientId: member.clientId }
+        if (member.clientId !== clientId) {
+          setShowNotification(newPlayer)
+          setTimeout(() => setShowNotification(null), 3000)
+        }
+        syncPresence()
+      })
+  
+      presenceChannel.presence.subscribe('leave', syncPresence)
+      syncPresence()
+    }
+  
+    // Garante que o client está conectado
+    ablyClient.connection.once('connected', onConnected)
+  
+    return () => {
+      if (ablyClient.connection.state === 'connected') {
+        presenceChannel.presence.leave()
+      }
+    
+      presenceChannel.presence.unsubscribe()
+      ablyClient.connection.off('connected', onConnected)
+    }
+  }, [ablyClient, session])
+
+
   const handleMouseEnter = () => {
     clearTimeout(logoutTimeoutId as NodeJS.Timeout); // Limpa qualquer timeout pendente
     setIsLogoutVisible(true);
@@ -93,7 +179,7 @@ export default function Frase() {
 
   const loadImages = async () => {
     setLoading(true)
-    setResults({})
+    setResults([])
     
     try {
       const res = await fetch('/api/generate-phrases', {
@@ -113,7 +199,9 @@ export default function Frase() {
       const data = await res.json()
       console.log('🔁 Dados recebidos:', data) // <-- Adicione isso para depuração
   
-      setImages(data)
+      setImages(data);
+      imageRefs.current = []; // limpa os refs antigos
+      setResults(Array(data.length).fill(null));
     } catch (error) {
       console.error('❌ Erro ao carregar imagens:', error)
     } finally {
@@ -130,30 +218,39 @@ export default function Frase() {
     if (correct_phrase && !alreadyCorrect && correctSound) correctSound.play()
     if (!correct_phrase && wrongSound) wrongSound.play()
 
-    const newResults = {
-      ...results,
-      [index]: { correct_phrase, selected: userAnswer }
-    }  
+    const newResults = [...results]; // agora é um array!
+    newResults[index] = { correct_phrase, selected: userAnswer };    
 
-    setResults(newResults)
+    setResults(newResults);
+
+    // ⏬ Scroll para a próxima imagem ainda não respondida (com pequeno delay)
+    setTimeout(() => {
+      const nextUnansweredIndex = newResults.findIndex((res, i) => !res && i > index)
+      const nextRef = imageRefs.current[nextUnansweredIndex]
+      if (nextUnansweredIndex !== -1 && nextRef) {
+        nextRef.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }, 300)
       
-    const correctCount = Object.values(newResults).filter(r => r?.correct_phrase).length
+
+    const currentCorrectCount = Object.values(newResults).filter((r) => r?.correct_phrase).length;
+    setCorrectAnswersCount(currentCorrectCount);
     const totalCount = images.length
     const hasWrong = Object.values(newResults).some(r => r && !r.correct_phrase)
 
-    saveProgress(correctCount)
+    saveProgress(currentCorrectCount)
 
     // Se errou alguma imagem, mostra botão para recomeçar
     if (hasWrong) {
       setShowRestart(true)
     }
 
-    if (correctCount === totalCount) {
+    if (currentCorrectCount === totalCount) {
       setShowCongrats(true)
       
       // Salvar progresso no localStorage
       const prevProgress = JSON.parse(localStorage.getItem('progress_phrases') || '[]')
-      localStorage.setItem('progress_phrases', JSON.stringify([...prevProgress, { round, correct_phrase: correctCount }]))
+      localStorage.setItem('progress_phrases', JSON.stringify([...prevProgress, { round, correct_phrase: currentCorrectCount }]))
         
       setTimeout(() => {
         const nextTheme = themes.filter(t => t !== theme)[Math.floor(Math.random() * (themes.length - 1))]
@@ -212,6 +309,19 @@ export default function Frase() {
         </div>
       )}
 
+      <AnimatePresence>
+        {showNotification && (
+          <motion.div
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -30 }}
+            className="fixed top-5 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-2xl shadow-xl z-50"
+          >
+            🎮 {showNotification.name} entrou no jogo!
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <motion.h1 
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }} 
@@ -262,7 +372,10 @@ export default function Frase() {
         <div className="flex flex-wrap justify-center gap-6 w-full max-w-6xl mt-6">
           {images.map((img, index) => (
             <motion.div 
-              key={index} 
+              key={index}
+              ref={(el) => {
+                if (el) imageRefs.current[index] = el;
+              }}  
               initial={{ opacity: 0, scale: 0.9 }} 
               animate={{ opacity: 1, scale: 1 }} 
               transition={{ duration: 0.3, delay: index * 0.1 }}
