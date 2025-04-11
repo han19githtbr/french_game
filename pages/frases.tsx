@@ -9,6 +9,19 @@ import { saveProgress } from './phrases_results'
 
 const themes = ['família', 'natureza', 'turismo', 'animais', 'tecnologia', 'gastronomia']
 
+const animalSounds: Record<string, string> = {
+  'Chien': '/sounds/cachorro.mp3',
+  'Chat': '/sounds/gato.mp3',
+  'Eléphant': '/sounds/elefante.mp3',
+  'Lion': '/sounds/lion.mp3',
+  'Poisson': '/sounds/fish.mp3',
+  'Requin': '/sounds/fish.mp3',
+  'Serpent': '/sounds/snake.mp3',
+  'Ours': '/sounds/bear.mp3',
+  'Cheval': '/sounds/horse.mp3',
+  'Perroquet': '/sounds/parrot.mp3',
+  'Oiseau': '/sounds/bird.mp3',
+}
 
 type Result = {
   correct_phrase: boolean
@@ -109,6 +122,8 @@ export default function Frase() {
   }
 
   const checkAnswer = (index: number, userAnswer: string) => {
+    playAnimalSound(images[index].title)
+    
     const correct_phrase = images[index].title.toLowerCase() === userAnswer.toLowerCase()
     const alreadyCorrect = results[index]?.correct_phrase
   
@@ -154,6 +169,16 @@ export default function Frase() {
     }
   }
   
+  const playAnimalSound = (title: string) => {
+    if (theme !== 'animais') return; // só toca se for o tema "animais"
+    const soundPath = animalSounds[title]
+    if (soundPath) {
+      const audio = new Audio(soundPath)
+      audio.play().catch(err => console.error('Erro ao tocar som do animal:', err))
+    }
+  }
+
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-800 to-slate-900 text-white flex flex-col items-center p-4 relative mb-6">
       <div className="fixed top-8 left-4 z-50">

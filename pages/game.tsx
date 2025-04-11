@@ -1,6 +1,6 @@
 /*'use client'*/
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createAblyClient } from '../lib/ably'
 import type * as Ably from 'ably'
 import { useSession, signOut } from 'next-auth/react'
@@ -21,6 +21,7 @@ const animalSounds: Record<string, string> = {
   'Eléphant': '/sounds/elefante.mp3',
   'Lion': '/sounds/lion.mp3',
   'Poisson': '/sounds/fish.mp3',
+  'Requin': '/sounds/fish.mp3',
   'Serpent': '/sounds/snake.mp3',
   'Ours': '/sounds/bear.mp3',
   'Cheval': '/sounds/horse.mp3',
@@ -49,6 +50,7 @@ const lockMessageVariants = {
 };
 
 export default function Game() {
+  const imageRefs = useRef<(HTMLDivElement | null)[]>([])
   const { data: session, status } = useSession()
   const router = useRouter()
 
@@ -57,12 +59,15 @@ export default function Game() {
 
   const [showRestart, setShowRestart] = useState(false)
   const [showCongrats, setShowCongrats] = useState(false)
-
+  
   const [theme, setTheme] = useState('')
   const [images, setImages] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   
-  const [results, setResults] = useState<Record<number, Result>>({});
+  //const [results, setResults] = useState<Record<number, Result>>({});
+  const [results, setResults] = useState<(Result | null)[]>([]);
+
+
   const [round, setRound] = useState(1);
   const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
 
@@ -79,7 +84,7 @@ export default function Game() {
 
   const [ablyClient, setAblyClient] = useState<Ably.Realtime | null>(null)
 
-
+  
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setCorrectSound(new Audio('/sounds/correct.mp3'))
@@ -95,6 +100,15 @@ export default function Game() {
   useEffect(() => {
     if (theme) loadImages()
   }, [theme, round])
+
+  useEffect(() => {
+    if (!showCongrats && images.length > 0) {
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 500); // Pequeno delay para garantir que novas imagens renderizem
+    }
+  }, [showCongrats, images]);
+  
 
   useEffect(() => {
     if (correctAnswersCount >= 1) {
@@ -206,7 +220,7 @@ export default function Game() {
 
   const loadImages = async () => {
     setLoading(true)
-    setResults({})
+    setResults([]);
     
     try {
       const res = await fetch('/api/generate-images', {
@@ -227,6 +241,8 @@ export default function Game() {
       console.log('🔁 Dados recebidos:', data); // <-- Adicione isso para depuração
   
       setImages(data);
+      imageRefs.current = []; // limpa os refs antigos
+      setResults(Array(data.length).fill(null));
     } catch (error) {
       console.error('❌ Erro ao carregar imagens:', error);
     } finally {
@@ -243,13 +259,32 @@ export default function Game() {
     if (correct && !alreadyCorrect && correctSound) correctSound.play()
     if (!correct && wrongSound) wrongSound.play()
 
-    const newResults = {
+    /*const newResults = {
       ...results,
       [index]: { correct, selected: userAnswer }
-    }  
+    }*/
+   
+    const newResults = [...results]; // agora é um array!
+    newResults[index] = { correct, selected: userAnswer };  
 
-    setResults(newResults)
+    setResults(newResults);
       
+    
+    // ⏬ Scroll para a próxima imagem ainda não respondida (com pequeno delay)
+    setTimeout(() => {
+      const nextUnansweredIndex = newResults.findIndex((res, i) => !res && i > index)
+      const nextRef = imageRefs.current[nextUnansweredIndex]
+      if (nextUnansweredIndex !== -1 && nextRef) {
+        nextRef.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }, 300)
+    
+    // Scroll para a próxima imagem ainda não respondida
+    /*const nextUnansweredIndex = newResults.findIndex((res, i) => !res && i > index);
+    if (nextUnansweredIndex !== -1 && imageRefs.current[nextUnansweredIndex]) {
+      imageRefs.current[nextUnansweredIndex]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }*/
+
     //const correctCount = Object.values(newResults).filter(r => r?.correct).length
     const currentCorrectCount = Object.values(newResults).filter((r) => r?.correct).length;
     setCorrectAnswersCount(currentCorrectCount);
@@ -264,7 +299,7 @@ export default function Game() {
     if (hasWrong) {
       setShowRestart(true)
     }
-
+    
     if (currentCorrectCount === totalCount) {
       setShowCongrats(true)
       
@@ -429,7 +464,10 @@ export default function Game() {
         <div className="flex flex-wrap justify-center gap-6 w-full max-w-6xl mt-6">
           {images.map((img, index) => (
             <motion.div 
-              key={index} 
+              key={index}
+              ref={(el) => {
+                if (el) imageRefs.current[index] = el;
+              }} 
               initial={{ opacity: 0, scale: 0.9 }} 
               animate={{ opacity: 1, scale: 1 }} 
               transition={{ duration: 0.3, delay: index * 0.1 }}
