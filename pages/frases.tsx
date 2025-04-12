@@ -354,7 +354,7 @@ export default function Frase() {
 
       <div className="flex flex-col items-center space-y-6">
         <button
-          onClick={() => router.push('/phrases_results')}
+          onClick={() => router.push('/sentences_results')}
           className="w-64 border border-blue bg-gradient-to-br text-blue from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-6 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 text-lg cursor-pointer"
         >
           Ver Progresso
