@@ -18,7 +18,7 @@ const themes = ['família', 'natureza', 'turismo', 'animais', 'tecnologia', 'gas
 const animalSounds: Record<string, string> = {
   'Chien': '/sounds/cachorro.mp3',
   'Chat': '/sounds/gato.mp3',
-  'Eléphant': '/sounds/elefante.mp3',
+  'Éléphant': '/sounds/elefante.mp3',
   'Lion': '/sounds/lion.mp3',
   'Poisson': '/sounds/fish.mp3',
   'Requin': '/sounds/fish.mp3',
@@ -45,6 +45,7 @@ type Player = {
 
 type ShowNotification = {
   name: string
+  type: 'join' | 'leave'
 } | null
 
 const lockMessageVariants = {
@@ -84,7 +85,7 @@ export default function Game() {
   const [successSound, setSuccessSound] = useState<HTMLAudioElement | null>(null);
 
   const [playersOnline, setPlayersOnline] = useState<Player[]>([])
-  const [showNotification, setShowNotification] = useState<Player | null>(null)
+  const [showNotification, setShowNotification] = useState<ShowNotification | null>(null)
 
   const [ablyClient, setAblyClient] = useState<Ably.Realtime | null>(null)
 
@@ -176,17 +177,30 @@ export default function Game() {
         setPlayersOnline(players)
       }
   
+      // ▶️ Quando alguém entra
       presenceChannel.presence.subscribe('enter', (member: any) => {
         const newPlayer = { name: member.data.name, clientId: member.clientId }
         if (member.clientId !== clientId) {
-          setShowNotification(newPlayer)
-          setTimeout(() => setShowNotification(null), 3000)
+          setShowNotification({ name: newPlayer.name, type: 'join' })
+          setTimeout(() => setShowNotification(null), 6000)
         }
         syncPresence()
       })
   
-      presenceChannel.presence.subscribe('leave', syncPresence)
+      // ⚡ Quando alguém sai
+      presenceChannel.presence.subscribe('leave', (member: any) => {
+        const leavingPlayer = { name: member.data.name, clientId: member.clientId }
+  
+        if (leavingPlayer.clientId !== clientId) {
+          setShowNotification({ name: leavingPlayer.name, type: 'leave' })
+          setTimeout(() => setShowNotification(null), 6000)
+        }
+  
+        syncPresence()
+      })
+    
       syncPresence()
+    
     }
   
     // Garante que o client está conectado
@@ -379,7 +393,11 @@ export default function Game() {
             exit={{ opacity: 0, y: -30 }}
             className="fixed top-5 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-2xl shadow-xl z-50"
           >
-            🎮 {showNotification.name} entrou no jogo!
+          {showNotification.type === 'join' ? (
+            <>🎮 {showNotification.name} entrou no jogo!</>
+          ) : (
+            <>⚡ {showNotification.name} saiu do jogo.</>
+          )}
           </motion.div>
         )}
       </AnimatePresence>
