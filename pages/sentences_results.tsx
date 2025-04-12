@@ -9,13 +9,13 @@ import { FaMedal } from 'react-icons/fa';
 
 interface Progress {
   round: number;
-  correct_phrase: number;
+  correct_answer: number;
 }
 
 
 export default function ResultsPage() {
   //const [progress_phrases, setProgressPhrases] = useState<{ round: number, correct_phrase: number }[]>([])
-  const [progress_phrases, setProgressPhrases] = useState<Progress[]>([]);
+  const [progress_answers, setProgressAnswers] = useState<Progress[]>([]);
   const [currentProgress, setCurrentProgress] = useState(0);
   const [isFlashing, setIsFlashing] = useState(false);
   //const { data: session } = useSession()
@@ -48,13 +48,13 @@ export default function ResultsPage() {
   };*/
 
   useEffect(() => {
-    const saved = localStorage.getItem('progress_phrases')
+    const saved = localStorage.getItem('progress_answers')
     if (saved) {
       const parsed: Progress[] = JSON.parse(saved);
-      setProgressPhrases(parsed);
+      setProgressAnswers(parsed);
       if (parsed.length > 0) {
-        setCurrentProgress(parsed[parsed.length - 1].correct_phrase);
-        setIsFlashing(parsed[parsed.length - 1].correct_phrase === 4);
+        setCurrentProgress(parsed[parsed.length - 1].correct_answer);
+        setIsFlashing(parsed[parsed.length - 1].correct_answer === 4);
       } else {
         setCurrentProgress(0);
         setIsFlashing(false);
@@ -63,24 +63,24 @@ export default function ResultsPage() {
   }, []);
 
   useEffect(() => {
-    if (progress_phrases.length > 0) {
-      const lastProgress = progress_phrases[progress_phrases.length - 1].correct_phrase;
+    if (progress_answers.length > 0) {
+      const lastProgress = progress_answers[progress_answers.length - 1].correct_answer;
       setCurrentProgress(lastProgress);
       setIsFlashing(lastProgress === 4);
     } else {
       setCurrentProgress(0);
       setIsFlashing(false);
     }
-  }, [progress_phrases]);
+  }, [progress_answers]);
 
   const clearProgress = () => {
-    localStorage.removeItem('progress_phrases');
-    setProgressPhrases([]);
+    localStorage.removeItem('progress_answers');
+    setProgressAnswers([]);
     setCurrentProgress(0);
     setIsFlashing(false);
   };
 
-  const bestRound = progress_phrases.reduce((prev, curr) => (curr.correct_phrase > prev.correct_phrase ? curr : prev), { round: 0, correct_phrase: 0 })
+  const bestRound = progress_answers.reduce((prev, curr) => (curr.correct_answer > prev.correct_answer ? curr : prev), { round: 0, correct_answer: 0 })
 
   const progressPercentage = (currentProgress / 4) * 100;
 
@@ -133,21 +133,21 @@ export default function ResultsPage() {
         <p className="text-sm text-gray-400 mt-1 text-center">Progresso para a Medalha de Ouro</p>
       </div>
 
-      {progress_phrases.length === 0 ? (
+      {progress_answers.length === 0 ? (
         <p className="text-center text-gray-400">Você ainda não fez nenhuma jogada.</p>
       ) : (
         <>
           <div className="max-w-md mx-auto space-y-4 mb-8">
-            {progress_phrases.map((p, i) => (
+            {progress_answers.map((p, i) => (
               <div
               key={i}
-              className={`bg-white text-black p-4 rounded-xl shadow-md flex justify-between items-center ${p.correct_phrase === bestRound.correct_phrase ? 'border-2 border-yellow-400' : ''}`}
+              className={`bg-white text-black p-4 rounded-xl shadow-md flex justify-between items-center ${p.correct_answer === bestRound.correct_answer ? 'border-2 border-yellow-400' : ''}`}
             >
               <span>Jogada {p.round}</span>
               <span>
-                {p.correct_phrase} acertos
-                {p.correct_phrase === 4 && <FaMedal color="gold" className="inline-block ml-2 medalha-brilho-ouro" />}
-                {p.correct_phrase === 3 && <FaMedal color="silver" className="inline-block ml-2 medalha-brilho-prata" />}
+                {p.correct_answer} acertos
+                {p.correct_answer === 4 && <FaMedal color="gold" className="inline-block ml-2 medalha-brilho-ouro" />}
+                {p.correct_answer === 3 && <FaMedal color="silver" className="inline-block ml-2 medalha-brilho-prata" />}
               </span>
             </div>
             ))}
@@ -165,7 +165,7 @@ export default function ResultsPage() {
           <h2 className="text-2xl font-semibold text-center mb-4">Estatísticas de Acertos</h2>
           <div className="h-72 w-full max-w-3xl mx-auto">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={progress_phrases}>
+              <BarChart data={progress_answers}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="round" label={{ value: 'Jogada', position: 'insideBottomRight', offset: -5 }} />
                 <YAxis label={{ value: 'Acertos', angle: -90, position: 'insideLeft' }} allowDecimals={false} />
@@ -176,7 +176,7 @@ export default function ResultsPage() {
           </div>
 
           <div className="text-center mt-8 text-lg">
-            🏆 Melhor desempenho: <strong>{bestRound.correct_phrase}</strong> acertos na jogada {bestRound.round}
+            🏆 Melhor desempenho: <strong>{bestRound.correct_answer}</strong> acertos na jogada {bestRound.round}
           </div>
         </>
 
@@ -187,11 +187,11 @@ export default function ResultsPage() {
 
 
 // Função para salvar progresso após cada rodada
-export const saveProgress = (correct_phrase: number) => {
+export const saveProgress = (correct_answer: number) => {
     if (typeof window === 'undefined') return
-    const saved = localStorage.getItem('progress_phrases')
+    const saved = localStorage.getItem('progress_answers')
     const parsed = saved ? JSON.parse(saved) : []
     const round = parsed.length + 1
-    parsed.push({ round, correct_phrase })
-    localStorage.setItem('progress_phrases', JSON.stringify(parsed))
+    parsed.push({ round, correct_answer })
+    localStorage.setItem('progress_answers', JSON.stringify(parsed))
 }

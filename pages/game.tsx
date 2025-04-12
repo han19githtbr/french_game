@@ -34,7 +34,7 @@ const animalSounds: Record<string, string> = {
 }
 
 type Result = {
-  correct: boolean
+  correct_word: boolean
   selected: string
 }
 
@@ -271,11 +271,11 @@ export default function Game() {
   const checkAnswer = (index: number, userAnswer: string) => {
     playAnimalSound(images[index].title)
     
-    const correct = images[index].title.toLowerCase() === userAnswer.toLowerCase()
-    const alreadyCorrect = results[index]?.correct
+    const correct_word = images[index].title.toLowerCase() === userAnswer.toLowerCase()
+    const alreadyCorrect = results[index]?.correct_word
     
-    if (correct && !alreadyCorrect && correctSound) correctSound.play()
-    if (!correct && wrongSound) wrongSound.play()
+    if (correct_word && !alreadyCorrect && correctSound) correctSound.play()
+    if (!correct_word && wrongSound) wrongSound.play()
 
     /*const newResults = {
       ...results,
@@ -283,7 +283,7 @@ export default function Game() {
     }*/
    
     const newResults = [...results]; // agora é um array!
-    newResults[index] = { correct, selected: userAnswer };  
+    newResults[index] = { correct_word, selected: userAnswer };  
 
     setResults(newResults);
       
@@ -304,10 +304,10 @@ export default function Game() {
     }*/
 
     //const correctCount = Object.values(newResults).filter(r => r?.correct).length
-    const currentCorrectCount = Object.values(newResults).filter((r) => r?.correct).length;
+    const currentCorrectCount = Object.values(newResults).filter((r) => r?.correct_word).length;
     setCorrectAnswersCount(currentCorrectCount);
     const totalCount = images.length
-    const hasWrong = Object.values(newResults).some(r => r && !r.correct)
+    const hasWrong = Object.values(newResults).some(r => r && !r.correct_word)
 
     //saveProgress(correctCount);
 
@@ -514,7 +514,7 @@ export default function Game() {
                   animate={{ opacity: 1, y: 0 }} 
                   className="mt-2 flex items-center"
                 >
-                  {results[index].correct ? (
+                  {results[index].correct_word ? (
                     <>
                       <Check className="mr-2" color="green" />
                       <span className="font-medium" color="green">Correto!</span>

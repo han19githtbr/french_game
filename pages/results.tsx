@@ -8,7 +8,7 @@ import { FaMedal } from 'react-icons/fa';
 
 interface Progress {
   round: number;
-  correct: number;
+  correct_word: number;
 }
 
 
@@ -48,8 +48,8 @@ export default function ResultsPage() {
       const parsed: Progress[] = JSON.parse(saved);
       setProgress(parsed);
       if (parsed.length > 0) {
-        setCurrentProgress(parsed[parsed.length - 1].correct);
-        setIsFlashing(parsed[parsed.length - 1].correct === 4);
+        setCurrentProgress(parsed[parsed.length - 1].correct_word);
+        setIsFlashing(parsed[parsed.length - 1].correct_word === 4);
       } else {
         setCurrentProgress(0);
         setIsFlashing(false);
@@ -60,7 +60,7 @@ export default function ResultsPage() {
 
   useEffect(() => {
     if (progress.length > 0) {
-      const lastProgress = progress[progress.length - 1].correct;
+      const lastProgress = progress[progress.length - 1].correct_word;
       setCurrentProgress(lastProgress);
       setIsFlashing(lastProgress === 4);
     } else {
@@ -77,7 +77,7 @@ export default function ResultsPage() {
     setIsFlashing(false);
   };
 
-  const bestRound = progress.reduce((prev, curr) => (curr.correct > prev.correct ? curr : prev), { round: 0, correct: 0 })
+  const bestRound = progress.reduce((prev, curr) => (curr.correct_word > prev.correct_word ? curr : prev), { round: 0, correct_word: 0 })
 
   const progressPercentage = (currentProgress / 4) * 100;
 
@@ -119,13 +119,13 @@ export default function ResultsPage() {
             {progress.map((p, i) => (
               <div
                 key={i}
-                className={`bg-white text-black p-4 rounded-xl shadow-md flex justify-between items-center ${p.correct === bestRound.correct ? 'border-2 border-yellow-400' : ''}`}
+                className={`bg-white text-black p-4 rounded-xl shadow-md flex justify-between items-center ${p.correct_word === bestRound.correct_word ? 'border-2 border-yellow-400' : ''}`}
               >
                 <span>Jogada {p.round}</span>
                 <span>
-                  {p.correct} acertos
-                  {p.correct === 4 && <FaMedal color="gold" className="inline-block ml-2 medalha-brilho-ouro" />}
-                  {p.correct === 3 && <FaMedal color="silver" className="inline-block ml-2 medalha-brilho-prata" />}
+                  {p.correct_word} acertos
+                  {p.correct_word === 4 && <FaMedal color="gold" className="inline-block ml-2 medalha-brilho-ouro" />}
+                  {p.correct_word === 3 && <FaMedal color="silver" className="inline-block ml-2 medalha-brilho-prata" />}
                 </span>
               </div>
             ))}
@@ -154,7 +154,7 @@ export default function ResultsPage() {
           </div>
 
           <div className="text-center mt-8 text-lg">
-            🏆 Melhor desempenho: <strong>{bestRound.correct}</strong> acertos na jogada {bestRound.round}
+            🏆 Melhor desempenho: <strong>{bestRound.correct_word}</strong> acertos na jogada {bestRound.round}
           </div>
         </>
 
@@ -164,11 +164,11 @@ export default function ResultsPage() {
 }
 
 // Função para salvar progresso após cada rodada
-export const saveProgress = (correct: number) => {
+export const saveProgress = (correct_word: number) => {
     if (typeof window === 'undefined') return
     const saved = localStorage.getItem('progress')
     const parsed = saved ? JSON.parse(saved) : []
     const round = parsed.length + 1
-    parsed.push({ round, correct })
+    parsed.push({ round, correct_word })
     localStorage.setItem('progress', JSON.stringify(parsed))
 }

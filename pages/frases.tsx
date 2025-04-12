@@ -6,7 +6,7 @@ import { useRouter } from 'next/router'
 //import { Button } from '@/components/ui/button'
 import { Check, X, ChevronLeft } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { saveProgress } from './phrases_results'
+import { saveProgress } from './sentences_results'
 
 
 const themes = ['família', 'natureza', 'turismo', 'animais', 'tecnologia', 'gastronomia']
@@ -31,7 +31,7 @@ const animalSounds: Record<string, string> = {
 }
 
 type Result = {
-  correct_phrase: boolean
+  correct_answer: boolean
   selected: string
 }
 
@@ -229,14 +229,14 @@ export default function Frase() {
   const checkAnswer = (index: number, userAnswer: string) => {
     playAnimalSound(images[index].title)
     
-    const correct_phrase = images[index].title.toLowerCase() === userAnswer.toLowerCase()
-    const alreadyCorrect = results[index]?.correct_phrase
+    const correct_answer = images[index].title.toLowerCase() === userAnswer.toLowerCase()
+    const alreadyCorrect = results[index]?.correct_answer
   
-    if (correct_phrase && !alreadyCorrect && correctSound) correctSound.play()
-    if (!correct_phrase && wrongSound) wrongSound.play()
+    if (correct_answer && !alreadyCorrect && correctSound) correctSound.play()
+    if (!correct_answer && wrongSound) wrongSound.play()
 
     const newResults = [...results]; // agora é um array!
-    newResults[index] = { correct_phrase, selected: userAnswer };    
+    newResults[index] = { correct_answer, selected: userAnswer };    
 
     setResults(newResults);
 
@@ -250,10 +250,10 @@ export default function Frase() {
     }, 300)
       
 
-    const currentCorrectCount = Object.values(newResults).filter((r) => r?.correct_phrase).length;
+    const currentCorrectCount = Object.values(newResults).filter((r) => r?.correct_answer).length;
     setCorrectAnswersCount(currentCorrectCount);
     const totalCount = images.length
-    const hasWrong = Object.values(newResults).some(r => r && !r.correct_phrase)
+    const hasWrong = Object.values(newResults).some(r => r && !r.correct_answer)
 
     saveProgress(currentCorrectCount)
 
@@ -266,8 +266,8 @@ export default function Frase() {
       setShowCongrats(true)
       
       // Salvar progresso no localStorage
-      const prevProgress = JSON.parse(localStorage.getItem('progress_phrases') || '[]')
-      localStorage.setItem('progress_phrases', JSON.stringify([...prevProgress, { round, correct_phrase: currentCorrectCount }]))
+      const prevProgress = JSON.parse(localStorage.getItem('progress_answers') || '[]')
+      localStorage.setItem('progress_answers', JSON.stringify([...prevProgress, { round, correct_answer: currentCorrectCount }]))
         
       setTimeout(() => {
         const nextTheme = themes.filter(t => t !== theme)[Math.floor(Math.random() * (themes.length - 1))]
@@ -421,7 +421,7 @@ export default function Frase() {
                   animate={{ opacity: 1, y: 0 }} 
                   className="mt-2 flex items-center"
                 >
-                  {results[index].correct_phrase ? (
+                  {results[index].correct_answer ? (
                     <>
                       <Check className="mr-2" color="green" />
                       <span className="font-medium" color="green">Correto!</span>
