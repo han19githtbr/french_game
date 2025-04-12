@@ -365,7 +365,7 @@ export default function Frase() {
           className="w-64 bg-gradient-to-br border border-blue text-blue font-semibold py-3 px-6 rounded-md shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-lg cursor-pointer **text-center**"
           value={theme}
         >
-          <option value="">Escolha um tema</option>
+          <option value="">Escolha uma opção</option>
           {themes.map(t => (
             <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
           ))}
@@ -385,7 +385,7 @@ export default function Frase() {
 
       </div>
 
-      {theme && <h2 className="text-2xl font-semibold mt-4 mb-6 text-center">Tema: {theme}</h2>}
+      {theme && <h2 className="text-2xl font-semibold mt-4 mb-6 text-center">Opção: {theme}</h2>}
 
       {loading ? (
         <div className="text-center text-lg animate-pulse">🔍 Procurando imagens...</div>

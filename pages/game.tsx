@@ -433,7 +433,7 @@ export default function Game() {
         {/* Botão "Frases em Francês" */}
         <div className="w-64 flex flex-col items-center">
           {!isFrasesUnlocked && (
-            <p className="text-sm text-gray-400 mb-1 text-center">Completa 1 acerto para desbloquear este nível.</p>
+            <p className="text-sm text-gray-400 mb-1 text-center">Selecione uma opção e complete 1 acerto para desbloquear este nível.</p>
           )}
           <button
             className={`flex items-center justify-center py-3 px-6 rounded-md font-semibold transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75 ${
@@ -478,7 +478,7 @@ export default function Game() {
 
       </div>
 
-      {theme && <h2 className="text-2xl font-semibold mt-4 mb-6 text-center">Tema: {theme}</h2>}
+      {theme && <h2 className="text-2xl font-semibold mt-4 mb-6 text-center">Opção: {theme}</h2>}
 
       {loading ? (
         <div className="text-center text-lg animate-pulse">🔍 Procurando imagens...</div>

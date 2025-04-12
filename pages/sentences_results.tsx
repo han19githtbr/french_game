@@ -170,7 +170,7 @@ export default function ResultsPage() {
                 <XAxis dataKey="round" label={{ value: 'Jogada', position: 'insideBottomRight', offset: -5 }} />
                 <YAxis label={{ value: 'Acertos', angle: -90, position: 'insideLeft' }} allowDecimals={false} />
                 <Tooltip />
-                <Bar dataKey="correct_phrase" fill="#6366f1" />
+                <Bar dataKey="correct_answer" fill="#6366f1" />
               </BarChart>
             </ResponsiveContainer>
           </div>
