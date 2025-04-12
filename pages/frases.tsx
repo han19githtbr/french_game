@@ -392,7 +392,7 @@ export default function Frase() {
         <div className="text-center text-lg animate-pulse">🔍 Procurando imagens...</div>
       ) : (
         <>  
-          <div className="flex flex-wrap justify-center gap-6 w-full max-w-6xl mt-6">
+          <div className="flex flex-wrap justify-center gap-6 w-full max-w-6xl mt-6 cursor-pointer">
             {images.map((img, index) => (
               <motion.div 
                 key={index}
