@@ -42,6 +42,7 @@ type Player = {
 
 type ShowNotification = {
   name: string
+  type: 'join' | 'leave'
 } | null
 
 const lockMessageVariants = {
@@ -75,7 +76,7 @@ export default function Frase() {
   const [successSound, setSuccessSound] = useState<HTMLAudioElement | null>(null);
 
   const [playersOnline, setPlayersOnline] = useState<Player[]>([])
-  const [showNotification, setShowNotification] = useState<Player | null>(null)
+  const [showNotification, setShowNotification] = useState<ShowNotification | null>(null)
 
   const [ablyClient, setAblyClient] = useState<Ably.Realtime | null>(null)
 
@@ -136,16 +137,28 @@ export default function Frase() {
         setPlayersOnline(players)
       }
   
+      // ▶️ Quando alguém entra
       presenceChannel.presence.subscribe('enter', (member: any) => {
         const newPlayer = { name: member.data.name, clientId: member.clientId }
         if (member.clientId !== clientId) {
-          setShowNotification(newPlayer)
-          setTimeout(() => setShowNotification(null), 3000)
+          setShowNotification({ name: newPlayer.name, type: 'join' })
+          setTimeout(() => setShowNotification(null), 6000)
         }
         syncPresence()
       })
   
-      presenceChannel.presence.subscribe('leave', syncPresence)
+      // ⚡ Quando alguém sai
+      presenceChannel.presence.subscribe('leave', (member: any) => {
+        const leavingPlayer = { name: member.data.name, clientId: member.clientId }
+  
+        if (leavingPlayer.clientId !== clientId) {
+          setShowNotification({ name: leavingPlayer.name, type: 'leave' })
+          setTimeout(() => setShowNotification(null), 6000)
+        }
+  
+        syncPresence()
+      })
+    
       syncPresence()
     }
   
@@ -321,7 +334,11 @@ export default function Frase() {
             exit={{ opacity: 0, y: -30 }}
             className="fixed top-5 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-2xl shadow-xl z-50"
           >
-            🎮 {showNotification.name} entrou no jogo!
+          {showNotification.type === 'join' ? (
+            <>🎮 {showNotification.name} entrou no jogo!</>
+          ) : (
+            <>⚡ {showNotification.name} saiu do jogo.</>
+          )}
           </motion.div>
         )}
       </AnimatePresence>
