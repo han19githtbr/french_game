@@ -1,5 +1,9 @@
 // pages/results.tsx
 import { useEffect, useState } from 'react'
+import { createAblyClient } from '../lib/ably'
+import type * as Ably from 'ably'
+import { useSession, signOut } from 'next-auth/react'
+import { motion , AnimatePresence} from 'framer-motion'
 import { useRouter } from 'next/router'
 import { ChevronLeft, Trash2 } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
@@ -11,17 +15,109 @@ interface Progress {
   correct_word: number;
 }
 
+type Player = {
+  clientId: string
+  name: string
+}
+
+type ShowNotification = {
+  name: string
+  type: 'join' | 'leave'
+} | null
 
 export default function ResultsPage() {
   //const [progress, setProgress] = useState<{ round: number, correct: number }[]>([])
+  const { data: session, status } = useSession()
   const [progress, setProgress] = useState<Progress[]>([]);
   const [currentProgress, setCurrentProgress] = useState(0);
   const [isFlashing, setIsFlashing] = useState(false);
   
+  const [playersOnline, setPlayersOnline] = useState<Player[]>([])
+  const [showNotification, setShowNotification] = useState<ShowNotification | null>(null)
+
+  const [ablyClient, setAblyClient] = useState<Ably.Realtime | null>(null)
+
   const router = useRouter()
 
   const [isLogoutVisible, setIsLogoutVisible] = useState(false);
   const [logoutTimeoutId, setLogoutTimeoutId] = useState<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (status === 'unauthenticated') router.push('/')
+  }, [status])
+
+  useEffect(() => {
+    if (!session) return
+  
+    const clientId = session.user?.email || Math.random().toString(36).substring(2, 9)
+    const client = createAblyClient(clientId)
+    setAblyClient(client)
+  
+    return () => {
+      client.close()
+    }
+  }, [session])
+
+
+  useEffect(() => {
+    if (!ablyClient || !session) return
+  
+    const presenceChannel = ablyClient.channels.get('game-room')
+    const name = session.user?.name || 'Anônimo'
+    const clientId = ablyClient.auth.clientId!
+  
+    const onConnected = () => {
+      presenceChannel.presence.enter({ name })
+  
+      // Atualiza lista de quem está online
+      const syncPresence = async () => {
+        const members = await presenceChannel.presence.get()
+        const players = members.map((member: any) => ({
+          name: member.data.name,
+          clientId: member.clientId,
+        }))
+        setPlayersOnline(players)
+      }
+  
+      // ▶️ Quando alguém entra
+      presenceChannel.presence.subscribe('enter', (member: any) => {
+        const newPlayer = { name: member.data.name, clientId: member.clientId }
+        if (member.clientId !== clientId) {
+          setShowNotification({ name: newPlayer.name, type: 'join' })
+          setTimeout(() => setShowNotification(null), 6000)
+        }
+        syncPresence()
+      })
+  
+      // ⚡ Quando alguém sai
+      presenceChannel.presence.subscribe('leave', (member: any) => {
+        const leavingPlayer = { name: member.data.name, clientId: member.clientId }
+  
+        if (leavingPlayer.clientId !== clientId) {
+          setShowNotification({ name: leavingPlayer.name, type: 'leave' })
+          setTimeout(() => setShowNotification(null), 6000)
+        }
+  
+        syncPresence()
+      })
+    
+      syncPresence()
+    
+    }
+  
+    // Garante que o client está conectado
+    ablyClient.connection.once('connected', onConnected)
+  
+    return () => {
+      if (ablyClient.connection.state === 'connected') {
+        presenceChannel.presence.leave()
+      }
+    
+      presenceChannel.presence.unsubscribe()
+      ablyClient.connection.off('connected', onConnected)
+    }
+  }, [ablyClient, session])
+
 
   const handleMouseEnter = () => {
     clearTimeout(logoutTimeoutId as NodeJS.Timeout);
@@ -93,6 +189,23 @@ export default function ResultsPage() {
         
       </div>      
       
+      <AnimatePresence>
+        {showNotification && (
+          <motion.div
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -30 }}
+            className="fixed top-5 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-2xl shadow-xl z-50"
+          >
+          {showNotification.type === 'join' ? (
+            <>🎮 {showNotification.name} entrou no jogo!</>
+          ) : (
+            <>⚡ {showNotification.name} saiu do jogo.</>
+          )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <h1 className="text-3xl font-bold mt-30 mb-4 text-center">Seu Progresso</h1>
       
       {/* Barra de Progresso */}
