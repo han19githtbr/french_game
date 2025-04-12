@@ -52,6 +52,7 @@ const lockMessageVariants = {
 };
 
 export default function Frase() {
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const imageRefs = useRef<(HTMLDivElement | null)[]>([])
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -390,53 +391,83 @@ export default function Frase() {
       {loading ? (
         <div className="text-center text-lg animate-pulse">🔍 Procurando imagens...</div>
       ) : (
-        <div className="flex flex-wrap justify-center gap-6 w-full max-w-6xl mt-6">
-          {images.map((img, index) => (
-            <motion.div 
-              key={index}
-              ref={(el) => {
-                if (el) imageRefs.current[index] = el;
-              }}  
-              initial={{ opacity: 0, scale: 0.9 }} 
-              animate={{ opacity: 1, scale: 1 }} 
-              transition={{ duration: 0.3, delay: index * 0.1 }}
-              className="bg-transparent text-black p-4 rounded-2xl shadow-2xl w-[280px] transition transform hover:scale-105"
-            >
-              <img src={img.url} alt="imagem" className="w-full h-48 object-cover rounded-xl" />
-              <div className="mt-2">Escolha a frase correta:</div>
-              <select
-                className="w-full mt-1 p-2 rounded border border-white text-white bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                onChange={e => checkAnswer(index, e.target.value)}
-                disabled={!!results[index]}
+        <>  
+          <div className="flex flex-wrap justify-center gap-6 w-full max-w-6xl mt-6">
+            {images.map((img, index) => (
+              <motion.div 
+                key={index}
+                ref={(el) => {
+                  if (el) imageRefs.current[index] = el;
+                }} 
+                initial={{ opacity: 0, scale: 0.9 }} 
+                animate={{ opacity: 1, scale: 1 }} 
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+                className="bg-transparent text-black p-4 rounded-2xl flex-grow shadow-2xl max-w-[250px] transition transform hover:scale-105"
               >
-                <option value="">Selecione</option>
-                {img.options.map((opt: string, i: number) => (
-                  <option key={i} value={opt}>{opt}</option>
-                ))}
-              </select>
-
-              {results[index] && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }} 
-                  animate={{ opacity: 1, y: 0 }} 
-                  className="mt-2 flex items-center"
+                <img 
+                  src={img.url} 
+                  alt="imagem" 
+                  className="w-full h-48 object-cover rounded-xl" 
+                  onClick={() => setZoomedImage(img.url)}
+                />
+                <div className="mt-2">Escolha o título correto:</div>
+                <select
+                  className="w-full mt-1 p-2 rounded border border-white text-white bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                  onChange={e => checkAnswer(index, e.target.value)}
+                  disabled={!!results[index]}
                 >
-                  {results[index].correct_answer ? (
-                    <>
-                      <Check className="mr-2" color="green" />
-                      <span className="font-medium" color="green">Correto!</span>
-                    </>
-                  ) : (
-                    <>
-                      <X className="mr-2" color="red"/>
-                      <span className="font-medium" color="red">Errado. Resposta: {img.title}</span>
-                    </>
-                  )}
-                </motion.div>
-              )}
-            </motion.div>
-          ))}
-        </div>
+                  <option value="">Selecione</option>
+                  {img.options.map((opt: string, i: number) => (
+                    <option key={i} value={opt}>{opt}</option>
+                  ))}
+                </select>
+
+                {results[index] && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }} 
+                    animate={{ opacity: 1, y: 0 }} 
+                    className="mt-2 flex items-center"
+                  >
+                    {results[index].correct_answer ? (
+                      <>
+                        <Check className="mr-2" color="green" />
+                        <span className="font-medium" color="green">Correto!</span>
+                      </>
+                    ) : (
+                      <>
+                        <X className="mr-2" color="red"/>
+                        <span className="font-medium" color="red">Errado. Resposta: {img.title}</span>
+                      </>
+                    )}
+                  </motion.div>
+                )}
+              </motion.div>
+            ))}
+          </div>
+        
+          
+          <AnimatePresence>
+            {zoomedImage && (
+              <motion.div
+                className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setZoomedImage(null)}
+              >
+                <motion.img
+                  src={zoomedImage}
+                  alt="Zoom"
+                  className="max-w-[50%] max-h-[80vh] rounded-xl shadow-2xl"
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0.8 }}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </>
       )}
 
       {showCongrats && (
