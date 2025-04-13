@@ -16,21 +16,21 @@ import { io } from 'socket.io-client'
 const themes = ['família', 'natureza', 'turismo', 'animais', 'tecnologia', 'gastronomia']
 
 const animalSounds: Record<string, string> = {
-  'Chien': '/sounds/cachorro.mp3',
-  'Chat': '/sounds/gato.mp3',
-  'Éléphant': '/sounds/elefante.mp3',
-  'Lion': '/sounds/lion.mp3',
-  'Poisson': '/sounds/fish.mp3',
-  'Requin': '/sounds/fish.mp3',
-  'Serpent': '/sounds/snake.mp3',
-  'Ours': '/sounds/bear.mp3',
-  'Cheval': '/sounds/horse.mp3',
-  'Perroquet': '/sounds/parrot.mp3',
-  'Oiseau': '/sounds/bird.mp3',
-  'Crocodile': '/sounds/alligator.mp3',
-  'Gorille': '/sounds/gorila.mp3',
-  'Mouton': '/sounds/sheep.mp3',
-  'Canard': '/sounds/duck.mp3',
+  'Le Chien': '/sounds/cachorro.mp3',
+  'Le Chat': '/sounds/gato.mp3',
+  'L\'Éléphant': '/sounds/elefante.mp3',
+  'Le Lion': '/sounds/lion.mp3',
+  'Le Poisson': '/sounds/fish.mp3',
+  'Le Requin': '/sounds/fish.mp3',
+  'Le Serpent': '/sounds/snake.mp3',
+  'L\'Ours': '/sounds/bear.mp3',
+  'Le Cheval': '/sounds/horse.mp3',
+  'Le Perroquet': '/sounds/parrot.mp3',
+  'l\'Oiseau': '/sounds/bird.mp3',
+  'Le Crocodile': '/sounds/alligator.mp3',
+  'Un Gorille': '/sounds/gorila.mp3',
+  'Le Mouton': '/sounds/sheep.mp3',
+  'Le Canard': '/sounds/duck.mp3',
 }
 
 type Result = {

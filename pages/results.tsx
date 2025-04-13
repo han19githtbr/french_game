@@ -1,12 +1,13 @@
 // pages/results.tsx
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/router'
+import { ChevronLeft, Trash2 } from 'lucide-react'
 import { createAblyClient } from '../lib/ably'
 import type * as Ably from 'ably'
 import { useSession, signOut } from 'next-auth/react'
 import { motion , AnimatePresence} from 'framer-motion'
-import { useRouter } from 'next/router'
-import { ChevronLeft, Trash2 } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+//import { signOut, useSession } from 'next-auth/react'
 import { FaMedal } from 'react-icons/fa';
 
 
@@ -26,25 +27,57 @@ type ShowNotification = {
 } | null
 
 export default function ResultsPage() {
-  //const [progress, setProgress] = useState<{ round: number, correct: number }[]>([])
-  const { data: session, status } = useSession()
-  const [progress, setProgress] = useState<Progress[]>([]);
+  //const [progress_phrases, setProgressPhrases] = useState<{ round: number, correct_phrase: number }[]>([])
+  const [progress_answers, setProgressAnswers] = useState<Progress[]>([]);
   const [currentProgress, setCurrentProgress] = useState(0);
   const [isFlashing, setIsFlashing] = useState(false);
-  
-  const [playersOnline, setPlayersOnline] = useState<Player[]>([])
-  const [showNotification, setShowNotification] = useState<ShowNotification | null>(null)
-
-  const [ablyClient, setAblyClient] = useState<Ably.Realtime | null>(null)
-
+  //const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const router = useRouter()
 
   const [isLogoutVisible, setIsLogoutVisible] = useState(false);
   const [logoutTimeoutId, setLogoutTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
+  const [playersOnline, setPlayersOnline] = useState<Player[]>([])
+  const [showNotification, setShowNotification] = useState<ShowNotification | null>(null)
+
+  const [ablyClient, setAblyClient] = useState<Ably.Realtime | null>(null)
+
+  /*const handleLogout = async () => {
+    await signOut();
+    
+  };*/
+
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/')
   }, [status])
+
+  useEffect(() => {
+    const saved = localStorage.getItem('progress_answers')
+    if (saved) {
+      const parsed: Progress[] = JSON.parse(saved);
+      setProgressAnswers(parsed);
+      if (parsed.length > 0) {
+        setCurrentProgress(parsed[parsed.length - 1].correct_word);
+        setIsFlashing(parsed[parsed.length - 1].correct_word === 4);
+      } else {
+        setCurrentProgress(0);
+        setIsFlashing(false);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (progress_answers.length > 0) {
+      const lastProgress = progress_answers[progress_answers.length - 1].correct_word;
+      setCurrentProgress(lastProgress);
+      setIsFlashing(lastProgress === 4);
+    } else {
+      setCurrentProgress(0);
+      setIsFlashing(false);
+    }
+  }, [progress_answers]);
+
 
   useEffect(() => {
     if (!session) return
@@ -137,43 +170,15 @@ export default function ResultsPage() {
     clearTimeout(logoutTimeoutId as NodeJS.Timeout);
   };
 
-  
-  useEffect(() => {
-    const saved = localStorage.getItem('progress')
-    if (saved) {
-      const parsed: Progress[] = JSON.parse(saved);
-      setProgress(parsed);
-      if (parsed.length > 0) {
-        setCurrentProgress(parsed[parsed.length - 1].correct_word);
-        setIsFlashing(parsed[parsed.length - 1].correct_word === 4);
-      } else {
-        setCurrentProgress(0);
-        setIsFlashing(false);
-      }
-    }
-  }, []);
-
-
-  useEffect(() => {
-    if (progress.length > 0) {
-      const lastProgress = progress[progress.length - 1].correct_word;
-      setCurrentProgress(lastProgress);
-      setIsFlashing(lastProgress === 4);
-    } else {
-      setCurrentProgress(0);
-      setIsFlashing(false);
-    }
-  }, [progress]);
-
 
   const clearProgress = () => {
-    localStorage.removeItem('progress');
-    setProgress([]);
+    localStorage.removeItem('progress_answers');
+    setProgressAnswers([]);
     setCurrentProgress(0);
     setIsFlashing(false);
   };
 
-  const bestRound = progress.reduce((prev, curr) => (curr.correct_word > prev.correct_word ? curr : prev), { round: 0, correct_word: 0 })
+  const bestRound = progress_answers.reduce((prev, curr) => (curr.correct_word > prev.correct_word ? curr : prev), { round: 0, correct_word: 0 })
 
   const progressPercentage = (currentProgress / 4) * 100;
 
@@ -186,7 +191,26 @@ export default function ResultsPage() {
           className="fixed flex border border-blue items-center bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75 mt-10 cursor-pointer">
           <ChevronLeft className="mr-2" color="blue" /> Voltar ao jogo
         </button>
-        
+        {/**{session?.user && (
+          <div
+            className="fixed right-4 z-50"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          >
+            <div className="flex items-center gap-2 cursor-pointer mt-16">
+              <span className="text-white font-medium hidden sm:inline">{session.user.name}</span>
+              <img src={session.user.image || ''} alt="Avatar" className="w-8 h-8 rounded-full border border-white" />
+            </div>
+            <div
+              className={`absolute border border-blue right-0 mt-2 text-black py-2 px-4 rounded shadow-lg z-10 ${
+                isLogoutVisible ? 'block' : 'hidden'
+              }`}
+              onMouseEnter={handleLogoutMouseEnter} // Impede o desaparecimento ao entrar no botão
+            >
+              <button onClick={handleLogout} className="hover:text-red-600 cursor-pointer">Logout</button>
+            </div>
+          </div>
+        )}**/}
       </div>      
       
       <AnimatePresence>
@@ -224,23 +248,23 @@ export default function ResultsPage() {
         <p className="text-sm text-gray-400 mt-1 text-center">Progresso para a Medalha de Ouro</p>
       </div>
 
-      {progress.length === 0 ? (
+      {progress_answers.length === 0 ? (
         <p className="text-center text-gray-400">Você ainda não fez nenhuma jogada.</p>
       ) : (
         <>
           <div className="max-w-md mx-auto space-y-4 mb-8">
-            {progress.map((p, i) => (
+            {progress_answers.map((p, i) => (
               <div
-                key={i}
-                className={`bg-white text-black p-4 rounded-xl shadow-md flex justify-between items-center ${p.correct_word === bestRound.correct_word ? 'border-2 border-yellow-400' : ''}`}
-              >
-                <span>Jogada {p.round}</span>
-                <span>
-                  {p.correct_word} acertos
-                  {p.correct_word === 4 && <FaMedal color="gold" className="inline-block ml-2 medalha-brilho-ouro" />}
-                  {p.correct_word === 3 && <FaMedal color="silver" className="inline-block ml-2 medalha-brilho-prata" />}
-                </span>
-              </div>
+              key={i}
+              className={`bg-white text-black p-4 rounded-xl shadow-md flex justify-between items-center ${p.correct_word === bestRound.correct_word ? 'border-2 border-yellow-400' : ''}`}
+            >
+              <span>Jogada {p.round}</span>
+              <span>
+                {p.correct_word} acertos
+                {p.correct_word === 4 && <FaMedal color="gold" className="inline-block ml-2 medalha-brilho-ouro" />}
+                {p.correct_word === 3 && <FaMedal color="silver" className="inline-block ml-2 medalha-brilho-prata" />}
+              </span>
+            </div>
             ))}
           </div>
 
@@ -256,12 +280,12 @@ export default function ResultsPage() {
           <h2 className="text-2xl font-semibold text-center mb-4">Estatísticas de Acertos</h2>
           <div className="h-72 w-full max-w-3xl mx-auto">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={progress}>
+              <BarChart data={progress_answers}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="round" label={{ value: 'Jogada', position: 'insideBottomRight', offset: -5 }} />
                 <YAxis label={{ value: 'Acertos', angle: -90, position: 'insideLeft' }} allowDecimals={false} />
                 <Tooltip />
-                <Bar dataKey="correct_word" fill="#6366f1" />
+                <Bar dataKey="correct_answer" fill="#6366f1" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -276,12 +300,13 @@ export default function ResultsPage() {
   )
 }
 
+
 // Função para salvar progresso após cada rodada
 export const saveProgress = (correct_word: number) => {
     if (typeof window === 'undefined') return
-    const saved = localStorage.getItem('progress')
+    const saved = localStorage.getItem('progress_answers')
     const parsed = saved ? JSON.parse(saved) : []
     const round = parsed.length + 1
     parsed.push({ round, correct_word })
-    localStorage.setItem('progress', JSON.stringify(parsed))
+    localStorage.setItem('progress_answers', JSON.stringify(parsed))
 }
