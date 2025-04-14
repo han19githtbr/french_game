@@ -69,5 +69,31 @@ npm cache clean --force
 npm install canvas-confetti
 
 
-## Para 
+## Para deixar que o vercel faça o deploy 
 
+"C:\Users\w540 1\AppData\Roaming\npm\vercel" --prod
+
+## fazer login no vercel
+
+vercel login
+
+## O Ably é uma plataforma de comunicação em tempo real que você está usando no seu projeto para:
+
+✅ Casos de uso no seu projeto:
+
+Detectar usuários online em tempo real no jogo de francês.
+
+Enviar e receber notificações entre os usuários enquanto jogam.
+
+
+## Vantagens do Ably:
+
+1-Baixíssima latência
+
+2-Escalável
+
+3-Confiável (usado por empresas grandes como   
+  HubSpot, Toyota etc.)
+
+4-SDKs para vários ambientes (Node, browser, 
+  mobile)
