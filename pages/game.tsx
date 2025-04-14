@@ -254,26 +254,7 @@ export default function Game() {
           alert(`❌ ${fromName} negou seu pedido de bate-papo.`);
         }
       });
-    
-      const handleChatMessage = (message: Ably.Message) => {
-        const { sender, text, timestamp } = message.data;
-        const chatId = message.name?.split(':')[1];
-        if (chatId && activeChats[chatId]) {
-          setActiveChats((prev) => ({
-            ...prev,
-            [chatId]: [...(prev[chatId] || []), { sender, text, timestamp }],
-          }));
-        }
-      };
-    
-      const handleTypingStatus = (message: Ably.Message) => {
-        const isUserTyping = message.data.isTyping;
-        const otherClientId = message.clientId;
-        if (otherClientId && isChatBubbleOpen === otherClientId) {
-          setTypingIndicator((prev) => ({ ...prev, [otherClientId]: isUserTyping }));
-        }
-      };
-    
+              
       for (const chatId in activeChats) {
         ablyClient.channels.get(`<span class="math-inline">\{chatChannelPrefix\}</span>{chatId}`).subscribe('message', handleChatMessage);
         const otherClientId = chatId;
