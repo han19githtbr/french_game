@@ -369,24 +369,29 @@ export default function ResultsPage() {
       </div>      
       
       <div className="bg-gradient-to-br from-slate-800 to-slate-900 text-white flex flex-col items-center justify-center relative mt-3 mb-3">
-        <h1 className="text-2xl font-bold mb-4">Jogadores Online</h1>
-        <ul className="space-y-2 w-full max-w-md">
+        <ul className="space-y-3 w-full max-w-md">
           {playersOnline.map((player) => (
             <li
               key={player.clientId}
-              className="bg-slate-700 rounded-md p-3 flex items-center justify-between"
+              className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg p-4 flex items-center justify-between shadow-md border border-gray-600 transition duration-300 ease-in-out transform hover:scale-105"
             >
-              <span className="font-semibold">{player.name}</span>
+              <div className="flex items-center">
+                <div className="w-2 h-2 rounded-full bg-green-400 mr-3 animate-pulse" /> {/* Indicador de online */}
+                <span className="font-bold text-lg text-white">{player.name}</span>
+              </div>
               <button
                 onClick={() => handleRequestChat(player)}
-                className="bg-blue-500 hover:bg-blue-600 text-white rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-400"
               >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
                 Bate-papo
               </button>
             </li>
           ))}
         </ul>
-        {/* Outros elementos do seu componente */}
+        
       </div>    
 
       <AnimatePresence>
@@ -406,30 +411,29 @@ export default function ResultsPage() {
         )}
       </AnimatePresence>
 
-      {/* Modal de Pedido de Bate-papo */}
       {chatRequestsReceived.length > 0 && (
-        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-slate-800 rounded-md p-6 max-w-md w-full">
-            <h2 className="text-lg font-semibold mb-4">Pedidos de Bate-papo</h2>
-            <ul className="space-y-2">
+        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 flex justify-center items-center z-50 backdrop-blur-sm">
+          <div className="bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl p-8 max-w-md w-full shadow-lg border-2 border-gray-600 animate__animated animate__fadeIn">
+            <h2 className="text-xl font-bold text-yellow-400 mb-6 glow-text">🕹️ Pedidos de Bate-papo Recebidos!</h2>
+            <ul className="space-y-4">
               {chatRequestsReceived.map((request) => (
                 <li
                   key={request.fromClientId}
-                  className="bg-slate-700 rounded-md p-3 flex items-center justify-between"
+                  className="bg-gray-900 rounded-md p-4 flex items-center justify-between border-b border-gray-700"
                 >
-                  <span>{request.fromName} quer conversar com você!</span>
-                  <div className="flex space-x-2">
+                  <span className="text-white font-semibold">{request.fromName}</span>
+                  <div className="flex space-x-3">
                     <button
                       onClick={() => handleAcceptChatRequest(request)}
-                      className="bg-green-500 hover:bg-green-600 text-white rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                      className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400"
                     >
-                      <Check className="h-4 w-4" />
+                      <Check className="h-5 w-5" /> Aceitar
                     </button>
                     <button
                       onClick={() => handleRejectChatRequest(request)}
-                      className="bg-red-500 hover:bg-red-600 text-white rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                      className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-400"
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-5 w-5" /> Recusar
                     </button>
                   </div>
                 </li>
@@ -439,11 +443,10 @@ export default function ResultsPage() {
         </div>
       )}
 
-      {/* Bolha de Bate-papo */}
       {isChatBubbleOpen && (
-        <div className="fixed bottom-6 right-6 bg-slate-700 rounded-lg shadow-md max-w-sm w-full flex flex-col z-50">
-          <div className="bg-slate-800 p-3 rounded-t-lg flex justify-between items-center">
-            <span className="font-semibold">{chatPartnerName}</span>
+        <div className="fixed bottom-4 left-4 z-50 max-w-sm w-full flex flex-col shadow-lg rounded-lg bg-gradient-to-br from-gray-800 to-gray-700 border-2 border-gray-600 animate__animated animate__slideInUp">
+          <div className="bg-gray-900 p-3 rounded-t-lg flex justify-between items-center border-b border-gray-700">
+            <span className="font-bold text-cyan-400 glow-text">{chatPartnerName}</span>
             <button onClick={closeChatBubble} className="text-gray-400 hover:text-gray-300 focus:outline-none">
               <X className="h-5 w-5" />
             </button>
@@ -452,34 +455,36 @@ export default function ResultsPage() {
             {activeChats[isChatBubbleOpen]?.map((msg, index) => (
               <div
                 key={index}
-                className={`mb-2 p-2 rounded-md ${
-                  msg.sender === playerName ? 'bg-blue-600 text-right text-white self-end' : 'bg-slate-600 text-left'
+                className={`mb-2 p-3 rounded-md ${
+                  msg.sender === playerName
+                    ? 'bg-blue-700 text-right text-white self-end shadow-md'
+                    : 'bg-gray-800 text-left text-white shadow-md'
                 }`}
               >
-                <span className="text-xs italic">{msg.sender}:</span>
-                <p>{msg.text}</p>
+                <span className="text-xs italic text-gray-300">{msg.sender}:</span>
+                <p className="font-medium">{msg.text}</p>
               </div>
             ))}
             {typingIndicator[isChatBubbleOpen] && (
               <div className="text-left italic text-gray-400">
-                <DotLoader color="#a0aec0" size={15} />
+                <DotLoader color="#a0aec0" size={15} /> <span className="ml-1">Digitando...</span>
               </div>
             )}
           </div>
-          <div className="p-3 border-t border-slate-600 flex items-center">
+          <div className="p-3 border-t border-gray-700 flex items-center">
             <input
               type="text"
-              className="bg-slate-800 text-white rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
-              placeholder="Mensagem..."
+              className="bg-gray-900 text-white rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-cyan-400 shadow-inner"
+              placeholder="Enviar mensagem..."
               value={chatInput}
               onChange={handleInputChange}
               onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
             />
             <button
               onClick={handleSendMessage}
-              className="bg-blue-500 hover:bg-blue-600 text-white rounded-md px-3 py-2 ml-2 focus:outline-none focus:ring-2 focus:focus:ring-blue-400"
+              className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-md ml-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400"
             >
-                Enviar
+              Enviar
             </button>
           </div>
         </div>

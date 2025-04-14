@@ -104,6 +104,7 @@ export default function Game() {
   const [showNotification, setShowNotification] = useState<ShowNotification | null>(null)
 
   const [ablyClient, setAblyClient] = useState<Ably.Realtime | null>(null)
+  const [clientId, setClientId] = useState<string | null>(null);
 
   const [chatRequestsReceived, setChatRequestsReceived] = useState<ChatRequest[]>([]);
   const [activeChats, setActiveChats] = useState<{ [clientId: string]: ChatMessage[] }>({});
@@ -113,7 +114,7 @@ export default function Game() {
   const [isTyping, setIsTyping] = useState(false);
   const [typingIndicator, setTypingIndicator] = useState<{ [clientId: string]: boolean }>({});
  
-  const clientId = ablyClient?.auth.clientId;
+  //const clientId = ablyClient?.auth.clientId;
   const playerName = session?.user?.name || 'Anônimo';
   
   useEffect(() => {
@@ -176,20 +177,35 @@ export default function Game() {
     const generatedClientId = session.user?.email || Math.random().toString(36).substring(2, 9)
     const client = createAblyClient(generatedClientId)
     setAblyClient(client);
+
+    setClientId(generatedClientId);
   
     return () => {
       client.close()
     }
   }, [session]);
 
+
+  // [ACRESCENTADO] Função para gerar um nome de canal de chat único para um par de usuários
+  const getChatChannelName = (clientId1: string, clientId2: string) => {
+    const sortedIds = [clientId1, clientId2].sort();
+    return `chat:<span class="math-inline">\{sortedIds\[0\]\}\-</span>{sortedIds[1]}`;
+  };
+
+  // [ACRESCENTADO] Função para gerar um nome de canal de digitação único para um par de usuários
+  const getTypingChannelName = (clientId1: string, clientId2: string) => {
+    const sortedIds = [clientId1, clientId2].sort();
+    return `typing:<span class="math-inline">\{sortedIds\[0\]\}\-</span>{sortedIds[1]}`;
+  };
+
   // Move as declarações das funções para fora do useEffect
   const handleChatMessage = (message: Ably.Message) => {
     const { sender, text, timestamp } = message.data;
-    const chatId = message.name?.split(':')[1];
-    if (chatId && activeChats[chatId]) {
+    const channelName = message.name; // [CORRIGIDO] O nome do canal contém os IDs dos participantes
+    if (channelName && activeChats[channelName]) {
       setActiveChats((prev) => ({
         ...prev,
-        [chatId]: [...(prev[chatId] || []), { sender, text, timestamp }],
+        [channelName]: [...(prev[channelName] || []), { sender, text, timestamp }],
       }));
     }
   };
@@ -197,7 +213,8 @@ export default function Game() {
   const handleTypingStatus = (message: Ably.Message) => {
     const isUserTyping = message.data.isTyping;
     const otherClientId = message.clientId;
-    if (otherClientId && isChatBubbleOpen === otherClientId) {
+    // [CORRIGIDO] Verifica se otherClientId é definido antes de usá-lo
+    if (otherClientId && isChatBubbleOpen && isChatBubbleOpen.includes(otherClientId) && clientId !== otherClientId) {
       setTypingIndicator((prev) => ({ ...prev, [otherClientId]: isUserTyping }));
     }
   };
@@ -207,11 +224,8 @@ export default function Game() {
   
     const presenceChannel = ablyClient.channels.get('game-room')
     const name = session.user?.name || 'Anônimo'
-    const currentClientId = ablyClient.auth.clientId!
-    const chatRequestChannel = ablyClient.channels.get(`chat-requests:${currentClientId}`)
-    const chatChannelPrefix = 'chat:';
-    const typingChannelPrefix = 'typing:';
-
+    const currentClientId = clientId!
+    
     const onConnected = async () => {
       await presenceChannel.presence.enter({ name });
       await syncPresence();
@@ -238,6 +252,7 @@ export default function Game() {
         syncPresence();
       });
     
+      const chatRequestChannel = ablyClient.channels.get(`chat-requests:${currentClientId}`);
       chatRequestChannel.subscribe('request', (message: Ably.Message) => {
         const request: ChatRequest = message.data;
         setChatRequestsReceived((prev) => [...prev, request]);
@@ -247,85 +262,112 @@ export default function Game() {
         const { accepted, fromClientId, fromName } = message.data;
         if (accepted) {
           alert(`🤝 ${fromName} aceitou seu pedido de bate-papo!`);
-          setActiveChats((prev) => ({ ...prev, [fromClientId]: [] }));
-          setIsChatBubbleOpen(fromClientId);
+          const chatChannelName = getChatChannelName(currentClientId, fromClientId);
+          setActiveChats((prev) => ({ ...prev, [chatChannelName]: [] }));
+          setIsChatBubbleOpen(chatChannelName);
           setChatPartnerName(fromName);
+          // [ACRESCENTADO] Inscrever-se no canal de mensagens quando o chat é aceito
+          ablyClient.channels.get(chatChannelName).subscribe('message', handleChatMessage);
+          // [ACRESCENTADO] Inscrever-se no canal de digitação quando o chat é aceito
+          ablyClient.channels.get(getTypingChannelName(currentClientId, fromClientId)).subscribe('typing', handleTypingStatus);
         } else {
           alert(`❌ ${fromName} negou seu pedido de bate-papo.`);
         }
       });
               
-      for (const chatId in activeChats) {
+      /*for (const chatId in activeChats) {
         ablyClient.channels.get(`<span class="math-inline">\{chatChannelPrefix\}</span>{chatId}`).subscribe('message', handleChatMessage);
         const otherClientId = chatId;
         ablyClient.channels.get(`<span class="math-inline">\{typingChannelPrefix\}</span>{otherClientId}`).subscribe('typing', handleTypingStatus);
-      }
+      }*/
     };
 
     ablyClient.connection.once('connected', onConnected);
 
     return () => {
-      if (ablyClient.connection.state === 'connected') {
+      if (ablyClient?.connection?.state === 'connected') {
         presenceChannel.presence.leave();
       }
       presenceChannel.presence.unsubscribe();
-      chatRequestChannel.unsubscribe('request');
-      chatRequestChannel.unsubscribe('response');
-      for (const chatId in activeChats) {
-        ablyClient.channels.get(`<span class="math-inline">\{chatChannelPrefix\}</span>{chatId}`).unsubscribe('message', handleChatMessage);
-        const otherClientId = chatId;
-        ablyClient.channels.get(`<span class="math-inline">\{typingChannelPrefix\}</span>{otherClientId}`).unsubscribe('typing', handleTypingStatus);
+      const chatRequestChannel = ablyClient.channels.get(`chat-requests:${currentClientId}`);
+      chatRequestChannel?.unsubscribe('request');
+      chatRequestChannel?.unsubscribe('response');
+      // [CORRIGIDO] Cancelar a inscrição de todos os canais de chat ativos ao desmontar
+      for (const channelName in activeChats) {
+        ablyClient?.channels.get(channelName)?.unsubscribe('message', handleChatMessage);
+        // [ACRESCENTADO] Extrai os clientIds do nome do canal para cancelar a inscrição do canal de digitação
+        const ids = channelName.split(':')[1]?.split('-');
+        if (ids && ids.length === 2) {
+          const typingChannelName = getTypingChannelName(ids[0], ids[1]);
+          ablyClient?.channels.get(typingChannelName)?.unsubscribe('typing', handleTypingStatus);
+        }
       }
       ablyClient.connection.off('connected', onConnected);
     };
-  }, [ablyClient, session, activeChats, isChatBubbleOpen]);
+  }, [ablyClient, session, clientId]);
     
   // Atualiza lista de quem está online
   const syncPresence = async () => {
-      if (!ablyClient) return;
-      const presenceChannel = ablyClient.channels.get('game-room');
-      const members = await presenceChannel.presence.get();
-      const currentClientId = ablyClient.auth.clientId!;
-      const players = members
-        .map((member: any) => ({
-          name: member.data.name,
-          clientId: member.clientId,
-        }))
-        .filter((player) => player.clientId !== currentClientId);
-      setPlayersOnline(players);
+    if (!ablyClient) return;
+    const presenceChannel = ablyClient.channels.get('game-room');
+    const members = await presenceChannel.presence.get();
+    const currentClientId = clientId!;
+    const players = members
+      .map((member: any) => ({
+        name: member.data.name,
+        clientId: member.clientId,
+      }))
+      .filter((player) => player.clientId !== currentClientId);
+    setPlayersOnline(players);
   };
         
       
   //syncPresence()
   
   const handleRequestChat = (otherPlayer: Player) => {
-    if (!ablyClient) return;
+    if (!ablyClient || !clientId) return;
     const chatRequestChannel = ablyClient.channels.get(`chat-requests:${otherPlayer.clientId}`);
     chatRequestChannel.publish('request', { fromClientId: clientId, fromName: playerName });
     alert(`⏳ Pedido de bate-papo enviado para ${otherPlayer.name}. Aguardando resposta...`);
   };
   
   const handleAcceptChatRequest = (request: ChatRequest) => {
-    if (!ablyClient) return;
+    if (!ablyClient || !clientId) return;
     const responseChannel = ablyClient.channels.get(`chat-requests:${request.fromClientId}`);
     responseChannel.publish('response', { accepted: true, fromClientId: clientId, fromName: playerName });
-    setActiveChats((prev) => ({ ...prev, [request.fromClientId]: [] }));
-    setIsChatBubbleOpen(request.fromClientId);
+    const chatChannelName = getChatChannelName(clientId, request.fromClientId);
+    setActiveChats((prev) => ({ ...prev, [chatChannelName]: [] }));
+    setIsChatBubbleOpen(chatChannelName);
     setChatPartnerName(request.fromName);
     setChatRequestsReceived((prev) => prev.filter((req) => req.fromClientId !== request.fromClientId));
+    // [ACRESCENTADO] Abrir a bolha de chat após a aceitação
+    openChatBubble({ clientId: request.fromClientId, name: request.fromName });
+    // A inscrição nos canais de mensagens e digitação agora é feita dentro de openChatBubble
   };
 
   const handleRejectChatRequest = (request: ChatRequest) => {
-    if (!ablyClient) return;
+    if (!ablyClient || !clientId) return;
     const responseChannel = ablyClient.channels.get(`chat-requests:${request.fromClientId}`);
     responseChannel.publish('response', { accepted: false, fromClientId: clientId, fromName: playerName });
     setChatRequestsReceived((prev) => prev.filter((req) => req.fromClientId !== request.fromClientId));
   };
 
   const openChatBubble = (player: Player) => {
-    setActiveChats((prev) => prev[player.clientId] ? prev : { ...prev, [player.clientId]: [] });
-    setIsChatBubbleOpen(player.clientId);
+    if (!clientId || !ablyClient) { // [CORRIGIDO] Verifica se clientId e ablyClient são null
+      return;
+    }
+    const chatChannelName = getChatChannelName(clientId, player.clientId);
+    setActiveChats((prev) => prev[chatChannelName] ? prev : { ...prev, [chatChannelName]: [] });
+    setIsChatBubbleOpen(chatChannelName);
     setChatPartnerName(player.name);
+    // [ACRESCENTADO] Inscrever-se no canal de mensagens ao abrir a bolha
+    // [CORRIGIDO] A verificação de existência do canal não é necessária antes de se inscrever
+    ablyClient.channels.get(chatChannelName).subscribe('message', handleChatMessage);
+
+    // [ACRESCENTADO] Inscrever-se no canal de digitação ao abrir a bolha
+    // [CORRIGIDO] A verificação de existência do canal não é necessária antes de se inscrever
+    const typingChannelName = getTypingChannelName(clientId, player.clientId);
+    ablyClient.channels.get(typingChannelName).subscribe('typing', handleTypingStatus);
   };
 
   const closeChatBubble = () => {
@@ -335,8 +377,8 @@ export default function Game() {
   };
 
   const handleSendMessage = () => {
-    if (!ablyClient || !isChatBubbleOpen || !chatInput.trim()) return;
-    const chatChannel = ablyClient.channels.get(`chat:${isChatBubbleOpen}`);
+    if (!ablyClient || !isChatBubbleOpen || !chatInput.trim() || !clientId) return;
+    const chatChannel = ablyClient.channels.get(isChatBubbleOpen);
     chatChannel.publish('message', { sender: playerName, text: chatInput, timestamp: Date.now() });
     setActiveChats((prev) => ({
       ...prev,
@@ -355,13 +397,12 @@ export default function Game() {
     if (e.target.value.trim() && !isTyping) {
       setIsTyping(true);
       publishTypingStatus(true);
-      // Defina um timeout para parar de mostrar "digitando" se o usuário parar de digitar por um tempo
       setTimeout(() => {
         if (isTyping && e.target.value === chatInput) {
           setIsTyping(false);
           publishTypingStatus(false);
         }
-      }, 1500); // Tempo em milissegundos para considerar que parou de digitar
+      }, 1500);
     } else if (!e.target.value.trim() && isTyping) {
       setIsTyping(false);
       publishTypingStatus(false);
@@ -369,12 +410,22 @@ export default function Game() {
   };
 
   const publishTypingStatus = (typing: boolean) => {
-    if (!ablyClient || !isChatBubbleOpen) return;
-    const typingChannel = ablyClient.channels.get(`typing:${isChatBubbleOpen}`);
-    typingChannel.publish('typing', { isTyping: typing });
+    if (!ablyClient || !isChatBubbleOpen || !clientId) return;
+    // [CORRIGIDO] Envia o status de digitação para o canal correto baseado no chat aberto
+    const otherClientId = isChatBubbleOpen.split(':')[1]?.split('-')?.find(id => id !== clientId);
+    if (otherClientId) {
+      const typingChannel = ablyClient.channels.get(getTypingChannelName(clientId, otherClientId));
+      typingChannel.publish('typing', { isTyping: typing });
+    }
   };
 
-  
+  // [ACRESCENTADO] Estado para armazenar o clientId assim que estiver disponível
+  useEffect(() => {
+    if (ablyClient) {
+      setClientId(ablyClient.auth.clientId);
+    }
+  }, [ablyClient]);
+
   const handleMouseEnter = () => {
     clearTimeout(logoutTimeoutId as NodeJS.Timeout); // Limpa qualquer timeout pendente
     setIsLogoutVisible(true);
@@ -504,7 +555,6 @@ export default function Game() {
       audio.play().catch(err => console.error('Erro ao tocar som do animal:', err))
     }
   }
-    
   
   const handleFrasesClick = () => {
     if (isFrasesUnlocked) {
@@ -544,17 +594,23 @@ export default function Game() {
       )}
 
       <h1 className="text-2xl font-bold mb-4">Jogadores Online</h1>
-      <ul className="space-y-2 w-full max-w-md">
+      <ul className="space-y-3 w-full max-w-md">
         {playersOnline.map((player) => (
           <li
             key={player.clientId}
-            className="bg-slate-700 rounded-md p-3 flex items-center justify-between"
+            className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg p-4 flex items-center justify-between shadow-md border border-gray-600 transition duration-300 ease-in-out transform hover:scale-105"
           >
-            <span className="font-semibold">{player.name}</span>
+            <div className="flex items-center">
+              <div className="w-2 h-2 rounded-full bg-green-400 mr-3 animate-pulse" /> {/* Indicador de online */}
+              <span className="font-bold text-lg text-white">{player.name}</span>
+            </div>
             <button
               onClick={() => handleRequestChat(player)}
-              className="bg-blue-500 hover:bg-blue-600 text-white rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-400"
             >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+              </svg>
               Bate-papo
             </button>
           </li>
@@ -578,30 +634,29 @@ export default function Game() {
         )}
       </AnimatePresence>
       
-      {/* Modal de Pedido de Bate-papo */}
       {chatRequestsReceived.length > 0 && (
-        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-slate-800 rounded-md p-6 max-w-md w-full">
-            <h2 className="text-lg font-semibold mb-4">Pedidos de Bate-papo</h2>
-            <ul className="space-y-2">
+        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 flex justify-center items-center z-50 backdrop-blur-sm">
+          <div className="bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl p-8 max-w-md w-full shadow-lg border-2 border-gray-600 animate__animated animate__fadeIn">
+            <h2 className="text-xl font-bold text-yellow-400 mb-6 glow-text">🕹️ Pedidos de Bate-papo Recebidos!</h2>
+            <ul className="space-y-4">
               {chatRequestsReceived.map((request) => (
                 <li
                   key={request.fromClientId}
-                  className="bg-slate-700 rounded-md p-3 flex items-center justify-between"
+                  className="bg-gray-900 rounded-md p-4 flex items-center justify-between border-b border-gray-700"
                 >
-                  <span>{request.fromName} quer conversar com você!</span>
-                  <div className="flex space-x-2">
+                  <span className="text-white font-semibold">{request.fromName}</span>
+                  <div className="flex space-x-3">
                     <button
                       onClick={() => handleAcceptChatRequest(request)}
-                      className="bg-green-500 hover:bg-green-600 text-white rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                      className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400"
                     >
-                      <Check className="h-4 w-4" />
+                      <Check className="h-5 w-5" /> Aceitar
                     </button>
                     <button
                       onClick={() => handleRejectChatRequest(request)}
-                      className="bg-red-500 hover:bg-red-600 text-white rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                      className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-400"
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-5 w-5" /> Recusar
                     </button>
                   </div>
                 </li>
@@ -611,11 +666,10 @@ export default function Game() {
         </div>
       )}
 
-      {/* Bolha de Bate-papo */}
       {isChatBubbleOpen && (
-        <div className="fixed bottom-6 right-6 bg-slate-700 rounded-lg shadow-md max-w-sm w-full flex flex-col z-50">
-          <div className="bg-slate-800 p-3 rounded-t-lg flex justify-between items-center">
-            <span className="font-semibold">{chatPartnerName}</span>
+        <div className="fixed bottom-4 left-4 z-50 max-w-sm w-full flex flex-col shadow-lg rounded-lg bg-gradient-to-br from-gray-800 to-gray-700 border-2 border-gray-600 animate__animated animate__slideInUp">
+          <div className="bg-gray-900 p-3 rounded-t-lg flex justify-between items-center border-b border-gray-700">
+            <span className="font-bold text-cyan-400 glow-text">{chatPartnerName}</span>
             <button onClick={closeChatBubble} className="text-gray-400 hover:text-gray-300 focus:outline-none">
               <X className="h-5 w-5" />
             </button>
@@ -624,34 +678,36 @@ export default function Game() {
             {activeChats[isChatBubbleOpen]?.map((msg, index) => (
               <div
                 key={index}
-                className={`mb-2 p-2 rounded-md ${
-                  msg.sender === playerName ? 'bg-blue-600 text-right text-white self-end' : 'bg-slate-600 text-left'
+                className={`mb-2 p-3 rounded-md ${
+                  msg.sender === playerName
+                    ? 'bg-blue-700 text-right text-white self-end shadow-md'
+                    : 'bg-gray-800 text-left text-white shadow-md'
                 }`}
               >
-                <span className="text-xs italic">{msg.sender}:</span>
-                <p>{msg.text}</p>
+                <span className="text-xs italic text-gray-300">{msg.sender}:</span>
+                <p className="font-medium">{msg.text}</p>
               </div>
             ))}
             {typingIndicator[isChatBubbleOpen] && (
               <div className="text-left italic text-gray-400">
-                <DotLoader color="#a0aec0" size={15} />
+                <DotLoader color="#a0aec0" size={15} /> <span className="ml-1">Digitando...</span>
               </div>
             )}
           </div>
-          <div className="p-3 border-t border-slate-600 flex items-center">
+          <div className="p-3 border-t border-gray-700 flex items-center">
             <input
               type="text"
-              className="bg-slate-800 text-white rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
-              placeholder="Mensagem..."
+              className="bg-gray-900 text-white rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-cyan-400 shadow-inner"
+              placeholder="Enviar mensagem..."
               value={chatInput}
               onChange={handleInputChange}
               onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
             />
             <button
               onClick={handleSendMessage}
-              className="bg-blue-500 hover:bg-blue-600 text-white rounded-md px-3 py-2 ml-2 focus:outline-none focus:ring-2 focus:focus:ring-blue-400"
+              className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-md ml-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400"
             >
-                Enviar
+              Enviar
             </button>
           </div>
         </div>
