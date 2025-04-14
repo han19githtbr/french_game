@@ -93,6 +93,8 @@ export default function Frase() {
   const [playersOnline, setPlayersOnline] = useState<Player[]>([])
   const [showNotification, setShowNotification] = useState<ShowNotification | null>(null)
 
+  const [notification, setNotification] = useState<{ message: string; type: 'info' | 'success' | 'error' } | null>(null);
+
   const [ablyClient, setAblyClient] = useState<Ably.Realtime | null>(null)
   const [clientId, setClientId] = useState<string | null>(null);
 
@@ -107,6 +109,12 @@ export default function Frase() {
   //const clientId = ablyClient?.auth.clientId;
   const playerName = session?.user?.name || 'Anônimo';
 
+  const showToast = (message: string, type: 'info' | 'success' | 'error') => {
+    setNotification({ message, type });
+    setTimeout(() => {
+      setNotification(null);
+    }, 3000); // Exibir por 3 segundos
+  };
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -226,7 +234,8 @@ export default function Frase() {
       chatRequestChannel.subscribe('response', (message: Ably.Message) => {
         const { accepted, fromClientId, fromName } = message.data;
         if (accepted) {
-          alert(`🤝 ${fromName} aceitou seu pedido de bate-papo!`);
+          //alert(`🤝 ${fromName} aceitou seu pedido de bate-papo!`);
+          showToast(`🤝 ${fromName} aceitou seu pedido de bate-papo!`, 'info');
           const chatChannelName = getChatChannelName(currentClientId, fromClientId);
           setActiveChats((prev) => ({ ...prev, [chatChannelName]: [] }));
           setIsChatBubbleOpen(chatChannelName);
@@ -236,7 +245,8 @@ export default function Frase() {
           // [ACRESCENTADO] Inscrever-se no canal de digitação quando o chat é aceito
           ablyClient.channels.get(getTypingChannelName(currentClientId, fromClientId)).subscribe('typing', handleTypingStatus);
         } else {
-          alert(`❌ ${fromName} negou seu pedido de bate-papo.`);
+          //alert(`❌ ${fromName} negou seu pedido de bate-papo.`);
+          showToast(`❌ ${fromName} negou seu pedido de bate-papo.`, 'info');
         }
       });
               
@@ -293,7 +303,8 @@ export default function Frase() {
     if (!ablyClient || !clientId) return;
     const chatRequestChannel = ablyClient.channels.get(`chat-requests:${otherPlayer.clientId}`);
     chatRequestChannel.publish('request', { fromClientId: clientId, fromName: playerName });
-    alert(`⏳ Pedido de bate-papo enviado para ${otherPlayer.name}. Aguardando resposta...`);
+    //alert(`⏳ Pedido de bate-papo enviado para ${otherPlayer.name}. Aguardando resposta...`);
+    showToast(`⏳ Pedido de bate-papo enviado para ${otherPlayer.name}. Aguardando resposta...`, 'info');
   };
   
   const handleAcceptChatRequest = (request: ChatRequest) => {
