@@ -215,11 +215,20 @@ export default function Game() {
   const handleChatMessage = (message: Ably.Message) => {
     const { sender, text, timestamp } = message.data;
     const channelName = message.name; // [CORRIGIDO] O nome do canal contém os IDs dos participantes
-    if (channelName && activeChats[channelName]) {
+    const otherClientId = channelName?.split(':')[1]?.split('-')?.find(id => id !== clientId);
+    const otherUserName = playersOnline.find(player => player.clientId === otherClientId)?.name || 'Usuário Desconhecido';
+
+    if (channelName && otherClientId) {
       setActiveChats((prev) => ({
         ...prev,
         [channelName]: [...(prev[channelName] || []), { sender, text, timestamp }],
       }));
+
+      // Abrir a caixa de diálogo automaticamente se estiver fechada ou se for uma nova conversa
+      if (isChatBubbleOpen !== channelName) {
+        setIsChatBubbleOpen(channelName);
+        setChatPartnerName(sender === playerName ? otherUserName : sender); // Define o nome do parceiro correto
+      }
     }
   };
 
