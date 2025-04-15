@@ -506,13 +506,13 @@ export default function ResultsPage() {
                     <div className="flex space-x-3">
                       <button
                         onClick={() => handleAcceptChatRequest(request)}
-                        className="bg-green hover:bg-green text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green"
+                        className="bg-green hover:bg-green text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green flex items-center space-x-2"
                       >
                         <Check className="h-5 w-5" /> Aceitar
                       </button>
                       <button
                         onClick={() => handleRejectChatRequest(request)}
-                        className="bg-red hover:bg-red text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red"
+                        className="bg-red hover:bg-red text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red flex items-center space-x-2"
                       >
                         <X className="h-5 w-5" /> Recusar
                       </button>
@@ -543,7 +543,7 @@ export default function ResultsPage() {
           <div className="bg-gray-900 p-3 rounded-t-lg flex justify-between items-center border-b border-gray-700">
             <span className="font-bold text-cyan-400 glow-text">{chatPartnerName}</span>
             <button onClick={closeChatBubble} className="text-gray-400 hover:text-gray-300 focus:outline-none">
-              <X className="h-5 w-5" />
+              <X className="h-5 w-5 cursor-pointer" />
             </button>
           </div>
           <div className="p-3 overflow-y-auto h-64 flex-grow">
