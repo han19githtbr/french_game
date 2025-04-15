@@ -711,7 +711,7 @@ export default function Game() {
       </>
       {isChatBubbleOpen && (
         <div 
-          className={`fixed bottom-4 left-4 z-50 max-w-sm w-full flex flex-col shadow-lg rounded-lg bg-gradient-to-br from-gray-800 to-gray-700 border-2 border-gray-600 animate__animated animate__slideInUp
+          className={`fixed bottom-4 left-54 z-50 max-w-sm w-full flex flex-col shadow-lg rounded-lg bg-gradient-to-br from-gray-800 to-gray-700 border-2 border-gray-600 animate__animated animate__slideInUp
             @media (min-width: 641px) { /* Tela pequena (sm) ou maior */
               max-w-[calc(100vw - 32px)] /* Garante que não ultrapasse a largura da tela com margens */
             }
