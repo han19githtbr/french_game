@@ -554,7 +554,7 @@ export default function Frase() {
         </div>
       )}
 
-      <h1 className="text-2xl font-bold mb-4">Jogadores Online</h1>
+      {/*<h1 className="text-2xl font-bold mb-4 mt-6">Jogadores Online</h1>*/}
       <ul className="space-y-3 w-full max-w-md">
         {playersOnline.map((player) => (
           <li

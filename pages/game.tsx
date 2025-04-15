@@ -588,7 +588,7 @@ export default function Game() {
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
-          <div className="flex items-center gap-2 cursor-pointer mt-4">
+          <div className="flex items-center gap-2 cursor-pointer mt-10">
             <span className="text-white font-medium hidden sm:inline">{session.user.name}</span>
             <img src={session.user.image || ''} alt="Avatar" className="w-10 h-10 rounded-full border border-white" />
           </div>
@@ -605,7 +605,7 @@ export default function Game() {
         </div>
       )}
 
-      <h1 className="text-2xl font-bold mb-4">Jogadores Online</h1>
+      {/*<h1 className="text-2xl font-bold mb-4 mt-6">Jogadores Online</h1>*/}
       <ul className="space-y-3 w-full max-w-md">
         {playersOnline.map((player) => (
           <li

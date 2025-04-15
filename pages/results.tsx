@@ -431,7 +431,7 @@ export default function ResultsPage() {
       </div>      
       
       <div className="bg-gradient-to-br from-slate-800 to-slate-900 text-white flex flex-col items-center justify-center relative mt-3 mb-3">
-      <h1 className="text-2xl font-bold mb-4">Jogadores Online</h1>
+      {/*<h1 className="text-2xl font-bold mb-4 mt-6">Jogadores Online</h1>*/}
         <ul className="space-y-3 w-full max-w-md">
           {playersOnline.map((player) => (
             <li
