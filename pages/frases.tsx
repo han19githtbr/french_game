@@ -578,7 +578,10 @@ export default function Frase() {
               <span className="font-bold text-lg text-white">{player.name}</span>
             </div>
             <button
-              onClick={() => openChatBubble(player)}
+              onClick={() => {
+                handleRequestChat(player);
+                openChatBubble(player); // 'player' só existe aqui dentro do map
+              }}
               className="bg-gradient-to-br from-blue to-purple hover:from-blue hover:to-purple text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -645,17 +648,21 @@ export default function Frase() {
       </>
 
       {isChatBubbleOpen && (
-        <div className={`fixed bottom-4 left-4 z-50 max-w-sm w-full flex flex-col shadow-lg rounded-lg bg-gradient-to-br from-gray-800 to-gray-700 border-2 border-gray-600 animate__animated animate__slideInUp
-          @media (max-width: 640px) { /* Tela pequena (sm) ou menor */
-            left-1/2
-            -translate-x-1/2
-            max-w-screen-sm /* Opcional: Ajustar a largura máxima em telas pequenas */
-          }
-          @media (max-width: 320px) { /* Tela muito pequena (ex: alguns celulares antigos) */
-            max-w-xs /* Reduzir ainda mais a largura máxima se necessário */
-          }
-        `}
-      >
+        <div 
+          className={`fixed bottom-4 left-4 z-50 max-w-sm w-full flex flex-col shadow-lg rounded-lg bg-gradient-to-br from-gray-800 to-gray-700 border-2 border-gray-600 animate__animated animate__slideInUp
+            @media (min-width: 641px) { /* Tela pequena (sm) ou maior */
+              max-w-[calc(100vw - 32px)] /* Garante que não ultrapasse a largura da tela com margens */
+            }
+            @media (max-width: 640px) { /* Tela pequena (sm) ou menor */
+              left-1/2
+              -translate-x-1/2
+              max-w-[calc(100vw - 32px)] /* Garante que não ultrapasse a largura da tela com margens */
+            }
+            @media (max-width: 320px) { /* Tela muito pequena (ex: alguns celulares antigos) */
+              max-w-[calc(100vw - 32px)] /* Garante que não ultrapasse a largura da tela com margens */
+            }
+          `}
+        >
           <div className="bg-gray-900 p-3 rounded-t-lg flex justify-between items-center border-b border-gray-700">
             <span className="font-bold text-cyan-400 glow-text">{chatPartnerName}</span>
             <button onClick={closeChatBubble} className="text-gray-400 hover:text-gray-300 focus:outline-none">
