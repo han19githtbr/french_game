@@ -553,7 +553,7 @@ export default function ResultsPage() {
         </div>
       )}
 
-      <h1 className="text-3xl font-bold mt-30 mb-4 text-center">Seu Progresso</h1>
+      <h1 className="text-3xl font-bold mt-40 mb-4 text-center">Seu Progresso</h1>
       
       {/* Barra de Progresso */}
       <div className="mb-6 max-w-md mx-auto">

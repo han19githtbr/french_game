@@ -678,7 +678,7 @@ export default function Frase() {
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }} 
         transition={{ duration: 0.6 }}
-        className="text-4xl font-bold mb-8 mt-32 text-center drop-shadow-md"
+        className="text-4xl font-bold mb-8 mt-42 text-center drop-shadow-md"
       >
         🎮 Construa frases em Francês
       </motion.h1>
