@@ -657,7 +657,7 @@ export default function Frase() {
               }
               /* Estilo para telas pequenas (centralizado na parte inferior) */
               @media (max-width: 640px) {
-                left-1/2
+                left-50%
                 -translate-x-1/2
                 /* Garante que a parte inferior esteja visível */
                 bottom-4
