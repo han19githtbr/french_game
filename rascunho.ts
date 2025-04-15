@@ -1,4 +1,46 @@
-/*type Player = {
+/*'use client'*/
+
+import { useEffect, useRef, useState } from 'react'
+import { createAblyClient } from '../lib/ably'
+import type * as Ably from 'ably'
+import { useSession, signOut } from 'next-auth/react'
+import { useRouter } from 'next/router'
+import { Check, X } from 'lucide-react'
+import { motion , AnimatePresence} from 'framer-motion'
+import { saveProgress } from './results'
+import { LockClosedIcon } from '@heroicons/react/24/solid';
+import { io } from 'socket.io-client'
+import { DotLoader } from 'react-spinners';
+
+
+//import successSound from '/sounds/success.mp3';
+
+const themes = ['família', 'natureza', 'turismo', 'animais', 'tecnologia', 'gastronomia']
+
+const animalSounds: Record<string, string> = {
+  'Le Chien': '/sounds/cachorro.mp3',
+  'Le Chat': '/sounds/gato.mp3',
+  'L\'Éléphant': '/sounds/elefante.mp3',
+  'Le Lion': '/sounds/lion.mp3',
+  'Le Poisson': '/sounds/fish.mp3',
+  'Le Requin': '/sounds/fish.mp3',
+  'Le Serpent': '/sounds/snake.mp3',
+  'L\'Ours': '/sounds/bear.mp3',
+  'Le Cheval': '/sounds/horse.mp3',
+  'Le Perroquet': '/sounds/parrot.mp3',
+  'l\'Oiseau': '/sounds/bird.mp3',
+  'Le Crocodile': '/sounds/alligator.mp3',
+  'Un Gorille': '/sounds/gorila.mp3',
+  'Le Mouton': '/sounds/sheep.mp3',
+  'Le Canard': '/sounds/duck.mp3',
+}
+
+type Result = {
+  correct_word: boolean
+  selected: string
+}
+
+type Player = {
   clientId: string
   name: string
 }
@@ -21,11 +63,44 @@ type ChatMessage = {
   timestamp: number;
 };
 
+const lockMessageVariants = {
+  initial: { opacity: 0, y: 10 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+  exit: { opacity: 0, y: 10, transition: { duration: 0.1 } },
+};
+
 export default function Game() {
-    
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const imageRefs = useRef<(HTMLDivElement | null)[]>([])
+  
   const { data: session, status } = useSession()
   const router = useRouter()
+
+  const [isLogoutVisible, setIsLogoutVisible] = useState(false);
+  const [logoutTimeoutId, setLogoutTimeoutId] = useState<NodeJS.Timeout | null>(null);
+
+  const [showRestart, setShowRestart] = useState(false)
+  const [showCongrats, setShowCongrats] = useState(false)
   
+  const [theme, setTheme] = useState('')
+  const [images, setImages] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+  
+  //const [results, setResults] = useState<Record<number, Result>>({});
+  const [results, setResults] = useState<(Result | null)[]>([]);
+
+
+  const [round, setRound] = useState(1);
+  const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
+
+  const [correctSound, setCorrectSound] = useState<HTMLAudioElement | null>(null)
+  const [wrongSound, setWrongSound] = useState<HTMLAudioElement | null>(null)
+
+  const [isFrasesUnlocked, setIsFrasesUnlocked] = useState(false);
+  const [showLockMessage, setShowLockMessage] = useState(false);
+
+  const [successSound, setSuccessSound] = useState<HTMLAudioElement | null>(null);
+
   const [playersOnline, setPlayersOnline] = useState<Player[]>([])
   const [showNotification, setShowNotification] = useState<ShowNotification | null>(null)
 
@@ -35,20 +110,84 @@ export default function Game() {
   const [clientId, setClientId] = useState<string | null>(null);
 
   const [chatRequestsReceived, setChatRequestsReceived] = useState<ChatRequest[]>([]);
-  const [activeChats, setActiveChats] = useState<{ [clientId: string]: ChatMessage[] }>({});
+  const [activeChats, setActiveChats] = useState<{ [channelName: string]: ChatMessage[] }>({});
   const [isChatBubbleOpen, setIsChatBubbleOpen] = useState<string | null>(null);
   const [chatInput, setChatInput] = useState('');
   const [chatPartnerName, setChatPartnerName] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [typingIndicator, setTypingIndicator] = useState<{ [clientId: string]: boolean }>({});
- 
+  const enterSoundRef = useRef<HTMLAudioElement | null>(null);
+  const chatRequestReceivedSoundRef = useRef<HTMLAudioElement | null>(null); // Referência para o som de pedido recebido
+  const chatRequestResponseSoundRef = useRef<HTMLAudioElement | null>(null); // Referência para o som de resposta ao pedido
+
   //const clientId = ablyClient?.auth.clientId;
   const playerName = session?.user?.name || 'Anônimo';
-      
+  
+  const handleCloseZoom = () => {
+    setZoomedImage(null);
+  };
+
+  const showToast = (message: string, type: 'info' | 'success' | 'error') => {
+    setNotification({ message, type });
+    setTimeout(() => {
+      setNotification(null);
+    }, 3000); // Exibir por 3 segundos
+  };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setCorrectSound(new Audio('/sounds/correct.mp3'))
+      setWrongSound(new Audio('/sounds/wrong.mp3'))
+      setSuccessSound(new Audio('/sounds/success.mp3'));
+    }
+  }, [])
+  
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/')
   }, [status, router]);
-   
+
+  useEffect(() => {
+    if (theme) loadImages()
+  }, [theme, round])
+
+  useEffect(() => {
+    if (!showCongrats && images.length > 0) {
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 500); // Pequeno delay para garantir que novas imagens renderizem
+    }
+  }, [showCongrats, images]);
+  
+
+  useEffect(() => {
+    if (correctAnswersCount >= 1) {
+      setIsFrasesUnlocked(true);
+    }
+  }, [correctAnswersCount]);
+
+  
+  /*useEffect(() => {
+    const socket = io({
+      path: '/api/socketio',
+    })
+
+    if (session?.user?.name) {
+      socket.emit('userJoined', session.user.name)
+    }
+
+    socket.on('userJoined', (name: string) => {
+      if (name !== session?.user?.name) {
+        setShowNotification({ name })
+        setTimeout(() => setShowNotification(null), 4000)
+      }
+    })
+
+    return () => {
+      socket.disconnect()
+    }
+  }, [session?.user?.name])*/
+
+  
   useEffect(() => {
     if (!session) return
   
@@ -67,24 +206,33 @@ export default function Game() {
   // [ACRESCENTADO] Função para gerar um nome de canal de chat único para um par de usuários
   const getChatChannelName = (clientId1: string, clientId2: string) => {
     const sortedIds = [clientId1, clientId2].sort();
-    return `chat:<span class="math-inline">\{sortedIds\[0\]\}\-</span>{sortedIds[1]}`;
+    return `chat:${sortedIds[0]}-${sortedIds[1]}`;
   };
 
   // [ACRESCENTADO] Função para gerar um nome de canal de digitação único para um par de usuários
   const getTypingChannelName = (clientId1: string, clientId2: string) => {
     const sortedIds = [clientId1, clientId2].sort();
-    return `typing:<span class="math-inline">\{sortedIds\[0\]\}\-</span>{sortedIds[1]}`;
+    return `typing:${sortedIds[0]}-${sortedIds[1]}`;
   };
 
   // Move as declarações das funções para fora do useEffect
   const handleChatMessage = (message: Ably.Message) => {
     const { sender, text, timestamp } = message.data;
     const channelName = message.name; // [CORRIGIDO] O nome do canal contém os IDs dos participantes
-    if (channelName && activeChats[channelName]) {
+    const otherClientId = channelName?.split(':')[1]?.split('-')?.find(id => id !== clientId);
+    const otherUserName = playersOnline.find(player => player.clientId === otherClientId)?.name || 'Usuário Desconhecido';
+
+    if (channelName && otherClientId) {
       setActiveChats((prev) => ({
         ...prev,
         [channelName]: [...(prev[channelName] || []), { sender, text, timestamp }],
       }));
+
+      // Abrir a caixa de diálogo automaticamente se estiver fechada ou se for uma nova conversa
+      if (isChatBubbleOpen !== channelName) {
+        setIsChatBubbleOpen(channelName);
+        setChatPartnerName(sender === playerName ? otherUserName : sender); // Define o nome do parceiro correto
+      }
     }
   };
 
@@ -98,7 +246,7 @@ export default function Game() {
   };
 
   useEffect(() => {
-    if (!ablyClient || !session) return;
+    if (!ablyClient || !session || !clientId) return;
   
     const presenceChannel = ablyClient.channels.get('game-room')
     const name = session.user?.name || 'Anônimo'
@@ -134,11 +282,15 @@ export default function Game() {
       chatRequestChannel.subscribe('request', (message: Ably.Message) => {
         const request: ChatRequest = message.data;
         setChatRequestsReceived((prev) => [...prev, request]);
+        // Reproduzir som ao receber um pedido de bate-papo
+        chatRequestReceivedSoundRef.current?.play();
       });
   
       chatRequestChannel.subscribe('response', (message: Ably.Message) => {
         const { accepted, fromClientId, fromName } = message.data;
         if (accepted) {
+          // Reproduzir som ao receber uma resposta (aceitar ou recusar)
+          chatRequestResponseSoundRef.current?.play();
           //alert(`🤝 ${fromName} aceitou seu pedido de bate-papo!`);
           showToast(`🤝 ${fromName} aceitou seu pedido de bate-papo!`, 'info');
           const chatChannelName = getChatChannelName(currentClientId, fromClientId);
@@ -154,7 +306,12 @@ export default function Game() {
           showToast(`❌ ${fromName} negou seu pedido de bate-papo.`, 'info');
         }
       });
-            
+              
+      /*for (const chatId in activeChats) {
+        ablyClient.channels.get(`<span class="math-inline">\{chatChannelPrefix\}</span>{chatId}`).subscribe('message', handleChatMessage);
+        const otherClientId = chatId;
+        ablyClient.channels.get(`<span class="math-inline">\{typingChannelPrefix\}</span>{otherClientId}`).subscribe('typing', handleTypingStatus);
+      }*/
     };
 
     ablyClient.connection.once('connected', onConnected);
@@ -196,6 +353,9 @@ export default function Game() {
     setPlayersOnline(players);
   };
         
+      
+  //syncPresence()
+  
   const handleRequestChat = (otherPlayer: Player) => {
     if (!ablyClient || !clientId) return;
     const chatRequestChannel = ablyClient.channels.get(`chat-requests:${otherPlayer.clientId}`);
@@ -215,7 +375,8 @@ export default function Game() {
     setChatRequestsReceived((prev) => prev.filter((req) => req.fromClientId !== request.fromClientId));
     // [ACRESCENTADO] Abrir a bolha de chat após a aceitação
     openChatBubble({ clientId: request.fromClientId, name: request.fromName });
-    // A inscrição nos canais de mensagens e digitação agora é feita dentro de openChatBubble
+    // Reproduzir som ao aceitar um pedido
+    chatRequestResponseSoundRef.current?.play();
   };
 
   const handleRejectChatRequest = (request: ChatRequest) => {
@@ -223,6 +384,8 @@ export default function Game() {
     const responseChannel = ablyClient.channels.get(`chat-requests:${request.fromClientId}`);
     responseChannel.publish('response', { accepted: false, fromClientId: clientId, fromName: playerName });
     setChatRequestsReceived((prev) => prev.filter((req) => req.fromClientId !== request.fromClientId));
+    // Reproduzir som ao recusar um pedido
+    chatRequestResponseSoundRef.current?.play();
   };
 
   const openChatBubble = (player: Player) => {
@@ -243,7 +406,12 @@ export default function Game() {
     ablyClient.channels.get(typingChannelName).subscribe('typing', handleTypingStatus);
   };
 
-  
+  const closeChatBubble = () => {
+    setIsChatBubbleOpen(null);
+    setChatPartnerName(null);
+    setTypingIndicator({}); // Limpar o indicador de digitação ao fechar o chat
+  };
+
   const handleSendMessage = () => {
     if (!ablyClient || !isChatBubbleOpen || !chatInput.trim() || !clientId) return;
     const chatChannel = ablyClient.channels.get(isChatBubbleOpen);
@@ -293,5 +461,498 @@ export default function Game() {
       setClientId(ablyClient.auth.clientId);
     }
   }, [ablyClient]);
-}*/
+
+  const handleMouseEnter = () => {
+    clearTimeout(logoutTimeoutId as NodeJS.Timeout); // Limpa qualquer timeout pendente
+    setIsLogoutVisible(true);
+  };
   
+  const handleMouseLeave = () => {
+    // Define um timeout para esconder o logout após um pequeno atraso
+    const timeoutId = setTimeout(() => {
+      setIsLogoutVisible(false);
+    }, 300); // Ajuste o valor do atraso (em milissegundos) conforme necessário
+    setLogoutTimeoutId(timeoutId);
+  };
+  
+  const handleLogoutMouseEnter = () => {
+    // Se o mouse entrar no botão de logout, cancela o timeout de desaparecimento
+    clearTimeout(logoutTimeoutId as NodeJS.Timeout);
+  };
+  
+  const loadImages = async () => {
+    setLoading(true)
+    setResults([]);
+      
+    try {
+      const res = await fetch('/api/generate-images', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ theme }),
+      });
+  
+      if (!res.ok) {
+        const errorText = await res.text()
+        console.error('❌ Erro da API:', errorText)
+        throw new Error('Erro ao carregar imagens.');
+      }
+    
+      const data = await res.json();
+      console.log('🔁 Dados recebidos:', data); // <-- Adicione isso para depuração
+    
+      setImages(data);
+      imageRefs.current = []; // limpa os refs antigos
+      setResults(Array(data.length).fill(null));
+    } catch (error) {
+      console.error('❌ Erro ao carregar imagens:', error);
+    } finally {
+      setLoading(false)
+    }
+  }
+
+
+  const checkAnswer = (index: number, userAnswer: string) => {
+    playAnimalSound(images[index].title)
+      
+    const correct_word = images[index].title.toLowerCase() === userAnswer.toLowerCase()
+    const alreadyCorrect = results[index]?.correct_word
+      
+    if (correct_word && !alreadyCorrect && correctSound) correctSound.play()
+    if (!correct_word && wrongSound) wrongSound.play()
+  
+      /*const newResults = {
+        ...results,
+        [index]: { correct, selected: userAnswer }
+      }*/
+     
+    const newResults = [...results]; // agora é um array!
+    newResults[index] = { correct_word, selected: userAnswer };  
+  
+    setResults(newResults);
+        
+      
+    // ⏬ Scroll para a próxima imagem ainda não respondida (com pequeno delay)
+    setTimeout(() => {
+      const nextUnansweredIndex = newResults.findIndex((res, i) => !res && i > index)
+      const nextRef = imageRefs.current[nextUnansweredIndex]
+      if (nextUnansweredIndex !== -1 && nextRef) {
+        nextRef.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }, 300)
+      
+    // Scroll para a próxima imagem ainda não respondida
+    /*const nextUnansweredIndex = newResults.findIndex((res, i) => !res && i > index);
+    if (nextUnansweredIndex !== -1 && imageRefs.current[nextUnansweredIndex]) {
+      imageRefs.current[nextUnansweredIndex]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }*/
+  
+    //const correctCount = Object.values(newResults).filter(r => r?.correct).length
+    const currentCorrectCount = Object.values(newResults).filter((r) => r?.correct_word).length;
+    setCorrectAnswersCount(currentCorrectCount);
+    const totalCount = images.length
+    const hasWrong = Object.values(newResults).some(r => r && !r.correct_word)
+  
+    //saveProgress(correctCount);
+  
+    saveProgress(currentCorrectCount);
+      
+    // Se errou alguma imagem, mostra botão para recomeçar
+    if (hasWrong) {
+      setShowRestart(true)
+    }
+      
+    if (currentCorrectCount === totalCount) {
+      setShowCongrats(true)
+        
+      // Salvar progresso no localStorage
+      const prevProgress = JSON.parse(localStorage.getItem('progress') || '[]')
+      localStorage.setItem('progress', JSON.stringify([...prevProgress, { round, correct: currentCorrectCount }]))
+          
+      setTimeout(() => {
+        const nextTheme = themes.filter(t => t !== theme)[Math.floor(Math.random() * (themes.length - 1))]
+        setTheme(nextTheme)
+        setRound(r => r + 1)
+        setShowCongrats(false)
+      }, 3000);
+  
+      if (successSound) {
+        successSound.play();
+      }
+    }
+  };
+  
+  const playAnimalSound = (title: string) => {
+    if (theme !== 'animais') return; // só toca se for o tema "animais"
+    const soundPath = animalSounds[title]
+    if (soundPath) {
+      const audio = new Audio(soundPath)
+      audio.play().catch(err => console.error('Erro ao tocar som do animal:', err))
+    }
+  }
+  
+  const handleFrasesClick = () => {
+    if (isFrasesUnlocked) {
+      router.push('/frases');
+    } else {
+      setShowLockMessage(true);
+      setTimeout(() => {
+        setShowLockMessage(false);
+      }, 2000); // A mensagem desaparece após 2 segundos
+    }
+  };
+
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-800 to-slate-900 text-white flex flex-col items-center p-4 relative mb-6">
+      {session?.user && (
+        <div 
+          className="fixed top-4 right-4 z-50 group"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
+          <div className="flex items-center gap-2 cursor-pointer mt-10">
+            <span className="text-white font-medium hidden sm:inline">{session.user.name}</span>
+            <img src={session.user.image || ''} alt="Avatar" className="w-10 h-10 rounded-full border border-white" />
+          </div>
+          <div
+            className={`absolute border border-blue right-0 mt-2 text-black py-2 px-4 rounded shadow-lg z-10 ${
+              isLogoutVisible ? 'block' : 'hidden'
+            }`}
+            onMouseEnter={handleLogoutMouseEnter} // Impede o desaparecimento ao entrar no botão
+          >
+            <button onClick={() => signOut()} className="hover:text-red-600 cursor-pointer">Logout</button>
+          </div>
+          {/* Adicionando um pequeno "espaço invisível" para manter o hover ativo */}
+          <div className="absolute top-0 left-0 w-full h-full pointer-events-none group-hover:block"></div>
+        </div>
+      )}
+
+      {/*<h1 className="text-2xl font-bold mb-4 mt-6">Jogadores Online</h1>*/}
+      <ul className="space-y-3 w-full max-w-md">
+        {playersOnline.map((player) => (
+          <li
+            key={player.clientId}
+            className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg p-4 flex items-center justify-between shadow-md border border-gray-600 transition duration-300 ease-in-out transform hover:scale-105"
+          >
+            <div className="flex items-center">
+              <div className="w-2 h-2 rounded-full bg-green mr-3 animate-pulse" /> {/* Indicador de online */}
+              <span className="font-bold text-lg text-white">{player.name}</span>
+            </div>
+            <button
+              onClick={() => handleRequestChat(player)}
+              className="bg-gradient-to-br from-blue to-purple hover:from-blue hover:to-purple text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+              </svg>
+              Iniciar Bate-papo
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      <AnimatePresence>
+        {showNotification && (
+          <motion.div
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -30 }}
+            className="fixed top-5 left-5 bg-gradient-to-r from-blue to-purple text-white px-6 py-3 rounded-2xl shadow-xl z-50"
+          >
+          {showNotification.type === 'join' ? (
+            <>🎮 {showNotification.name} entrou no jogo!</>
+          ) : (
+            <>⚡ {showNotification.name} saiu do jogo.</>
+          )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      <>
+        <audio ref={enterSoundRef} src="/sounds/accepted_sound.mp3" preload="auto" />
+        <audio ref={chatRequestReceivedSoundRef} src="/sounds/received_sound.mp3" preload="auto" />
+        <audio ref={chatRequestResponseSoundRef} src="/sounds/refuse_sound.mp3" preload="auto" />
+        {chatRequestsReceived.length > 0 && (
+          <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 flex justify-center items-center z-50 backdrop-blur-sm">
+            <div className="bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl p-8 max-w-md w-full shadow-lg border-2 border-gray-600 animate__animated animate__fadeIn">
+              <h2 className="text-xl font-bold text-yellow mb-6 glow-text">🕹️ Pedidos de Bate-papo Recebidos!</h2>
+              <ul className="space-y-4">
+                {chatRequestsReceived.map((request) => (
+                  <li
+                    key={request.fromClientId}
+                    className="bg-gray-900 rounded-md p-4 flex items-center justify-between border-b border-gray-700"
+                  >
+                    <span className="text-white font-semibold">{request.fromName}</span>
+                    <div className="flex space-x-3">
+                      <button
+                        onClick={() => handleAcceptChatRequest(request)}
+                        className="bg-green hover:bg-green text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green"
+                      >
+                        <Check className="h-5 w-5" /> Aceitar
+                      </button>
+                      <button
+                        onClick={() => handleRejectChatRequest(request)}
+                        className="bg-red hover:bg-red text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red"
+                      >
+                        <X className="h-5 w-5" /> Recusar
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+      </>
+      {isChatBubbleOpen && (
+        <div className={`fixed bottom-4 left-4 z-50 max-w-sm w-full flex flex-col shadow-lg rounded-lg bg-gradient-to-br from-gray-800 to-gray-700 border-2 border-gray-600 animate__animated animate__slideInUp
+            @media (max-width: 640px) { /* Tela pequena (sm) ou menor */
+              left-1/2
+              -translate-x-1/2
+              max-w-screen-sm /* Opcional: Ajustar a largura máxima em telas pequenas */
+            }
+            @media (max-width: 320px) { /* Tela muito pequena (ex: alguns celulares antigos) */
+              max-w-xs /* Reduzir ainda mais a largura máxima se necessário */
+            }
+          `}
+        >
+          
+          <div className="bg-gray-900 p-3 rounded-t-lg flex justify-between items-center border-b border-gray-700">
+            <span className="font-bold text-cyan-400 glow-text">{chatPartnerName}</span>
+            <button onClick={closeChatBubble} className="text-gray-400 hover:text-gray-300 focus:outline-none">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="p-3 overflow-y-auto h-64 flex-grow">
+            {activeChats[isChatBubbleOpen]?.map((msg, index) => (
+              <div
+                key={index}
+                className={`mb-2 p-3 rounded-md ${
+                  msg.sender === playerName
+                    ? 'bg-blue text-right text-white self-end shadow-md'
+                    : 'bg-gray-800 text-left text-white shadow-md'
+                }`}
+              >
+                <span className="text-xs italic text-gray-300">{msg.sender}:</span>
+                <p className="font-medium">{msg.text}</p>
+              </div>
+            ))}
+            {typingIndicator[isChatBubbleOpen] && (
+              <div className="text-left italic text-gray-400">
+                <DotLoader color="#a0aec0" size={15} /> <span className="ml-1">Digitando...</span>
+              </div>
+            )}
+          </div>
+          <div className="p-3 border-t border-gray-700 flex items-center">
+            <input
+              type="text"
+              className="bg-gray-900 text-white rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-cyan-400 shadow-inner"
+              placeholder="Enviar mensagem..."
+              value={chatInput}
+              onChange={handleInputChange}
+              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+            />
+            <button
+              onClick={handleSendMessage}
+              className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-md ml-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+            >
+              Enviar
+            </button>
+          </div>
+        </div>
+      )}
+
+
+      <motion.h1 
+        initial={{ opacity: 0, y: -20 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        transition={{ duration: 0.6 }}
+        className="text-4xl font-bold mb-8 mt-36 text-center drop-shadow-md"
+      >
+        🎮 Jogo para treinar o Francês
+      </motion.h1>
+
+      <div className="flex flex-col items-center space-y-6">
+        <button
+          onClick={() => router.push('/results')}
+          className="w-64 border border-blue bg-gradient-to-br text-blue from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-6 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 text-lg cursor-pointer"
+        >
+          Ver Progresso
+        </button>
+
+        <select
+          onChange={e => setTheme(e.target.value)}
+          className="w-64 bg-gradient-to-br border border-blue text-blue font-semibold py-3 px-6 rounded-md shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-lg cursor-pointer **text-center**"
+          value={theme}
+        >
+          <option value="">Escolha uma opção</option>
+          {themes.map(t => (
+            <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+          ))}
+        </select>
+
+        {/* Botão "Frases em Francês" */}
+        <div className="w-64 flex flex-col items-center">
+          {!isFrasesUnlocked && (
+            <p className="text-sm text-gray-400 mb-1 text-center">Selecione uma opção e complete 1 acerto para desbloquear este nível.</p>
+          )}
+          <button
+            className={`flex items-center justify-center py-3 px-6 rounded-md font-semibold transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75 ${
+              isFrasesUnlocked
+                ? 'bg-blue hover:bg-green cursor-pointer text-white shadow-md'
+                : 'bg-gray-600 text-gray-400 cursor-not-allowed shadow-sm'
+            }`}
+            onClick={handleFrasesClick}
+            disabled={!isFrasesUnlocked}
+          >
+            {!isFrasesUnlocked && <LockClosedIcon className="w-5 h-5 mr-2 " />}
+            Frases em Francês
+          </button>
+
+          {/* Mensagem de bloqueio */}
+          <AnimatePresence>
+            {showLockMessage && !isFrasesUnlocked && (
+              <motion.div
+                className="absolute bottom-[-30px] text-sm text-yellow-400 font-semibold"
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                variants={lockMessageVariants}
+              >
+                Nível bloqueado!
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {showRestart && (
+          <button
+            onClick={() => {
+              setRound(r => r + 1)
+              setShowRestart(false)
+            }}
+            className="mt-6 border border-red text-red-500 bg-transparent hover:bg-red-600 hover:text-white px-4 py-2 rounded shadow transition cursor-pointer"
+          >
+            ❌ Jogue de novo
+          </button>
+        )}
+
+      </div>
+
+      {theme && <h2 className="text-2xl font-semibold mt-4 mb-6 text-center">Opção: {theme}</h2>}
+
+      {loading ? (
+        <div className="text-center text-lg animate-pulse">🔍 Procurando imagens...</div>
+      ) : (
+        <>  
+          <div className="flex flex-wrap justify-center gap-6 w-full max-w-6xl mt-6 cursor-pointer">
+            {images.map((img, index) => (
+              <motion.div 
+                key={index}
+                ref={(el) => {
+                  if (el) imageRefs.current[index] = el;
+                }} 
+                initial={{ opacity: 0, scale: 0.9 }} 
+                animate={{ opacity: 1, scale: 1 }} 
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+                className="bg-transparent text-black p-4 rounded-2xl flex-grow shadow-2xl max-w-[280px] transition transform hover:scale-105 "
+              >
+                <img 
+                  src={img.url} 
+                  alt="imagem" 
+                  className="w-full h-48 object-cover rounded-xl cursor-zoom-in" 
+                  onClick={() => setZoomedImage(img.url)}
+                />
+                <div className="mt-2">Escolha o título correto:</div>
+                <select
+                  className="w-full mt-1 p-2 rounded border border-white text-white bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                  onChange={e => checkAnswer(index, e.target.value)}
+                  disabled={!!results[index]}
+                >
+                  <option value="">Selecione</option>
+                  {img.options.map((opt: string, i: number) => (
+                    <option key={i} value={opt}>{opt}</option>
+                  ))}
+                </select>
+
+                {results[index] && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }} 
+                    animate={{ opacity: 1, y: 0 }} 
+                    className="mt-2 flex items-center"
+                  >
+                    {results[index].correct_word ? (
+                      <>
+                        <Check className="mr-2" color="green" />
+                        <span className="font-medium text-green">Correto!</span>
+                      </>
+                    ) : (
+                      <>
+                        <X className="mr-2" color="red"/>
+                        <span className="font-medium text-red">Errado. Resposta: {img.title}</span>
+                      </>
+                    )}
+                  </motion.div>
+                )}
+              </motion.div>
+            ))}
+          </div>
+        
+          
+          <AnimatePresence>
+            {zoomedImage && (
+              <motion.div
+                className="fixed top-0 left-0 w-full h-full inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center cursor-pointer"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setZoomedImage(null)}
+              >
+                <motion.img
+                  src={zoomedImage}
+                  alt="Zoom"
+                  className="max-w-[70%] max-h-[50vh] rounded-xl shadow-2xl"
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0.8 }}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </>
+      
+      )}
+
+      {showCongrats && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6 }}
+          className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-70 backdrop-blur-md" // Adicionado backdrop-blur-md para o efeito de sobreamento
+        >
+          <motion.div
+            className="bg-white text-black rounded-2xl p-8 shadow-2xl text-center text-3xl font-bold animate-pulse"
+            style={{
+              boxShadow: '0 0 20px rgba(255, 255, 0, 0.8)', // Adicionado brilho amarelo
+              textShadow: '0 0 10px rgba(255, 255, 0, 0.8)', // Adicionado brilho no texto
+            }}
+            initial={{ opacity: 0, scale: 0.7 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: 'spring', damping: 10, stiffness: 100 }}
+            onAnimationComplete={() => {
+              if (successSound) {
+                successSound.play();
+              }
+            }}
+          >
+            🎉 Parabéns! Você acertou tudo!
+          </motion.div>
+        </motion.div>
+      )}
+
+    </div>
+  )
+}

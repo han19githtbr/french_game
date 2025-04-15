@@ -641,7 +641,7 @@ export default function Game() {
               <span className="font-bold text-lg text-white">{player.name}</span>
             </div>
             <button
-              onClick={() => handleRequestChat(player)}
+              onClick={() => openChatBubble(player)}
               className="bg-gradient-to-br from-blue to-purple hover:from-blue hover:to-purple text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
