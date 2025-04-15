@@ -716,7 +716,7 @@ export default function Game() {
               max-w-[calc(100vw - 32px)] /* Garante que não ultrapasse a largura da tela com margens */
             }
             @media (max-width: 640px) { /* Tela pequena (sm) ou menor */
-              left-1/2
+              left-20
               -translate-x-1/2
               max-w-[calc(100vw - 32px)] /* Garante que não ultrapasse a largura da tela com margens */
             }
