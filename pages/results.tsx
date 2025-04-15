@@ -127,13 +127,13 @@ export default function ResultsPage() {
   // [ACRESCENTADO] Função para gerar um nome de canal de chat único para um par de usuários
   const getChatChannelName = (clientId1: string, clientId2: string) => {
     const sortedIds = [clientId1, clientId2].sort();
-    return `chat:<span class="math-inline">\{sortedIds\[0\]\}\-</span>{sortedIds[1]}`;
+    return `chat:${sortedIds[0]}-${sortedIds[1]}`;
   };
 
   // [ACRESCENTADO] Função para gerar um nome de canal de digitação único para um par de usuários
   const getTypingChannelName = (clientId1: string, clientId2: string) => {
     const sortedIds = [clientId1, clientId2].sort();
-    return `typing:<span class="math-inline">\{sortedIds\[0\]\}\-</span>{sortedIds[1]}`;
+    return `typing:${sortedIds[0]}-${sortedIds[1]}`;
   };
 
   // Move as declarações das funções para fora do useEffect
@@ -159,7 +159,7 @@ export default function ResultsPage() {
   
   
   useEffect(() => {
-    if (!ablyClient || !session) return;
+    if (!ablyClient || !session || !clientId) return;
   
     const presenceChannel = ablyClient.channels.get('game-room')
     const name = session.user?.name || 'Anônimo'
@@ -215,12 +215,8 @@ export default function ResultsPage() {
           showToast(`❌ ${fromName} negou seu pedido de bate-papo.`, 'info');
         }
       });
-              
-      /*for (const chatId in activeChats) {
-        ablyClient.channels.get(`<span class="math-inline">\{chatChannelPrefix\}</span>{chatId}`).subscribe('message', handleChatMessage);
-        const otherClientId = chatId;
-        ablyClient.channels.get(`<span class="math-inline">\{typingChannelPrefix\}</span>{otherClientId}`).subscribe('typing', handleTypingStatus);
-      }*/
+        
+      
     };
   
     
@@ -463,7 +459,7 @@ export default function ResultsPage() {
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -30 }}
-            className="fixed top-5 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-2xl shadow-xl z-50"
+            className="fixed top-5 left-5 bg-gradient-to-r from-blue to-purple text-white px-6 py-3 rounded-2xl shadow-xl z-50"
           >
           {showNotification.type === 'join' ? (
             <>🎮 {showNotification.name} entrou no jogo!</>

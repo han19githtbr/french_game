@@ -109,7 +109,7 @@ export default function Game() {
   const [clientId, setClientId] = useState<string | null>(null);
 
   const [chatRequestsReceived, setChatRequestsReceived] = useState<ChatRequest[]>([]);
-  const [activeChats, setActiveChats] = useState<{ [clientId: string]: ChatMessage[] }>({});
+  const [activeChats, setActiveChats] = useState<{ [channelName: string]: ChatMessage[] }>({});
   const [isChatBubbleOpen, setIsChatBubbleOpen] = useState<string | null>(null);
   const [chatInput, setChatInput] = useState('');
   const [chatPartnerName, setChatPartnerName] = useState<string | null>(null);
@@ -119,6 +119,10 @@ export default function Game() {
   //const clientId = ablyClient?.auth.clientId;
   const playerName = session?.user?.name || 'Anônimo';
   
+  const handleCloseZoom = () => {
+    setZoomedImage(null);
+  };
+
   const showToast = (message: string, type: 'info' | 'success' | 'error') => {
     setNotification({ message, type });
     setTimeout(() => {
@@ -198,13 +202,13 @@ export default function Game() {
   // [ACRESCENTADO] Função para gerar um nome de canal de chat único para um par de usuários
   const getChatChannelName = (clientId1: string, clientId2: string) => {
     const sortedIds = [clientId1, clientId2].sort();
-    return `chat:<span class="math-inline">\{sortedIds\[0\]\}\-</span>{sortedIds[1]}`;
+    return `chat:${sortedIds[0]}-${sortedIds[1]}`;
   };
 
   // [ACRESCENTADO] Função para gerar um nome de canal de digitação único para um par de usuários
   const getTypingChannelName = (clientId1: string, clientId2: string) => {
     const sortedIds = [clientId1, clientId2].sort();
-    return `typing:<span class="math-inline">\{sortedIds\[0\]\}\-</span>{sortedIds[1]}`;
+    return `typing:${sortedIds[0]}-${sortedIds[1]}`;
   };
 
   // Move as declarações das funções para fora do useEffect
@@ -229,7 +233,7 @@ export default function Game() {
   };
 
   useEffect(() => {
-    if (!ablyClient || !session) return;
+    if (!ablyClient || !session || !clientId) return;
   
     const presenceChannel = ablyClient.channels.get('game-room')
     const name = session.user?.name || 'Anônimo'
@@ -635,7 +639,7 @@ export default function Game() {
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -30 }}
-            className="fixed top-5 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-2xl shadow-xl z-50"
+            className="fixed top-5 left-5 bg-gradient-to-r from-blue to-purple text-white px-6 py-3 rounded-2xl shadow-xl z-50"
           >
           {showNotification.type === 'join' ? (
             <>🎮 {showNotification.name} entrou no jogo!</>
@@ -823,7 +827,7 @@ export default function Game() {
                 <img 
                   src={img.url} 
                   alt="imagem" 
-                  className="w-full h-48 object-cover rounded-xl" 
+                  className="w-full h-48 object-cover rounded-xl cursor-zoom-in" 
                   onClick={() => setZoomedImage(img.url)}
                 />
                 <div className="mt-2">Escolha o título correto:</div>
@@ -847,12 +851,12 @@ export default function Game() {
                     {results[index].correct_word ? (
                       <>
                         <Check className="mr-2" color="green" />
-                        <span className="font-medium" color="green">Correto!</span>
+                        <span className="font-medium text-green">Correto!</span>
                       </>
                     ) : (
                       <>
                         <X className="mr-2" color="red"/>
-                        <span className="font-medium" color="red">Errado. Resposta: {img.title}</span>
+                        <span className="font-medium text-red">Errado. Resposta: {img.title}</span>
                       </>
                     )}
                   </motion.div>
@@ -865,7 +869,7 @@ export default function Game() {
           <AnimatePresence>
             {zoomedImage && (
               <motion.div
-                className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center"
+                className="fixed top-0 left-0 w-full h-full inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center cursor-pointer"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -874,7 +878,7 @@ export default function Game() {
                 <motion.img
                   src={zoomedImage}
                   alt="Zoom"
-                  className="max-w-[50%] max-h-[80vh] rounded-xl shadow-2xl"
+                  className="max-w-[70%] max-h-[50vh] rounded-xl shadow-2xl"
                   initial={{ scale: 0.8 }}
                   animate={{ scale: 1 }}
                   exit={{ scale: 0.8 }}
