@@ -710,7 +710,7 @@ export default function Game() {
         )}
       </>
       {isChatBubbleOpen && (
-        <div className="fixed bottom-4 z-50 max-w-sm w-full flex flex-col shadow-lg rounded-lg bg-gradient-to-br from-gray-800 to-gray-700 border-2 border-gray-600 animate__animated animate__slideInUp">
+        <div className="absolute bottom-4 z-50 max-w-sm w-full flex flex-col shadow-lg rounded-lg bg-gradient-to-br from-gray-800 to-gray-700 border-2 border-gray-600 animate__animated animate__slideInUp">
           
           <div className="bg-gray-900 p-3 rounded-t-lg flex justify-between items-center border-b border-gray-700">
             <span className="font-bold text-cyan-400 glow-text">{chatPartnerName}</span>
