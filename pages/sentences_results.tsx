@@ -561,7 +561,7 @@ export default function ResultsPage() {
                     : 'bg-gray-800 text-left text-white shadow-md'
                 }`}
               >
-                <span className="text-xs italic text-gray-300">{msg.sender}:</span>
+                <span className="text-xs italic text-gray-900">{msg.sender}:</span>
                 <p className="font-medium">{msg.text}</p>
               </div>
             ))}
