@@ -431,6 +431,7 @@ export default function ResultsPage() {
       </div>      
       
       <div className="bg-gradient-to-br from-slate-800 to-slate-900 text-white flex flex-col items-center justify-center relative mt-3 mb-3">
+      <h1 className="text-2xl font-bold mb-4">Jogadores Online</h1>
         <ul className="space-y-3 w-full max-w-md">
           {playersOnline.map((player) => (
             <li
@@ -607,7 +608,7 @@ export default function ResultsPage() {
                 <XAxis dataKey="round" label={{ value: 'Jogada', position: 'insideBottomRight', offset: -5 }} />
                 <YAxis label={{ value: 'Acertos', angle: -90, position: 'insideLeft' }} allowDecimals={false} />
                 <Tooltip />
-                <Bar dataKey="correct_answer" fill="#6366f1" />
+                <Bar dataKey="correct_word" fill="#6366f1" />
               </BarChart>
             </ResponsiveContainer>
           </div>
