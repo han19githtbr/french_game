@@ -444,35 +444,32 @@ export default function ResultsPage() {
         )}**/}
       </div>      
       
-      <div className="bg-gradient-to-br from-slate-800 to-slate-900 text-white flex flex-col items-center justify-center relative mt-3 mb-3">
       {/*<h1 className="text-2xl font-bold mb-4 mt-6">Jogadores Online</h1>*/}
-        <ul className="space-y-3 w-full max-w-md">
-          {playersOnline.map((player) => (
-            <li
-              key={player.clientId}
-              className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg p-4 flex items-center justify-between shadow-md border border-gray-600 transition duration-300 ease-in-out transform hover:scale-105"
+      <ul className="space-y-3 w-full max-w-md">
+        {playersOnline.map((player) => (
+          <li
+            key={player.clientId}
+            className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg p-4 flex items-center justify-between shadow-md border border-gray-600 transition duration-300 ease-in-out transform hover:scale-105"
+          >
+            <div className="flex items-center">
+              <div className="w-2 h-2 rounded-full bg-green mr-3 animate-pulse" /> {/* Indicador de online */}
+              <span className="font-bold text-lg text-white">{player.name}</span>
+            </div>
+            <button
+              onClick={() => {
+                handleRequestChat(player);
+                openChatBubble(player); // 'player' só existe aqui dentro do map
+              }}
+              className="bg-gradient-to-br from-blue to-purple hover:from-blue hover:to-purple text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue"
             >
-              <div className="flex items-center">
-                <div className="w-2 h-2 rounded-full bg-green mr-3 animate-pulse" /> {/* Indicador de online */}
-                <span className="font-bold text-lg text-white">{player.name}</span>
-              </div>
-              <button
-                onClick={() => {
-                  handleRequestChat(player);
-                  openChatBubble(player); // 'player' só existe aqui dentro do map
-                }}
-                className="bg-gradient-to-br from-blue to-purple hover:from-blue hover:to-purple text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
-                Iniciar Bate-papo
-              </button>
-            </li>
-          ))}
-        </ul>
-        
-      </div>    
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+              </svg>
+              Iniciar Bate-papo
+            </button>
+          </li>
+        ))}
+      </ul>    
 
       <AnimatePresence>
         {showNotification && (
