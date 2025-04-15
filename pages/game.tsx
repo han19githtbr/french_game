@@ -617,17 +617,17 @@ export default function Game() {
             className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg p-4 flex items-center justify-between shadow-md border border-gray-600 transition duration-300 ease-in-out transform hover:scale-105"
           >
             <div className="flex items-center">
-              <div className="w-2 h-2 rounded-full bg-green-400 mr-3 animate-pulse" /> {/* Indicador de online */}
+              <div className="w-2 h-2 rounded-full bg-green mr-3 animate-pulse" /> {/* Indicador de online */}
               <span className="font-bold text-lg text-white">{player.name}</span>
             </div>
             <button
               onClick={() => handleRequestChat(player)}
-              className="bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="bg-gradient-to-br from-blue to-purple hover:from-blue hover:to-purple text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
               </svg>
-              Bate-papo
+              Iniciar Bate-papo
             </button>
           </li>
         ))}
@@ -653,7 +653,7 @@ export default function Game() {
       {chatRequestsReceived.length > 0 && (
         <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 flex justify-center items-center z-50 backdrop-blur-sm">
           <div className="bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl p-8 max-w-md w-full shadow-lg border-2 border-gray-600 animate__animated animate__fadeIn">
-            <h2 className="text-xl font-bold text-yellow-400 mb-6 glow-text">🕹️ Pedidos de Bate-papo Recebidos!</h2>
+            <h2 className="text-xl font-bold text-yellow mb-6 glow-text">🕹️ Pedidos de Bate-papo Recebidos!</h2>
             <ul className="space-y-4">
               {chatRequestsReceived.map((request) => (
                 <li
@@ -664,13 +664,13 @@ export default function Game() {
                   <div className="flex space-x-3">
                     <button
                       onClick={() => handleAcceptChatRequest(request)}
-                      className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400"
+                      className="bg-green hover:bg-green text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green"
                     >
                       <Check className="h-5 w-5" /> Aceitar
                     </button>
                     <button
                       onClick={() => handleRejectChatRequest(request)}
-                      className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-400"
+                      className="bg-red hover:bg-red text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red"
                     >
                       <X className="h-5 w-5" /> Recusar
                     </button>
@@ -696,7 +696,7 @@ export default function Game() {
                 key={index}
                 className={`mb-2 p-3 rounded-md ${
                   msg.sender === playerName
-                    ? 'bg-blue-700 text-right text-white self-end shadow-md'
+                    ? 'bg-blue text-right text-white self-end shadow-md'
                     : 'bg-gray-800 text-left text-white shadow-md'
                 }`}
               >
