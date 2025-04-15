@@ -718,7 +718,7 @@ export default function Game() {
                 max-w-sm /* Ou outro valor adequado para telas maiores */
               }
               /* Estilo para telas pequenas (centralizado na parte inferior) */
-              @media (max-width: 640px) {
+              @media (max-width: 641px) {
                 left-1/2
                 -translate-x-1/2
                 /* Garante que a parte inferior esteja visível */
