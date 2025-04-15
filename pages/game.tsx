@@ -12,6 +12,7 @@ import { LockClosedIcon } from '@heroicons/react/24/solid';
 import { io } from 'socket.io-client'
 import { DotLoader } from 'react-spinners';
 
+
 //import successSound from '/sounds/success.mp3';
 
 const themes = ['família', 'natureza', 'turismo', 'animais', 'tecnologia', 'gastronomia']
@@ -115,7 +116,10 @@ export default function Game() {
   const [chatPartnerName, setChatPartnerName] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [typingIndicator, setTypingIndicator] = useState<{ [clientId: string]: boolean }>({});
- 
+  const enterSoundRef = useRef<HTMLAudioElement | null>(null);
+  const chatRequestReceivedSoundRef = useRef<HTMLAudioElement | null>(null); // Referência para o som de pedido recebido
+  const chatRequestResponseSoundRef = useRef<HTMLAudioElement | null>(null); // Referência para o som de resposta ao pedido
+
   //const clientId = ablyClient?.auth.clientId;
   const playerName = session?.user?.name || 'Anônimo';
   
@@ -278,11 +282,15 @@ export default function Game() {
       chatRequestChannel.subscribe('request', (message: Ably.Message) => {
         const request: ChatRequest = message.data;
         setChatRequestsReceived((prev) => [...prev, request]);
+        // Reproduzir som ao receber um pedido de bate-papo
+        chatRequestReceivedSoundRef.current?.play();
       });
   
       chatRequestChannel.subscribe('response', (message: Ably.Message) => {
         const { accepted, fromClientId, fromName } = message.data;
         if (accepted) {
+          // Reproduzir som ao receber uma resposta (aceitar ou recusar)
+          chatRequestResponseSoundRef.current?.play();
           //alert(`🤝 ${fromName} aceitou seu pedido de bate-papo!`);
           showToast(`🤝 ${fromName} aceitou seu pedido de bate-papo!`, 'info');
           const chatChannelName = getChatChannelName(currentClientId, fromClientId);
@@ -367,7 +375,8 @@ export default function Game() {
     setChatRequestsReceived((prev) => prev.filter((req) => req.fromClientId !== request.fromClientId));
     // [ACRESCENTADO] Abrir a bolha de chat após a aceitação
     openChatBubble({ clientId: request.fromClientId, name: request.fromName });
-    // A inscrição nos canais de mensagens e digitação agora é feita dentro de openChatBubble
+    // Reproduzir som ao aceitar um pedido
+    chatRequestResponseSoundRef.current?.play();
   };
 
   const handleRejectChatRequest = (request: ChatRequest) => {
@@ -375,6 +384,8 @@ export default function Game() {
     const responseChannel = ablyClient.channels.get(`chat-requests:${request.fromClientId}`);
     responseChannel.publish('response', { accepted: false, fromClientId: clientId, fromName: playerName });
     setChatRequestsReceived((prev) => prev.filter((req) => req.fromClientId !== request.fromClientId));
+    // Reproduzir som ao recusar um pedido
+    chatRequestResponseSoundRef.current?.play();
   };
 
   const openChatBubble = (player: Player) => {
@@ -659,38 +670,42 @@ export default function Game() {
         )}
       </AnimatePresence>
       
-      {chatRequestsReceived.length > 0 && (
-        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 flex justify-center items-center z-50 backdrop-blur-sm">
-          <div className="bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl p-8 max-w-md w-full shadow-lg border-2 border-gray-600 animate__animated animate__fadeIn">
-            <h2 className="text-xl font-bold text-yellow mb-6 glow-text">🕹️ Pedidos de Bate-papo Recebidos!</h2>
-            <ul className="space-y-4">
-              {chatRequestsReceived.map((request) => (
-                <li
-                  key={request.fromClientId}
-                  className="bg-gray-900 rounded-md p-4 flex items-center justify-between border-b border-gray-700"
-                >
-                  <span className="text-white font-semibold">{request.fromName}</span>
-                  <div className="flex space-x-3">
-                    <button
-                      onClick={() => handleAcceptChatRequest(request)}
-                      className="bg-green hover:bg-green text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green"
-                    >
-                      <Check className="h-5 w-5" /> Aceitar
-                    </button>
-                    <button
-                      onClick={() => handleRejectChatRequest(request)}
-                      className="bg-red hover:bg-red text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red"
-                    >
-                      <X className="h-5 w-5" /> Recusar
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
+      <>
+        <audio ref={enterSoundRef} src="/sounds/player_enter.mp3" preload="auto" />
+        <audio ref={chatRequestReceivedSoundRef} src="/sounds/chat_request_received.mp3" preload="auto" />
+        <audio ref={chatRequestResponseSoundRef} src="/sounds/chat_request_response.mp3" preload="auto" />
+        {chatRequestsReceived.length > 0 && (
+          <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 flex justify-center items-center z-50 backdrop-blur-sm">
+            <div className="bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl p-8 max-w-md w-full shadow-lg border-2 border-gray-600 animate__animated animate__fadeIn">
+              <h2 className="text-xl font-bold text-yellow mb-6 glow-text">🕹️ Pedidos de Bate-papo Recebidos!</h2>
+              <ul className="space-y-4">
+                {chatRequestsReceived.map((request) => (
+                  <li
+                    key={request.fromClientId}
+                    className="bg-gray-900 rounded-md p-4 flex items-center justify-between border-b border-gray-700"
+                  >
+                    <span className="text-white font-semibold">{request.fromName}</span>
+                    <div className="flex space-x-3">
+                      <button
+                        onClick={() => handleAcceptChatRequest(request)}
+                        className="bg-green hover:bg-green text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green"
+                      >
+                        <Check className="h-5 w-5" /> Aceitar
+                      </button>
+                      <button
+                        onClick={() => handleRejectChatRequest(request)}
+                        className="bg-red hover:bg-red text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red"
+                      >
+                        <X className="h-5 w-5" /> Recusar
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-        </div>
-      )}
-
+        )}
+      </>
       {isChatBubbleOpen && (
         <div className={`fixed bottom-4 left-4 z-50 max-w-sm w-full flex flex-col shadow-lg rounded-lg bg-gradient-to-br from-gray-800 to-gray-700 border-2 border-gray-600 animate__animated animate__slideInUp
             @media (max-width: 640px) { /* Tela pequena (sm) ou menor */
