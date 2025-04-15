@@ -528,26 +528,7 @@ export default function ResultsPage() {
         )}
       </>
       {isChatBubbleOpen && (
-        <div 
-            className={`fixed bottom-4 z-50 max-w-sm w-64 flex flex-col shadow-lg rounded-lg bg-gradient-to-br from-gray-800 to-gray-700 border-2 border-gray-600 animate__animated animate__slideInUp
-              /* Estilo padrão para telas maiores (ajustado) */
-              @media (min-width: 641px) {
-                fixed
-                left-54
-                max-w-md /* Ou outro valor adequado para telas maiores */
-              }
-              /* Estilo para telas pequenas (centralizado na parte inferior) */
-              @media (max-width: 640px) {
-                fixed
-                left-50%
-                -translate-x-1/2
-                /* Garante que a parte inferior esteja visível */
-                bottom-4
-                /* Opcional: Largura máxima um pouco menor para evitar bordas */
-                max-w-[calc(100vw - 16px)]
-              }
-            `}
-        >
+        <div className="fixed bottom-4 z-50 max-w-sm w-full flex flex-col shadow-lg rounded-lg bg-gradient-to-br from-gray-800 to-gray-700 border-2 border-gray-600 animate__animated animate__slideInUp">
           <div className="bg-gray-900 p-3 rounded-t-lg flex justify-between items-center border-b border-gray-700">
             <span className="font-bold text-cyan-400 glow-text">{chatPartnerName}</span>
             <button onClick={closeChatBubble} className="text-gray-400 hover:text-gray-300 focus:outline-none">
