@@ -486,9 +486,9 @@ export default function ResultsPage() {
       </AnimatePresence>
 
       <>
-        <audio ref={enterSoundRef} src="/sounds/player_enter.mp3" preload="auto" />
-        <audio ref={chatRequestReceivedSoundRef} src="/sounds/chat_request_received.mp3" preload="auto" />
-        <audio ref={chatRequestResponseSoundRef} src="/sounds/chat_request_response.mp3" preload="auto" />
+        <audio ref={enterSoundRef} src="/sounds/accepted_sound.mp3" preload="auto" />
+        <audio ref={chatRequestReceivedSoundRef} src="/sounds/received_sound.mp3" preload="auto" />
+        <audio ref={chatRequestResponseSoundRef} src="/sounds/refuse_sound.mp3" preload="auto" />
         {chatRequestsReceived.length > 0 && (
           <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 flex justify-center items-center z-50 backdrop-blur-sm">
             <div className="bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl p-8 max-w-md w-full shadow-lg border-2 border-gray-600 animate__animated animate__fadeIn">
