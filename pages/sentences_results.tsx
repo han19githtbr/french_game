@@ -528,15 +528,15 @@ export default function ResultsPage() {
         <div 
           className={`fixed bottom-4 left-54 z-50 max-w-sm w-full flex flex-col shadow-lg rounded-lg bg-gradient-to-br from-gray-800 to-gray-700 border-2 border-gray-600 animate__animated animate__slideInUp
             @media (min-width: 641px) { /* Tela pequena (sm) ou maior */
-              max-w-[calc(100vw - 32px)] /* Garante que não ultrapasse a largura da tela com margens */
+              max-w-[calc(100vw - 62px)] /* Garante que não ultrapasse a largura da tela com margens */
             }
             @media (max-width: 640px) { /* Tela pequena (sm) ou menor */
               left-1/2
               -translate-x-1/2
-              max-w-[calc(100vw - 32px)] /* Garante que não ultrapasse a largura da tela com margens */
+              max-w-[calc(100vw - 62px)] /* Garante que não ultrapasse a largura da tela com margens */
             }
             @media (max-width: 320px) { /* Tela muito pequena (ex: alguns celulares antigos) */
-              max-w-[calc(100vw - 32px)] /* Garante que não ultrapasse a largura da tela com margens */
+              max-w-[calc(100vw - 62px)] /* Garante que não ultrapasse a largura da tela com margens */
             }
           `}
         >
