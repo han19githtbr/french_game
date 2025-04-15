@@ -711,19 +711,22 @@ export default function Game() {
       </>
       {isChatBubbleOpen && (
         <div 
-          className={`fixed bottom-4 left-54 z-50 max-w-sm w-full flex flex-col shadow-lg rounded-lg bg-gradient-to-br from-gray-800 to-gray-700 border-2 border-gray-600 animate__animated animate__slideInUp
-            @media (min-width: 641px) { /* Tela pequena (sm) ou maior */
-              max-w-[calc(100vw - 32px)] /* Garante que não ultrapasse a largura da tela com margens */
-            }
-            @media (max-width: 640px) { /* Tela pequena (sm) ou menor */
-              left-20
-              -translate-x-1/2
-              max-w-[calc(100vw - 32px)] /* Garante que não ultrapasse a largura da tela com margens */
-            }
-            @media (max-width: 320px) { /* Tela muito pequena (ex: alguns celulares antigos) */
-              max-w-[calc(100vw - 32px)] /* Garante que não ultrapasse a largura da tela com margens */
-            }
-          `}
+            className={`fixed bottom-4 z-50 max-w-sm w-full flex flex-col shadow-lg rounded-lg bg-gradient-to-br from-gray-800 to-gray-700 border-2 border-gray-600 animate__animated animate__slideInUp
+              /* Estilo padrão para telas maiores (ajustado) */
+              @media (min-width: 641px) {
+                left-54
+                max-w-md /* Ou outro valor adequado para telas maiores */
+              }
+              /* Estilo para telas pequenas (centralizado na parte inferior) */
+              @media (max-width: 640px) {
+                left-1/2
+                -translate-x-1/2
+                /* Garante que a parte inferior esteja visível */
+                bottom-4
+                /* Opcional: Largura máxima um pouco menor para evitar bordas */
+                max-w-[calc(100vw - 16px)]
+              }
+            `}
         >
           
           <div className="bg-gray-900 p-3 rounded-t-lg flex justify-between items-center border-b border-gray-700">
