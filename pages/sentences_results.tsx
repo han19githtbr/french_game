@@ -486,7 +486,7 @@ export default function ResultsPage() {
               <div>
                 <button
                   onClick={() => handleHidePlayer(player.clientId)}
-                  className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-2 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-gray-500 mr-2"
+                  className="bg-blue hover:bg-gray-700 text-white font-bold py-2 px-2 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-gray-500 mr-2"
                   title="Ocultar Jogador"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
