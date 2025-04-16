@@ -393,7 +393,7 @@ export default function Frase() {
     }));
     setChatInput('');
     setIsTyping(false);
-    publishTypingStatus(false);
+    //publishTypingStatus(false);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -614,7 +614,10 @@ export default function Frase() {
                   }}
                   className="bg-gradient-to-br from-blue to-purple hover:from-blue hover:to-purple text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue"
                 >
-                  {/* ... Botão de Bate-papo ... */}
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                  </svg>
+                  Bate-papo
                 </button>
               </div>
             </li>
@@ -672,15 +675,15 @@ export default function Frase() {
                     <div className="flex space-x-3">
                       <button
                         onClick={() => handleAcceptChatRequest(request)}
-                        className="bg-green hover:bg-green text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green flex items-center space-x-2"
+                        className="bg-blue hover:bg-blue text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue flex items-center space-x-2"
                       >
-                        <Check className="h-5 w-5" /> Aceitar
+                        <Check className="h-5 w-5 mr-2" /> Aceitar
                       </button>
                       <button
                         onClick={() => handleRejectChatRequest(request)}
                         className="bg-red hover:bg-red text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red flex items-center space-x-2"
                       >
-                        <X className="h-5 w-5" /> Recusar
+                        <X className="h-5 w-5 mr-2" /> Recusar
                       </button>
                     </div>
                   </li>
@@ -719,7 +722,7 @@ export default function Frase() {
             `}
         >
           <div className="bg-gray-900 p-3 rounded-t-lg flex justify-between items-center border-b border-gray-700">
-            <span className="font-bold text-cyan-400 glow-text">{chatPartnerName}</span>
+            <span className="font-bold text-gray-900 glow-text">{chatPartnerName}</span>
             <button onClick={closeChatBubble} className="text-gray-400 hover:text-gray-300 focus:outline-none">
               <X className="h-5 w-5" />
             </button>
