@@ -242,6 +242,7 @@ export default function Game() {
     );
     if (alreadyExists) return;
 
+    
     if (channelName && otherClientId) {
       setActiveChats((prev) => ({
         ...prev,
@@ -466,20 +467,17 @@ export default function Game() {
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setChatInput(value);
-    
-    if (value.trim() && !isTyping) {
+    setChatInput(e.target.value);
+    if (e.target.value.trim() && !isTyping) {
       setIsTyping(true);
       publishTypingStatus(true);
-
       setTimeout(() => {
-        if (isTyping && value === chatInput) {
+        if (isTyping && e.target.value === chatInput) {
           setIsTyping(false);
           publishTypingStatus(false);
         }
       }, 1500);
-    } else if (!value.trim() && isTyping) {
+    } else if (!e.target.value.trim() && isTyping) {
       setIsTyping(false);
       publishTypingStatus(false);
     }
@@ -803,7 +801,7 @@ export default function Game() {
                 key={index}
                 className={`mb-2 p-3 rounded-md ${
                   msg.sender === playerName
-                    ? 'bg-gray-800 text-right text-white self-end shadow-md'
+                    ? 'bg-blue text-right text-white self-end shadow-md'
                     : 'bg-gray-800 text-left text-white shadow-md'
                 }`}
               >
