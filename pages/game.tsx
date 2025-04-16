@@ -236,6 +236,12 @@ export default function Game() {
     const otherClientId = channelName.split(':')[1]?.split('-')?.find(id => id !== clientId);
     const otherUserName = playersOnline.find(player => player.clientId === otherClientId)?.name || 'Usuário Desconhecido';
 
+    // Evita duplicar mensagens com mesmo sender + timestamp
+    const alreadyExists = activeChats[channelName]?.some(msg =>
+      msg.sender === sender && msg.timestamp === timestamp
+    );
+    if (alreadyExists) return;
+
     if (channelName && otherClientId) {
       setActiveChats((prev) => ({
         ...prev,
@@ -460,17 +466,20 @@ export default function Game() {
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setChatInput(e.target.value);
-    if (e.target.value.trim() && !isTyping) {
+    const value = e.target.value;
+    setChatInput(value);
+    
+    if (value.trim() && !isTyping) {
       setIsTyping(true);
       publishTypingStatus(true);
+
       setTimeout(() => {
-        if (isTyping && e.target.value === chatInput) {
+        if (isTyping && value === chatInput) {
           setIsTyping(false);
           publishTypingStatus(false);
         }
       }, 1500);
-    } else if (!e.target.value.trim() && isTyping) {
+    } else if (!value.trim() && isTyping) {
       setIsTyping(false);
       publishTypingStatus(false);
     }
@@ -783,7 +792,7 @@ export default function Game() {
         >
           
           <div className="bg-gray-900 p-3 rounded-t-lg flex justify-between items-center border-b border-gray-700">
-            <span className="font-bold text-gray-900 glow-text">{chatPartnerName}</span>
+            <span className="font-bold text-gray-300 glow-text">{chatPartnerName}</span>
             <button onClick={closeChatBubble} className="text-gray-400 hover:text-gray-300 focus:outline-none">
               <X className="h-5 w-5" />
             </button>
@@ -794,11 +803,11 @@ export default function Game() {
                 key={index}
                 className={`mb-2 p-3 rounded-md ${
                   msg.sender === playerName
-                    ? 'bg-blue text-right text-white self-end shadow-md'
+                    ? 'bg-gray-800 text-right text-white self-end shadow-md'
                     : 'bg-gray-800 text-left text-white shadow-md'
                 }`}
               >
-                <span className="text-xs italic text-gray-900">{msg.sender}:</span>
+                <span className="text-xs italic text-gray-300">{msg.sender}:</span>
                 <p className="font-medium">{msg.text}</p>
               </div>
             ))}
