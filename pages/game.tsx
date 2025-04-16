@@ -676,7 +676,7 @@ export default function Game() {
               <div>
                 <button
                   onClick={() => handleHidePlayer(player.clientId)}
-                  className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-2 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-gray-500 mr-2"
+                  className="bg-blue hover:bg-gray-700 text-white font-bold py-2 px-2 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-gray-500 mr-2"
                   title="Ocultar Jogador"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -772,29 +772,13 @@ export default function Game() {
       </>
       {isChatBubbleOpen && (
         <div
-            className={`fixed bottom-0 left-1/2 z-50 max-w-sm w-full flex flex-col shadow-lg rounded-t-lg bg-gradient-to-br from-gray-800 to-gray-700 border-t-2 border-gray-600 animate__animated animate__slideInUp -translate-x-1/2
-              @media (min-width: 641px) { /* Tela pequena (sm) ou maior */
-                /* Mantenha o posicionamento inferior e centralizado */
-                bottom-0
-                left-1/2
-                -translate-x-1/2
-                max-w-md /* Ajuste a largura máxima para telas maiores se necessário */
-                border-t-2 /* Garante a borda superior */
-                rounded-t-lg /* Garante os cantos arredondados superiores */
-                rounded-bl-none /* Remove o arredondamento inferior esquerdo */
-                rounded-br-none /* Remove o arredondamento inferior direito */
-              }
-              @media (max-width: 640px) { /* Tela pequena (sm) ou menor */
-                /* Já está centralizado e na parte inferior */
-                bottom-0
-                left-1/2
-                -translate-x-1/2
-                max-w-[calc(100vw - 16px)] /* Ajusta a largura para telas menores */
-                border-t-2
-                rounded-t-lg
-                rounded-bl-none
-                rounded-br-none
-              }
+            className={`fixed bottom-0 left-1/2 -translate-x-1/2 z-50
+              w-full max-w-[calc(100vw-16px)] sm:max-w-md
+              flex flex-col shadow-lg rounded-t-lg bg-gradient-to-br from-gray-800 to-gray-700
+              border-t-2 border-gray-600
+              animate__animated animate__slideInUp
+              rounded-bl-none rounded-br-none
+              px-2 sm:px-0
             `}
         >
           
@@ -842,7 +826,6 @@ export default function Game() {
           </div>
         </div>
       )}
-
 
       <motion.h1 
         initial={{ opacity: 0, y: -20 }} 

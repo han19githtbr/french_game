@@ -9,9 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { saveProgress } from './sentences_results'
 import { DotLoader } from 'react-spinners';
 
-
 const themes = ['família', 'natureza', 'turismo', 'animais', 'tecnologia', 'gastronomia']
-
 
 const animalSounds: Record<string, string> = {
   'C\'est mon chien': '/sounds/cachorro.mp3',
@@ -110,7 +108,7 @@ export default function Frase() {
   const enterSoundRef = useRef<HTMLAudioElement | null>(null);
   const chatRequestReceivedSoundRef = useRef<HTMLAudioElement | null>(null); // Referência para o som de pedido recebido
   const chatRequestResponseSoundRef = useRef<HTMLAudioElement | null>(null); // Referência para o som de resposta ao pedido
-
+  const chatHandlersRef = useRef<Record<string, (message: Ably.Message) => void>>({});
   
   //const clientId = ablyClient?.auth.clientId;
   const playerName = session?.user?.name || 'Anônimo';
@@ -185,9 +183,9 @@ export default function Frase() {
 
 
   // Move as declarações das funções para fora do useEffect
-  const handleChatMessage = (message: Ably.Message) => {
+  const handleChatMessage = (message: Ably.Message, channelName: string) => {
       const { sender, text, timestamp } = message.data;
-      const channelName = message.name; // [CORRIGIDO] O nome do canal contém os IDs dos participantes
+      //const channelName = message.name; // [CORRIGIDO] O nome do canal contém os IDs dos participantes
       const otherClientId = channelName?.split(':')[1]?.split('-')?.find(id => id !== clientId);
       const otherUserName = playersOnline.find(player => player.clientId === otherClientId)?.name || 'Usuário Desconhecido';
   
@@ -266,10 +264,18 @@ export default function Frase() {
           setActiveChats((prev) => ({ ...prev, [chatChannelName]: [] }));
           setIsChatBubbleOpen(chatChannelName);
           setChatPartnerName(fromName);
-          // [ACRESCENTADO] Inscrever-se no canal de mensagens quando o chat é aceito
-          ablyClient.channels.get(chatChannelName).subscribe('message', handleChatMessage);
+          
+          const chatMessageHandler = (message: Ably.Message) => {
+            handleChatMessage(message, chatChannelName);
+          };
+          
+          ablyClient.channels.get(chatChannelName).subscribe('message', chatMessageHandler);
+          
           // [ACRESCENTADO] Inscrever-se no canal de digitação quando o chat é aceito
-          ablyClient.channels.get(getTypingChannelName(currentClientId, fromClientId)).subscribe('typing', handleTypingStatus);
+          ablyClient.channels
+            .get(getTypingChannelName(currentClientId, fromClientId))
+            .subscribe('typing', handleTypingStatus);
+        
         } else {
           //alert(`❌ ${fromName} negou seu pedido de bate-papo.`);
           showToast(`❌ ${fromName} negou seu pedido de bate-papo.`, 'info');
@@ -291,7 +297,7 @@ export default function Frase() {
       chatRequestChannel?.unsubscribe('response');
       // [CORRIGIDO] Cancelar a inscrição de todos os canais de chat ativos ao desmontar
       for (const channelName in activeChats) {
-        ablyClient?.channels.get(channelName)?.unsubscribe('message', handleChatMessage);
+        ablyClient?.channels.get(channelName)?.unsubscribe('message', chatHandlersRef.current[channelName]);
         // [ACRESCENTADO] Extrai os clientIds do nome do canal para cancelar a inscrição do canal de digitação
         const ids = channelName.split(':')[1]?.split('-');
         if (ids && ids.length === 2) {
@@ -339,7 +345,12 @@ export default function Frase() {
     setChatRequestsReceived((prev) => prev.filter((req) => req.fromClientId !== request.fromClientId));
     
     // [CORREÇÃO] Inscrever-se nos canais de mensagens e digitação AQUI para o receptor
-    ablyClient.channels.get(chatChannelName).subscribe('message', handleChatMessage);
+    const chatMessageHandler = (message: Ably.Message) => {
+      handleChatMessage(message, chatChannelName);
+    };
+    ablyClient.channels.get(chatChannelName).subscribe('message', chatMessageHandler);
+    chatHandlersRef.current[chatChannelName] = chatMessageHandler;
+    
     const typingChannelName = getTypingChannelName(clientId, request.fromClientId);
     ablyClient.channels.get(typingChannelName).subscribe('typing', handleTypingStatus);
     
@@ -696,29 +707,13 @@ export default function Frase() {
 
       {isChatBubbleOpen && (
         <div
-            className={`fixed bottom-0 left-1/2 z-50 max-w-sm w-full flex flex-col shadow-lg rounded-t-lg bg-gradient-to-br from-gray-800 to-gray-700 border-t-2 border-gray-600 animate__animated animate__slideInUp -translate-x-1/2
-              @media (min-width: 641px) { /* Tela pequena (sm) ou maior */
-                /* Mantenha o posicionamento inferior e centralizado */
-                bottom-0
-                left-1/2
-                -translate-x-1/2
-                max-w-md /* Ajuste a largura máxima para telas maiores se necessário */
-                border-t-2 /* Garante a borda superior */
-                rounded-t-lg /* Garante os cantos arredondados superiores */
-                rounded-bl-none /* Remove o arredondamento inferior esquerdo */
-                rounded-br-none /* Remove o arredondamento inferior direito */
-              }
-              @media (max-width: 640px) { /* Tela pequena (sm) ou menor */
-                /* Já está centralizado e na parte inferior */
-                bottom-0
-                left-1/2
-                -translate-x-1/2
-                max-w-[calc(100vw - 16px)] /* Ajusta a largura para telas menores */
-                border-t-2
-                rounded-t-lg
-                rounded-bl-none
-                rounded-br-none
-              }
+            className={`fixed bottom-0 left-1/2 -translate-x-1/2 z-50
+              w-full max-w-[calc(100vw-16px)] sm:max-w-md
+              flex flex-col shadow-lg rounded-t-lg bg-gradient-to-br from-gray-800 to-gray-700
+              border-t-2 border-gray-600
+              animate__animated animate__slideInUp
+              rounded-bl-none rounded-br-none
+              px-2 sm:px-0
             `}
         >
           <div className="bg-gray-900 p-3 rounded-t-lg flex justify-between items-center border-b border-gray-700">
