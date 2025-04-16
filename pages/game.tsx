@@ -749,18 +749,18 @@ export default function Game() {
                     className="bg-gray-900 rounded-md p-4 flex items-center justify-between border-b border-gray-700"
                   >
                     <span className="text-white font-semibold">{request.fromName}</span>
-                    <div className="flex space-x-3">
+                    <div className="flex flex-wrap gap-3">
                       <button
                         onClick={() => handleAcceptChatRequest(request)}
-                        className="bg-blue hover:bg-blue text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue flex items-center space-x-2"
+                        className="flex items-center justify-center whitespace-nowrap bg-blue hover:bg-blue text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue"
                       >
-                        <Check className="h-5 w-5 mr-2" /> Aceitar
+                        <Check className="h-5 w-5 mr-2 shrink-0" /> Aceitar
                       </button>
                       <button
                         onClick={() => handleRejectChatRequest(request)}
-                        className="bg-red hover:bg-red text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red flex items-center space-x-2"
+                        className="flex items-center justify-center whitespace-nowrap bg-red hover:bg-red text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red"
                       >
-                        <X className="h-5 w-5 mr-2" /> Recusar
+                        <X className="h-5 w-5 mr-2 shrink-0" /> Recusar
                       </button>
                     </div>
                   </li>
