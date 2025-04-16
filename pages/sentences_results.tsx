@@ -54,6 +54,8 @@ export default function ResultsPage() {
   const [logoutTimeoutId, setLogoutTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
   const [playersOnline, setPlayersOnline] = useState<Player[]>([])
+  const [hiddenPlayers, setHiddenPlayers] = useState<string[]>([]);
+
   const [showNotification, setShowNotification] = useState<ShowNotification | null>(null)
 
   const [notification, setNotification] = useState<{ message: string; type: 'info' | 'success' | 'error' } | null>(null);
@@ -75,6 +77,14 @@ export default function ResultsPage() {
   
   //const clientId = ablyClient?.auth.clientId;
   const playerName = session?.user?.name || 'Anônimo';
+
+  const handleHidePlayer = (clientId: string) => {
+    setHiddenPlayers((prev) => [...prev, clientId]);
+  };
+
+  const handleShowPlayer = (clientId: string) => {
+    setHiddenPlayers((prev) => prev.filter((id) => id !== clientId));
+  };
 
   const showToast = (message: string, type: 'info' | 'success' | 'error') => {
     setNotification({ message, type });
@@ -292,6 +302,12 @@ export default function ResultsPage() {
     setIsChatBubbleOpen(chatChannelName);
     setChatPartnerName(request.fromName);
     setChatRequestsReceived((prev) => prev.filter((req) => req.fromClientId !== request.fromClientId));
+    
+    // [CORREÇÃO] Inscrever-se nos canais de mensagens e digitação AQUI para o receptor
+    ablyClient.channels.get(chatChannelName).subscribe('message', handleChatMessage);
+    const typingChannelName = getTypingChannelName(clientId, request.fromClientId);
+    ablyClient.channels.get(typingChannelName).subscribe('typing', handleTypingStatus);
+    
     // [ACRESCENTADO] Abrir a bolha de chat após a aceitação
     openChatBubble({ clientId: request.fromClientId, name: request.fromName });
     chatRequestResponseSoundRef.current?.play();
@@ -315,12 +331,12 @@ export default function ResultsPage() {
     setChatPartnerName(player.name);
     // [ACRESCENTADO] Inscrever-se no canal de mensagens ao abrir a bolha
     // [CORRIGIDO] A verificação de existência do canal não é necessária antes de se inscrever
-    ablyClient.channels.get(chatChannelName).subscribe('message', handleChatMessage);
+    /*ablyClient.channels.get(chatChannelName).subscribe('message', handleChatMessage);
 
     // [ACRESCENTADO] Inscrever-se no canal de digitação ao abrir a bolha
     // [CORRIGIDO] A verificação de existência do canal não é necessária antes de se inscrever
     const typingChannelName = getTypingChannelName(clientId, player.clientId);
-    ablyClient.channels.get(typingChannelName).subscribe('typing', handleTypingStatus);
+    ablyClient.channels.get(typingChannelName).subscribe('typing', handleTypingStatus);*/
   };
 
   const closeChatBubble = () => {
@@ -442,31 +458,59 @@ export default function ResultsPage() {
       </div>      
 
       {/*<h1 className="text-2xl font-bold mb-4 mt-6">Jogadores Online</h1>*/}
+      {/*<h1 className="text-2xl font-bold mb-4 mt-6">Jogadores Online</h1>*/}
       <ul className="space-y-3 w-full max-w-md">
-        {playersOnline.map((player) => (
-          <li
-            key={player.clientId}
-            className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg p-4 flex items-center justify-between shadow-md border border-gray-600 transition duration-300 ease-in-out transform hover:scale-105"
-          >
-            <div className="flex items-center">
-              <div className="w-2 h-2 rounded-full bg-green mr-3 animate-pulse" /> {/* Indicador de online */}
-              <span className="font-bold text-lg text-white">{player.name}</span>
-            </div>
-            <button
-              onClick={() => {
-                handleRequestChat(player);
-                openChatBubble(player); // 'player' só existe aqui dentro do map
-              }}
-              className="bg-gradient-to-br from-blue to-purple hover:from-blue hover:to-purple text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue"
+        {playersOnline
+          .filter((player) => !hiddenPlayers.includes(player.clientId))
+          .map((player) => (
+            <li
+              key={player.clientId}
+              className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg p-4 flex items-center justify-between shadow-md border border-gray-600 transition duration-300 ease-in-out transform hover:scale-105"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-              </svg>
-              Iniciar Bate-papo
-            </button>
-          </li>
-        ))}
-      </ul>    
+              <div className="flex items-center">
+                <div className="w-2 h-2 rounded-full bg-green mr-3 animate-pulse" /> {/* Indicador de online */}
+                <span className="font-bold text-lg text-white">{player.name}</span>
+              </div>
+              <div>
+                <button
+                  onClick={() => handleHidePlayer(player.clientId)}
+                  className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-2 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-gray-500 mr-2"
+                  title="Ocultar Jogador"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7 1.274 4.057 1.57 8.957 0 12-4.478 0-8.268-2.943-9.542-7-1.274-4.057-1.57-8.957 0-12z" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => {
+                    handleRequestChat(player);
+                    openChatBubble(player);
+                  }}
+                  className="bg-gradient-to-br from-blue to-purple hover:from-blue hover:to-purple text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue"
+                >
+                  {/* ... Botão de Bate-papo ... */}
+                </button>
+              </div>
+            </li>
+          ))}
+      </ul>
+
+      {/* Miniaturas dos jogadores ocultos */}
+      <div className="fixed bottom-4 right-4 bg-gray-800 rounded-md shadow-md border border-gray-700 overflow-x-auto h-16 flex items-center p-2">
+        {playersOnline
+          .filter((player) => hiddenPlayers.includes(player.clientId))
+          .map((player) => (
+            <div
+              key={player.clientId}
+              className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-white text-xs cursor-pointer mr-2"
+              onClick={() => handleShowPlayer(player.clientId)}
+              title={`Mostrar ${player.name}`}
+            >
+              {player.name.substring(0, 2).toUpperCase()}
+            </div>
+          ))}
+      </div>    
 
       <AnimatePresence>
         {showNotification && (
@@ -522,7 +566,32 @@ export default function ResultsPage() {
         )}
       </>
       {isChatBubbleOpen && (
-        <div className="absolute bottom-4 z-50 max-w-sm w-full flex flex-col shadow-lg rounded-lg bg-gradient-to-br from-gray-800 to-gray-700 border-2 border-gray-600 animate__animated animate__slideInUp">
+        <div
+            className={`fixed bottom-0 left-1/2 z-50 max-w-sm w-full flex flex-col shadow-lg rounded-t-lg bg-gradient-to-br from-gray-800 to-gray-700 border-t-2 border-gray-600 animate__animated animate__slideInUp -translate-x-1/2
+              @media (min-width: 641px) { /* Tela pequena (sm) ou maior */
+                /* Mantenha o posicionamento inferior e centralizado */
+                bottom-0
+                left-1/2
+                -translate-x-1/2
+                max-w-md /* Ajuste a largura máxima para telas maiores se necessário */
+                border-t-2 /* Garante a borda superior */
+                rounded-t-lg /* Garante os cantos arredondados superiores */
+                rounded-bl-none /* Remove o arredondamento inferior esquerdo */
+                rounded-br-none /* Remove o arredondamento inferior direito */
+              }
+              @media (max-width: 640px) { /* Tela pequena (sm) ou menor */
+                /* Já está centralizado e na parte inferior */
+                bottom-0
+                left-1/2
+                -translate-x-1/2
+                max-w-[calc(100vw - 16px)] /* Ajusta a largura para telas menores */
+                border-t-2
+                rounded-t-lg
+                rounded-bl-none
+                rounded-br-none
+              }
+            `}
+        >
           <div className="bg-gray-900 p-3 rounded-t-lg flex justify-between items-center border-b border-gray-700">
             <span className="font-bold text-cyan-400 glow-text">{chatPartnerName}</span>
             <button onClick={closeChatBubble} className="text-gray-400 hover:text-gray-300 focus:outline-none">
