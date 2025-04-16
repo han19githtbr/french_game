@@ -121,6 +121,8 @@ export default function Game() {
   const enterSoundRef = useRef<HTMLAudioElement | null>(null);
   const chatRequestReceivedSoundRef = useRef<HTMLAudioElement | null>(null); // Referência para o som de pedido recebido
   const chatRequestResponseSoundRef = useRef<HTMLAudioElement | null>(null); // Referência para o som de resposta ao pedido
+  const chatHandlersRef = useRef<Record<string, (message: Ably.Message) => void>>({});
+
 
   //const clientId = ablyClient?.auth.clientId;
   const playerName = session?.user?.name || 'Anônimo';
@@ -226,10 +228,12 @@ export default function Game() {
   };
 
   // Move as declarações das funções para fora do useEffect
-  const handleChatMessage = (message: Ably.Message) => {
+  const handleChatMessage = (message: Ably.Message, channelName: string) => {
     const { sender, text, timestamp } = message.data;
-    const channelName = message.name; // [CORRIGIDO] O nome do canal contém os IDs dos participantes
-    const otherClientId = channelName?.split(':')[1]?.split('-')?.find(id => id !== clientId);
+    //const channelName = message.name; // [CORRIGIDO] O nome do canal contém os IDs dos participantes
+    //const channelName = message.channelName; // ✅ CORRETO
+
+    const otherClientId = channelName.split(':')[1]?.split('-')?.find(id => id !== clientId);
     const otherUserName = playersOnline.find(player => player.clientId === otherClientId)?.name || 'Usuário Desconhecido';
 
     if (channelName && otherClientId) {
@@ -307,21 +311,24 @@ export default function Game() {
           setActiveChats((prev) => ({ ...prev, [chatChannelName]: [] }));
           setIsChatBubbleOpen(chatChannelName);
           setChatPartnerName(fromName);
-          // [ACRESCENTADO] Inscrever-se no canal de mensagens quando o chat é aceito
-          ablyClient.channels.get(chatChannelName).subscribe('message', handleChatMessage);
+          
+          const chatMessageHandler = (message: Ably.Message) => {
+            handleChatMessage(message, chatChannelName);
+          };
+          
+          ablyClient.channels.get(chatChannelName).subscribe('message', chatMessageHandler);
+         
           // [ACRESCENTADO] Inscrever-se no canal de digitação quando o chat é aceito
-          ablyClient.channels.get(getTypingChannelName(currentClientId, fromClientId)).subscribe('typing', handleTypingStatus);
+          ablyClient.channels
+            .get(getTypingChannelName(currentClientId, fromClientId))
+            .subscribe('typing', handleTypingStatus);
         } else {
           //alert(`❌ ${fromName} negou seu pedido de bate-papo.`);
           showToast(`❌ ${fromName} negou seu pedido de bate-papo.`, 'info');
         }
       });
-              
-      /*for (const chatId in activeChats) {
-        ablyClient.channels.get(`<span class="math-inline">\{chatChannelPrefix\}</span>{chatId}`).subscribe('message', handleChatMessage);
-        const otherClientId = chatId;
-        ablyClient.channels.get(`<span class="math-inline">\{typingChannelPrefix\}</span>{otherClientId}`).subscribe('typing', handleTypingStatus);
-      }*/
+             
+      
     };
 
     ablyClient.connection.once('connected', onConnected);
@@ -336,7 +343,7 @@ export default function Game() {
       chatRequestChannel?.unsubscribe('response');
       // [CORRIGIDO] Cancelar a inscrição de todos os canais de chat ativos ao desmontar
       for (const channelName in activeChats) {
-        ablyClient?.channels.get(channelName)?.unsubscribe('message', handleChatMessage);
+        ablyClient?.channels.get(channelName).unsubscribe('message', chatHandlersRef.current[channelName]);
         // [ACRESCENTADO] Extrai os clientIds do nome do canal para cancelar a inscrição do canal de digitação
         const ids = channelName.split(':')[1]?.split('-');
         if (ids && ids.length === 2) {
@@ -385,7 +392,15 @@ export default function Game() {
     setChatRequestsReceived((prev) => prev.filter((req) => req.fromClientId !== request.fromClientId));
     
     // [CORREÇÃO] Inscrever-se nos canais de mensagens e digitação AQUI para o receptor
-    ablyClient.channels.get(chatChannelName).subscribe('message', handleChatMessage);
+    //ablyClient.channels.get(chatChannelName).subscribe('message', handleChatMessage);
+    
+    const chatMessageHandler = (message: Ably.Message) => {
+      handleChatMessage(message, chatChannelName);
+    };
+    ablyClient.channels.get(chatChannelName).subscribe('message', chatMessageHandler);
+    chatHandlersRef.current[chatChannelName] = chatMessageHandler;
+    
+    
     const typingChannelName = getTypingChannelName(clientId, request.fromClientId);
     ablyClient.channels.get(typingChannelName).subscribe('typing', handleTypingStatus);
     

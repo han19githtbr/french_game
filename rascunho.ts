@@ -1,17 +1,5 @@
 /*export default function Game() {
-  
-  // [ACRESCENTADO] Função para gerar um nome de canal de chat único para um par de usuários
-  const getChatChannelName = (clientId1: string, clientId2: string) => {
-    const sortedIds = [clientId1, clientId2].sort();
-    return `chat:${sortedIds[0]}-${sortedIds[1]}`;
-  };
-
-  // [ACRESCENTADO] Função para gerar um nome de canal de digitação único para um par de usuários
-  const getTypingChannelName = (clientId1: string, clientId2: string) => {
-    const sortedIds = [clientId1, clientId2].sort();
-    return `typing:${sortedIds[0]}-${sortedIds[1]}`;
-  };
-
+    
   // Move as declarações das funções para fora do useEffect
   const handleChatMessage = (message: Ably.Message) => {
     const { sender, text, timestamp } = message.data;
@@ -103,8 +91,7 @@
           showToast(`❌ ${fromName} negou seu pedido de bate-papo.`, 'info');
         }
       });
-             
-      
+        
     };
 
     ablyClient.connection.once('connected', onConnected);
@@ -130,23 +117,37 @@
       ablyClient.connection.off('connected', onConnected);
     };
   }, [ablyClient, session, clientId]);
-     
+   
   
-  const openChatBubble = (player: Player) => {
-    if (!clientId || !ablyClient) { // [CORRIGIDO] Verifica se clientId e ablyClient são null
-      return;
-    }
-    const chatChannelName = getChatChannelName(clientId, player.clientId);
-    setActiveChats((prev) => prev[chatChannelName] ? prev : { ...prev, [chatChannelName]: [] });
-    setIsChatBubbleOpen(chatChannelName);
-    setChatPartnerName(player.name);
-    
-    ablyClient.channels.get(chatChannelName).subscribe('message', handleChatMessage);
-
-    const typingChannelName = getTypingChannelName(clientId, player.clientId);
-    ablyClient.channels.get(typingChannelName).subscribe('typing', handleTypingStatus);
+  const handleRequestChat = (otherPlayer: Player) => {
+    if (!ablyClient || !clientId) return;
+    const chatRequestChannel = ablyClient.channels.get(`chat-requests:${otherPlayer.clientId}`);
+    chatRequestChannel.publish('request', { fromClientId: clientId, fromName: playerName });
+    //alert(`⏳ Pedido de bate-papo enviado para ${otherPlayer.name}. Aguardando resposta...`);
+    showToast(`⏳ Pedido de bate-papo enviado para ${otherPlayer.name}. Aguardando resposta...`, 'info');
   };
-
+  
+  const handleAcceptChatRequest = (request: ChatRequest) => {
+    if (!ablyClient || !clientId) return;
+    const responseChannel = ablyClient.channels.get(`chat-requests:${request.fromClientId}`);
+    responseChannel.publish('response', { accepted: true, fromClientId: clientId, fromName: playerName });
+    const chatChannelName = getChatChannelName(clientId, request.fromClientId);
+    setActiveChats((prev) => ({ ...prev, [chatChannelName]: [] }));
+    setIsChatBubbleOpen(chatChannelName);
+    setChatPartnerName(request.fromName);
+    setChatRequestsReceived((prev) => prev.filter((req) => req.fromClientId !== request.fromClientId));
+    
+    // [CORREÇÃO] Inscrever-se nos canais de mensagens e digitação AQUI para o receptor
+    ablyClient.channels.get(chatChannelName).subscribe('message', handleChatMessage);
+    const typingChannelName = getTypingChannelName(clientId, request.fromClientId);
+    ablyClient.channels.get(typingChannelName).subscribe('typing', handleTypingStatus);
+    
+    // [ACRESCENTADO] Abrir a bolha de chat após a aceitação
+    openChatBubble({ clientId: request.fromClientId, name: request.fromName });
+    // Reproduzir som ao aceitar um pedido
+    chatRequestResponseSoundRef.current?.play();
+  };
+    
   const handleSendMessage = () => {
     if (!ablyClient || !isChatBubbleOpen || !chatInput.trim() || !clientId) return;
     const chatChannel = ablyClient.channels.get(isChatBubbleOpen);
@@ -160,13 +161,35 @@
     }));
     setChatInput('');
     setIsTyping(false);
-    publishTypingStatus(false);
+    //publishTypingStatus(false);
   };
-   
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setChatInput(e.target.value);
+    if (e.target.value.trim() && !isTyping) {
+      setIsTyping(true);
+      publishTypingStatus(true);
+      setTimeout(() => {
+        if (isTyping && e.target.value === chatInput) {
+          setIsTyping(false);
+          publishTypingStatus(false);
+        }
+      }, 1500);
+    } else if (!e.target.value.trim() && isTyping) {
+      setIsTyping(false);
+      publishTypingStatus(false);
+    }
+  };
+
+  const publishTypingStatus = (typing: boolean) => {
+    if (!ablyClient || !isChatBubbleOpen || !clientId) return;
+    // [CORRIGIDO] Envia o status de digitação para o canal correto baseado no chat aberto
+    const otherClientId = isChatBubbleOpen.split(':')[1]?.split('-')?.find(id => id !== clientId);
+    if (otherClientId) {
+      const typingChannel = ablyClient.channels.get(getTypingChannelName(clientId, otherClientId));
+      typingChannel.publish('typing', { isTyping: typing });
+    }
+  };
+  
 }*/
-
-
-
-
-
-
+  
