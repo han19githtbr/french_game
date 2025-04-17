@@ -29,7 +29,7 @@ const animalSounds: Record<string, string> = {
   'L\'Ours': '/sounds/bear.mp3',
   'Le Cheval': '/sounds/horse.mp3',
   'Le Perroquet': '/sounds/parrot.mp3',
-  'l\'Oiseau': '/sounds/bird.mp3',
+  'L\'Oiseau': '/sounds/bird.mp3',
   'Le Crocodile': '/sounds/alligator.mp3',
   'Un Gorille': '/sounds/gorila.mp3',
   'Le Mouton': '/sounds/sheep.mp3',
