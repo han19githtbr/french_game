@@ -634,7 +634,7 @@ export default function ResultsPage() {
       {/* Caixinha de miniaturas arrastável */}
       <div
         ref={boxRef}
-        className="fixed bg-gray-800 rounded-md shadow-md border border-blue overflow-x-auto resize-y max-h-32 min-h-12 flex items-center p-2 space-x-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 cursor-move"
+        className="fixed bg-transparent rounded-md shadow-md border border-blue overflow-x-auto resize-y max-h-32 min-h-12 flex items-center p-2 space-x-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 cursor-move"
         style={{
           top: position.y,
           left: position.x,
