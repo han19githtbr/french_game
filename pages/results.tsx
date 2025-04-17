@@ -158,6 +158,12 @@ export default function ResultsPage() {
       const otherClientId = channelName?.split(':')[1]?.split('-')?.find(id => id !== clientId);
       const otherUserName = playersOnline.find(player => player.clientId === otherClientId)?.name || 'Usuário Desconhecido';
   
+      // Evita duplicar mensagens com mesmo sender + timestamp
+      const alreadyExists = activeChats[channelName]?.some(msg =>
+        msg.sender === sender && msg.timestamp === timestamp
+      );
+      if (alreadyExists) return;
+      
       if (channelName && otherClientId) {
         setActiveChats((prev) => ({
           ...prev,
@@ -475,42 +481,46 @@ export default function ResultsPage() {
       {/*<h1 className="text-2xl font-bold mb-4 mt-6">Jogadores Online</h1>*/}
       <ul className="space-y-3 w-full max-w-md">
         {playersOnline
-          .filter((player) => !hiddenPlayers.includes(player.clientId))
-          .map((player) => (
-            <li
-              key={player.clientId}
-              className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg p-4 flex items-center justify-between shadow-md border border-gray-600 transition duration-300 ease-in-out transform hover:scale-105"
-            >
-              <div className="flex items-center">
-                <div className="w-2 h-2 rounded-full bg-green mr-3 animate-pulse" /> {/* Indicador de online */}
-                <span className="font-bold text-lg text-white">{player.name}</span>
-              </div>
-              <div>
-                <button
-                  onClick={() => handleHidePlayer(player.clientId)}
-                  className="bg-blue hover:bg-gray-700 text-white font-bold py-2 px-2 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-gray-500 mr-2"
-                  title="Ocultar Jogador"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7 1.274 4.057 1.57 8.957 0 12-4.478 0-8.268-2.943-9.542-7-1.274-4.057-1.57-8.957 0-12z" />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => {
-                    handleRequestChat(player);
-                    openChatBubble(player);
-                  }}
-                  className="bg-gradient-to-br from-blue to-purple hover:from-blue hover:to-purple text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                  </svg>
-                  Bate-papo
-                </button>
-              </div>
-            </li>
-          ))}
+        .filter((player) => !hiddenPlayers.includes(player.clientId))
+        .map((player) => (
+          <li
+            key={player.clientId}
+            className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg p-4 flex items-center justify-between shadow-md border border-gray-600 transition duration-300 ease-in-out transform hover:scale-105"
+          >
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="w-2 h-2 rounded-full bg-green mr-1 animate-pulse shrink-0" />
+              <span className="font-bold text-lg text-white truncate max-w-[140px] sm:max-w-[180px]">
+                {player.name}
+              </span>
+            </div>
+
+            <div className="flex items-center shrink-0">
+              <button
+                onClick={() => handleHidePlayer(player.clientId)}
+                className="bg-blue hover:bg-gray-700 text-white font-bold py-2 px-2 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-gray-500 mr-2"
+                title="Ocultar Jogador"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7 1.274 4.057 1.57 8.957 0 12-4.478 0-8.268-2.943-9.542-7-1.274-4.057-1.57-8.957 0-12z" />
+                </svg>
+              </button>
+
+              <button
+                onClick={() => {
+                  handleRequestChat(player);
+                  openChatBubble(player);
+                }}
+                className="bg-gradient-to-br from-blue to-purple hover:from-blue hover:to-purple text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
+                Bate-papo
+              </button>
+            </div>
+          </li>
+        ))}
       </ul>
 
       {/* Miniaturas dos jogadores ocultos */}
@@ -605,7 +615,7 @@ export default function ResultsPage() {
                 key={index}
                 className={`mb-2 p-3 rounded-md ${
                   msg.sender === playerName
-                    ? 'bg-blue text-right text-white self-end shadow-md'
+                    ? 'bg-gray-800 text-right text-white self-end shadow-md'
                     : 'bg-gray-800 text-left text-white shadow-md'
                 }`}
               >
