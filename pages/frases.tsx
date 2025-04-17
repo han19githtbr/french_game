@@ -618,13 +618,13 @@ export default function Frase() {
             <div className="flex items-center shrink-0">
               <button
                 onClick={() => handleHidePlayer(player.clientId)}
-                className="bg-blue hover:bg-gray-700 text-white font-bold py-2 px-2 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-gray-500 mr-2"
+                className="bg-blue hover:bg-gray-700 text-white font-bold py-2 px-2 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-gray-500 mr-2 cursor-pointer"
                 title="Ocultar Jogador"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7 1.274 4.057 1.57 8.957 0 12-4.478 0-8.268-2.943-9.542-7-1.274-4.057-1.57-8.957 0-12z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.06 10.06 0 012.19-3.368M6.423 6.423A9.967 9.967 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.05 10.05 0 01-4.128 5.14M15 12a3 3 0 11-6 0 3 3 0 016 0zm-9 9l18-18" />
                 </svg>
+
               </button>
 
               <button
@@ -632,7 +632,7 @@ export default function Frase() {
                   handleRequestChat(player);
                   openChatBubble(player);
                 }}
-                className="bg-gradient-to-br from-blue to-purple hover:from-blue hover:to-purple text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue"
+                className="bg-gradient-to-br from-blue to-purple hover:from-blue hover:to-purple text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
@@ -645,13 +645,13 @@ export default function Frase() {
       </ul>
 
       {/* Miniaturas dos jogadores ocultos */}
-      <div className="fixed bottom-4 right-4 bg-gray-800 rounded-md shadow-md border border-gray-700 overflow-x-auto h-16 flex items-center p-2">
+      <div className="fixed bottom-4 right-4 bg-gray-800 rounded-md shadow-md border border-gray-700 overflow-x-auto h-16 flex items-center p-2 cursor-pointer">
         {playersOnline
           .filter((player) => hiddenPlayers.includes(player.clientId))
           .map((player) => (
             <div
               key={player.clientId}
-              className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-white text-xs cursor-pointer mr-2"
+              className="w-8 h-8 rounded-full bg-gray-700 border border-blue flex items-center justify-center text-white text-xs cursor-pointer mr-2"
               onClick={() => handleShowPlayer(player.clientId)}
               title={`Mostrar ${player.name}`}
             >
