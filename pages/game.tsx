@@ -126,6 +126,8 @@ export default function Game() {
   const chatRequestResponseSoundRef = useRef<HTMLAudioElement | null>(null); // Referência para o som de resposta ao pedido
   const chatHandlersRef = useRef<Record<string, (message: Ably.Message) => void>>({});
 
+  const boxRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ x: 16, y: 16 });
 
   //const clientId = ablyClient?.auth.clientId;
   const playerName = session?.user?.name || 'Anônimo';
@@ -173,6 +175,44 @@ export default function Game() {
     }
   }, [showCongrats, images]);
   
+
+  // Função que ativa o drag
+  useEffect(() => {
+    const box = boxRef.current;
+    if (!box) return;
+
+    let isDragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    const onMouseDown = (e: MouseEvent) => {
+      isDragging = true;
+      offsetX = e.clientX - box.offsetLeft;
+      offsetY = e.clientY - box.offsetTop;
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp);
+    };
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return;
+      const newX = e.clientX - offsetX;
+      const newY = e.clientY - offsetY;
+      setPosition({ x: newX, y: newY });
+    };
+
+    const onMouseUp = () => {
+      isDragging = false;
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    };
+
+    box.addEventListener("mousedown", onMouseDown);
+
+    return () => {
+      box.removeEventListener("mousedown", onMouseDown);
+    };
+  }, []);
+
 
   useEffect(() => {
     if (correctAnswersCount >= 1) {
@@ -748,8 +788,17 @@ export default function Game() {
         ))}
       </ul>
 
-      {/* Miniaturas dos jogadores ocultos */}
-      <div className="fixed bottom-4 right-4 max-w-sm w-full bg-gray-800 rounded-md shadow-md border border-blue overflow-x-auto h-16 flex items-center p-2 space-x-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 cursor-pointer">
+      {/* Caixinha de miniaturas arrastável */}
+      <div
+        ref={boxRef}
+        className="absolute bg-gray-800 rounded-md shadow-md border border-blue overflow-x-auto resize-y max-h-32 min-h-12 flex items-center p-2 space-x-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 cursor-move"
+        style={{
+          top: position.y,
+          left: position.x,
+          width: "clamp(180px, 50vw, 320px)",
+          height: "64px",
+        }}
+      >
         {playersOnline
           .filter((player) => hiddenPlayers.includes(player.clientId))
           .map((player) => (
@@ -763,6 +812,7 @@ export default function Game() {
             </div>
           ))}
       </div>
+
 
       <AnimatePresence>
         {showNotification && (
