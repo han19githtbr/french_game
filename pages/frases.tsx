@@ -112,11 +112,10 @@ export default function Frase() {
   const chatRequestResponseSoundRef = useRef<HTMLAudioElement | null>(null); // Referência para o som de resposta ao pedido
   const chatHandlersRef = useRef<Record<string, (message: Ably.Message) => void>>({});
 
-  const boxRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [offsetX, setOffsetX] = useState(0);
-  const [offsetY, setOffsetY] = useState(0);
+  const boxRef = useRef<HTMLDivElement | null>(null)
+  const [position, setPosition] = useState({ x: 20, y: 20 }) // canto superior esquerdo
+  const [dragging, setDragging] = useState(false)
+  const [offset, setOffset] = useState({ x: 0, y: 0 })
 
 
   //const clientId = ablyClient?.auth.clientId;
@@ -149,40 +148,45 @@ export default function Frase() {
     if (status === 'unauthenticated') router.push('/')
   }, [status])
 
-  // Lógica de Arrastar (Sua versão funcional)
   useEffect(() => {
-    const box = boxRef.current;
-    if (!box) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!dragging || !boxRef.current) return
 
-    const onMouseDown = (e: MouseEvent) => {
-      setIsDragging(true);
-      setOffsetX(e.clientX - box.offsetLeft);
-      setOffsetY(e.clientY - box.offsetTop);
-      document.addEventListener('mousemove', onMouseMove);
-      document.addEventListener('mouseup', onMouseUp);
-    };
+      const newX = e.clientX - offset.x
+      const newY = e.clientY - offset.y
 
-    const onMouseMove = (e: MouseEvent) => {
-      if (!isDragging) return;
-      const newX = e.clientX - offsetX;
-      const newY = e.clientY - offsetY;
-      setPosition({ x: newX, y: newY });
-    };
+      const box = boxRef.current
+      const windowWidth = window.innerWidth
+      const windowHeight = window.innerHeight
 
-    const onMouseUp = () => {
-      setIsDragging(false);
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
-    };
+      const boxWidth = box.offsetWidth
+      const boxHeight = box.offsetHeight
 
-    box.addEventListener('mousedown', onMouseDown);
+      const clampedX = Math.max(0, Math.min(newX, windowWidth - boxWidth))
+      const clampedY = Math.max(0, Math.min(newY, windowHeight - boxHeight))
+
+      setPosition({ x: clampedX, y: clampedY })
+    }
+
+    const handleMouseUp = () => setDragging(false)
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
 
     return () => {
-      box.removeEventListener('mousedown', onMouseDown);
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
-    };
-  }, []);
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [dragging, offset])
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!boxRef.current) return
+    setDragging(true)
+    setOffset({
+      x: e.clientX - boxRef.current.offsetLeft,
+      y: e.clientY - boxRef.current.offsetTop,
+    })
+  }
 
 
   // Lógica de Posicionamento Inicial e Responsividade
@@ -748,29 +752,41 @@ export default function Frase() {
         ))}
       </ul>
 
+      {/* Caixinha de miniaturas arrastável */}
       <div
         ref={boxRef}
-        className="fixed bg-transparent rounded-md shadow-md border border-blue overflow-x-auto resize-y max-h-32 min-h-12 flex items-center p-2 space-x-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 cursor-move"
+        onMouseDown={handleMouseDown}
         style={{
-          top: position.y,
+          position: 'fixed',
           left: position.x,
-          width: 'clamp(180px, 50vw, 320px)',
-          height: '64px',
-          cursor: isDragging ? 'grabbing' : 'grab',
+          top: position.y,
+          maxWidth: '90vw',
+          maxHeight: '90vh',
+          minWidth: '220px',
+          zIndex: 9999,
         }}
+        className="bg-gray-800 text-white p-3 rounded-md shadow-lg border border-blue"
       >
-        {playersOnline
-          .filter((player) => hiddenPlayers.includes(player.clientId))
-          .map((player) => (
-            <div
-              key={player.clientId}
-              className="w-8 h-8 rounded-full bg-gray-700 border border-blue flex items-center justify-center text-white text-xs cursor-pointer mr-2"
-              onClick={() => handleShowPlayer(player.clientId)}
-              title={`Mostrar ${player.name}`}
-            >
-              {player.name.substring(0, 2).toUpperCase()}
-            </div>
-          ))}
+        <div className="font-semibold mb-2 select-none">Jogadores Online</div>
+
+        <div
+          className="bg-gray-900 rounded p-2 overflow-y-auto"
+          style={{ minHeight: 'calc(15vh - 60px)' }}
+        >
+          <ul className="space-y-3 w-full max-w-md">
+            {playersOnline
+              .filter((player) => !hiddenPlayers.includes(player.clientId))
+              .map((player) => (
+                <li
+                  key={player.clientId}
+                  className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg p-4 flex items-center justify-between shadow-md border border-gray-600 transition duration-300 ease-in-out transform hover:scale-105"
+                >
+                  {/* Conteúdo do player aqui */}
+                  <span>{player.name}</span>
+                </li>
+              ))}
+          </ul>
+        </div>
       </div>
      
       <AnimatePresence>
