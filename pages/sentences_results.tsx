@@ -523,7 +523,7 @@ export default function ResultsPage() {
 
 
       {/* Miniaturas dos jogadores ocultos */}
-      <div className="fixed bottom-4 right-4 bg-gray-800 rounded-md shadow-md border border-gray-700 overflow-x-auto h-16 flex items-center p-2 cursor-pointer">
+      <div className="fixed bottom-4 right-4 max-w-sm w-full bg-gray-800 rounded-md shadow-md border border-blue overflow-x-auto h-16 flex items-center p-2 space-x-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 cursor-pointer">
         {playersOnline
           .filter((player) => hiddenPlayers.includes(player.clientId))
           .map((player) => (
