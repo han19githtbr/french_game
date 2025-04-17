@@ -840,7 +840,8 @@ export default function Game() {
         }}
         className="bg-gray-800 text-white p-3 rounded-md shadow-lg border border-blue"
       >
-      <div className="font-semibold mb-2 select-none">Jogadores Online</div>
+      <div className="font-thin mb-2 select-none">Pode arrastar</div>
+      <div className="font-bold mb-2 select-none">Jogadores Online</div>
 
       <div
         className="bg-gray-900 rounded p-2 overflow-y-auto"

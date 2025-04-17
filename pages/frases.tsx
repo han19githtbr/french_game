@@ -150,73 +150,74 @@ export default function Frase() {
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (!dragging || !boxRef.current) return
+      handleMove(e.clientX, e.clientY);
+    };
 
-      const newX = e.clientX - offset.x
-      const newY = e.clientY - offset.y
+    const handleMouseUp = () => setDragging(false);
 
-      const box = boxRef.current
-      const windowWidth = window.innerWidth
-      const windowHeight = window.innerHeight
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        handleMove(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    };
 
-      const boxWidth = box.offsetWidth
-      const boxHeight = box.offsetHeight
+    const handleTouchEnd = () => setDragging(false);
 
-      const clampedX = Math.max(0, Math.min(newX, windowWidth - boxWidth))
-      const clampedY = Math.max(0, Math.min(newY, windowHeight - boxHeight))
-
-      setPosition({ x: clampedX, y: clampedY })
-    }
-
-    const handleMouseUp = () => setDragging(false)
-
-    document.addEventListener('mousemove', handleMouseMove)
-    document.addEventListener('mouseup', handleMouseUp)
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('touchmove', handleTouchMove, { passive: false }); // Passive false para permitir preventDefault
+    document.addEventListener('touchend', handleTouchEnd);
+    document.addEventListener('touchcancel', handleTouchEnd); // Adicionado para casos de cancelamento do toque
 
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
-    }
-  }, [dragging, offset])
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+      document.removeEventListener('touchcancel', handleTouchEnd);
+    };
+  }, [dragging, offset]);
 
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!boxRef.current) return
-    setDragging(true)
-    setOffset({
-      x: e.clientX - boxRef.current.offsetLeft,
-      y: e.clientY - boxRef.current.offsetTop,
-    })
-  }
+  const handleMove = (clientX: number, clientY: number) => {
+    if (!dragging || !boxRef.current) return;
 
+    const newX = clientX - offset.x;
+    const newY = clientY - offset.y;
 
-  // Lógica de Posicionamento Inicial e Responsividade
-  useEffect(() => {
     const box = boxRef.current;
-    if (!box) return;
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
 
-    const calculateInitialPosition = () => {
-      const windowWidth = window.innerWidth;
-      const windowHeight = window.innerHeight;
-      const boxWidth = box.offsetWidth;
-      const boxHeight = box.offsetHeight;
+    const boxWidth = box.offsetWidth;
+    const boxHeight = box.offsetHeight;
 
-      const initialX = windowWidth - boxWidth - 16;
-      const initialY = windowHeight - boxHeight - 16;
-      setPosition({ x: initialX, y: initialY });
-    };
+    const clampedX = Math.max(0, Math.min(newX, windowWidth - boxWidth));
+    const clampedY = Math.max(0, Math.min(newY, windowHeight - boxHeight));
 
-    calculateInitialPosition();
+    setPosition({ x: clampedX, y: clampedY });
+  };
 
-    const handleResize = () => {
-      calculateInitialPosition();
-    };
+  const handleStart = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+    if (!boxRef.current) return;
+    setDragging(true);
+    let clientX: number | undefined;
+    let clientY: number | undefined;
 
-    window.addEventListener('resize', handleResize);
+    if (e instanceof MouseEvent) {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    } else if (e instanceof TouchEvent && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    }
 
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
+    if (clientX !== undefined && clientY !== undefined) {
+      setOffset({
+        x: clientX - boxRef.current.offsetLeft,
+        y: clientY - boxRef.current.offsetTop,
+      });
+    }
+  };
 
   useEffect(() => {
     if (theme) loadImages()
@@ -755,7 +756,8 @@ export default function Frase() {
       {/* Caixinha de miniaturas arrastável */}
       <div
         ref={boxRef}
-        onMouseDown={handleMouseDown}
+        onMouseDown={handleStart}
+        onTouchStart={handleStart}
         style={{
           position: 'fixed',
           left: position.x,
@@ -767,26 +769,27 @@ export default function Frase() {
         }}
         className="bg-gray-800 text-white p-3 rounded-md shadow-lg border border-blue"
       >
-        <div className="font-semibold mb-2 select-none">Jogadores Online</div>
+      <div className="font-thin mb-2 select-none">Pode arrastar</div>
+      <div className="font-bold mb-2 select-none">Jogadores Online</div>
 
-        <div
-          className="bg-gray-900 rounded p-2 overflow-y-auto"
-          style={{ minHeight: 'calc(15vh - 60px)' }}
-        >
-          <ul className="space-y-3 w-full max-w-md">
-            {playersOnline
-              .filter((player) => !hiddenPlayers.includes(player.clientId))
-              .map((player) => (
-                <li
-                  key={player.clientId}
-                  className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg p-4 flex items-center justify-between shadow-md border border-gray-600 transition duration-300 ease-in-out transform hover:scale-105"
-                >
-                  {/* Conteúdo do player aqui */}
-                  <span>{player.name}</span>
-                </li>
-              ))}
-          </ul>
-        </div>
+      <div
+        className="bg-gray-900 rounded p-2 overflow-y-auto"
+        style={{ minHeight: 'calc(15vh - 60px)' }}
+      >
+        <ul className="space-y-3 w-full max-w-md">
+          {playersOnline
+            .filter((player) => !hiddenPlayers.includes(player.clientId))
+            .map((player) => (
+              <li
+                key={player.clientId}
+                className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg p-4 flex items-center justify-between shadow-md border border-gray-600 transition duration-300 ease-in-out transform hover:scale-105"
+              >
+                {/* Conteúdo do player aqui */}
+                <span>{player.name}</span>
+              </li>
+            ))}
+        </ul>
+      </div>
       </div>
      
       <AnimatePresence>
