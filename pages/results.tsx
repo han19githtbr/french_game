@@ -76,10 +76,10 @@ export default function ResultsPage() {
   const chatRequestResponseSoundRef = useRef<HTMLAudioElement | null>(null); // Referência para o som de resposta ao pedido
   const chatHandlersRef = useRef<Record<string, (message: Ably.Message) => void>>({});
 
-  const boxRef = useRef<HTMLDivElement | null>(null)
-  const [position, setPosition] = useState({ x: 20, y: 20 }) // canto superior esquerdo
-  const [dragging, setDragging] = useState(false)
-  const [offset, setOffset] = useState({ x: 0, y: 0 })
+  const boxRef = useRef<HTMLDivElement | null>(null);
+  const [position, setPosition] = useState({ x: 20, y: 20 }); // canto superior esquerdo
+  const [dragging, setDragging] = useState(false);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
 
 
   //const clientId = ablyClient?.auth.clientId;
@@ -119,19 +119,20 @@ export default function ResultsPage() {
     };
 
     const handleTouchEnd = () => setDragging(false);
+    const handleTouchCancel = () => setDragging(false);
 
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-    document.addEventListener('touchmove', handleTouchMove, { passive: false }); // Passive false para permitir preventDefault
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
     document.addEventListener('touchend', handleTouchEnd);
-    document.addEventListener('touchcancel', handleTouchEnd); // Adicionado para casos de cancelamento do toque
+    document.addEventListener('touchcancel', handleTouchCancel);
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
-      document.removeEventListener('touchcancel', handleTouchEnd);
+      document.removeEventListener('touchcancel', handleTouchCancel);
     };
   }, [dragging, offset]);
 
@@ -645,6 +646,7 @@ export default function ResultsPage() {
           position: 'fixed',
           left: position.x,
           top: position.y,
+          width: 'auto', // Largura automática para se ajustar ao conteúdo interno inicialmente
           maxWidth: '90vw',
           maxHeight: '90vh',
           minWidth: '220px',
@@ -656,18 +658,21 @@ export default function ResultsPage() {
       <div className="font-bold mb-2 select-none">Jogadores Online</div>
 
       <div
-        className="bg-gray-900 rounded p-2 overflow-y-auto"
-        style={{ minHeight: 'calc(15vh - 60px)' }}
+        className="bg-gray-900 rounded p-2 overflow-x-auto" // Mudança aqui para rolagem horizontal
+        style={{
+          minHeight: 'calc(15vh - 60px)',
+          whiteSpace: 'nowrap', // Impede que os itens da lista quebrem para a próxima linha
+        }}
       >
-        <ul className="space-y-3 w-full max-w-md">
+        <ul className="space-x-3 w-full max-w-none flex flex-row"> {/* Ajustes no estilo da lista */}
           {playersOnline
             .filter((player) => !hiddenPlayers.includes(player.clientId))
             .map((player) => (
               <li
                 key={player.clientId}
                 className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg p-4 flex items-center justify-between shadow-md border border-gray-600 transition duration-300 ease-in-out transform hover:scale-105"
+                style={{ display: 'inline-block', minWidth: '200px' }} // Garante que cada item tenha uma largura mínima
               >
-                {/* Conteúdo do player aqui */}
                 <span>{player.name}</span>
               </li>
             ))}
