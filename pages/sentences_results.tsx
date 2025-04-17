@@ -556,7 +556,7 @@ export default function ResultsPage() {
   return (
     <div className="min-h-screen bg-slate-900 text-white p-6">
       {/* Header com perfil */}
-      <div className="flex justify-between items-center mb-6 mt-10">
+      <div className="flex justify-between items-center mb-6 mt-16">
         <button 
           onClick={() => router.push('/frases')} 
           className="fixed flex border border-blue items-center bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75 mt-50 cursor-pointer">
