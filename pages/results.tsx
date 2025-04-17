@@ -11,6 +11,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 //import { signOut, useSession } from 'next-auth/react'
 import { FaMedal } from 'react-icons/fa';
 import { DotLoader } from 'react-spinners';
+import { Realtime, Message } from 'ably'
 
 
 interface Progress {
@@ -68,6 +69,7 @@ export default function ResultsPage() {
   const [chatInput, setChatInput] = useState('');
   const [chatPartnerName, setChatPartnerName] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const typingHandlersRef = useRef<Record<string, (msg: Ably.Message) => void>>({});
   const [typingIndicator, setTypingIndicator] = useState<{ [clientId: string]: boolean }>({});
   const enterSoundRef = useRef<HTMLAudioElement | null>(null);
   const chatRequestReceivedSoundRef = useRef<HTMLAudioElement | null>(null); // Referência para o som de pedido recebido
@@ -241,11 +243,12 @@ export default function ResultsPage() {
           setChatPartnerName(fromName);
           // [ACRESCENTADO] Inscrever-se no canal de mensagens quando o chat é aceito
           
-          const chatMessageHandler = (message: Ably.Message) => {
-            handleChatMessage(message, chatChannelName);
-          };
-          
-          ablyClient.channels.get(chatChannelName).subscribe('message', chatMessageHandler);
+          if (!chatHandlersRef.current[chatChannelName]) {
+            const chatMessageHandler = (message: Ably.Message) => {
+              handleChatMessage(message, chatChannelName);
+            };
+            subscribeToChatChannel(ablyClient, chatChannelName, chatMessageHandler, chatHandlersRef);
+          }
           
           // [ACRESCENTADO] Inscrever-se no canal de digitação quando o chat é aceito
           ablyClient.channels.get(getTypingChannelName(currentClientId, fromClientId)).subscribe('typing', handleTypingStatus);
@@ -306,7 +309,28 @@ export default function ResultsPage() {
     //alert(`⏳ Pedido de bate-papo enviado para ${otherPlayer.name}. Aguardando resposta...`);
     showToast(`⏳ Pedido de bate-papo enviado para ${otherPlayer.name}. Aguardando resposta...`, 'info');
   };
+
   
+  const subscribeToChatChannel = (
+      ablyClient: Realtime,
+      channelName: string,
+      handler: (msg: Ably.Message) => void,
+      handlersRef: React.MutableRefObject<Record<string, (msg: Ably.Message) => void>>
+    ) => {
+      const channel = ablyClient.channels.get(channelName);
+    
+      // Remove qualquer handler antigo
+      if (handlersRef.current[channelName]) {
+        channel.unsubscribe('message', handlersRef.current[channelName]);
+      }
+    
+      // Adiciona o novo handler
+      channel.subscribe('message', handler);
+    
+      // Salva referência
+      handlersRef.current[channelName] = handler;
+  };
+
   const handleAcceptChatRequest = (request: ChatRequest) => {
     if (!ablyClient || !clientId) return;
     const responseChannel = ablyClient.channels.get(`chat-requests:${request.fromClientId}`);
@@ -318,20 +342,30 @@ export default function ResultsPage() {
     setChatRequestsReceived((prev) => prev.filter((req) => req.fromClientId !== request.fromClientId));
     
     // [CORREÇÃO] Inscrever-se nos canais de mensagens e digitação AQUI para o receptor
-    const chatMessageHandler = (message: Ably.Message) => {
-      handleChatMessage(message, chatChannelName);
-    };
-    ablyClient.channels.get(chatChannelName).subscribe('message', chatMessageHandler);
-    chatHandlersRef.current[chatChannelName] = chatMessageHandler;
+    // ⚠️ Verifica se já tem handler antes de criar novo
+    if (!chatHandlersRef.current[chatChannelName]) {
+      const chatMessageHandler = (message: Ably.Message) => {
+        handleChatMessage(message, chatChannelName);
+      };
+    
+      subscribeToChatChannel(ablyClient, chatChannelName, chatMessageHandler, chatHandlersRef);
+    }
+        
     
     const typingChannelName = getTypingChannelName(clientId, request.fromClientId);
-    ablyClient.channels.get(typingChannelName).subscribe('typing', handleTypingStatus);
+    if (!typingHandlersRef.current[typingChannelName]) {
+      ablyClient.channels
+        .get(typingChannelName)
+        .subscribe('typing', handleTypingStatus);
+      typingHandlersRef.current[typingChannelName] = handleTypingStatus;
+    }
     
     // [ACRESCENTADO] Abrir a bolha de chat após a aceitação
     openChatBubble({ clientId: request.fromClientId, name: request.fromName });
     // A inscrição nos canais de mensagens e digitação agora é feita dentro de openChatBubble
     chatRequestResponseSoundRef.current?.play();
   };
+  
   
   const handleRejectChatRequest = (request: ChatRequest) => {
     if (!ablyClient || !clientId) return;
