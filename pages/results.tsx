@@ -77,7 +77,12 @@ export default function ResultsPage() {
   const chatHandlersRef = useRef<Record<string, (message: Ably.Message) => void>>({});
 
   const boxRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ x: 16, y: 16 });
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [offsetX, setOffsetX] = useState(0);
+  const [offsetY, setOffsetY] = useState(0);
+
+
   //const clientId = ablyClient?.auth.clientId;
   const playerName = session?.user?.name || 'Anônimo';
 
@@ -101,42 +106,71 @@ export default function ResultsPage() {
   }, [status])
 
 
-  // Função que ativa o drag
+  // Lógica de Arrastar (Sua versão funcional)
   useEffect(() => {
-      const box = boxRef.current;
-      if (!box) return;
-  
-      let isDragging = false;
-      let offsetX = 0;
-      let offsetY = 0;
-  
-      const onMouseDown = (e: MouseEvent) => {
-        isDragging = true;
-        offsetX = e.clientX - box.offsetLeft;
-        offsetY = e.clientY - box.offsetTop;
-        document.addEventListener("mousemove", onMouseMove);
-        document.addEventListener("mouseup", onMouseUp);
-      };
-  
-      const onMouseMove = (e: MouseEvent) => {
-        if (!isDragging) return;
-        const newX = e.clientX - offsetX;
-        const newY = e.clientY - offsetY;
-        setPosition({ x: newX, y: newY });
-      };
-  
-      const onMouseUp = () => {
-        isDragging = false;
-        document.removeEventListener("mousemove", onMouseMove);
-        document.removeEventListener("mouseup", onMouseUp);
-      };
-  
-      box.addEventListener("mousedown", onMouseDown);
-  
-      return () => {
-        box.removeEventListener("mousedown", onMouseDown);
-      };
+    const box = boxRef.current;
+    if (!box) return;
+
+    const onMouseDown = (e: MouseEvent) => {
+      setIsDragging(true);
+      setOffsetX(e.clientX - box.offsetLeft);
+      setOffsetY(e.clientY - box.offsetTop);
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    };
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return;
+      const newX = e.clientX - offsetX;
+      const newY = e.clientY - offsetY;
+      setPosition({ x: newX, y: newY });
+    };
+
+    const onMouseUp = () => {
+      setIsDragging(false);
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+
+    box.addEventListener('mousedown', onMouseDown);
+
+    return () => {
+      box.removeEventListener('mousedown', onMouseDown);
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
   }, []);
+
+
+  // Lógica de Posicionamento Inicial e Responsividade
+  useEffect(() => {
+    const box = boxRef.current;
+    if (!box) return;
+
+    const calculateInitialPosition = () => {
+      const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
+      const boxWidth = box.offsetWidth;
+      const boxHeight = box.offsetHeight;
+
+      const initialX = windowWidth - boxWidth - 16;
+      const initialY = windowHeight - boxHeight - 16;
+      setPosition({ x: initialX, y: initialY });
+    };
+
+    calculateInitialPosition();
+
+    const handleResize = () => {
+      calculateInitialPosition();
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
 
   useEffect(() => {
     const saved = localStorage.getItem('progress_answers')
@@ -600,12 +634,13 @@ export default function ResultsPage() {
       {/* Caixinha de miniaturas arrastável */}
       <div
         ref={boxRef}
-        className="absolute bg-gray-800 rounded-md shadow-md border border-blue overflow-x-auto resize-y max-h-32 min-h-12 flex items-center p-2 space-x-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 cursor-move"
+        className="fixed bg-gray-800 rounded-md shadow-md border border-blue overflow-x-auto resize-y max-h-32 min-h-12 flex items-center p-2 space-x-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 cursor-move"
         style={{
           top: position.y,
           left: position.x,
-          width: "clamp(180px, 50vw, 320px)",
-          height: "64px",
+          width: 'clamp(180px, 50vw, 320px)',
+          height: '64px',
+          cursor: isDragging ? 'grabbing' : 'grab',
         }}
       >
         {playersOnline
