@@ -16,7 +16,7 @@ export default function Home() {
     if (!session) {
       const intervalId = setInterval(() => {
         setCurrentIndex((prevIndex) => (prevIndex + 1) % title.length);
-      }, 150); // Ajuste a velocidade do brilho (ms)
+      }, 100); // Ajuste a velocidade do brilho (ms)
       return () => clearInterval(intervalId);
     }
   }, [session, title.length]);
@@ -51,7 +51,7 @@ export default function Home() {
       
       <button
         onClick={() => signIn('google')}
-        className="flex items-center gap-3 bg-transparent border border-blue text-white font-semibold px-6 py-3 rounded-lg shadow-md hover:shadow-xl transition duration-300 cursor-pointer"
+        className="flex items-center gap-3 bg-transparent hover:border-green border border-blue text-white font-semibold px-6 py-3 rounded-lg shadow-md hover:shadow-xl transition duration-300 cursor-pointer"
       >
         <svg className="w-6 h-6" viewBox="0 0 533.5 544.3">
           <path
