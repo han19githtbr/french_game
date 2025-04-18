@@ -764,7 +764,7 @@ export default function Game() {
           onMouseLeave={handleMouseLeave}
         >
           <div className="flex items-center gap-2 cursor-pointer mt-10">
-            <span className="text-white font-medium hidden sm:inline">{session.user.name}</span>
+            <span className="text-gray-300 font-medium hidden sm:inline">{session.user.name}</span>
             <img src={session.user.image || ''} alt="Avatar" className="w-10 h-10 rounded-full border border-white" />
           </div>
           <div
@@ -842,13 +842,13 @@ export default function Game() {
         }}
         className="bg-gray-800 text-white p-3 rounded-md shadow-lg border border-blue"
       >
-      <div className="font-thin mb-2 select-none">Pode arrastar</div>
-      <div className="font-bold mb-2 select-none">Jogadores Online</div>
+      <div className="font-bold mb-2 select-none text-blue">Pode arrastar</div>
+      <div className="font-bold mb-2 select-none text-green">Jogadores Online</div>
 
       <div
-        className="bg-gray-900 rounded p-2 overflow-x-auto" // Mudança aqui para rolagem horizontal
+        className="bg-gray-900 border border-green rounded p-2 overflow-x-auto" // Mudança aqui para rolagem horizontal
         style={{
-          minHeight: 'calc(15vh - 60px)',
+          minHeight: 'calc(17vh - 60px)',
           whiteSpace: 'nowrap', // Impede que os itens da lista quebrem para a próxima linha
         }}
       >
@@ -983,7 +983,7 @@ export default function Game() {
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }} 
         transition={{ duration: 0.6 }}
-        className="text-4xl font-bold mb-8 mt-36 text-center drop-shadow-md"
+        className="text-4xl text-gray-300 font-bold mb-8 mt-36 text-center drop-shadow-md"
       >
         🎮 Jogo para treinar o Francês
       </motion.h1>

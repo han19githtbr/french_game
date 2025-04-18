@@ -681,7 +681,7 @@ export default function Frase() {
       <div className="fixed top-44 left-4 z-50">
         <button
             onClick={() => router.push('/game')}
-            className="flex border border-blue bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75 cursor-pointer"
+            className="flex border border-blue text-gray-300 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75 cursor-pointer"
         >
             <ChevronLeft className="mr-2" color="blue" /> Voltar para tela principal
         </button>
@@ -771,13 +771,13 @@ export default function Frase() {
         }}
         className="bg-gray-800 text-white p-3 rounded-md shadow-lg border border-blue"
       >
-      <div className="font-thin mb-2 select-none">Pode arrastar</div>
-      <div className="font-bold mb-2 select-none">Jogadores Online</div>
+      <div className="font-bold mb-2 select-none text-blue">Pode arrastar</div>
+      <div className="font-bold mb-2 select-none text-green">Jogadores Online</div>
 
       <div
-        className="bg-gray-900 rounded p-2 overflow-x-auto" // Mudança aqui para rolagem horizontal
+        className="bg-gray-900 border border-green rounded p-2 overflow-x-auto" // Mudança aqui para rolagem horizontal
         style={{
-          minHeight: 'calc(15vh - 60px)',
+          minHeight: 'calc(17vh - 60px)',
           whiteSpace: 'nowrap', // Impede que os itens da lista quebrem para a próxima linha
         }}
       >
@@ -911,7 +911,7 @@ export default function Frase() {
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }} 
         transition={{ duration: 0.6 }}
-        className="text-4xl font-bold mb-8 mt-42 text-center drop-shadow-md"
+        className="text-4xl text-gray-300 font-bold mb-8 mt-42 text-center drop-shadow-md"
       >
         🎮 Construa frases em Francês
       </motion.h1>

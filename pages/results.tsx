@@ -563,10 +563,10 @@ export default function ResultsPage() {
   return (
     <div className="min-h-screen bg-slate-900 text-white p-6">
       {/* Header com perfil */}
-      <div className="flex justify-between items-center mb-6 mt-16">
+      <div className="flex justify-between items-center mb-6 mt-18">
         <button 
           onClick={() => router.push('/game')} 
-          className="fixed flex border border-blue items-center bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75 mt-50 cursor-pointer">
+          className="fixed flex border text-gray-300 border-blue items-center bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75 mt-50 cursor-pointer">
           <ChevronLeft className="mr-2" color="blue" /> Voltar ao jogo
         </button>
         {/**{session?.user && (
@@ -654,13 +654,13 @@ export default function ResultsPage() {
         }}
         className="bg-gray-800 text-white p-3 rounded-md shadow-lg border border-blue"
       >
-      <div className="font-thin mb-2 select-none">Pode arrastar</div>
-      <div className="font-bold mb-2 select-none">Jogadores Online</div>
+      <div className="font-bold mb-2 select-none text-blue">Pode arrastar</div>
+      <div className="font-bold mb-2 select-none text-green">Jogadores Online</div>
 
       <div
-        className="bg-gray-900 rounded p-2 overflow-x-auto" // Mudança aqui para rolagem horizontal
+        className="bg-gray-900 border border-green rounded p-2 overflow-x-auto" // Mudança aqui para rolagem horizontal
         style={{
-          minHeight: 'calc(15vh - 60px)',
+          minHeight: 'calc(17vh - 60px)',
           whiteSpace: 'nowrap', // Impede que os itens da lista quebrem para a próxima linha
         }}
       >
@@ -790,7 +790,7 @@ export default function ResultsPage() {
         </div>
       )}
 
-      <h1 className="text-3xl font-bold mt-40 mb-4 text-center">Seu Progresso</h1>
+      <h1 className="text-3xl font-bold text-gray-300 mt-40 mb-4 text-center">Seu Progresso</h1>
       
       {/* Barra de Progresso */}
       <div className="mb-6 max-w-md mx-auto">
