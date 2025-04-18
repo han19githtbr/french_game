@@ -10,6 +10,8 @@ const allImages = {
     { url: '/ghibli/familia/almoço.png', title: 'Un Dîner en famille' },
     { url: '/ghibli/familia/piquenique.png', title: 'Une Pique-nique en famille' },
     { url: '/ghibli/familia/mae.png', title: 'Une femme enceinte' },
+    { url: '/ghibli/familia/casal.jpg', title: 'Un couple' },
+    { url: '/ghibli/familia/rir.jpg', title: 'Rire' },
   ],
   'natureza': [
     { url: '/ghibli/natureza/árvore.png', title: 'Un Arbre' },
@@ -23,6 +25,15 @@ const allImages = {
     { url: '/ghibli/natureza/chuva.png', title: 'La pluie' },
     { url: '/ghibli/natureza/estrelas.png', title: 'Les étoiles' },
     { url: '/ghibli/natureza/mangas.png', title: 'Un manguier' },
+    { url: '/ghibli/natureza/ceu.jpg', title: 'Le ciel est bleu' },
+    { url: '/ghibli/natureza/flores.jpg', title: 'Des fleurs' },
+    { url: '/ghibli/natureza/fotografo.jpg', title: 'Un photographe' },
+    { url: '/ghibli/natureza/guarda-chuva.jpg', title: 'Un parapluie' },
+    { url: '/ghibli/natureza/guitarra.jpg', title: 'La musique et la nature' },
+    { url: '/ghibli/natureza/mergulho.jpg', title: 'Sous l\'eau' },
+    { url: '/ghibli/natureza/noite.jpg', title: 'La nuit' },
+    { url: '/ghibli/natureza/praia.jpg', title: 'À la plage' },
+        
   ],
   'turismo': [
     { url: '/ghibli/turismo/aeroporto.png', title: 'L\'Aéroport' },
@@ -35,6 +46,7 @@ const allImages = {
     { url: '/ghibli/turismo/bandeira_haitiana.png', title: 'Le drapeau haïtien' },
     { url: '/ghibli/turismo/estatua_liberdade.png', title: 'Statue de la liberté' },
     { url: '/ghibli/turismo/torre_eiffel.png', title: 'La Tour Eiffel' },
+    { url: '/ghibli/turismo/fogos.jpg', title: 'Des feux d\'artifice' },
   ],
   'animais': [
     { url: '/ghibli/animais/cachorro.png', title: 'Le Chien' },
@@ -52,6 +64,8 @@ const allImages = {
     { url: '/ghibli/animais/gorila.png', title: 'Un Gorille' },
     { url: '/ghibli/animais/ovelha.png', title: 'Le Mouton' },
     { url: '/ghibli/animais/pato.png', title: 'Le Canard' },
+    { url: '/ghibli/animais/galinha.jpg', title: 'Un Coq' },
+    { url: '/ghibli/animais/brincar_cachorro.jpg', title: 'Jouer avec son chien' },
   ],
   'tecnologia': [
     { url: '/ghibli/tecnologia/satelite.png', title: 'Une Satellite' },
@@ -62,6 +76,7 @@ const allImages = {
     { url: '/ghibli/tecnologia/televisao.png', title: 'La Télévision' },
     { url: '/ghibli/tecnologia/drone.png', title: 'Un Drone' },
     { url: '/ghibli/tecnologia/foguete.png', title: 'Une Fusée' },
+    { url: '/ghibli/tecnologia/moto.jpg', title: 'Une moto' },
   ],
   'gastronomia': [
     { url: '/ghibli/gastronomia/bolo.png', title: 'Un Gâteau' },

@@ -10,6 +10,8 @@ const allImages = {
     { url: '/frases/familia/almoço.png', title: 'La famille se réunit pour dîner!' },
     { url: '/frases/familia/piquenique.png', title: 'Dimanche c\'est le jour d\'une pique-nique en famille' },
     { url: '/frases/familia/mae.png', title: 'Ma soeur est enceinte de six mois' },
+    { url: '/frases/familia/casal.jpg', title: 'Le couple se promène main dans la main' },
+    { url: '/frases/familia/rir.jpg', title: 'Les trois frères sont heureux' },
   ],
   'natureza': [
     { url: '/frases/natureza/árvore.png', title: 'Il y a quelqu\'un sous l\'arbre' },
@@ -26,6 +28,15 @@ const allImages = {
     { url: '/frases/natureza/rio.png', title: 'Tout près de chez moi, il y a une rivière' },
     { url: '/frases/natureza/estrelas.png', title: 'Le soir, j\'aime regarder les étoiles' },
     { url: '/frases/natureza/mangas.png', title: 'Ce manguier, c\'est celui du voisin' },
+    { url: '/frases/natureza/ceu.jpg', title: 'Les trois frères se réunissent sous le ciel bleu' },
+    { url: '/frases/natureza/flores.jpg', title: 'Ces fleurs sont très jolies' },
+    { url: '/frases/natureza/fotografo.jpg', title: 'Un photographe dans la nature' },
+    { url: '/frases/natureza/guarda-chuva.jpg', title: 'Elle sort son parapluie pour se protéger de la pluie' },
+    { url: '/frases/natureza/guitarra.jpg', title: 'Paul aime jouer à la guitarre' },
+    { url: '/frases/natureza/mergulho.jpg', title: 'Qu\'est-ce qu\'il fait sous l\'eau?' },
+    { url: '/frases/natureza/noite.jpg', title: 'Cette nuit est très étoilée!' },
+    { url: '/frases/natureza/nuvens.jpg', title: 'Le ciel est rempli de nuages' },
+    { url: '/frases/natureza/praia.jpg', title: 'Le couple regarde le coucher du soleil à la plage' },
   ],
   'turismo': [
     { url: '/frases/turismo/aeroporto.png', title: 'Je suis déjà à l\'Aéroport' },
@@ -38,6 +49,7 @@ const allImages = {
     { url: '/frases/turismo/bandeira_haitiana.png', title: 'Le drapeau haïtien est un symbole de liberté' },
     { url: '/frases/turismo/estatua_liberdade.png', title: 'La statue de la liberté est connue dans le monde entier' },
     { url: '/frases/turismo/torre_eiffel.png', title: 'La Tour Eiffel se trouve en France' },
+    { url: '/frases/turismo/fogos.png', title: 'Mon frère n\'aime pas les feux d\'artifice' },
   ],
   'animais': [
     { url: '/frases/animais/cachorro.png', title: 'C\'est mon chien' },
@@ -55,6 +67,8 @@ const allImages = {
     { url: '/frases/animais/gorila.png', title: 'Ce gorille est très docile' },
     { url: '/frases/animais/ovelha.png', title: 'Ce mouton a perdu sa troupe' },
     { url: '/frases/animais/pato.png', title: 'Ce canard est celui de ma tante!' },
+    { url: '/frases/animais/brincar_cachorro.jpg', title: 'Jean joue avec son chien' },
+    { url: '/frases/animais/galinha.jpg', title: 'Je me suis réveillé au chant de ce coq!' },
   ],
   'tecnologia': [
     { url: '/frases/tecnologia/satelite.png', title: 'Les satellites sont de grandes inventions' },
@@ -65,6 +79,7 @@ const allImages = {
     { url: '/frases/tecnologia/televisao.png', title: 'Le soir, je regarde souvent la télévision' },
     { url: '/frases/tecnologia/drone.png', title: 'Ce drone controle toute la zone' },
     { url: '/frases/tecnologia/foguete.png', title: 'Cette fusée a été lancée l\'année dernière' },
+    { url: '/frases/tecnologia/moto.jpg', title: 'Il est dangereux de piloter une moto sous la pluie!' },
   ],
   'gastronomia': [
     { url: '/frases/gastronomia/bolo.png', title: 'C\'est l\'heure de couper le gâteau!' },
