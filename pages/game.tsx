@@ -1013,7 +1013,7 @@ export default function Game() {
             <p className="text-sm text-gray-400 mb-1 text-center">Selecione uma opção e complete 1 acerto para desbloquear este nível.</p>
           )}
           <button
-            className={`flex items-center justify-center py-3 px-6 rounded-md font-semibold transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75 ${
+            className={`flex items-center justify-center py-3 px-6 rounded-md mt-2 font-semibold transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75 ${
               isFrasesUnlocked
                 ? 'bg-blue hover:bg-green cursor-pointer text-white shadow-md'
                 : 'bg-gray-600 text-gray-400 cursor-not-allowed shadow-sm'
