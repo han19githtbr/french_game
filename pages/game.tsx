@@ -1063,10 +1063,10 @@ export default function Game() {
 
       </div>
 
-      {theme && <h2 className="text-2xl font-semibold mt-4 mb-6 text-center">Opção: {theme}</h2>}
+      {theme && <h2 className="text-2xl text-gray-300 font-semibold mt-4 mb-6 text-center">Opção: {theme}</h2>}
 
       {loading ? (
-        <div className="text-center text-lg animate-pulse">🔍 Procurando imagens...</div>
+        <div className="text-center text-lg text-gray-300 animate-pulse">🔍 Procurando imagens...</div>
       ) : (
         <>  
           <div className="flex flex-wrap justify-center gap-6 w-full max-w-6xl mt-6 cursor-pointer">
@@ -1087,9 +1087,9 @@ export default function Game() {
                   className="w-full h-48 object-cover rounded-xl cursor-zoom-in" 
                   onClick={() => setZoomedImage(img.url)}
                 />
-                <div className="mt-2">Escolha o título correto:</div>
+                <div className="mt-2 text-gray-300">Escolha o título correto:</div>
                 <select
-                  className="w-full mt-1 p-2 rounded border border-white text-white bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                  className="w-full mt-1 p-2 rounded border border-white text-gray-300 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                   onChange={e => checkAnswer(index, e.target.value)}
                   disabled={!!results[index]}
                 >
