@@ -126,6 +126,8 @@ export default function Game() {
   const chatRequestResponseSoundRef = useRef<HTMLAudioElement | null>(null); // Referência para o som de resposta ao pedido
   const chatHandlersRef = useRef<Record<string, (message: Ably.Message) => void>>({});
 
+  const [chatRequestsSent, setChatRequestsSent] = useState<{ toClientId: string, toName: string }[]>([]);
+
   const boxRef = useRef<HTMLDivElement | null>(null)
   const [position, setPosition] = useState({ x: 20, y: 20 }) // canto superior esquerdo
   const [dragging, setDragging] = useState(false)
@@ -465,9 +467,26 @@ export default function Game() {
   
   const handleRequestChat = (otherPlayer: Player) => {
     if (!ablyClient || !clientId) return;
+    
+    // ✅ Verifica se já foi enviado um pedido para este jogador
+    const alreadySent = chatRequestsSent.some(
+      (req) => req.toClientId === otherPlayer.clientId
+    );
+
+    if (alreadySent) {
+      showToast(`⚠️ Você já enviou um pedido para ${otherPlayer.name}. Aguarde a resposta.`, 'info');
+      return;
+    }
+    
     const chatRequestChannel = ablyClient.channels.get(`chat-requests:${otherPlayer.clientId}`);
     chatRequestChannel.publish('request', { fromClientId: clientId, fromName: playerName });
-    //alert(`⏳ Pedido de bate-papo enviado para ${otherPlayer.name}. Aguardando resposta...`);
+    
+    // ✅ Armazena o pedido enviado
+    setChatRequestsSent((prev) => [
+      ...prev,
+      { toClientId: otherPlayer.clientId, toName: otherPlayer.name },
+    ]);
+
     showToast(`⏳ Pedido de bate-papo enviado para ${otherPlayer.name}. Aguardando resposta...`, 'info');
   };
   
@@ -500,10 +519,17 @@ export default function Game() {
     setActiveChats((prev) => ({ ...prev, [chatChannelName]: [] }));
     setIsChatBubbleOpen(chatChannelName);
     setChatPartnerName(request.fromName);
-    setChatRequestsReceived((prev) => prev.filter((req) => req.fromClientId !== request.fromClientId));
+    //setChatRequestsReceived((prev) => prev.filter((req) => req.fromClientId !== request.fromClientId));
     
-    // [CORREÇÃO] Inscrever-se nos canais de mensagens e digitação AQUI para o receptor
-    //ablyClient.channels.get(chatChannelName).subscribe('message', handleChatMessage);
+    // ✅ Remove o pedido da lista de recebidos
+    setChatRequestsReceived((prev) =>
+      prev.filter((req) => req.fromClientId !== request.fromClientId)
+    );
+
+    // ✅ Remove o pedido da lista de enviados
+    setChatRequestsSent((prev) =>
+      prev.filter((req) => req.toClientId !== request.fromClientId)
+    );
     
     // ⚠️ Verifica se já tem handler antes de criar novo
     if (!chatHandlersRef.current[chatChannelName]) {
@@ -547,14 +573,7 @@ export default function Game() {
     setActiveChats((prev) => prev[chatChannelName] ? prev : { ...prev, [chatChannelName]: [] });
     setIsChatBubbleOpen(chatChannelName);
     setChatPartnerName(player.name);
-    // [ACRESCENTADO] Inscrever-se no canal de mensagens ao abrir a bolha
-    // [CORRIGIDO] A verificação de existência do canal não é necessária antes de se inscrever
-    /*ablyClient.channels.get(chatChannelName).subscribe('message', handleChatMessage);
-
-    // [ACRESCENTADO] Inscrever-se no canal de digitação ao abrir a bolha
-    // [CORRIGIDO] A verificação de existência do canal não é necessária antes de se inscrever
-    const typingChannelName = getTypingChannelName(clientId, player.clientId);
-    ablyClient.channels.get(typingChannelName).subscribe('typing', handleTypingStatus);*/
+    
   };
 
   const closeChatBubble = () => {
@@ -672,12 +691,7 @@ export default function Game() {
       
     if (correct_word && !alreadyCorrect && correctSound) correctSound.play()
     if (!correct_word && wrongSound) wrongSound.play()
-  
-      /*const newResults = {
-        ...results,
-        [index]: { correct, selected: userAnswer }
-      }*/
-     
+      
     const newResults = [...results]; // agora é um array!
     newResults[index] = { correct_word, selected: userAnswer };  
   
@@ -692,14 +706,7 @@ export default function Game() {
         nextRef.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }
     }, 300)
-      
-    // Scroll para a próxima imagem ainda não respondida
-    /*const nextUnansweredIndex = newResults.findIndex((res, i) => !res && i > index);
-    if (nextUnansweredIndex !== -1 && imageRefs.current[nextUnansweredIndex]) {
-      imageRefs.current[nextUnansweredIndex]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }*/
-  
-    //const correctCount = Object.values(newResults).filter(r => r?.correct).length
+        
     const currentCorrectCount = Object.values(newResults).filter((r) => r?.correct_word).length;
     setCorrectAnswersCount(currentCorrectCount);
     const totalCount = images.length
@@ -813,12 +820,12 @@ export default function Game() {
                   handleRequestChat(player);
                   openChatBubble(player);
                 }}
-                className="bg-gradient-to-br from-blue to-purple hover:from-blue hover:to-purple text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer"
+                className="bg-gradient-to-br from-blue to-purple hover:from-blue hover:to-purple text-white whitespace-nowrap font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                 </svg>
-                Bate-papo
+                Solicitar Bate-papo
               </button>
             </div>
           </li>
@@ -1105,7 +1112,7 @@ export default function Game() {
                     ) : (
                       <>
                         <X className="mr-2" color="red"/>
-                        <span className="font-medium text-red">Errado. Resposta: {img.title}</span>
+                        <span className="font-medium text-red">Errado. <span className="text-green">Resposta: {img.title}</span></span>
                       </>
                     )}
                   </motion.div>

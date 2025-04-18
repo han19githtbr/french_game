@@ -64,6 +64,8 @@ export default function ResultsPage() {
   const [ablyClient, setAblyClient] = useState<Ably.Realtime | null>(null)
   const [clientId, setClientId] = useState<string | null>(null);
 
+  const [chatRequestsSent, setChatRequestsSent] = useState<{ toClientId: string, toName: string }[]>([]);
+
   const [chatRequestsReceived, setChatRequestsReceived] = useState<ChatRequest[]>([]);
   const [activeChats, setActiveChats] = useState<{ [clientId: string]: ChatMessage[] }>({});
   const [isChatBubbleOpen, setIsChatBubbleOpen] = useState<string | null>(null);
@@ -380,9 +382,26 @@ export default function ResultsPage() {
 
   const handleRequestChat = (otherPlayer: Player) => {
     if (!ablyClient || !clientId) return;
+    
+    // ✅ Verifica se já foi enviado um pedido para este jogador
+    const alreadySent = chatRequestsSent.some(
+      (req) => req.toClientId === otherPlayer.clientId
+    );
+
+    if (alreadySent) {
+      showToast(`⚠️ Você já enviou um pedido para ${otherPlayer.name}. Aguarde a resposta.`, 'info');
+      return;
+    }
+    
     const chatRequestChannel = ablyClient.channels.get(`chat-requests:${otherPlayer.clientId}`);
     chatRequestChannel.publish('request', { fromClientId: clientId, fromName: playerName });
-    //alert(`⏳ Pedido de bate-papo enviado para ${otherPlayer.name}. Aguardando resposta...`);
+    
+    // ✅ Armazena o pedido enviado
+    setChatRequestsSent((prev) => [
+      ...prev,
+      { toClientId: otherPlayer.clientId, toName: otherPlayer.name },
+    ]);
+
     showToast(`⏳ Pedido de bate-papo enviado para ${otherPlayer.name}. Aguardando resposta...`, 'info');
   };
   
@@ -408,37 +427,49 @@ export default function ResultsPage() {
 
 
   const handleAcceptChatRequest = (request: ChatRequest) => {
-    if (!ablyClient || !clientId) return;
-    const responseChannel = ablyClient.channels.get(`chat-requests:${request.fromClientId}`);
-    responseChannel.publish('response', { accepted: true, fromClientId: clientId, fromName: playerName });
-    const chatChannelName = getChatChannelName(clientId, request.fromClientId);
-    setActiveChats((prev) => ({ ...prev, [chatChannelName]: [] }));
-    setIsChatBubbleOpen(chatChannelName);
-    setChatPartnerName(request.fromName);
-    setChatRequestsReceived((prev) => prev.filter((req) => req.fromClientId !== request.fromClientId));
-    
-    // [CORREÇÃO] Inscrever-se nos canais de mensagens e digitação AQUI para o receptor
-    // ⚠️ Verifica se já tem handler antes de criar novo
-    if (!chatHandlersRef.current[chatChannelName]) {
-      const chatMessageHandler = (message: Ably.Message) => {
-        handleChatMessage(message, chatChannelName);
-      };
-    
-      subscribeToChatChannel(ablyClient, chatChannelName, chatMessageHandler, chatHandlersRef);
-    }
-        
-    
-    const typingChannelName = getTypingChannelName(clientId, request.fromClientId);
-    if (!typingHandlersRef.current[typingChannelName]) {
-      ablyClient.channels
-        .get(typingChannelName)
-        .subscribe('typing', handleTypingStatus);
-      typingHandlersRef.current[typingChannelName] = handleTypingStatus;
-    }
-    
-    // [ACRESCENTADO] Abrir a bolha de chat após a aceitação
-    openChatBubble({ clientId: request.fromClientId, name: request.fromName });
-    chatRequestResponseSoundRef.current?.play();
+      if (!ablyClient || !clientId) return;
+      const responseChannel = ablyClient.channels.get(`chat-requests:${request.fromClientId}`);
+      responseChannel.publish('response', { accepted: true, fromClientId: clientId, fromName: playerName });
+      const chatChannelName = getChatChannelName(clientId, request.fromClientId);
+      setActiveChats((prev) => ({ ...prev, [chatChannelName]: [] }));
+      setIsChatBubbleOpen(chatChannelName);
+      setChatPartnerName(request.fromName);
+      
+      // ✅ Remove o pedido da lista de recebidos
+      setChatRequestsReceived((prev) =>
+        prev.filter((req) => req.fromClientId !== request.fromClientId)
+      );
+  
+      // ✅ Remove o pedido da lista de enviados
+      setChatRequestsSent((prev) =>
+        prev.filter((req) => req.toClientId !== request.fromClientId)
+      );
+      
+      //setChatRequestsReceived((prev) => prev.filter((req) => req.fromClientId !== request.fromClientId));
+      
+      // [CORREÇÃO] Inscrever-se nos canais de mensagens e digitação AQUI para o receptor
+      // ⚠️ Verifica se já tem handler antes de criar novo
+      if (!chatHandlersRef.current[chatChannelName]) {
+        const chatMessageHandler = (message: Ably.Message) => {
+          handleChatMessage(message, chatChannelName);
+        };
+      
+        subscribeToChatChannel(ablyClient, chatChannelName, chatMessageHandler, chatHandlersRef);
+      }
+          
+      
+      const typingChannelName = getTypingChannelName(clientId, request.fromClientId);
+      if (!typingHandlersRef.current[typingChannelName]) {
+        ablyClient.channels
+          .get(typingChannelName)
+          .subscribe('typing', handleTypingStatus);
+        typingHandlersRef.current[typingChannelName] = handleTypingStatus;
+      }
+      
+      // [ACRESCENTADO] Abrir a bolha de chat após a aceitação
+      openChatBubble({ clientId: request.fromClientId, name: request.fromName });
+      // A inscrição nos canais de mensagens e digitação agora é feita dentro de openChatBubble
+      chatRequestResponseSoundRef.current?.play();
   };
 
   const handleRejectChatRequest = (request: ChatRequest) => {
@@ -619,12 +650,12 @@ export default function ResultsPage() {
                   handleRequestChat(player);
                   openChatBubble(player);
                 }}
-                className="bg-gradient-to-br from-blue to-purple hover:from-blue hover:to-purple text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer"
+                className="bg-gradient-to-br from-blue to-purple hover:from-blue hover:to-purple text-white whitespace-nowrap font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                 </svg>
-                Bate-papo
+                Solicitar Bate-papo
               </button>
             </div>
           </li>
