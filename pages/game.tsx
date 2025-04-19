@@ -1002,7 +1002,7 @@ export default function Game() {
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }} 
         transition={{ duration: 0.6 }}
-        className="text-4xl text-gray-300 font-bold mb-8 mt-56 text-center drop-shadow-md"
+        className="text-4xl text-gray-300 font-bold mb-8 mt-76 text-center drop-shadow-md"
       >
         🎮 Jogo para treinar o Francês
       </motion.h1>

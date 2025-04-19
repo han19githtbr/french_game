@@ -946,12 +946,12 @@ export default function Frase() {
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }} 
         transition={{ duration: 0.6 }}
-        className="text-4xl text-gray-300 font-bold mb-8 mt-72 text-center drop-shadow-md"
+        className="text-4xl text-gray-300 font-bold mb-8 mt-92 text-center drop-shadow-md"
       >
         🎮 Construa frases em Francês
       </motion.h1>
 
-      <div className="flex flex-col items-center space-y-6">
+      <div className="flex flex-col items-center space-y-6 mt-8">
         <button
           onClick={() => router.push('/sentences_results')}
           className="w-64 border border-blue bg-gradient-to-br text-blue from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-6 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 text-lg cursor-pointer"
