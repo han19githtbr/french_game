@@ -616,55 +616,55 @@ export default function ResultsPage() {
         )}**/}
       </div>      
 
-      {/*<h1 className="text-2xl font-bold mb-4 mt-6">Jogadores Online</h1>*/}
-      {/*<h1 className="text-2xl font-bold mb-4 mt-6">Jogadores Online</h1>*/}
-      <ul className="space-y-3 w-full max-w-md">
-        {playersOnline
-        .filter((player) => !hiddenPlayers.includes(player.clientId))
-        .map((player) => (
-          <li
-            key={player.clientId}
-            className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg p-4 flex items-center justify-between shadow-md border border-gray-600 transition duration-300 ease-in-out transform hover:scale-105"
-          >
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <div className="w-2 h-2 rounded-full bg-green mr-1 animate-pulse shrink-0" />
-              <span className="font-bold text-lg text-white truncate max-w-[140px] sm:max-w-[180px]">
-                {player.name}
-              </span>
-            </div>
-
-            <div className="flex items-center shrink-0">
-              <button
-                onClick={() => handleHidePlayer(player.clientId)}
-                className="bg-blue hover:bg-gray-700 text-white font-bold py-2 px-2 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-gray-500 mr-2 cursor-pointer"
-                title="Ocultar Jogador"
+      {/*<div className="flex justify-center w-full mt-4">
+        
+        <ul className="space-y-3 max-w-md w-full">
+          {playersOnline
+            .filter((player) => !hiddenPlayers.includes(player.clientId))
+            .map((player) => (
+              <li
+                key={player.clientId}
+                className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg p-4 flex items-center justify-between shadow-md border border-gray-600 transition duration-300 ease-in-out transform hover:scale-105"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.06 10.06 0 012.19-3.368M6.423 6.423A9.967 9.967 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.05 10.05 0 01-4.128 5.14M15 12a3 3 0 11-6 0 3 3 0 016 0zm-9 9l18-18" />
-                </svg>
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="w-2 h-2 rounded-full bg-green mr-1 animate-pulse shrink-0" />
+                  <span className="font-bold text-lg text-white truncate max-w-[140px] sm:max-w-[180px]">
+                    {player.name}
+                  </span>
+                </div>
 
-              </button>
+                <div className="flex items-center shrink-0">
+                  <button
+                    onClick={() => handleHidePlayer(player.clientId)}
+                    className="bg-blue hover:bg-gray-700 text-white font-bold py-2 px-2 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-gray-500 mr-2 cursor-pointer"
+                    title="Ocultar Jogador"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.06 10.06 0 012.19-3.368M6.423 6.423A9.967 9.967 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.05 10.05 0 01-4.128 5.14M15 12a3 3 0 11-6 0 3 3 0 016 0zm-9 9l18-18" />
+                    </svg>
+                  </button>
 
-              <button
-                onClick={() => {
-                  handleRequestChat(player);
-                  openChatBubble(player);
-                }}
-                className="bg-gradient-to-br from-blue to-purple hover:from-blue hover:to-purple text-white whitespace-nowrap font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
-                Solicitar Bate-papo
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
+                  <button
+                    onClick={() => {
+                      handleRequestChat(player);
+                      openChatBubble(player);
+                    }}
+                    className="bg-gradient-to-br from-blue to-purple hover:from-blue hover:to-purple text-white whitespace-nowrap font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                    </svg>
+                    Solicitar Bate-papo
+                  </button>
+                </div>
+              </li>
+            ))}
+        </ul>
+      </div>*/}
 
 
       {/* Caixinha de miniaturas arrastável */}
-      <div
+      {/*<div
         ref={boxRef}
         onMouseDown={handleStart}
         onTouchStart={handleStart}
@@ -672,7 +672,7 @@ export default function ResultsPage() {
           position: 'fixed',
           left: position.x,
           top: position.y,
-          width: 'auto', // Largura automática para se ajustar ao conteúdo interno inicialmente
+          width: 'auto',
           maxWidth: '90vw',
           maxHeight: '90vh',
           minWidth: '220px',
@@ -680,31 +680,38 @@ export default function ResultsPage() {
         }}
         className="bg-gray-800 text-white p-3 rounded-md shadow-lg border border-blue"
       >
-      <div className="font-bold mb-2 select-none text-blue">Pode arrastar</div>
-      <div className="font-bold mb-2 select-none text-green">Jogadores Online</div>
+        <div className="font-bold mb-2 select-none text-blue">Pode arrastar</div>
+        <div className="font-bold mb-2 select-none text-green">Jogadores Online</div>
 
-      <div
-        className="bg-gray-900 border border-green rounded p-2 overflow-x-auto" // Mudança aqui para rolagem horizontal
-        style={{
-          minHeight: 'calc(17vh - 60px)',
-          whiteSpace: 'nowrap', // Impede que os itens da lista quebrem para a próxima linha
-        }}
-      >
-        <ul className="space-x-3 w-full max-w-none flex flex-row"> {/* Ajustes no estilo da lista */}
-          {playersOnline
-            .filter((player) => !hiddenPlayers.includes(player.clientId))
-            .map((player) => (
+        <div
+          className="bg-gray-900 border border-green rounded p-2 overflow-x-auto"
+          style={{
+            minHeight: 'calc(17vh - 60px)',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <ul className="space-x-3 w-full max-w-none flex flex-row">
+            {playersOnline.map((player) => (
               <li
                 key={player.clientId}
-                className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg p-4 flex items-center justify-between shadow-md border border-gray-600 transition duration-300 ease-in-out transform hover:scale-105"
-                style={{ display: 'inline-block', minWidth: '200px' }} // Garante que cada item tenha uma largura mínima
+                className={`bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg p-4 flex items-center justify-between shadow-md border border-gray-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer ${hiddenPlayers.includes(player.clientId) ? 'opacity-50' : ''}`}
+                style={{ display: 'inline-block', minWidth: '200px' }}
+                onClick={() => handleShowPlayer(player.clientId)} // Adicionando a função para reexibir
+                title={hiddenPlayers.includes(player.clientId) ? 'Mostrar Jogador' : ''}
               >
-                <span>{player.name}</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-green mr-1 animate-pulse shrink-0" />
+                  <span className="font-bold text-lg text-white truncate max-w-[140px] sm:max-w-[180px]">
+                    {player.name}
+                  </span>
+                </div>
+                
               </li>
             ))}
-        </ul>
-      </div>
-      </div>    
+          </ul>
+        </div>
+      </div>*/}    
+
 
       <AnimatePresence>
         {showNotification && (

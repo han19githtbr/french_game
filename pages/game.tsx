@@ -145,8 +145,8 @@ export default function Game() {
     setHiddenPlayers((prev) => [...prev, clientId]);
   };
 
-  const handleShowPlayer = (clientId: string) => {
-    setHiddenPlayers((prev) => prev.filter((id) => id !== clientId));
+  const handleShowPlayer = (clientIdToShow: string) => {
+    setHiddenPlayers((prev) => prev.filter((id) => id !== clientIdToShow));
   };
 
   const showToast = (message: string, type: 'info' | 'success' | 'error') => {
@@ -842,7 +842,7 @@ export default function Game() {
           position: 'fixed',
           left: position.x,
           top: position.y,
-          width: 'auto', // Largura automática para se ajustar ao conteúdo interno inicialmente
+          width: 'auto',
           maxWidth: '90vw',
           maxHeight: '90vh',
           minWidth: '220px',
@@ -850,30 +850,41 @@ export default function Game() {
         }}
         className="bg-gray-800 text-white p-3 rounded-md shadow-lg border border-blue"
       >
-      <div className="font-bold mb-2 select-none text-blue">Pode arrastar</div>
-      <div className="font-bold mb-2 select-none text-green">Jogadores Online</div>
+        <div className="font-bold mb-2 select-none text-blue">Pode arrastar</div>
+        <div className="font-bold mb-2 select-none text-green">Jogadores Online</div>
 
-      <div
-        className="bg-gray-900 border border-green rounded p-2 overflow-x-auto" // Mudança aqui para rolagem horizontal
-        style={{
-          minHeight: 'calc(17vh - 60px)',
-          whiteSpace: 'nowrap', // Impede que os itens da lista quebrem para a próxima linha
-        }}
-      >
-        <ul className="space-x-3 w-full max-w-none flex flex-row"> {/* Ajustes no estilo da lista */}
-          {playersOnline
-            .filter((player) => !hiddenPlayers.includes(player.clientId))
-            .map((player) => (
+        <div
+          className="bg-gray-900 border border-green rounded p-2 overflow-x-auto"
+          style={{
+            minHeight: 'calc(17vh - 60px)',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <ul className="space-x-3 w-full max-w-none flex flex-row">
+            {playersOnline.map((player) => (
               <li
                 key={player.clientId}
-                className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg p-4 flex items-center justify-between shadow-md border border-gray-600 transition duration-300 ease-in-out transform hover:scale-105"
-                style={{ display: 'inline-block', minWidth: '200px' }} // Garante que cada item tenha uma largura mínima
+                className={`bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg p-4 flex items-center justify-between shadow-md border border-gray-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer ${hiddenPlayers.includes(player.clientId) ? 'opacity-50' : ''}`}
+                style={{ display: 'inline-block', minWidth: '200px' }}
+                onClick={() => handleShowPlayer(player.clientId)} // Adicionando a função para reexibir
+                title={hiddenPlayers.includes(player.clientId) ? 'Mostrar Jogador' : ''}
               >
-                <span>{player.name}</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-green mr-1 animate-pulse shrink-0" />
+                  <span className="font-bold text-lg text-white truncate max-w-[140px] sm:max-w-[180px]">
+                    {player.name}
+                  </span>
+                </div>
+                {/**{hiddenPlayers.includes(player.clientId) && (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                )}**/}
               </li>
             ))}
-        </ul>
-      </div>
+          </ul>
+        </div>
       </div>
 
 
