@@ -789,7 +789,7 @@ export default function Game() {
       )}
 
       {/*<h1 className="text-2xl font-bold mb-4 mt-6">Jogadores Online</h1>*/}
-      <ul className="space-y-3 w-full max-w-md">
+      <ul className="space-y-3 w-full max-w-md fixed">
         {playersOnline
         .filter((player) => !hiddenPlayers.includes(player.clientId))
         .map((player) => (
@@ -1002,7 +1002,7 @@ export default function Game() {
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }} 
         transition={{ duration: 0.6 }}
-        className="text-4xl text-gray-300 font-bold mb-8 mt-76 text-center drop-shadow-md"
+        className="text-4xl text-gray-300 font-bold mb-8 mt-72 text-center drop-shadow-md"
       >
         🎮 Jogo para treinar o Francês
       </motion.h1>
