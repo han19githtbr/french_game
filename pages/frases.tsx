@@ -793,7 +793,7 @@ export default function Frase() {
           minWidth: '220px',
           zIndex: 9999,
         }}
-        className="bg-gray-800 text-white p-3 rounded-md shadow-lg border border-blue"
+        className="bg-gray-800 text-white mt-20 p-3 rounded-md shadow-lg border border-blue"
       >
         <div className="font-bold mb-2 select-none text-blue">Pode arrastar</div>
         <div className="font-bold mb-2 select-none text-green">Jogadores Online</div>
