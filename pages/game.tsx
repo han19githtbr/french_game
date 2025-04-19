@@ -129,10 +129,10 @@ export default function Game() {
 
   const [chatRequestsSent, setChatRequestsSent] = useState<{ toClientId: string, toName: string }[]>([]);
 
-  const boxRef = useRef<HTMLDivElement | null>(null)
+  const boxRef = useRef<HTMLDivElement | null>(null);
   const [position, setPosition] = useState({ x: 20, y: 20 }) // canto superior esquerdo
-  const [dragging, setDragging] = useState(false)
-  const [offset, setOffset] = useState({ x: 0, y: 0 })
+  const [dragging, setDragging] = useState(false);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
 
   //const clientId = ablyClient?.auth.clientId;
   const playerName = session?.user?.name || 'Anônimo';
@@ -184,11 +184,20 @@ export default function Game() {
     const handleTouchEnd = () => setDragging(false);
     const handleTouchCancel = () => setDragging(false);
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
-    document.addEventListener('touchend', handleTouchEnd);
-    document.addEventListener('touchcancel', handleTouchCancel);
+    
+    if (dragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener('touchmove', handleTouchMove, { passive: false });
+      document.addEventListener('touchend', handleTouchEnd);
+      document.addEventListener('touchcancel', handleTouchCancel);
+    } else {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+      document.removeEventListener('touchcancel', handleTouchCancel);
+    }
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
@@ -221,22 +230,26 @@ export default function Game() {
   const handleStart = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     if (!boxRef.current) return;
     setDragging(true);
-    let clientX: number | undefined;
-    let clientY: number | undefined;
+
+    let startX: number | undefined;
+    let startY: number | undefined;
+    const rect = boxRef.current.getBoundingClientRect();
 
     if (e instanceof MouseEvent) {
-      clientX = e.clientX;
-      clientY = e.clientY;
+      startX = e.clientX;
+      startY = e.clientY;
     } else if (e instanceof TouchEvent && e.touches.length > 0) {
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
     }
 
-    if (clientX !== undefined && clientY !== undefined) {
+    if (startX !== undefined && startY !== undefined) {
       setOffset({
-        x: clientX - boxRef.current.offsetLeft,
-        y: clientY - boxRef.current.offsetTop,
+        x: startX - rect.left,
+        y: startY - rect.top,
       });
+      // Tenta definir a posição inicial para o ponto do clique/toque
+      setPosition({ x: startX - (startX - rect.left), y: startY - (startY - rect.top) });
     }
   };
 
@@ -314,9 +327,7 @@ export default function Game() {
   // Move as declarações das funções para fora do useEffect
   const handleChatMessage = (message: Ably.Message, channelName: string) => {
     const { sender, text, timestamp } = message.data;
-    //const channelName = message.name; // [CORRIGIDO] O nome do canal contém os IDs dos participantes
-    //const channelName = message.channelName; // ✅ CORRETO
-
+    
     const otherClientId = channelName.split(':')[1]?.split('-')?.find(id => id !== clientId);
     const otherUserName = playersOnline.find(player => player.clientId === otherClientId)?.name || 'Usuário Desconhecido';
 
@@ -847,6 +858,7 @@ export default function Game() {
           maxHeight: '90vh',
           minWidth: '220px',
           zIndex: 9999,
+          cursor: 'grab',
         }}
         className="bg-gray-800 text-white mt-20 p-3 rounded-md shadow-lg border border-blue"
       >

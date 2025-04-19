@@ -792,6 +792,7 @@ export default function Frase() {
           maxHeight: '90vh',
           minWidth: '220px',
           zIndex: 9999,
+          cursor: 'grab',
         }}
         className="bg-gray-800 text-white mt-20 p-3 rounded-md shadow-lg border border-blue"
       >
