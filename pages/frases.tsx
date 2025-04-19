@@ -734,7 +734,7 @@ export default function Frase() {
       )}
 
       {/*<h1 className="text-2xl font-bold mb-4 mt-6">Jogadores Online</h1>*/}
-      <ul className="space-y-3 w-full max-w-md">
+      <ul className="space-y-3 w-full max-w-md fixed">
         {playersOnline
         .filter((player) => !hiddenPlayers.includes(player.clientId))
         .map((player) => (
