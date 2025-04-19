@@ -771,7 +771,7 @@ export default function Game() {
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
-          <div className="flex items-center gap-2 cursor-pointer mt-10">
+          <div className="flex items-center gap-2 cursor-pointer mt-12">
             <span className="text-gray-300 font-medium hidden sm:inline">{session.user.name}</span>
             <img src={session.user.image || ''} alt="Avatar" className="w-10 h-10 rounded-full border border-white" />
           </div>

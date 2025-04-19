@@ -716,7 +716,7 @@ export default function Frase() {
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
-          <div className="flex items-center gap-2 cursor-pointer mt-4 mr-2">
+          <div className="flex items-center gap-2 cursor-pointer mt-6 mr-2">
             <span className="text-gray-300 font-medium hidden sm:inline">{session.user.name}</span>
             <img src={session.user.image || ''} alt="Avatar" className="w-8 h-8 rounded-full border border-white" />
           </div>
