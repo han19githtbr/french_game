@@ -1,5 +1,5 @@
 # Use a imagem oficial do Node.js como base
-FROM node:18-alpine AS builder
+FROM node:22-alpine AS builder
 
 # Defina o diretório de trabalho dentro do contêiner
 WORKDIR /app
@@ -17,7 +17,7 @@ COPY . .
 RUN npm run build
 
 # --- Stage para a imagem de produção ---
-FROM node:18-alpine AS runner
+FROM node:22-alpine AS runner
 
 # Defina o diretório de trabalho
 WORKDIR /app

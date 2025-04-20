@@ -598,7 +598,7 @@ export default function ResultsPage() {
       <div className="flex justify-between items-center mb-6">
         <button 
           onClick={() => router.push('/game')} 
-          className="fixed flex border text-gray-300 border-blue items-center bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75 mt-50 cursor-pointer">
+          className="absolute flex border text-gray-300 border-blue items-center bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75 mt-50 cursor-pointer">
           <ChevronLeft className="mr-2" color="blue" /> Voltar ao jogo
         </button>
         {/**{session?.user && (
@@ -740,7 +740,7 @@ export default function ResultsPage() {
         <audio ref={enterSoundRef} src="/sounds/accepted_sound.mp3" preload="auto" />
         <audio ref={chatRequestReceivedSoundRef} src="/sounds/received_sound.mp3" preload="auto" />
         <audio ref={chatRequestResponseSoundRef} src="/sounds/refuse_sound.mp3" preload="auto" />
-        {chatRequestsReceived.length > 0 && (
+        {/*{chatRequestsReceived.length > 0 && (
           <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 flex justify-center items-center z-50 backdrop-blur-sm">
             <div className="bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl p-8 max-w-md w-full shadow-lg border-2 border-gray-600 animate__animated animate__fadeIn">
               <h2 className="text-xl font-bold text-yellow mb-6 glow-text">🕹️ Pedidos de Bate-papo Recebidos!</h2>
@@ -770,7 +770,7 @@ export default function ResultsPage() {
               </ul>
             </div>
           </div>
-        )}
+        )}*/}
       </>
       {isChatBubbleOpen && (
         <div

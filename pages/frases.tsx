@@ -116,10 +116,10 @@ export default function Frase() {
   const chatHandlersRef = useRef<Record<string, (message: Ably.Message) => void>>({});
 
   const boxRef = useRef<HTMLDivElement | null>(null);
-  const [position, setPosition] = useState({ x: 20, y: 20 }); // canto superior esquerdo
+  const [position, setPosition] = useState({ x: 20, y: 20 }) // canto superior esquerdo
   const [dragging, setDragging] = useState(false);
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-
+  const [offset, setOffset] = useState({ x: 130, y: 130 });
+  const [visibleModals, setVisibleModals] = useState<Record<string, boolean>>({});
 
   //const clientId = ablyClient?.auth.clientId;
   const playerName = session?.user?.name || 'Anônimo';
@@ -483,6 +483,8 @@ export default function Frase() {
       prev.filter((req) => req.toClientId !== request.fromClientId)
     );
 
+    setVisibleModals(prev => ({ ...prev, [request.fromClientId]: false }));
+
     // [CORREÇÃO] Inscrever-se nos canais de mensagens e digitação AQUI para o receptor
     // ⚠️ Verifica se já tem handler antes de criar novo
     if (!chatHandlersRef.current[chatChannelName]) {
@@ -511,7 +513,18 @@ export default function Frase() {
     const responseChannel = ablyClient.channels.get(`chat-requests:${request.fromClientId}`);
     responseChannel.publish('response', { accepted: false, fromClientId: clientId, fromName: playerName });
     setChatRequestsReceived((prev) => prev.filter((req) => req.fromClientId !== request.fromClientId));
+    setVisibleModals(prev => ({ ...prev, [request.fromClientId]: false }));
     chatRequestResponseSoundRef.current?.play();
+  };
+
+  const handleOpenChatRequest = (request: ChatRequest) => {
+    // Exibe o modal correspondente ao pedido clicado
+    setVisibleModals(prev => ({ ...prev, [request.fromClientId]: true }));
+  };
+
+  const handleMinimizeChatRequest = (clientId: string) => {
+    // Esconde o modal correspondente ao pedido minimizado
+    setVisibleModals(prev => ({ ...prev, [clientId]: false }));
   };
 
   const openChatBubble = (player: Player) => {
@@ -702,7 +715,7 @@ export default function Frase() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-800 to-slate-900 text-white flex flex-col items-center p-4 relative mb-6">
-      <div className="fixed top-78 left-4 z-50">
+      <div className="absolute top-76 left-4 z-50">
         <button
             onClick={() => router.push('/game')}
             className="flex border border-blue text-gray-300 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75 cursor-pointer"
@@ -784,7 +797,7 @@ export default function Frase() {
         onMouseDown={handleStart}
         onTouchStart={handleStart}
         style={{
-          position: 'fixed',
+          position: 'absolute',
           left: position.x,
           top: position.y,
           width: 'auto',
@@ -854,7 +867,7 @@ export default function Frase() {
         <audio ref={enterSoundRef} src="/sounds/accepted_sound.mp3" preload="auto" />
         <audio ref={chatRequestReceivedSoundRef} src="/sounds/received_sound.mp3" preload="auto" />
         <audio ref={chatRequestResponseSoundRef} src="/sounds/refuse_sound.mp3" preload="auto" />
-        {chatRequestsReceived.length > 0 && (
+        {/*{chatRequestsReceived.length > 0 && (
           <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 flex justify-center items-center z-50 backdrop-blur-sm">
             <div className="bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl p-8 max-w-md w-full shadow-lg border-2 border-gray-600 animate__animated animate__fadeIn">
               <h2 className="text-xl font-bold text-yellow mb-6 glow-text">🕹️ Pedidos de Bate-papo Recebidos!</h2>
@@ -884,7 +897,49 @@ export default function Frase() {
               </ul>
             </div>
           </div>
+        )}*/}
+        {chatRequestsReceived.length > 0 && (
+          <div className="fixed bottom-0 left-0 w-full bg-gray-900 bg-opacity-70 border-t border-gray-700 py-2 px-4 flex items-center justify-start gap-4 z-40">
+            {chatRequestsReceived.map((request) => (
+              <div
+                key={request.fromClientId}
+                className="bg-gray-800 rounded-md p-2 cursor-pointer hover:bg-gray-700 transition duration-200 ease-in-out"
+                onClick={() => handleOpenChatRequest(request)}
+              >
+                <span className="text-sm text-yellow-300 font-semibold">Novo pedido de: {request.fromName}</span>
+              </div>
+            ))}
+          </div>
         )}
+        {chatRequestsReceived.map((request) => (
+          <div
+            key={`modal-${request.fromClientId}`}
+            id={`modal-${request.fromClientId}`}
+            className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl p-8 max-w-md w-full shadow-lg border-2 border-gray-600 z-50 animate__animated animate__fadeIn ${visibleModals[request.fromClientId] ? '' : 'hidden'}`}
+          >
+            <h2 className="text-xl font-bold text-yellow mb-6 glow-text">🕹️ Pedido de Bate-papo de {request.fromName}!</h2>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => handleAcceptChatRequest(request)}
+                className="flex items-center justify-center whitespace-nowrap bg-blue hover:bg-blue text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue"
+              >
+                <Check className="h-5 w-5 mr-2 shrink-0" /> Aceitar
+              </button>
+              <button
+                onClick={() => handleRejectChatRequest(request)}
+                className="flex items-center justify-center whitespace-nowrap bg-red hover:bg-red text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red"
+              >
+                <X className="h-5 w-5 mr-2 shrink-0" /> Recusar
+              </button>
+              <button
+                onClick={() => handleMinimizeChatRequest(request.fromClientId)}
+                className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              >
+                Minimizar
+              </button>
+            </div>
+          </div>
+        ))}
       </>
 
       {isChatBubbleOpen && (
