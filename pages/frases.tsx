@@ -266,7 +266,9 @@ export default function Frase() {
   };
 
 
-  // Move as declarações das funções para fora do useEffect
+  // É acionada quando uma nova mensagem chega ao canal (incluindo as suas próprias). 
+  // Ela verifica se a mensagem já existe no estado com base no remetente e timestamp 
+  // antes de adicioná-la ao activeChats
   const handleChatMessage = (message: Ably.Message, channelName: string) => {
       const { sender, text, timestamp } = message.data;
       //const channelName = message.name; // [CORRIGIDO] O nome do canal contém os IDs dos participantes
@@ -545,17 +547,18 @@ export default function Frase() {
     setTypingIndicator({}); // Limpar o indicador de digitação ao fechar o chat
   };
 
+  // Apenas publica a mensagem no canal do Ably e limpa o input. Não atualiza o estado activeChats diretamente.
   const handleSendMessage = () => {
     if (!ablyClient || !isChatBubbleOpen || !chatInput.trim() || !clientId) return;
     const chatChannel = ablyClient.channels.get(isChatBubbleOpen);
     chatChannel.publish('message', { sender: playerName, text: chatInput, timestamp: Date.now() });
-    setActiveChats((prev) => ({
+    /*setActiveChats((prev) => ({
       ...prev,
       [isChatBubbleOpen]: [
         ...(prev[isChatBubbleOpen] || []),
         { sender: playerName, text: chatInput, timestamp: Date.now() },
       ],
-    }));
+    }));*/
     setChatInput('');
     setIsTyping(false);
     //publishTypingStatus(false);

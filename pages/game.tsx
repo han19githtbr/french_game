@@ -612,13 +612,13 @@ export default function Game() {
     if (!ablyClient || !isChatBubbleOpen || !chatInput.trim() || !clientId) return;
     const chatChannel = ablyClient.channels.get(isChatBubbleOpen);
     chatChannel.publish('message', { sender: playerName, text: chatInput, timestamp: Date.now() });
-    setActiveChats((prev) => ({
+    /*setActiveChats((prev) => ({
       ...prev,
       [isChatBubbleOpen]: [
         ...(prev[isChatBubbleOpen] || []),
         { sender: playerName, text: chatInput, timestamp: Date.now() },
       ],
-    }));
+    }));*/
     setChatInput('');
     setIsTyping(false);
     //publishTypingStatus(false);
