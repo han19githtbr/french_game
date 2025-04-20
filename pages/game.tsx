@@ -91,7 +91,6 @@ export default function Game() {
   //const [results, setResults] = useState<Record<number, Result>>({});
   const [results, setResults] = useState<(Result | null)[]>([]);
 
-
   const [round, setRound] = useState(1);
   const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
 
@@ -353,12 +352,29 @@ export default function Game() {
     }
   };
 
-  const handleTypingStatus = (message: Ably.Message) => {
+  /*const handleTypingStatus = (message: Ably.Message) => {
     const isUserTyping = message.data.isTyping;
     const otherClientId = message.clientId;
     // [CORRIGIDO] Verifica se otherClientId é definido antes de usá-lo
     if (otherClientId && isChatBubbleOpen && isChatBubbleOpen.includes(otherClientId) && clientId !== otherClientId) {
       setTypingIndicator((prev) => ({ ...prev, [otherClientId]: isUserTyping }));
+    }
+  };*/
+
+  const handleTypingStatus = (message: Ably.Message) => {
+    const isUserTyping = message.data.isTyping;
+    const otherClientId = message.clientId;
+  
+    if (otherClientId && isChatBubbleOpen) {
+      if (typeof otherClientId === 'string') {
+        // ✅ Aserção de tipo para clientId
+        const chatChannelName = getChatChannelName(clientId as string, otherClientId);
+        if (chatChannelName === isChatBubbleOpen && clientId !== otherClientId) {
+          setTypingIndicator((prev) => ({ ...prev, [isChatBubbleOpen]: isUserTyping }));
+        }
+      } else {
+        console.warn('handleTypingStatus: otherClientId não é uma string:', otherClientId);
+      }
     }
   };
 
@@ -932,9 +948,9 @@ export default function Game() {
       </AnimatePresence>
       
       <>
-        <audio ref={enterSoundRef} src="/sounds/accepted_sound.mp3" preload="auto" />
-        <audio ref={chatRequestReceivedSoundRef} src="/sounds/received_sound.mp3" preload="auto" />
-        <audio ref={chatRequestResponseSoundRef} src="/sounds/refuse_sound.mp3" preload="auto" />
+        <audio ref={enterSoundRef} src="/sounds/received_sound.mp3" preload="auto" />
+        <audio ref={chatRequestReceivedSoundRef} src="/sounds/accepted_sound.mp3" preload="auto" />
+        <audio ref={chatRequestResponseSoundRef} src="/sounds/message.mp3" preload="auto" />
         {/*{chatRequestsReceived.length > 0 && (
           <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 flex justify-center items-center z-50 backdrop-blur-sm">
             <div className="bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl p-8 max-w-md w-full shadow-lg border-2 border-gray-600 animate__animated animate__fadeIn">
