@@ -14,6 +14,7 @@ const themes = ['família', 'natureza', 'turismo', 'animais', 'tecnologia', 'gas
 
 const animalSounds: Record<string, string> = {
   'C\'est mon chien': '/sounds/cachorro.mp3',
+  'Jean joue avec son chien': '/sounds/cachorro.mp3',
   'Ce chat, c\'est celui de Julien': '/sounds/gato.mp3',
   'Je n\'ai pas peur des éléphants': '/sounds/elefante.mp3',
   'Le lion est le roi de la jungle': '/sounds/lion.mp3',
