@@ -77,9 +77,9 @@ export default function Home() {
       <div className="absolute top-10 left-10 border border-blue bg-white bg-opacity-10 rounded-md shadow-md p-3 flex flex-col items-center justify-center">
         <span className="font-semibold text-sm mb-1 text-gray-300">Quantidade de acessos Hoje</span>
         <div className="flex items-center mr-8">
+          
           <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-25 text-lightblue mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7 1.274 4.057 1.274 8.057 0 12-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7 0-4.057 0-8.057 0-12z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.237l.051.02C7.414 2.469 7.5 2.716 7.5 3c0 .833-.333 1.5-1 1.5-.667 0-1.333-.667-1-1.5c0-.284.086-.531.262-.763l.051-.02a2 2 0 012.977-1.412c.414.12.85.346 1.15.671a2 2 0 01.668 1.488l.032.029" />
           </svg>
           <span className="font-semibold text-lg text-blue mt-3">{dailyAccessCount}</span>
         </div>
