@@ -84,3 +84,17 @@ select option:hover {
 .animate-progress-flash {
   animation: progress-flash 1s infinite alternate;
 }
+
+/* ... outras importações */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none; /* Firefox */
+}
+
+.text-shadow-glow {
+  text-shadow: 0 0 10px rgba(34, 211, 238, 0.8);
+}

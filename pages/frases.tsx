@@ -4,7 +4,7 @@ import type * as Ably from 'ably'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/router'
 //import { Button } from '@/components/ui/button'
-import { Check, X, ChevronLeft } from 'lucide-react'
+import { Check, X, ChevronLeft, Minus } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { saveProgress } from './sentences_results'
 import { DotLoader } from 'react-spinners';
@@ -121,6 +121,7 @@ export default function Frase() {
   const [dragging, setDragging] = useState(false);
   const [offset, setOffset] = useState({ x: 130, y: 130 });
   const [visibleModals, setVisibleModals] = useState<Record<string, boolean>>({});
+  const [minimizedRequests, setMinimizedRequests] = useState<string[]>([]);
 
   //const clientId = ablyClient?.auth.clientId;
   const playerName = session?.user?.name || 'Anônimo';
@@ -504,6 +505,7 @@ export default function Frase() {
     );
 
     setVisibleModals(prev => ({ ...prev, [request.fromClientId]: false }));
+    setMinimizedRequests(prev => prev.filter(id => id !== request.fromClientId)); // Remove da lista de minimizados
 
     // [CORREÇÃO] Inscrever-se nos canais de mensagens e digitação AQUI para o receptor
     // ⚠️ Verifica se já tem handler antes de criar novo
@@ -534,17 +536,29 @@ export default function Frase() {
     responseChannel.publish('response', { accepted: false, fromClientId: clientId, fromName: playerName });
     setChatRequestsReceived((prev) => prev.filter((req) => req.fromClientId !== request.fromClientId));
     setVisibleModals(prev => ({ ...prev, [request.fromClientId]: false }));
+    setMinimizedRequests(prev => prev.filter(id => id !== request.fromClientId));
     chatRequestResponseSoundRef.current?.play();
   };
 
   const handleOpenChatRequest = (request: ChatRequest) => {
     // Exibe o modal correspondente ao pedido clicado
     setVisibleModals(prev => ({ ...prev, [request.fromClientId]: true }));
+    setMinimizedRequests(prev => prev.filter(id => id !== request.fromClientId));
   };
 
   const handleMinimizeChatRequest = (clientId: string) => {
     // Esconde o modal correspondente ao pedido minimizado
     setVisibleModals(prev => ({ ...prev, [clientId]: false }));
+    if (!minimizedRequests.includes(clientId)) {
+      setMinimizedRequests(prev => [...prev, clientId]);
+    }
+  };
+
+  const handleOpenMinimizedRequest = (clientId: string) => {
+    const request = chatRequestsReceived.find(req => req.fromClientId === clientId);
+    if (request) {
+      handleOpenChatRequest(request);
+    }
   };
 
   const openChatBubble = (player: Player) => {
@@ -556,6 +570,10 @@ export default function Frase() {
     setIsChatBubbleOpen(chatChannelName);
     setChatPartnerName(player.name);
     
+  };
+
+  const minimizeChatBubble = () => {
+    setIsChatBubbleOpen(null); // Ou trocar para estado de "minimizado"
   };
 
   const closeChatBubble = () => {
@@ -888,38 +906,8 @@ export default function Frase() {
         <audio ref={enterSoundRef} src="/sounds/received_sound.mp3" preload="auto" />
         <audio ref={chatRequestReceivedSoundRef} src="/sounds/accepted_sound.mp3" preload="auto" />
         <audio ref={chatRequestResponseSoundRef} src="/sounds/message.mp3" preload="auto" />
+        
         {/*{chatRequestsReceived.length > 0 && (
-          <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 flex justify-center items-center z-50 backdrop-blur-sm">
-            <div className="bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl p-8 max-w-md w-full shadow-lg border-2 border-gray-600 animate__animated animate__fadeIn">
-              <h2 className="text-xl font-bold text-yellow mb-6 glow-text">🕹️ Pedidos de Bate-papo Recebidos!</h2>
-              <ul className="space-y-4">
-                {chatRequestsReceived.map((request) => (
-                  <li
-                    key={request.fromClientId}
-                    className="bg-gray-900 rounded-md p-4 flex items-center justify-between border-b border-gray-700"
-                  >
-                    <span className="text-white font-semibold">{request.fromName}</span>
-                    <div className="flex flex-wrap gap-3">
-                      <button
-                        onClick={() => handleAcceptChatRequest(request)}
-                        className="flex items-center justify-center whitespace-nowrap bg-blue hover:bg-blue text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue"
-                      >
-                        <Check className="h-5 w-5 mr-2 shrink-0" /> Aceitar
-                      </button>
-                      <button
-                        onClick={() => handleRejectChatRequest(request)}
-                        className="flex items-center justify-center whitespace-nowrap bg-red hover:bg-red text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red"
-                      >
-                        <X className="h-5 w-5 mr-2 shrink-0" /> Recusar
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        )}*/}
-        {chatRequestsReceived.length > 0 && (
           <div className="fixed bottom-0 left-0 w-full bg-gray-900 bg-opacity-70 border-t border-gray-700 py-2 px-4 flex items-center justify-start gap-4 z-40">
             {chatRequestsReceived.map((request) => (
               <div
@@ -960,10 +948,64 @@ export default function Frase() {
               </button>
             </div>
           </div>
+        ))}*/}
+        {minimizedRequests.length > 0 && (
+          <div className="fixed bottom-0 left-0 w-full bg-gray-800 bg-opacity-80 border-t border-gray-700 py-2 px-4 flex items-center overflow-x-auto scrollbar-hide z-40">
+            {minimizedRequests.map((clientId) => {
+              const request = chatRequestsReceived.find(req => req.fromClientId === clientId);
+              return request ? (
+                <div
+                  key={clientId}
+                  className="bg-gradient-to-br from-yellow-600 to-yellow-500 rounded-full p-2 mr-2 cursor-pointer shadow-md hover:scale-105 transition duration-200 ease-in-out"
+                  onClick={() => handleOpenMinimizedRequest(clientId)}
+                >
+                  <span className="text-xs text-gray-900 font-bold">{request.fromName.substring(0, 2).toUpperCase()}</span> {/* Avatar inicial */}
+                </div>
+              ) : null;
+            })}
+          </div>
+        )}
+        
+        {chatRequestsReceived.map((request) => (
+          <div
+            key={`modal-${request.fromClientId}`}
+            id={`modal-${request.fromClientId}`}
+            className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl p-6 max-w-md w-full shadow-lg border-2 border-gray-600 z-50 animate__animated animate__fadeIn ${visibleModals[request.fromClientId] ? '' : 'hidden'}
+            sm:p-8`} /* Ajuste padding em telas maiores */
+          >
+            <h2 className="text-xl font-bold text-yellow-400 mb-4 glow-text">
+              <span role="img" aria-label="joystick" className="mr-2">🕹️</span>
+              Pedido de Chat de <span className="text-yellow-300">{request.fromName}</span>!
+            </h2>
+            <p className="text-gray-300 mb-4 text-sm sm:text-base">
+              {/* Você pode adicionar mais informações sobre o pedido aqui, se necessário */}
+              Um jogador quer conversar com você!
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => handleAcceptChatRequest(request)}
+                className="flex items-center justify-center whitespace-nowrap bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm sm:text-base"
+              >
+                <Check className="h-4 w-4 mr-2 shrink-0" /> Aceitar
+              </button>
+              <button
+                onClick={() => handleRejectChatRequest(request)}
+                className="flex items-center justify-center whitespace-nowrap bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-400 text-sm sm:text-base"
+              >
+                <X className="h-4 w-4 mr-2 shrink-0" /> Recusar
+              </button>
+              <button
+                onClick={() => handleMinimizeChatRequest(request.fromClientId)}
+                className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm sm:text-base"
+              >
+                <Minus className="h-4 w-4 shrink-0" /> {/* Ícone de minimizar */}
+              </button>
+            </div>
+          </div>
         ))}
       </>
 
-      {isChatBubbleOpen && (
+      {/*{isChatBubbleOpen && (
         <div
             className={`fixed bottom-0 left-1/2 -translate-x-1/2 z-50
               w-full max-w-[calc(100vw-16px)] sm:max-w-md
@@ -974,8 +1016,9 @@ export default function Frase() {
               px-2 sm:px-0
             `}
         >
+          
           <div className="bg-gray-900 p-3 rounded-t-lg flex justify-between items-center border-b border-gray-700">
-            <span className="font-bold text-gray-900 glow-text">{chatPartnerName}</span>
+            <span className="font-bold text-gray-300 glow-text">{chatPartnerName}</span>
             <button onClick={closeChatBubble} className="text-gray-400 hover:text-gray-300 focus:outline-none">
               <X className="h-5 w-5" />
             </button>
@@ -990,7 +1033,7 @@ export default function Frase() {
                     : 'bg-gray-800 text-left text-white shadow-md'
                 }`}
               >
-                <span className="text-xs italic text-gray-900">{msg.sender}:</span>
+                <span className="text-xs italic text-gray-300">{msg.sender}:</span>
                 <p className="font-medium">{msg.text}</p>
               </div>
             ))}
@@ -1004,6 +1047,88 @@ export default function Frase() {
             <input
               type="text"
               className="bg-gray-900 text-white rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-cyan-400 shadow-inner"
+              placeholder="Enviar mensagem..."
+              value={chatInput}
+              onChange={handleInputChange}
+              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+            />
+            <button
+              onClick={handleSendMessage}
+              className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-md ml-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+            >
+              Enviar
+            </button>
+          </div>
+        </div>
+      )}*/}
+
+{isChatBubbleOpen && (
+        <div
+          className="
+            fixed bottom-0 left-1/2 -translate-x-1/2 z-50
+            w-full max-w-[calc(100vw-16px)] sm:max-w-md
+            flex flex-col
+            bg-gradient-to-br from-[#1e293b] via-[#334155] to-[#0f172a]
+            border-t-4 border-cyan-500
+            rounded-t-2xl shadow-2xl
+            animate__animated animate__fadeInUp
+            px-2 sm:px-0
+          "
+        >
+          {/* Header */}
+          <div className="bg-[#0f172a] p-3 rounded-t-2xl flex justify-between items-center border-b border-cyan-600 relative">
+            <span className="font-bold text-cyan-300 text-shadow-glow">{chatPartnerName}</span>
+            <div className="flex space-x-2">
+              {/* Minimizar botão */}
+              <button
+                onClick={minimizeChatBubble}
+                className="text-cyan-400 hover:text-cyan-300 transition transform hover:scale-110"
+                title="Minimizar"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                </svg>
+              </button>
+              {/* Fechar botão */}
+              <button
+                onClick={closeChatBubble}
+                className="text-cyan-400 hover:text-red-400 transition transform hover:scale-110"
+                title="Fechar"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Chat messages */}
+          <div className="p-3 overflow-y-auto h-64 flex-grow space-y-2">
+            {activeChats[isChatBubbleOpen]?.map((msg, index) => (
+              <div
+                key={index}
+                className={`p-3 rounded-xl max-w-[80%] shadow-lg transition-all duration-300 ${
+                  msg.sender === playerName
+                    ? 'bg-cyan-700 text-white self-end ml-auto'
+                    : 'bg-gray-700 text-white self-start mr-auto'
+                }`}
+              >
+                <span className="text-xs italic text-cyan-100">{msg.sender}:</span>
+                <p className="font-semibold">{msg.text}</p>
+              </div>
+            ))}
+
+            {typingIndicator[isChatBubbleOpen] && (
+              <div className="text-left italic text-cyan-400 flex items-center space-x-1">
+                <DotLoader color="#22d3ee" size={15} />
+                <span>Digitando...</span>
+              </div>
+            )}
+          </div>
+
+          {/* Input */}
+          <div className="p-3 border-t border-cyan-600 flex items-center bg-[#1e293b] rounded-b-2xl">
+            <input
+              type="text"
+              className="bg-gray-800 text-white rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-cyan-400 shadow-inner"
               placeholder="Enviar mensagem..."
               value={chatInput}
               onChange={handleInputChange}
