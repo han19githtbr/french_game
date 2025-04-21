@@ -909,7 +909,7 @@ export default function Game() {
           zIndex: 9999,
           cursor: 'grab',
         }}
-        className="bg-gray-800 text-white mt-20 p-3 rounded-md shadow-lg border border-blue"
+        className="bg-transparent text-white mt-20 p-3 rounded-md shadow-lg border border-blue"
       >
         <div className="font-bold mb-2 select-none text-blue">Pode arrastar</div>
         <div className="font-bold mb-2 select-none text-green">Jogadores Online</div>

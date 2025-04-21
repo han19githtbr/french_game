@@ -846,7 +846,7 @@ export default function Frase() {
           zIndex: 9999,
           cursor: 'grab',
         }}
-        className="bg-gray-800 text-white mt-20 p-3 rounded-md shadow-lg border border-blue"
+        className="bg-transparent text-white mt-20 p-3 rounded-md shadow-lg border border-blue"
       >
         <div className="font-bold mb-2 select-none text-blue">Pode arrastar</div>
         <div className="font-bold mb-2 select-none text-green">Jogadores Online</div>
@@ -1062,7 +1062,7 @@ export default function Frase() {
         </div>
       )}*/}
 
-{isChatBubbleOpen && (
+      {isChatBubbleOpen && (
         <div
           className="
             fixed bottom-0 left-1/2 -translate-x-1/2 z-50
