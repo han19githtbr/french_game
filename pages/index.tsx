@@ -3,6 +3,8 @@ import { useRouter } from 'next/router'
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 
+const DAILY_ACCESS_KEY = 'frenchLearningDailyAccess';
+const LAST_RESET_KEY = 'frenchLearningLastReset';
 
 export default function Home() {
   const { data: session } = useSession()
@@ -10,6 +12,25 @@ export default function Home() {
   const title = "Aprenda Francês jogando";
   const [animatedTitle, setAnimatedTitle] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [dailyAccessCount, setDailyAccessCount] = useState(0);
+
+  useEffect(() => {
+    const resetDailyAccessIfNeeded = () => {
+      const lastReset = localStorage.getItem(LAST_RESET_KEY);
+      const today = new Date().toDateString();
+
+      if (lastReset !== today) {
+        localStorage.removeItem(DAILY_ACCESS_KEY);
+        localStorage.setItem(LAST_RESET_KEY, today);
+        setDailyAccessCount(0);
+      } else {
+        const storedCount = localStorage.getItem(DAILY_ACCESS_KEY);
+        setDailyAccessCount(storedCount ? parseInt(storedCount, 10) : 0);
+      }
+    };
+
+    resetDailyAccessIfNeeded();
+  }, []);
 
 
   useEffect(() => {
@@ -20,6 +41,7 @@ export default function Home() {
       return () => clearInterval(intervalId);
     }
   }, [session, title.length]);
+
 
   useEffect(() => {
     if (!session) {
@@ -36,6 +58,14 @@ export default function Home() {
   }, [currentIndex, session, title]);
 
 
+  const handleSignInClick = () => {
+    const newCount = dailyAccessCount + 1;
+    setDailyAccessCount(newCount);
+    localStorage.setItem(DAILY_ACCESS_KEY, newCount.toString());
+    signIn('google');
+  };
+
+
   if (session) {
     router.push('/game')
     return null
@@ -44,13 +74,23 @@ export default function Home() {
 
   return (
     <div className="h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500 to-pink-500 text-white">
+      <div className="absolute top-10 left-10 border border-blue bg-white bg-opacity-10 rounded-md shadow-md p-3 flex flex-col items-center justify-center">
+        <span className="font-semibold text-sm mb-1 text-gray-300">Quantidade de acessos Hoje</span>
+        <div className="flex items-center mr-8">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-25 text-lightblue mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7 1.274 4.057 1.274 8.057 0 12-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7 0-4.057 0-8.057 0-12z" />
+          </svg>
+          <span className="font-semibold text-lg text-blue mt-3">{dailyAccessCount}</span>
+        </div>
+      </div>
       <h1
         className="text-4xl font-bold mb-8 text-center"
         dangerouslySetInnerHTML={{ __html: animatedTitle }}
       />
       
       <button
-        onClick={() => signIn('google')}
+        onClick={handleSignInClick}
         className="flex items-center gap-3 bg-transparent hover:border-green border border-blue text-white font-semibold px-6 py-3 rounded-lg shadow-md hover:shadow-xl transition duration-300 cursor-pointer"
       >
         <svg className="w-6 h-6" viewBox="0 0 533.5 544.3">
