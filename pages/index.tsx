@@ -6,6 +6,11 @@ import { useState, useEffect } from 'react';
 const DAILY_ACCESS_KEY = 'frenchLearningDailyAccess';
 const LAST_RESET_KEY = 'frenchLearningLastReset';
 
+const getDayName = (date: Date) => {
+  const days = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+  return days[date.getDay()];
+};
+
 export default function Home() {
   const { data: session } = useSession()
   const router = useRouter()
@@ -13,20 +18,23 @@ export default function Home() {
   const [animatedTitle, setAnimatedTitle] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dailyAccessCount, setDailyAccessCount] = useState(0);
+  const [dayName, setDayName] = useState('');
 
   useEffect(() => {
     const resetDailyAccessIfNeeded = () => {
+      const today = new Date();
+      const todayDateString = today.toDateString();
       const lastReset = localStorage.getItem(LAST_RESET_KEY);
-      const today = new Date().toDateString();
 
-      if (lastReset !== today) {
+      if (lastReset !== todayDateString) {
         localStorage.removeItem(DAILY_ACCESS_KEY);
-        localStorage.setItem(LAST_RESET_KEY, today);
+        localStorage.setItem(LAST_RESET_KEY, todayDateString);
         setDailyAccessCount(0);
       } else {
         const storedCount = localStorage.getItem(DAILY_ACCESS_KEY);
         setDailyAccessCount(storedCount ? parseInt(storedCount, 10) : 0);
       }
+      setDayName(getDayName(today));
     };
 
     resetDailyAccessIfNeeded();
@@ -75,7 +83,7 @@ export default function Home() {
   return (
     <div className="h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500 to-pink-500 text-white">
       <div className="absolute top-10 left-10 border border-blue bg-white bg-opacity-10 rounded-md shadow-md p-3 flex flex-col items-center justify-center">
-        <span className="font-semibold text-sm mb-1 text-gray-300">Quantidade de acessos Hoje</span>
+        <span className="font-semibold text-sm mb-1 text-gray-300">Acessos de Hoje <span className='text-green'>({dayName})</span></span>
         <div className="flex items-center mr-8">
           
           <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-25 text-green mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
