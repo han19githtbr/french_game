@@ -2,9 +2,32 @@ import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
+//import { cn } from "@/lib/utils";
+import { cn } from '../lib/utils';
 
 const DAILY_ACCESS_KEY = 'frenchLearningDailyAccess';
 const LAST_RESET_KEY = 'frenchLearningLastReset';
+const PROVERBS_KEY = 'frenchLearningProverbs';
+const LAST_PROVERB_DATE_KEY = 'frenchLearningLastProverbDate';
+
+
+interface Proverb {
+  french: string;
+  portuguese: string;
+}
+
+const frenchProverbs: Proverb[] = [
+  { french: "Petit à petit, l'oiseau fait son nid.", portuguese: "Pouco a pouco, o pássaro faz seu ninho." },
+  { french: "Il ne faut pas mettre la charrue avant les bœufs.", portuguese: "Não coloque a carroça na frente dos bois." },
+  { french: "Tous les chemins mènent à Rome.", portuguese: "Todos os caminhos levam a Roma." },
+  { french: "Mieux vaut tard que jamais.", portuguese: "Melhor tarde do que nunca." },
+  { french: "Qui vivra verra.", portuguese: "Quem viver verá." },
+  { french: "L'habit ne fait pas le moine.", portuguese: "A roupa não faz o monge." },
+  { french: "On ne change pas une équipe qui gagne.", portuguese: "Não se mexe em time que está ganhando." },
+  { french: "Pierre qui roule n'amasse pas mousse.", portuguese: "Pedra que rola não cria musgo." },
+  { french: "Il faut battre le fer tant qu'il est chaud.", portuguese: "É preciso bater o ferro enquanto está quente." },
+  { french: "Rien ne sert de courir, il faut partir à point.", portuguese: "Não adianta correr, é preciso sair na hora certa." },
+];
 
 const getDayName = (date: Date) => {
   const days = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
@@ -19,6 +42,8 @@ export default function Home() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dailyAccessCount, setDailyAccessCount] = useState(0);
   const [dayName, setDayName] = useState('');
+  const [proverb, setProverb] = useState<Proverb | null>(null);
+
 
   useEffect(() => {
     const resetDailyAccessIfNeeded = () => {
@@ -46,7 +71,20 @@ export default function Home() {
       const intervalId = setInterval(() => {
         setCurrentIndex((prevIndex) => (prevIndex + 1) % title.length);
       }, 100); // Ajuste a velocidade do brilho (ms)
-      return () => clearInterval(intervalId);
+      
+      const proverbIntervalId = setInterval(() => {
+        const randomProverbIndex = Math.floor(Math.random() * frenchProverbs.length);
+        setProverb(frenchProverbs[randomProverbIndex]);
+      }, 10000);
+
+      // Define o provérbio inicial
+      const initialProverbIndex = Math.floor(Math.random() * frenchProverbs.length);
+      setProverb(frenchProverbs[initialProverbIndex]);
+      
+      return () => {
+        clearInterval(intervalId);
+        clearInterval(proverbIntervalId);
+      };
     }
   }, [session, title.length]);
 
@@ -82,7 +120,63 @@ export default function Home() {
 
   return (
     <div className="h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500 to-pink-500 text-white">
-      <div className="absolute top-10 left-10 border border-blue bg-white bg-opacity-10 rounded-md shadow-md p-3 flex flex-col items-center justify-center">
+      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 text-center w-full px-4">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className={cn(
+            "bg-white bg-opacity-10 rounded-xl shadow-lg p-4 mb-6",
+            "backdrop-blur-md "
+          )}
+        >
+          <h2 className={cn(
+            "text-lg font-semibold mb-2",
+            "text-gray-200",
+            "sm:text-xl md:text-2xl",
+            "tracking-wide"
+          )}>
+            Provérbios usados no dia a dia!
+          </h2>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2, duration: 0.3 }}
+            className="space-y-2"
+          >
+            <p className={cn(
+              "text-md italic",
+              "text-white",
+              "sm:text-lg md:text-xl",
+              "leading-relaxed",
+              "font-serif"
+            )}>
+              {proverb ? `"${proverb.french}"` : "Carregando provérbio..."}
+            </p>
+            {proverb && (
+              <p className={cn(
+                "text-sm",
+                "text-gray-300",
+                "sm:text-base md:text-lg",
+                "text-center",
+
+              )}>
+                {proverb.portuguese}
+              </p>
+            )}
+          </motion.div>
+          <motion.div
+            className="mt-4 text-xs text-gray-400"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.3 }}
+          >
+            Fonte: Provérbios Franceses
+          </motion.div>
+        </motion.div>
+      </div>
+      
+      <div className="absolute top-64 left-4 border border-blue bg-white bg-opacity-10 rounded-md shadow-md p-3 flex flex-col items-center justify-center">
         <span className="font-semibold text-sm mb-1 text-gray-300">Acessos de Hoje <span className='text-green'>({dayName})</span></span>
         <div className="flex items-center mr-8">
           
@@ -93,7 +187,7 @@ export default function Home() {
         </div>
       </div>
       <h1
-        className="text-4xl font-bold mb-8 text-center"
+        className="text-4xl font-bold mt-70 mb-8 text-center"
         dangerouslySetInnerHTML={{ __html: animatedTitle }}
       />
       
