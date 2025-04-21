@@ -49,7 +49,7 @@ export default function Home() {
       for (let i = 0; i < title.length; i++) {
         newAnimatedTitle += (i === currentIndex) ?
           `<span style="color: lightblue; text-shadow: 0 0 14px lightblue;">${title[i]}</span>` :
-          `<span style="color: white;">${title[i]}</span>`;
+          `<span style="color: gray;">${title[i]}</span>`;
       }
       setAnimatedTitle(newAnimatedTitle);
     } else {
@@ -91,7 +91,7 @@ export default function Home() {
       
       <button
         onClick={handleSignInClick}
-        className="flex items-center gap-3 bg-transparent hover:border-green border border-blue text-white font-semibold px-6 py-3 rounded-lg shadow-md hover:shadow-xl transition duration-300 cursor-pointer"
+        className="flex items-center gap-3 bg-transparent hover:border-green border border-blue text-gray-300 font-semibold px-6 py-3 rounded-lg shadow-md hover:shadow-xl transition duration-300 cursor-pointer"
       >
         <svg className="w-6 h-6" viewBox="0 0 533.5 544.3">
           <path

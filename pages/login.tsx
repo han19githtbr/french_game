@@ -17,7 +17,7 @@ const LoginPage: NextPage = () => {
     <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
       {/*<h1 className="text-3xl font-bold mb-6">Aprenda Francês com Imagens!</h1>*/}
       <button
-        className="bg-blue-500 hover:bg-green text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+        className="bg-blue hover:bg-green text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
         onClick={() => signIn('google')}
       >
         Entrar com o Google
