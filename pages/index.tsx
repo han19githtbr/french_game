@@ -17,16 +17,17 @@ interface Proverb {
 }
 
 const frenchProverbs: Proverb[] = [
-  { french: "Petit à petit, l'oiseau fait son nid.", portuguese: "Pouco a pouco, o pássaro faz seu ninho." },
+  { french: "Petit à petit, l'oiseau fait son nid.", portuguese: "Pouco a pouco, as coisas vão dando certo." },
   { french: "Il ne faut pas mettre la charrue avant les bœufs.", portuguese: "Não coloque a carroça na frente dos bois." },
-  { french: "Tous les chemins mènent à Rome.", portuguese: "Todos os caminhos levam a Roma." },
+  { french: "Tous les chemins mènent à Rome.", portuguese: "Existem maneiras diferentes de alcançar um mesmo objetivo." },
   { french: "Mieux vaut tard que jamais.", portuguese: "Melhor tarde do que nunca." },
   { french: "Qui vivra verra.", portuguese: "Quem viver verá." },
-  { french: "L'habit ne fait pas le moine.", portuguese: "A roupa não faz o monge." },
-  { french: "On ne change pas une équipe qui gagne.", portuguese: "Não se mexe em time que está ganhando." },
+  { french: "L'habit ne fait pas le moine.", portuguese: "Não julgue pelas aparências." },
   { french: "Pierre qui roule n'amasse pas mousse.", portuguese: "Pedra que rola não cria musgo." },
-  { french: "Il faut battre le fer tant qu'il est chaud.", portuguese: "É preciso bater o ferro enquanto está quente." },
+  { french: "Il faut battre le fer tant qu'il est chaud.", portuguese: "Tem que agarrar a oportunidade no momento que surge." },
   { french: "Rien ne sert de courir, il faut partir à point.", portuguese: "Não adianta correr, é preciso sair na hora certa." },
+  { french: "On ne change pas une équipe qui gagne.", portuguese: "Não tenta modificar o processo que está dando certo." },
+  { french: "À bon entendeur, salut!", portuguese: "A bom entendedor, meia palavra basta!" },
 ];
 
 const getDayName = (date: Date) => {
