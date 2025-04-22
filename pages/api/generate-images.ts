@@ -79,6 +79,8 @@ const allImages = {
     { url: '/ghibli/tecnologia/foguete.png', title: 'Une Fusée' },
     { url: '/ghibli/tecnologia/moto.jpg', title: 'Une moto' },
     { url: '/ghibli/tecnologia/ventilador.png', title: 'Le ventilateur' },
+    { url: '/ghibli/tecnologia/redes_sociais.png', title: 'Les réseaux sociaux' },
+    { url: '/ghibli/tecnologia/trem.png', title: 'Le train' },
   ],
   'gastronomia': [
     { url: '/ghibli/gastronomia/bolo.png', title: 'Un Gâteau' },

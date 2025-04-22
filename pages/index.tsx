@@ -199,7 +199,7 @@ export default function Home() {
         </div>*/}
       </div>
       
-      <div className="absolute top-64 left-4 bg-white bg-opacity-10 rounded-md shadow-md p-3 flex flex-col items-center justify-center">
+      <div className="absolute top-64 left-1/2 transform -translate-x-1/2 bg-white bg-opacity-10 border border-green rounded-md shadow-md p-3 flex flex-col items-center justify-center">
         <span className="font-semibold text-sm mb-1 text-gray-300">Acessos de Hoje <span className='text-green'>({dayName})</span></span>
         <div className="flex items-center mr-8">
           

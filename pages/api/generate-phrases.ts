@@ -82,6 +82,8 @@ const allImages = {
     { url: '/frases/tecnologia/foguete.png', title: 'Cette fusée a été lancée l\'année dernière' },
     { url: '/frases/tecnologia/moto.jpg', title: 'Il est dangereux de piloter une moto sous la pluie!' },
     { url: '/frases/tecnologia/ventilador.png', title: 'J\'aime dormir au son du ventilateur' },
+    { url: '/frases/tecnologia/trem.png', title: 'Le train arrive très vite' },
+    { url: '/frases/tecnologia/redes_sociais.png', title: 'L\'usage excessif des réseaux sociaux n\'est pas recommandé' },
   ],
   'gastronomia': [
     { url: '/frases/gastronomia/bolo.png', title: 'C\'est l\'heure de couper le gâteau!' },
