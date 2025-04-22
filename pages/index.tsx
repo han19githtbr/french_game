@@ -26,7 +26,7 @@ const frenchProverbs: Proverb[] = [
   { french: "Pierre qui roule n'amasse pas mousse.", portuguese: "Pedra que rola não cria musgo." },
   { french: "Il faut battre le fer tant qu'il est chaud.", portuguese: "Tem que agarrar a oportunidade no momento que surge." },
   { french: "Rien ne sert de courir, il faut partir à point.", portuguese: "Não adianta correr, é preciso sair na hora certa." },
-  { french: "On ne change pas une équipe qui gagne.", portuguese: "Não tenta modificar o processo que está dando certo." },
+  { french: "On ne change pas une équipe qui gagne.", portuguese: "Não tente modificar o que está dando certo." },
   { french: "À bon entendeur, salut!", portuguese: "A bom entendedor, meia palavra basta!" },
   { french: "Telle mère, telle fille", portuguese: "Se trata de uma filha que herdou traços de personalidade da mãe" },
   { french: "Tel père, tel fils", portuguese: "Se trata de um filho que herdou traços de personalidade do pai" },
