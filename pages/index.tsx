@@ -28,6 +28,10 @@ const frenchProverbs: Proverb[] = [
   { french: "Rien ne sert de courir, il faut partir à point.", portuguese: "Não adianta correr, é preciso sair na hora certa." },
   { french: "On ne change pas une équipe qui gagne.", portuguese: "Não tenta modificar o processo que está dando certo." },
   { french: "À bon entendeur, salut!", portuguese: "A bom entendedor, meia palavra basta!" },
+  { french: "Telle mère, telle fille", portuguese: "Se trata de uma filha que herdou traços de personalidade da mãe" },
+  { french: "Tel père, tel fils", portuguese: "Se trata de um filho que herdou traços de personalidade do pai" },
+  { french: "À bon vin point d'enseigne", portuguese: "O que é valioso não precisa ser recomendado" },
+  
 ];
 
 const getDayName = (date: Date) => {
