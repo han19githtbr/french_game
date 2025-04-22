@@ -1238,7 +1238,7 @@ export default function Game() {
               transition-all duration-300 ease-out
             `}
           >
-            <option value="">🎮 Escolha uma opção</option>
+            <option value="">✅ Escolha uma opção</option>
             {themes.map(t => (
               <option key={t} value={t}>
                 {t.charAt(0).toUpperCase() + t.slice(1)}
@@ -1336,7 +1336,7 @@ export default function Game() {
                     onChange={e => checkAnswer(index, e.target.value)}
                     disabled={!!results[index]}
                   >
-                    <option value="">🎮 Selecione</option>
+                    <option value="">✅ Selecione</option>
                     {img.options.map((opt: string, i: number) => (
                       <option className='cursor-pointer' key={i} value={opt}>{opt}</option>
                     ))}

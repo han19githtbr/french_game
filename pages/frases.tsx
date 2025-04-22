@@ -1150,7 +1150,7 @@ export default function Frase() {
         transition={{ duration: 0.6 }}
         className="text-4xl text-gray-300 font-bold mb-8 mt-104 text-center drop-shadow-md"
       >
-        🎮 Construa frases em Francês
+        📝 Construa frases em Francês
       </motion.h1>
 
       <div className="flex flex-col items-center space-y-6 mt-8">
@@ -1174,7 +1174,7 @@ export default function Frase() {
               transition-all duration-300 ease-out
             `}
           >
-            <option value="">🎮 Escolha uma opção</option>
+            <option value="">✅ Escolha uma opção</option>
             {themes.map(t => (
               <option key={t} value={t}>
                 {t.charAt(0).toUpperCase() + t.slice(1)}
@@ -1237,7 +1237,7 @@ export default function Frase() {
                     onChange={e => checkAnswer(index, e.target.value)}
                     disabled={!!results[index]}
                   >
-                    <option value="">🎮 Selecione</option>
+                    <option value="">✅ Selecione</option>
                     {img.options.map((opt: string, i: number) => (
                       <option className='cursor-pointer' key={i} value={opt}>{opt}</option>
                     ))}
