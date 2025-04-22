@@ -1313,7 +1313,7 @@ export default function Game() {
                 initial={{ opacity: 0, scale: 0.9 }} 
                 animate={{ opacity: 1, scale: 1 }} 
                 transition={{ duration: 0.3, delay: index * 0.1 }}
-                className="bg-transparent text-black p-4 rounded-2xl flex-grow shadow-2xl max-w-[280px] transition transform hover:scale-105 "
+                className="bg-transparent text-black p-4 rounded-2xl flex-grow shadow-2xl max-w-[250px] transition transform hover:scale-105 "
               >
                 <img 
                   src={img.url} 
@@ -1322,7 +1322,7 @@ export default function Game() {
                   onClick={() => setZoomedImage(img.url)}
                 />
                 <div className="mt-2 text-gray-300">Escolha o título correto:</div>
-                <div className="relative w-64 mt-1">
+                <div className="relative w-full mt-1">
                   <select
                     className={`
                       w-full appearance-none p-3 rounded-xl border-2 border-blue 
