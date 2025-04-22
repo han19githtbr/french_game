@@ -1161,16 +1161,28 @@ export default function Frase() {
           Ver Progresso
         </button>
 
-        <select
-          onChange={e => setTheme(e.target.value)}
-          className="w-64 bg-gradient-to-br border border-blue text-blue font-semibold py-3 px-6 rounded-md shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-lg cursor-pointer **text-center**"
-          value={theme}
-        >
-          <option value="">Escolha uma opção</option>
-          {themes.map(t => (
-            <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
-          ))}
-        </select>
+        <div className="relative w-64">
+          <select
+            onChange={e => setTheme(e.target.value)}
+            value={theme}
+            className={`
+              w-full appearance-none py-3 px-6 rounded-xl border-2 border-blue
+              bg-gradient-to-br from-purple-700 to-indigo-800 text-blue
+              shadow-lg shadow-purple-500/40 hover:shadow-xl hover:shadow-pink-500/50
+              focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-2
+              text-lg tracking-wide font-semibold text-center cursor-pointer
+              transition-all duration-300 ease-out
+            `}
+          >
+            <option value="">🎮 Escolha uma opção</option>
+            {themes.map(t => (
+              <option key={t} value={t}>
+                {t.charAt(0).toUpperCase() + t.slice(1)}
+              </option>
+            ))}
+          </select>
+  
+        </div>
 
         {showRestart && (
           <button
@@ -1211,16 +1223,27 @@ export default function Frase() {
                   onClick={() => setZoomedImage(img.url)}
                 />
                 <div className="mt-2 text-gray-300">Escolha o título correto:</div>
-                <select
-                  className="w-full mt-1 p-2 rounded border border-white text-gray-300 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                  onChange={e => checkAnswer(index, e.target.value)}
-                  disabled={!!results[index]}
-                >
-                  <option value="">Selecione</option>
-                  {img.options.map((opt: string, i: number) => (
-                    <option key={i} value={opt}>{opt}</option>
-                  ))}
-                </select>
+                <div className="relative w-full mt-1">
+                  <select
+                    className={`
+                      w-full appearance-none p-3 rounded-xl border-2 border-blue 
+                      text-blue bg-gradient-to-br from-purple-700 to-indigo-800
+                      shadow-lg shadow-purple-500/40
+                      hover:shadow-xl hover:shadow-pink-500/50
+                      transition-all duration-300 ease-out
+                      focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-1
+                      cursor-pointer text-lg tracking-wide font-semibold
+                    `}
+                    onChange={e => checkAnswer(index, e.target.value)}
+                    disabled={!!results[index]}
+                  >
+                    <option value="">🎮 Selecione</option>
+                    {img.options.map((opt: string, i: number) => (
+                      <option className='cursor-pointer' key={i} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+  
+                </div>
 
                 {results[index] && (
                   <motion.div 

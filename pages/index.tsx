@@ -174,6 +174,24 @@ export default function Home() {
             Fonte: Provérbios Franceses
           </motion.div>
         </motion.div>
+      
+        {/* AdSense ad slot */}
+        {/*<div className="mb-4">
+          <ins
+            className="adsbygoogle"
+            style={{ display: "block" }}
+            data-ad-client="YOUR_AD_CLIENT_ID" // Substitua pelo seu ID do AdSense
+            data-ad-slot="YOUR_AD_SLOT_ID"     // Substitua pelo seu ID do slot de anúncio
+            data-ad-format="horizontal"      // Adapte o formato do anúncio
+          ></ins>
+          
+          {!document.getElementById('adsense-script') &&
+            <script
+              id='adsense-script'
+              async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"
+            ></script>
+          }
+        </div>*/}
       </div>
       
       <div className="absolute top-64 left-4 bg-white bg-opacity-10 rounded-md shadow-md p-3 flex flex-col items-center justify-center">
