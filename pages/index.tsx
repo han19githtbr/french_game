@@ -24,7 +24,7 @@ const frenchProverbs: Proverb[] = [
   { french: "Qui vivra verra.", portuguese: "Quem viver verá." },
   { french: "L'habit ne fait pas le moine.", portuguese: "Não julgue pelas aparências." },
   { french: "Pierre qui roule n'amasse pas mousse.", portuguese: "Pedra que rola não cria musgo." },
-  { french: "Il faut battre le fer tant qu'il est chaud.", portuguese: "Tem que agarrar a oportunidade no momento que surge." },
+  { french: "Il faut battre le fer tant qu'il est chaud.", portuguese: "Tem que aproveitar a oportunidade enquanto é possível." },
   { french: "Rien ne sert de courir, il faut partir à point.", portuguese: "Não adianta correr, é preciso sair na hora certa." },
   { french: "On ne change pas une équipe qui gagne.", portuguese: "Não tente modificar o que está dando certo." },
   { french: "À bon entendeur, salut!", portuguese: "A bom entendedor, meia palavra basta!" },
