@@ -33,6 +33,7 @@ const allImages = {
     { url: '/ghibli/natureza/mergulho.jpg', title: 'Sous l\'eau' },
     { url: '/ghibli/natureza/noite.jpg', title: 'La nuit' },
     { url: '/ghibli/natureza/praia.jpg', title: 'À la plage' },
+    { url: '/ghibli/natureza/lua.png', title: 'La lune' },
         
   ],
   'turismo': [
@@ -77,6 +78,7 @@ const allImages = {
     { url: '/ghibli/tecnologia/drone.png', title: 'Un Drone' },
     { url: '/ghibli/tecnologia/foguete.png', title: 'Une Fusée' },
     { url: '/ghibli/tecnologia/moto.jpg', title: 'Une moto' },
+    { url: '/ghibli/tecnologia/ventilador.png', title: 'Le ventilateur' },
   ],
   'gastronomia': [
     { url: '/ghibli/gastronomia/bolo.png', title: 'Un Gâteau' },

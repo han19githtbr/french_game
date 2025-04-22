@@ -37,6 +37,7 @@ const allImages = {
     { url: '/frases/natureza/noite.jpg', title: 'Cette nuit est très étoilée!' },
     { url: '/frases/natureza/nuvens.jpg', title: 'Le ciel est rempli de nuages' },
     { url: '/frases/natureza/praia.jpg', title: 'Le couple regarde le coucher du soleil à la plage' },
+    { url: '/frases/natureza/lua.png', title: 'C\'est la pleine lune, le moment idéal pour une promenade!' },
   ],
   'turismo': [
     { url: '/frases/turismo/aeroporto.png', title: 'Je suis déjà à l\'Aéroport' },
@@ -80,6 +81,7 @@ const allImages = {
     { url: '/frases/tecnologia/drone.png', title: 'Ce drone controle toute la zone' },
     { url: '/frases/tecnologia/foguete.png', title: 'Cette fusée a été lancée l\'année dernière' },
     { url: '/frases/tecnologia/moto.jpg', title: 'Il est dangereux de piloter une moto sous la pluie!' },
+    { url: '/frases/tecnologia/ventilador.png', title: 'J\'aime dormir au son du ventilateur' },
   ],
   'gastronomia': [
     { url: '/frases/gastronomia/bolo.png', title: 'C\'est l\'heure de couper le gâteau!' },
