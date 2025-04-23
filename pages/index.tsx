@@ -43,7 +43,9 @@ export default function Home() {
   const { data: session } = useSession()
   const router = useRouter()
   const title = "Aprenda Francês jogando";
+  const titleGoogle = "Entrar com Google";
   const [animatedTitle, setAnimatedTitle] = useState("");
+  const [animatedTitleGoogle, setAnimatedTitleGoogle] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dailyAccessCount, setDailyAccessCount] = useState(0);
   const [dayName, setDayName] = useState('');
@@ -97,16 +99,27 @@ export default function Home() {
   useEffect(() => {
     if (!session) {
       let newAnimatedTitle = "";
+      let animatedTitleGoogle = "";
       for (let i = 0; i < title.length; i++) {
         newAnimatedTitle += (i === currentIndex) ?
           `<span style="color: lightblue; text-shadow: 0 0 14px lightblue;">${title[i]}</span>` :
           `<span style="color: gray;">${title[i]}</span>`;
       }
       setAnimatedTitle(newAnimatedTitle);
+    
+      for (let i = 0; i < titleGoogle.length; i++) {
+        animatedTitleGoogle += (i === currentIndex) ?
+          `<span style="color: lightblue; text-shadow: 0 0 14px lightblue;">${titleGoogle[i]}</span>` :
+          `<span style="color: gray;">${titleGoogle[i]}</span>`;
+      }
+      setAnimatedTitleGoogle(animatedTitleGoogle);
+    
     } else {
       setAnimatedTitle(title); // Se estiver logado, mostra o título normal
+      setAnimatedTitleGoogle(titleGoogle);
     }
-  }, [currentIndex, session, title]);
+    
+  }, [currentIndex, session, title, titleGoogle]);
 
 
   const handleSignInClick = () => {
@@ -236,7 +249,10 @@ export default function Home() {
             fill="#ea4335"
           />
         </svg>
-        Entrar com Google
+        <span
+          dangerouslySetInnerHTML={{ __html: animatedTitleGoogle }}
+        />
+        
       </button>
     </div>
   )
