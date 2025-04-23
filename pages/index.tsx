@@ -137,7 +137,7 @@ export default function Home() {
         >
           <h2 className={cn(
             "text-lg font-semibold mb-2",
-            "text-gray-200",
+            "text-gray-300",
             "sm:text-xl md:text-2xl",
             "tracking-wide"
           )}>
@@ -160,7 +160,7 @@ export default function Home() {
             </p>
             {proverb && (
               <p className={cn(
-                "text-sm",
+                "text-sm italic",
                 "text-gray-300",
                 "sm:text-base md:text-lg",
                 "text-center",
