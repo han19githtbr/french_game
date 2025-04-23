@@ -171,7 +171,7 @@ export default function Home() {
             )}
           </motion.div>
           <motion.div
-            className="mt-4 text-xs text-gray-400"
+            className="mt-4 text-xs text-gray-100 font-bold"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.3 }}
@@ -199,8 +199,8 @@ export default function Home() {
         </div>*/}
       </div>
       
-      <div className="absolute top-64 left-1/2 transform -translate-x-1/2 bg-white bg-opacity-10 border border-green rounded-md shadow-md p-3 flex flex-col items-center justify-center">
-        <span className="font-semibold text-sm mb-1 text-gray-300">Acessos de Hoje <span className='text-green'>({dayName})</span></span>
+      <div className="absolute top-64 left-1/2 transform -translate-x-1/2 bg-white bg-opacity-10 rounded-md shadow-md p-3 flex flex-col items-center justify-center">
+        <span className="font-semibold text-sm mb-1 text-gray-300 items-center">Acessos de Hoje <span className='text-green'>({dayName})</span></span>
         <div className="flex items-center mr-8">
           
           <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-25 text-green mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -210,7 +210,7 @@ export default function Home() {
         </div>
       </div>
       <h1
-        className="text-4xl font-bold mt-70 mb-8 text-center"
+        className="text-4xl font-bold mt-90 mb-8 text-center"
         dangerouslySetInnerHTML={{ __html: animatedTitle }}
       />
       
