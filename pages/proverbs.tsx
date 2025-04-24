@@ -14,31 +14,11 @@ import { DotLoader } from 'react-spinners';
 import { Realtime, Message } from 'ably'
 
 
-//import successSound from '/sounds/success.mp3';
+const groups = ['grupo-1', 'grupo-2', 'grupo-3']
 
-const themes = ['família', 'natureza', 'turismo', 'animais', 'tecnologia', 'gastronomia']
-
-const animalSounds: Record<string, string> = {
-  'Le Chien': '/sounds/cachorro.mp3',
-  'Le Chat': '/sounds/gato.mp3',
-  'L\'Éléphant': '/sounds/elefante.mp3',
-  'Le Lion': '/sounds/lion.mp3',
-  'Le Poisson': '/sounds/fish.mp3',
-  'Le Requin': '/sounds/fish.mp3',
-  'Le Serpent': '/sounds/snake.mp3',
-  'L\'Ours': '/sounds/bear.mp3',
-  'Le Cheval': '/sounds/horse.mp3',
-  'Le Perroquet': '/sounds/parrot.mp3',
-  'L\'Oiseau': '/sounds/bird.mp3',
-  'Le Crocodile': '/sounds/alligator.mp3',
-  'Un Gorille': '/sounds/gorila.mp3',
-  'Le Mouton': '/sounds/sheep.mp3',
-  'Le Canard': '/sounds/duck.mp3',
-  'Un Coq': '/sounds/clucking.mp3',
-}
 
 type Result = {
-  correct_word: boolean
+  correct_proverb: boolean
   selected: string
 }
 
@@ -84,7 +64,7 @@ export default function Game() {
   const [showRestart, setShowRestart] = useState(false)
   const [showCongrats, setShowCongrats] = useState(false)
   
-  const [theme, setTheme] = useState('')
+  const [group, setGroup] = useState('')
   const [images, setImages] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   
@@ -97,10 +77,6 @@ export default function Game() {
   const [correctSound, setCorrectSound] = useState<HTMLAudioElement | null>(null)
   const [wrongSound, setWrongSound] = useState<HTMLAudioElement | null>(null)
 
-  const [isFrasesUnlocked, setIsFrasesUnlocked] = useState(false);
-  const [showLockMessage, setShowLockMessage] = useState(false);
-
-  const [isProverbsUnlocked, setIsProverbsUnlocked] = useState(false);
   
   const [successSound, setSuccessSound] = useState<HTMLAudioElement | null>(null);
 
@@ -258,8 +234,8 @@ export default function Game() {
 
 
   useEffect(() => {
-    if (theme) loadImages()
-  }, [theme, round])
+    if (group) loadImages()
+  }, [group, round])
 
   useEffect(() => {
     if (!showCongrats && images.length > 0) {
@@ -270,14 +246,6 @@ export default function Game() {
   }, [showCongrats, images]);
   
   
-  useEffect(() => {
-    if (correctAnswersCount >= 2) {
-      setIsFrasesUnlocked(true);
-    } else if(correctAnswersCount >= 1) {
-      setIsProverbsUnlocked(true);
-    }
-  }, [correctAnswersCount]);
-
   
   /*useEffect(() => {
     const socket = io({
@@ -341,6 +309,7 @@ export default function Game() {
       msg.sender === sender && msg.timestamp === timestamp
     );
     if (alreadyExists) return;
+
 
     if (channelName && otherClientId) {
       setActiveChats((prev) => ({
@@ -496,6 +465,8 @@ export default function Game() {
   };
         
       
+  //syncPresence()
+  
   const handleRequestChat = (otherPlayer: Player) => {
     if (!ablyClient || !clientId) return;
     
@@ -717,12 +688,12 @@ export default function Game() {
     setResults([]);
       
     try {
-      const res = await fetch('/api/generate-images', {
+      const res = await fetch('/api/generate-proverbs', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ theme }),
+        body: JSON.stringify({ group }),
       });
   
       if (!res.ok) {
@@ -746,19 +717,19 @@ export default function Game() {
 
 
   const checkAnswer = (index: number, userAnswer: string) => {
-    playAnimalSound(images[index].title)
+          
+    const correct_proverb = images[index].title.toLowerCase() === userAnswer.toLowerCase()
+    const alreadyCorrect = results[index]?.correct_proverb
       
-    const correct_word = images[index].title.toLowerCase() === userAnswer.toLowerCase()
-    const alreadyCorrect = results[index]?.correct_word
-      
-    if (correct_word && !alreadyCorrect && correctSound) correctSound.play()
-    if (!correct_word && wrongSound) wrongSound.play()
+    if (correct_proverb && !alreadyCorrect && correctSound) correctSound.play()
+    if (!correct_proverb && wrongSound) wrongSound.play()
       
     const newResults = [...results]; // agora é um array!
-    newResults[index] = { correct_word, selected: userAnswer };  
+    newResults[index] = { correct_proverb, selected: userAnswer };  
   
     setResults(newResults);
         
+      
     // ⏬ Scroll para a próxima imagem ainda não respondida (com pequeno delay)
     setTimeout(() => {
       const nextUnansweredIndex = newResults.findIndex((res, i) => !res && i > index)
@@ -768,10 +739,10 @@ export default function Game() {
       }
     }, 300)
         
-    const currentCorrectCount = Object.values(newResults).filter((r) => r?.correct_word).length;
+    const currentCorrectCount = Object.values(newResults).filter((r) => r?.correct_proverb).length;
     setCorrectAnswersCount(currentCorrectCount);
     const totalCount = images.length
-    const hasWrong = Object.values(newResults).some(r => r && !r.correct_word)
+    const hasWrong = Object.values(newResults).some(r => r && !r.correct_proverb)
   
     //saveProgress(correctCount);
   
@@ -790,8 +761,8 @@ export default function Game() {
       localStorage.setItem('progress', JSON.stringify([...prevProgress, { round, correct: currentCorrectCount }]))
           
       setTimeout(() => {
-        const nextTheme = themes.filter(t => t !== theme)[Math.floor(Math.random() * (themes.length - 1))]
-        setTheme(nextTheme)
+        const nextGroup = groups.filter(t => t !== group)[Math.floor(Math.random() * (groups.length - 1))]
+        setGroup(nextGroup)
         setRound(r => r + 1)
         setShowCongrats(false)
       }, 3000);
@@ -802,39 +773,8 @@ export default function Game() {
     }
   };
   
-  const playAnimalSound = (title: string) => {
-    if (theme !== 'animais') return; // só toca se for o tema "animais"
-    const soundPath = animalSounds[title]
-    if (soundPath) {
-      const audio = new Audio(soundPath)
-      audio.play().catch(err => console.error('Erro ao tocar som do animal:', err))
-    }
-  }
-  
-  const handleFrasesClick = () => {
-    if (isFrasesUnlocked) {
-      router.push('/frases');
-    } else {
-      setShowLockMessage(true);
-      setTimeout(() => {
-        setShowLockMessage(false);
-      }, 2000); // A mensagem desaparece após 2 segundos
-    }
-  };
-
-  const handleProverbsClick = () => {
-    if (isProverbsUnlocked) {
-      router.push('/proverbs');
-    } else {
-      setShowLockMessage(true);
-      setTimeout(() => {
-        setShowLockMessage(false);
-      }, 2000); // A mensagem desaparece após 2 segundos
-    }
-  };
-
-
-
+    
+    
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-800 to-slate-900 text-white flex flex-col items-center p-4 relative mb-6">
       {session?.user && (
@@ -1226,12 +1166,12 @@ export default function Game() {
         transition={{ duration: 0.6 }}
         className="text-4xl text-gray-300 font-bold mb-8 mt-72 text-center drop-shadow-md"
       >
-        🎮 Jogo para treinar o Francês
+        🗨️ Ditados comuns em Francês
       </motion.h1>
 
       <div className="flex flex-col items-center space-y-6">
         <button
-          onClick={() => router.push('/results')}
+          onClick={() => router.push('/proverbs_results')}
           className="w-64 border border-blue bg-gradient-to-br text-blue from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-6 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 text-lg cursor-pointer"
         >
           Ver Progresso
@@ -1239,8 +1179,8 @@ export default function Game() {
 
         <div className="relative w-64">
           <select
-            onChange={e => setTheme(e.target.value)}
-            value={theme}
+            onChange={e => setGroup(e.target.value)}
+            value={group}
             className={`
               w-full appearance-none py-3 px-6 rounded-xl border-2 border-blue
               bg-gradient-to-br from-purple-700 to-indigo-800 text-blue
@@ -1251,7 +1191,7 @@ export default function Game() {
             `}
           >
             <option value="">✅ Escolha uma opção</option>
-            {themes.map(t => (
+            {groups.map(t => (
               <option key={t} value={t}>
                 {t.charAt(0).toUpperCase() + t.slice(1)}
               </option>
@@ -1259,77 +1199,7 @@ export default function Game() {
           </select>
   
         </div>
-
-
-        {/* Botão "Frases em Francês" */}
-        <div className="w-64 flex flex-col items-center">
-          {!isFrasesUnlocked && (
-            <p className="text-sm text-gray-400 mb-1 text-center">Selecione uma opção e complete 2 acertos para desbloquear este nível.</p>
-          )}
-          <button
-            className={`flex items-center justify-center py-3 px-6 rounded-md mt-2 font-semibold transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75 ${
-              isFrasesUnlocked
-                ? 'bg-blue hover:bg-green cursor-pointer text-white shadow-md'
-                : 'bg-gray-900 text-gray-400 cursor-not-allowed shadow-sm'
-            }`}
-            onClick={handleFrasesClick}
-            disabled={!isFrasesUnlocked}
-          >
-            {!isFrasesUnlocked && <LockClosedIcon className="w-5 h-5 mr-2 " />}
-            Frases em Francês
-          </button>
-
-          
-          {/* Mensagem de bloqueio */}
-          <AnimatePresence>
-            {showLockMessage && !isFrasesUnlocked && (
-              <motion.div
-                className="absolute bottom-[-30px] text-sm text-yellow-400 font-semibold"
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                variants={lockMessageVariants}
-              >
-                Nível bloqueado!
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Botão "Ditados em Francês" */}
-        <div className="w-64 flex flex-col items-center">
-          {!isProverbsUnlocked && (
-            <p className="text-sm text-gray-400 mb-1 text-center">Selecione uma opção e complete 1 acerto para desbloquear este nível.</p>
-          )}
-          <button
-            className={`flex items-center justify-center py-3 px-6 rounded-md mt-2 font-semibold transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75 ${
-              isProverbsUnlocked
-                ? 'bg-blue hover:bg-green cursor-pointer text-white shadow-md'
-                : 'bg-gray-700 text-gray-400 cursor-not-allowed shadow-sm'
-            }`}
-            onClick={handleProverbsClick}
-            disabled={!isProverbsUnlocked}
-          >
-            {!isProverbsUnlocked && <LockClosedIcon className="w-5 h-5 mr-2 " />}
-            Ditados em Francês
-          </button>
-          
-
-          {/* Mensagem de bloqueio */}
-          <AnimatePresence>
-            {showLockMessage && !isProverbsUnlocked && (
-              <motion.div
-                className="absolute bottom-[-30px] text-sm text-yellow-400 font-semibold"
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                variants={lockMessageVariants}
-              >
-                Nível bloqueado!
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+        
 
         {showRestart && (
           <button
@@ -1345,7 +1215,7 @@ export default function Game() {
 
       </div>
 
-      {theme && <h2 className="text-2xl text-gray-300 font-semibold mt-4 mb-6 text-center">Opção: {theme}</h2>}
+      {group && <h2 className="text-2xl text-gray-300 font-semibold mt-4 mb-6 text-center">Opção: {group}</h2>}
 
       {loading ? (
         <div className="text-center text-lg text-gray-300 animate-pulse">🔍 Procurando imagens...</div>
@@ -1399,7 +1269,7 @@ export default function Game() {
                     animate={{ opacity: 1, y: 0 }} 
                     className="mt-2 flex items-center"
                   >
-                    {results[index].correct_word ? (
+                    {results[index].correct_proverb ? (
                       <>
                         <Check className="mr-2" color="green" />
                         <span className="font-medium text-green">Correto!</span>
