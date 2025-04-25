@@ -5,7 +5,7 @@ import { createAblyClient } from '../lib/ably'
 import type * as Ably from 'ably'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/router'
-import { Check, X, Minus } from 'lucide-react'
+import { Check, X, Minus, ChevronLeft } from 'lucide-react'
 import { motion , AnimatePresence} from 'framer-motion'
 import { saveProgress } from './proverbs_results'
 import { LockClosedIcon } from '@heroicons/react/24/solid';
@@ -777,6 +777,14 @@ export default function Game() {
     
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-800 to-slate-900 text-white flex flex-col items-center p-4 relative mb-6">
+      <div className="absolute top-66 left-4 z-50">
+        <button
+          onClick={() => router.push('/game')}
+          className="flex border border-blue text-gray-300 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75 cursor-pointer"
+        >
+          <ChevronLeft className="mr-2" color="blue" /> Voltar para tela principal
+        </button>
+      </div>
       {session?.user && (
         <div 
           className="fixed top-4 right-4 z-50 group"
@@ -1164,17 +1172,39 @@ export default function Game() {
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }} 
         transition={{ duration: 0.6 }}
-        className="text-4xl text-gray-300 font-bold mb-8 mt-72 text-center drop-shadow-md"
+        className="text-4xl text-gray-300 font-bold mb-8 mt-92 text-center drop-shadow-md"
       >
         🗨️ Ditados comuns em Francês
       </motion.h1>
 
       <div className="flex flex-col items-center space-y-6">
         <button
-          onClick={() => router.push('/proverbs_results')}
-          className="w-64 border border-blue bg-gradient-to-br text-blue from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-6 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 text-lg cursor-pointer"
+            onClick={() => router.push('/proverbs_results')}
+            className="w-64 border border-blue bg-gradient-to-br text-blue from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-6 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 text-lg cursor-pointer flex items-center justify-center space-x-3"
         >
-          Ver Progresso
+          <div className="flex items-center">
+            <svg
+              className="animate-spin h-6 w-6 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+              ></path>
+            </svg>
+          </div>
+          <span>Ver Progresso</span>
         </button>
 
         <div className="relative w-64">
