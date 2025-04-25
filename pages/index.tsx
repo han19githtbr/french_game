@@ -156,7 +156,7 @@ export default function Home() {
             "sm:text-xl md:text-2xl",
             "tracking-wide"
           )}>
-            Provérbios usados no dia a dia!
+            Ditados usados no dia a dia!
           </h2>
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -191,7 +191,7 @@ export default function Home() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.3 }}
           >
-            Fonte: Provérbios Franceses
+            Fonte: Ditados Franceses
           </motion.div>
         </motion.div>
       
