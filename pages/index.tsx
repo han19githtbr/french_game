@@ -46,6 +46,7 @@ export default function Home() {
   const titleGoogle = "Entrar com Google";
   const [animatedTitle, setAnimatedTitle] = useState("");
   const [animatedTitleGoogle, setAnimatedTitleGoogle] = useState("");
+  const [animatedTitleAccess, setAnimatedTitleAccess] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dailyAccessCount, setDailyAccessCount] = useState(0);
   const [dayName, setDayName] = useState('');
@@ -100,6 +101,7 @@ export default function Home() {
     if (!session) {
       let newAnimatedTitle = "";
       let animatedTitleGoogle = "";
+      
       for (let i = 0; i < title.length; i++) {
         newAnimatedTitle += (i === currentIndex) ?
           `<span style="color: lightblue; text-shadow: 0 0 14px lightblue;">${title[i]}</span>` :
@@ -113,7 +115,7 @@ export default function Home() {
           `<span style="color: gray;">${titleGoogle[i]}</span>`;
       }
       setAnimatedTitleGoogle(animatedTitleGoogle);
-    
+          
     } else {
       setAnimatedTitle(title); // Se estiver logado, mostra o título normal
       setAnimatedTitleGoogle(titleGoogle);
@@ -213,6 +215,7 @@ export default function Home() {
       </div>
       
       <div className="absolute top-64 left-1/2 transform -translate-x-1/2 bg-white bg-opacity-10 rounded-md shadow-md p-3 flex flex-col items-center justify-center">
+        <span className='text-white font-bold italic'>Mede sua frequência de login</span>
         <span className="font-semibold text-sm mb-1 text-gray-300 items-center">Acessos de Hoje <span className='text-green'>({dayName})</span></span>
         <div className="flex items-center mr-8">
           

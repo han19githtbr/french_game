@@ -488,14 +488,7 @@ export default function ResultsPage() {
     setActiveChats((prev) => prev[chatChannelName] ? prev : { ...prev, [chatChannelName]: [] });
     setIsChatBubbleOpen(chatChannelName);
     setChatPartnerName(player.name);
-    // [ACRESCENTADO] Inscrever-se no canal de mensagens ao abrir a bolha
-    // [CORRIGIDO] A verificação de existência do canal não é necessária antes de se inscrever
-    /*ablyClient.channels.get(chatChannelName).subscribe('message', handleChatMessage);
-
-    // [ACRESCENTADO] Inscrever-se no canal de digitação ao abrir a bolha
-    // [CORRIGIDO] A verificação de existência do canal não é necessária antes de se inscrever
-    const typingChannelName = getTypingChannelName(clientId, player.clientId);
-    ablyClient.channels.get(typingChannelName).subscribe('typing', handleTypingStatus);*/
+    
   };
 
   const closeChatBubble = () => {
@@ -877,7 +870,7 @@ export default function ResultsPage() {
                 <XAxis dataKey="round" label={{ value: 'Jogada', position: 'insideBottomRight', offset: -5 }} />
                 <YAxis label={{ value: 'Acertos', angle: -90, position: 'insideLeft' }} allowDecimals={false} />
                 <Tooltip />
-                <Bar dataKey="correct_answer" fill="#6366f1" />
+                <Bar dataKey="correct_proverb" fill="#6366f1" />
               </BarChart>
             </ResponsiveContainer>
           </div>

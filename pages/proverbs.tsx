@@ -7,7 +7,7 @@ import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import { Check, X, Minus } from 'lucide-react'
 import { motion , AnimatePresence} from 'framer-motion'
-import { saveProgress } from './results'
+import { saveProgress } from './proverbs_results'
 import { LockClosedIcon } from '@heroicons/react/24/solid';
 import { io } from 'socket.io-client'
 import { DotLoader } from 'react-spinners';
