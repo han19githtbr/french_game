@@ -1,11 +1,11 @@
 /*'use client'*/
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, RefObject } from 'react'
 import { createAblyClient } from '../lib/ably'
 import type * as Ably from 'ably'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/router'
-import { Check, X, Minus, ChevronLeft } from 'lucide-react'
+import { Check, X, Minus, ChevronLeft, Lock } from 'lucide-react'
 import { motion , AnimatePresence} from 'framer-motion'
 import { saveProgress } from './proverbs_results'
 import { LockClosedIcon } from '@heroicons/react/24/solid';
@@ -44,6 +44,11 @@ type ChatMessage = {
   text: string;
   timestamp: number;
 };
+
+interface ReviewItem {
+  url: string;
+  title: string;
+}
 
 const lockMessageVariants = {
   initial: { opacity: 0, y: 10 },
@@ -112,6 +117,14 @@ export default function Game() {
   const [offset, setOffset] = useState({ x: 130, y: 130 });
   const [visibleModals, setVisibleModals] = useState<Record<string, boolean>>({});
   const [minimizedRequests, setMinimizedRequests] = useState<string[]>([]);
+
+  const [reviewHistory, setReviewHistory] = useState<ReviewItem[]>([]);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
+  const [availableReviews, setAvailableReviews] = useState(0);
+  const reviewIntervalRef: RefObject<ReturnType<typeof setInterval> | null> = useRef(null);
+  
+  const [isFlashing, setIsFlashing] = useState(false); // Estado para controlar a animação de piscar
 
   const [open, setOpen] = useState(false);
 
@@ -238,6 +251,28 @@ export default function Game() {
   useEffect(() => {
     if (group) loadImages()
   }, [group, round])
+
+
+  useEffect(() => {
+      const correctAnswersInRound = results.filter(res => res?.correct_proverb);
+      if (correctAnswersInRound.length > 0 && results.length === images.length) {
+        setAvailableReviews(prev => prev + 1);
+      }
+  }, [results, images.length]);
+  
+  // Efeito para iniciar e parar a animação de piscar quando availableReviews muda
+  useEffect(() => {
+      if (availableReviews > 0) {
+        setIsFlashing(true);
+        const timer = setTimeout(() => {
+          setIsFlashing(false);
+        }, 500); // Duração do efeito de piscar (ajuste conforme necessário)
+        return () => clearTimeout(timer);
+      } else {
+        setIsFlashing(false);
+      }
+  }, [availableReviews]);
+
 
   useEffect(() => {
     if (!showCongrats && images.length > 0) {
@@ -762,6 +797,15 @@ export default function Game() {
       const prevProgress = JSON.parse(localStorage.getItem('progress') || '[]')
       localStorage.setItem('progress', JSON.stringify([...prevProgress, { round, correct: currentCorrectCount }]))
           
+      // Adiciona os acertos da rodada ao histórico de revisão
+      const currentRoundCorrect = images.filter((_, i) => newResults[i]?.correct_proverb).map(img => ({
+        url: img.url,
+        title: img.title,
+      }));
+      if (currentRoundCorrect.length > 0) {
+        setReviewHistory(prev => [...prev, ...currentRoundCorrect]);
+      }
+
       setTimeout(() => {
         const nextGroup = groups.filter(t => t !== group)[Math.floor(Math.random() * (groups.length - 1))]
         setGroup(nextGroup)
@@ -775,6 +819,43 @@ export default function Game() {
     }
   };
   
+
+  const handleOpenReview = () => {
+    setShowReviewModal(true);
+    setCurrentReviewIndex(0);
+    startReviewVideo();
+    setAvailableReviews(0); // Marca as revisões como assistidas
+  };
+
+  const handleCloseReview = () => {
+    setShowReviewModal(false);
+    stopReviewVideo();
+  };
+
+  const startReviewVideo = () => {
+    stopReviewVideo();
+    reviewIntervalRef.current = setInterval(() => {
+      setCurrentReviewIndex(prev => (prev + 1) % reviewHistory.length);
+    }, 3000); // Ajuste a velocidade do "vídeo" aqui (ms)
+  };
+
+  const stopReviewVideo = () => {
+    if (reviewIntervalRef.current) {
+      clearInterval(reviewIntervalRef.current);
+      reviewIntervalRef.current = null;
+    }
+  };
+
+  const handlePauseResumeReview = () => {
+    if (reviewIntervalRef.current) {
+      stopReviewVideo();
+    } else {
+      startReviewVideo();
+    }
+  };
+
+  const isReviewAvailable = availableReviews > 0;
+
     
     
   return (
@@ -1317,100 +1398,203 @@ export default function Game() {
 
       {group && <h2 className="text-2xl text-gray-300 font-semibold mt-4 mb-6 text-center">Opção: {group}</h2>}
 
-      {loading ? (
-        <div className="text-center text-lg text-gray-300 animate-pulse">🔍 Procurando imagens...</div>
-      ) : (
-        <>  
-          <div className="flex flex-wrap justify-center gap-6 w-full max-w-6xl mt-6 cursor-pointer">
-            {images.map((img, index) => (
-              <motion.div 
-                key={index}
-                ref={(el) => {
-                  if (el) imageRefs.current[index] = el;
-                }} 
-                initial={{ opacity: 0, scale: 0.9 }} 
-                animate={{ opacity: 1, scale: 1 }} 
-                transition={{ duration: 0.3, delay: index * 0.1 }}
-                className="bg-transparent text-black p-4 rounded-2xl flex-grow shadow-2xl max-w-[250px] transition transform hover:scale-105 "
-              >
-                <img 
-                  src={img.url} 
-                  alt="imagem" 
-                  className="w-full h-48 object-cover rounded-xl cursor-zoom-in" 
-                  onClick={() => setZoomedImage(img.url)}
-                />
-                <div className="mt-2 text-gray-300">Escolha o título correto:</div>
-                <div className="relative w-full mt-1">
-                  <select
-                    className={`
-                      w-full appearance-none p-3 rounded-xl border-2 border-blue 
-                      text-blue bg-gradient-to-br from-purple-700 to-indigo-800
-                      shadow-lg shadow-purple-500/40
-                      hover:shadow-xl hover:shadow-pink-500/50
-                      transition-all duration-300 ease-out
-                      focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-1
-                      cursor-pointer text-lg tracking-wide font-semibold
-                    `}
-                    onChange={e => checkAnswer(index, e.target.value)}
-                    disabled={!!results[index]}
-                  >
-                    <option value="">✅ Selecione</option>
-                    {img.options.map((opt: string, i: number) => (
-                      <option className='cursor-pointer' key={i} value={opt}>{opt}</option>
-                    ))}
-                  </select>
-  
-                </div>
-
-
-                {results[index] && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }} 
-                    animate={{ opacity: 1, y: 0 }} 
-                    className="mt-2 flex items-center"
-                  >
-                    {results[index].correct_proverb ? (
-                      <>
-                        <Check className="mr-2" color="green" />
-                        <span className="font-medium text-green">Correto!</span>
-                      </>
-                    ) : (
-                      <>
-                        <X className="mr-2" color="red"/>
-                        <span className="font-medium text-red">Errado. <span className="text-green">Resposta: {img.title}</span></span>
-                      </>
-                    )}
-                  </motion.div>
-                )}
-              </motion.div>
-            ))}
-          </div>
+      <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-indigo-900 to-purple-900 min-h-screen text-gray-100">
         
-          
-          <AnimatePresence>
-            {zoomedImage && (
-              <motion.div
-                className="fixed top-0 left-0 w-full h-full inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center cursor-pointer"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setZoomedImage(null)}
+        <div className="mb-2 text-center">
+          Rodada: <span className="font-semibold text-blue-300">{round}</span> | Acertos: <span className="font-semibold text-green-300">{correctAnswersCount} / {images.length}</span>
+        </div>
+
+        {loading ? (
+          <div className="text-center text-lg text-gray-300 animate-pulse">🔍 Procurando imagens...</div>
+        ) : (
+          <>
+            <div className="flex flex-wrap justify-center gap-6 w-full max-w-6xl mt-6 cursor-pointer">
+              {images.map((img, index) => (
+                <motion.div
+                  key={index}
+                  ref={(el) => {
+                    if (el) imageRefs.current[index] = el;
+                  }}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                  className="bg-transparent text-black p-4 rounded-2xl flex-grow shadow-2xl max-w-[250px] transition transform hover:scale-105 "
+                >
+                  <img
+                    src={img.url}
+                    alt="imagem"
+                    className="w-full h-48 object-cover rounded-xl cursor-zoom-in"
+                    onClick={() => setZoomedImage(img.url)}
+                  />
+                  <div className="mt-2 text-gray-300">Escolha o título correto:</div>
+                  <div className="relative w-full mt-1">
+                    <select
+                      className={`
+                        w-full appearance-none p-3 rounded-xl border-2 border-blue
+                        text-blue bg-gradient-to-br from-purple-700 to-indigo-800
+                        shadow-lg shadow-purple-500/40
+                        hover:shadow-xl hover:shadow-pink-500/50
+                        transition-all duration-300 ease-out
+                        focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-1
+                        cursor-pointer text-lg tracking-wide font-semibold
+                      `}
+                      onChange={e => checkAnswer(index, e.target.value)}
+                      disabled={!!results[index]}
+                    >
+                      <option value="">✅ Selecione</option>
+                      {img.options.map((opt: string, i: number) => (
+                        <option className='cursor-pointer' key={i} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {results[index] && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-2 flex items-center"
+                    >
+                      {results[index].correct_proverb ? (
+                        <>
+                          <Check className="mr-2 text-green" size={20} />
+                          <span className="font-medium text-green">Correto!</span>
+                        </>
+                      ) : (
+                        <>
+                          <X className="mr-2 text-red" size={20} />
+                          <span className="font-medium text-red">Errado. <span className="text-green">Resposta: {img.title}</span></span>
+                        </>
+                      )}
+                    </motion.div>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+
+            <div className="mt-8 flex gap-4">
+              {showRestart && (
+                <button
+                  onClick={() => {
+                    loadImages();
+                    setShowRestart(false);
+                    setCorrectAnswersCount(0);
+                    setRound(1);
+                    setReviewHistory([]);
+                    setAvailableReviews(0);
+                  }}
+                  className="border border-red text-gray-300 rounded-xl py-2 px-8 cursor-pointer hover:border-green hover:text-white transition-colors"
+                >
+                  Recomeçar
+                </button>
+              )}
+              <button
+                onClick={handleOpenReview}
+                disabled={!isReviewAvailable || reviewHistory.length === 0}
+                className={`border ${isReviewAvailable && reviewHistory.length > 0 ? 'border-blue hover:border-green hover:text-white cursor-pointer relative' : 'border-gray-500 cursor-not-allowed'} text-gray-300 rounded-xl py-2 px-8 transition-colors`}
               >
-                <motion.img
-                  src={zoomedImage}
-                  alt="Zoom"
-                  className="max-w-[70%] max-h-[50vh] rounded-xl shadow-2xl"
-                  initial={{ scale: 0.8 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0.8 }}
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </>
-      
-      )}
+                {!isReviewAvailable || reviewHistory.length === 0 ? <Lock className="inline-block mr-2 mb-1" size={20} /> : null}
+                Revisar os acertos
+                {isReviewAvailable && reviewHistory.length > 0 && (
+                  <span
+                    className={`absolute top-[-10px] right-[-10px] bg-green text-gray-700 rounded-full w-5 h-5 flex items-center justify-center text-sm font-bold ${isFlashing ? 'animate-ping-once' : ''}`}
+                  >
+                    {availableReviews}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            <AnimatePresence>
+              {zoomedImage && (
+                <motion.div
+                  className="fixed top-0 left-0 w-full h-full inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center cursor-pointer"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setZoomedImage(null)}
+                >
+                  <motion.img
+                    src={zoomedImage}
+                    alt="Zoom"
+                    className="max-w-[70%] max-h-[50vh] rounded-xl shadow-2xl"
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0.8 }}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+              {showCongrats && (
+                <motion.div
+                  className="fixed top-0 left-0 w-full h-full bg-gradient-to-br from-green-800 to-lime-700 bg-opacity-80 z-50 flex items-center justify-center"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <motion.div
+                    className="bg-white rounded-xl shadow-lg p-8 text-center"
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0.8 }}
+                  >
+                    <h2 className="text-2xl font-bold text-green-600 mb-4">Parabéns! Você acertou tudo! 🎉</h2>
+                    <p className="text-gray-700 mb-4">Próxima rodada em breve...</p>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+              {showReviewModal && reviewHistory.length > 0 && (
+                <motion.div
+                  className="fixed top-0 left-0 w-full h-full z-50 flex items-center justify-center"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  {/* Efeito de fundo sombreado */}
+                  <motion.div
+                    className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-75 z-40"
+                    onClick={handleCloseReview} // Permite fechar ao clicar fora
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  />
+                  <motion.div
+                    className="bg-gradient-to-br from-blue-800 to-cyan-700 rounded-xl shadow-lg p-8 text-center max-w-md w-[90%] z-50"
+                    initial={{ scale: 0.9 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0.9 }}
+                  >
+                    {/*<h2 className="text-2xl font-bold text-white mb-4">Revisão dos Acertos</h2>*/}
+                    <div className="relative">
+                      <img
+                        src={reviewHistory[currentReviewIndex]?.url}
+                        alt={reviewHistory[currentReviewIndex]?.title}
+                        className="w-full rounded-lg shadow-md"
+                      />
+                      <div className="absolute bottom-2 left-0 right-0 bg-black bg-opacity-60 text-white py-2 rounded-b-lg">
+                        <p className="text-2xl font-bold text-green">{reviewHistory[currentReviewIndex]?.title}</p>
+                      </div>
+                    </div>
+                    <div className="mt-4 flex justify-between items-center">
+                      <button onClick={handlePauseResumeReview} className="bg-lightblue border border-gray-300 text-white rounded-full p-2 hover:bg-transparent transition cursor-pointer">
+                        {reviewIntervalRef.current ? 'Pausar' : 'Continuar'}
+                      </button>
+                      <button onClick={handleCloseReview} className="bg-red text-white border border-gray-300 rounded-full p-2 hover:bg-transparent transition cursor-pointer">
+                        Sair
+                      </button>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </>
+        )}
+      </div>
 
       {showCongrats && (
         <motion.div

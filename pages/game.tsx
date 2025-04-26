@@ -5,7 +5,7 @@ import { createAblyClient } from '../lib/ably'
 import type * as Ably from 'ably'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/router'
-import { Check, X, Minus } from 'lucide-react'
+import { Check, X, Minus, Lock } from 'lucide-react'
 import { motion , AnimatePresence} from 'framer-motion'
 import { saveProgress } from './results'
 import { LockClosedIcon } from '@heroicons/react/24/solid';
@@ -1624,6 +1624,7 @@ export default function Game() {
                 disabled={!isReviewAvailable || reviewHistory.length === 0}
                 className={`border ${isReviewAvailable && reviewHistory.length > 0 ? 'border-blue hover:border-green hover:text-white cursor-pointer relative' : 'border-gray-500 cursor-not-allowed'} text-gray-300 rounded-xl py-2 px-8 transition-colors`}
               >
+                {!isReviewAvailable || reviewHistory.length === 0 ? <Lock className="inline-block mr-2 mb-1" size={20} /> : null}
                 Revisar os acertos
                 {isReviewAvailable && reviewHistory.length > 0 && (
                   <span
@@ -1712,10 +1713,10 @@ export default function Game() {
                       </div>
                     </div>
                     <div className="mt-4 flex justify-between items-center">
-                      <button onClick={handlePauseResumeReview} className="bg-lightblue text-white rounded-full p-2 hover:bg-gray transition cursor-pointer">
-                        {reviewIntervalRef.current ? 'Pause' : 'Play'}
+                      <button onClick={handlePauseResumeReview} className="bg-lightblue border border-gray-300 text-white rounded-full p-2 hover:bg-transparent transition cursor-pointer">
+                        {reviewIntervalRef.current ? 'Pausar' : 'Continuar'}
                       </button>
-                      <button onClick={handleCloseReview} className="bg-red text-white rounded-full p-2 hover:bg-red transition cursor-pointer">
+                      <button onClick={handleCloseReview} className="bg-red text-white border border-gray-300 rounded-full p-2 hover:bg-transparent transition cursor-pointer">
                         Sair
                       </button>
                     </div>
