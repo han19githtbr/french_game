@@ -123,6 +123,8 @@ export default function Frase() {
   const [visibleModals, setVisibleModals] = useState<Record<string, boolean>>({});
   const [minimizedRequests, setMinimizedRequests] = useState<string[]>([]);
 
+  const [open, setOpen] = useState(false);
+
   //const clientId = ablyClient?.auth.clientId;
   const playerName = session?.user?.name || 'Anônimo';
 
@@ -1183,27 +1185,95 @@ export default function Frase() {
           <span>Ver Progresso</span>
         </button>
 
-        <div className="relative w-64">
-          <select
-            onChange={e => setTheme(e.target.value)}
-            value={theme}
-            className={`
-              w-full appearance-none py-3 px-6 rounded-xl border-2 border-blue
-              bg-gradient-to-br from-purple-700 to-indigo-800 text-blue
-              shadow-lg shadow-purple-500/40 hover:shadow-xl hover:shadow-pink-500/50
-              focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-2
-              text-lg tracking-wide font-semibold text-center cursor-pointer
-              transition-all duration-300 ease-out
-            `}
+        <div className="relative w-full">
+          {/* Botão de abertura */}
+          <button
+            onClick={() => setOpen(!open)}
+            className="w-full flex items-center justify-between py-3 px-6 rounded-xl border-2 border-blue bg-gradient-to-br from-purple-700 to-indigo-800 text-blue shadow-lg shadow-purple-500/40 hover:shadow-xl hover:shadow-pink-500/50 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-2 text-lg tracking-wide font-semibold text-center cursor-pointer transition-all duration-300 ease-out"
           >
-            <option value="">✅ Escolha uma opção</option>
-            {themes.map(t => (
-              <option key={t} value={t}>
-                {t.charAt(0).toUpperCase() + t.slice(1)}
-              </option>
-            ))}
-          </select>
-  
+            {theme ? (
+              `🎯 ${theme}`
+            ) : (
+              <span className="flex items-center gap-2">
+                {/* Ícone Check animado */}
+                <motion.div
+                  initial={{ x: -10, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ duration: 0.8, type: "spring" }}
+                  className="text-green"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={3}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </motion.div>
+                <span>Escolha uma opção</span>
+              </span>
+            )}
+            <span className="ml-2">▼</span>
+          </button>
+        
+          {/* Lista de opções */}
+          {open && (
+            <ul className="absolute mt-2 w-full rounded-xl bg-gray-700 shadow-lg border border-blue max-h-72 overflow-y-auto custom-scrollbar z-10">
+                      
+              {/* Opção padrão */}
+              <li
+                onClick={() => {
+                  setTheme('');
+                  setOpen(false);
+              }}
+                className="flex items-center justify-start gap-3 px-6 py-3 hover:bg-lightblue text-black text-lg font-semibold cursor-pointer transition-all duration-300"
+              >
+                <motion.div
+                  initial={{ x: -10, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ duration: 0.8, type: "spring" }}
+                  className="text-green"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={3}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </motion.div>
+              Escolha uma opção
+              </li>
+                      
+              {themes.map((t) => (
+                <li
+                  key={t}
+                  onClick={() => {
+                    setTheme(t);
+                    setOpen(false);
+                  }}
+                  className="flex items-center justify-start gap-3 px-6 py-3 hover:bg-lightblue text-black text-lg font-semibold cursor-pointer transition-all duration-300"
+                >
+                  {/* Setinha animada */}
+                  <motion.div
+                    initial={{ x: 10, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.4, type: "spring" }}
+                    className="text-green"
+                  >
+                    ➤
+                  </motion.div>
+                  {t.charAt(0).toUpperCase() + t.slice(1)}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         {showRestart && (

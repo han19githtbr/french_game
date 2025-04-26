@@ -98,3 +98,22 @@ select option:hover {
 .text-shadow-glow {
   text-shadow: 0 0 10px rgba(34, 211, 238, 0.8);
 }
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px; /* largura da scrollbar */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f0f0f0; /* cor do fundo da scrollbar */
+  border-radius: 9999px; /* borda totalmente arredondada */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #6b7280; /* cor da "bolinha" da scrollbar */
+  border-radius: 9999px; /* extremidades arredondadas */
+  cursor: pointer;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #4b5563; /* cor quando passar o mouse em cima */
+}
