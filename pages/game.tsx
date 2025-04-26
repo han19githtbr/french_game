@@ -149,7 +149,7 @@ export default function Game() {
   const reviewIntervalRef: RefObject<ReturnType<typeof setInterval> | null> = useRef(null);
 
   const [isFlashing, setIsFlashing] = useState(false); // Estado para controlar a animação de piscar
-
+  const [isReviewPaused, setIsReviewPaused] = useState(false);
 
   const [open, setOpen] = useState(false);
 
@@ -860,24 +860,28 @@ export default function Game() {
     setCurrentReviewIndex(0);
     startReviewVideo();
     setAvailableReviews(0); // Marca as revisões como assistidas
+    setIsReviewPaused(false); // Inicializa como não pausado ao abrir
   };
 
   const handleCloseReview = () => {
     setShowReviewModal(false);
     stopReviewVideo();
+    setIsReviewPaused(false); // Reseta o estado de pausa ao fechar
   };
 
   const startReviewVideo = () => {
     stopReviewVideo();
     reviewIntervalRef.current = setInterval(() => {
       setCurrentReviewIndex(prev => (prev + 1) % reviewHistory.length);
-    }, 3000); // Ajuste a velocidade do "vídeo" aqui (ms)
+    }, 5000); // Ajuste a velocidade do "vídeo" aqui (ms)
+    setIsReviewPaused(false); // Atualiza o estado para não pausado
   };
 
   const stopReviewVideo = () => {
     if (reviewIntervalRef.current) {
       clearInterval(reviewIntervalRef.current);
       reviewIntervalRef.current = null;
+      setIsReviewPaused(true); // Atualiza o estado para pausado
     }
   };
 
@@ -1517,7 +1521,7 @@ export default function Game() {
               setRound(r => r + 1)
               setShowRestart(false)
             }}
-            className="mt-6 border border-red text-red-500 bg-transparent hover:bg-red-600 hover:text-white px-4 py-2 rounded shadow transition cursor-pointer"
+            className="mt-6 border border-red text-red bg-transparent hover:bg-gray-300 hover:text-white px-4 py-2 rounded shadow transition cursor-pointer"
           >
             ❌ Jogue de novo
           </button>
@@ -1619,7 +1623,7 @@ export default function Game() {
               <button
                 onClick={handleOpenReview}
                 disabled={!isReviewAvailable || reviewHistory.length === 0}
-                className={`border ${isReviewAvailable && reviewHistory.length > 0 ? 'border-blue hover:border-green hover:text-white cursor-pointer relative' : 'border-gray-500 cursor-not-allowed'} text-gray-300 rounded-xl py-2 px-8 transition-colors`}
+                className={`border ${isReviewAvailable && reviewHistory.length > 0 ? 'border-blue hover:border-green hover:text-white cursor-pointer relative' : 'border-gray-300 bg-gray-800 cursor-not-allowed'} text-gray-300 rounded-xl py-2 px-8 transition-colors`}
               >
                 {!isReviewAvailable || reviewHistory.length === 0 ? <Lock className="inline-block mr-2 mb-1" size={20} /> : null}
                 Revisar os acertos
@@ -1686,14 +1690,14 @@ export default function Game() {
                 >
                   {/* Efeito de fundo sombreado */}
                   <motion.div
-                    className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-75 z-40"
+                    className="fixed top-0 left-0 w-full h-full bg-opacity-75 z-40"
                     onClick={handleCloseReview} // Permite fechar ao clicar fora
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   />
                   <motion.div
-                    className="bg-gradient-to-br from-blue-800 to-cyan-700 rounded-xl shadow-lg p-8 text-center max-w-md w-[90%] z-50"
+                    className="bg-gray-900 from-blue to-lightblue rounded-xl shadow-lg p-8 text-center max-w-md w-[90%] z-50"
                     initial={{ scale: 0.9 }}
                     animate={{ scale: 1 }}
                     exit={{ scale: 0.9 }}
@@ -1710,10 +1714,13 @@ export default function Game() {
                       </div>
                     </div>
                     <div className="mt-4 flex justify-between items-center">
-                      <button onClick={handlePauseResumeReview} className="bg-lightblue border border-gray-300 text-white rounded-full p-2 hover:bg-transparent transition cursor-pointer">
-                        {reviewIntervalRef.current ? 'Pausar' : 'Continuar'}
+                      <button 
+                        onClick={handlePauseResumeReview} 
+                        className="bg-lightblue border border-gray-100 text-white rounded-full p-2 hover:bg-transparent transition cursor-pointer"
+                      >
+                        {isReviewPaused ? 'Continuar' : 'Pausar'}
                       </button>
-                      <button onClick={handleCloseReview} className="bg-red text-white border border-gray-300 rounded-full p-2 hover:bg-transparent transition cursor-pointer">
+                      <button onClick={handleCloseReview} className="bg-red text-white border border-gray-100 rounded-full p-2 hover:bg-transparent transition cursor-pointer">
                         Sair
                       </button>
                     </div>
