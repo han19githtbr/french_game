@@ -104,16 +104,16 @@ select option:hover {
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: #f0f0f0; /* cor do fundo da scrollbar */
+  background: #f5f4f4f7; /* cor do fundo da scrollbar */
   border-radius: 9999px; /* borda totalmente arredondada */
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #6b7280; /* cor da "bolinha" da scrollbar */
+  background: #1010d8; /* cor da "bolinha" da scrollbar */
   border-radius: 9999px; /* extremidades arredondadas */
   cursor: pointer;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #4b5563; /* cor quando passar o mouse em cima */
+  background: #287bee; /* cor quando passar o mouse em cima */
 }
