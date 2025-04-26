@@ -12,10 +12,7 @@ import { LockClosedIcon } from '@heroicons/react/24/solid';
 import { io } from 'socket.io-client'
 import { DotLoader } from 'react-spinners';
 import { Realtime, Message } from 'ably'
-//import applauseSoundFile from '../public/sounds/applause.mp3';
 
-
-//import successSound from '/sounds/success.mp3';
 
 const themes = ['família', 'natureza', 'turismo', 'animais', 'tecnologia', 'gastronomia']
 
@@ -302,9 +299,9 @@ export default function Game() {
   }, [availableReviews]);
 
 
-  const saveProgress = (count: number) => {
+  /*const saveProgress = (count: number) => {
     localStorage.setItem('correctAnswers', JSON.stringify(count));
-  };
+  };*/
 
 
   useEffect(() => {
