@@ -1155,7 +1155,7 @@ export default function Game() {
         {isChatBubbleOpen && (
           <motion.div
             className={`fixed bottom-6 right-6 z-50 /* [MODIFICADO] Altera a posição para canto inferior direito quando aberto */
-              w-full max-w-sm
+              w-full max-w-[calc(100vw-16px)] sm:max-w-sm
               flex flex-col shadow-lg rounded-t-lg
               bg-gray-700 from-blue to-green /* Cores mais vibrantes */
               border-t-2 border-blue
@@ -1175,10 +1175,10 @@ export default function Game() {
                   onClick={handleMinimizeChat}
                   className="text-purple-300 hover:text-purple-200 focus:outline-none mr-2"
                 >
-                  <Minus className="h-5 w-5" /> {/* Ícone de minimizar */}
+                  <Minus className="h-5 w-5 cursor-pointer" /> {/* Ícone de minimizar */}
                 </button>
                 <button onClick={() => setIsChatBubbleOpen(false)} className="text-purple-300 hover:text-purple-200 focus:outline-none">
-                  <X className="h-5 w-5" />
+                  <X className="h-5 w-5 cursor-pointer" />
                 </button>
               </div>
             </div>
