@@ -378,15 +378,7 @@ export default function Game() {
     }
   };
 
-  /*const handleTypingStatus = (message: Ably.Message) => {
-    const isUserTyping = message.data.isTyping;
-    const otherClientId = message.clientId;
-    // [CORRIGIDO] Verifica se otherClientId é definido antes de usá-lo
-    if (otherClientId && isChatBubbleOpen && isChatBubbleOpen.includes(otherClientId) && clientId !== otherClientId) {
-      setTypingIndicator((prev) => ({ ...prev, [otherClientId]: isUserTyping }));
-    }
-  };*/
-
+  
   const handleTypingStatus = (message: Ably.Message) => {
     const isUserTyping = message.data.isTyping;
     const otherClientId = message.clientId;
@@ -404,6 +396,47 @@ export default function Game() {
     }
   };
 
+  const subscribeToChatChannel = (
+    ablyClient: Realtime,
+    channelName: string,
+    handler: (msg: Ably.Message) => void,
+    handlersRef: React.MutableRefObject<Record<string, (msg: Ably.Message) => void>>
+  ) => {
+    const channel = ablyClient.channels.get(channelName);
+  
+    // Remove qualquer handler antigo
+    if (handlersRef.current[channelName]) {
+      channel.unsubscribe('message', handlersRef.current[channelName]);
+    }
+  
+    // Adiciona o novo handler
+    channel.subscribe('message', handler);
+  
+    // Salva referência
+    handlersRef.current[channelName] = handler;
+  };
+  
+
+  const subscribeToChatAndTypingChannels = useCallback((clientId1: string, clientId2: string) => {
+    if (!ablyClient) return;
+
+    const chatChannelName = getChatChannelName(clientId1, clientId2);
+    const chatMessageHandler = useCallback((message: Ably.Message) => {
+      handleChatMessage(message, chatChannelName);
+    }, [handleChatMessage, chatChannelName]);
+
+    subscribeToChatChannel(ablyClient, chatChannelName, chatMessageHandler, chatHandlersRef);
+
+    const typingChannelName = getTypingChannelName(clientId1, clientId2);
+    if (!typingHandlersRef.current[typingChannelName]) {
+      ablyClient.channels
+        .get(typingChannelName)
+        .subscribe('typing', handleTypingStatus);
+      typingHandlersRef.current[typingChannelName] = handleTypingStatus;
+    }
+  }, [ablyClient, getChatChannelName, getTypingChannelName, handleChatMessage, handleTypingStatus, chatHandlersRef, subscribeToChatChannel, typingHandlersRef]);
+
+  
   useEffect(() => {
     if (!ablyClient || !session || !clientId) return;
   
@@ -457,18 +490,18 @@ export default function Game() {
           setIsChatBubbleOpen(chatChannelName);
           setChatPartnerName(fromName);
           
-          if (!chatHandlersRef.current[chatChannelName]) {
+          /*if (!chatHandlersRef.current[chatChannelName]) {
             const chatMessageHandler = (message: Ably.Message) => {
               handleChatMessage(message, chatChannelName);
             };
             subscribeToChatChannel(ablyClient, chatChannelName, chatMessageHandler, chatHandlersRef);
           }
-          
-         
+                  
           // [ACRESCENTADO] Inscrever-se no canal de digitação quando o chat é aceito
           ablyClient.channels
             .get(getTypingChannelName(currentClientId, fromClientId))
-            .subscribe('typing', handleTypingStatus);
+            .subscribe('typing', handleTypingStatus);*/
+            subscribeToChatAndTypingChannels(currentClientId, fromClientId);  
         } else {
           //alert(`❌ ${fromName} negou seu pedido de bate-papo.`);
           showToast(`❌ ${fromName} negou seu pedido de bate-papo.`, 'info');
@@ -495,13 +528,14 @@ export default function Game() {
         const ids = channelName.split(':')[1]?.split('-');
         if (ids && ids.length === 2) {
           const typingChannelName = getTypingChannelName(ids[0], ids[1]);
-          ablyClient?.channels.get(typingChannelName)?.unsubscribe('typing', handleTypingStatus);
+          //ablyClient?.channels.get(typingChannelName)?.unsubscribe('typing', handleTypingStatus);
+          ablyClient?.channels.get(typingChannelName)?.unsubscribe('typing', typingHandlersRef.current[typingChannelName]);
         }
       }
       ablyClient.connection.off('connected', onConnected);
     };
-  }, [ablyClient, session, clientId]);
-    
+  //}, [ablyClient, session, clientId]);
+  }, [ablyClient, session, clientId, getChatChannelName, getTypingChannelName, handleChatMessage, handleTypingStatus, subscribeToChatChannel, showToast, chatRequestReceivedSoundRef, chatRequestResponseSoundRef, playersOnline, subscribeToChatAndTypingChannels]);  
   // Atualiza lista de quem está online
   const syncPresence = async () => {
     if (!ablyClient) return;
@@ -543,26 +577,8 @@ export default function Game() {
     showToast(`⏳ Pedido de bate-papo enviado para ${otherPlayer.name}. Aguardando resposta...`, 'info');
   };
   
-  const subscribeToChatChannel = (
-    ablyClient: Realtime,
-    channelName: string,
-    handler: (msg: Ably.Message) => void,
-    handlersRef: React.MutableRefObject<Record<string, (msg: Ably.Message) => void>>
-  ) => {
-    const channel = ablyClient.channels.get(channelName);
   
-    // Remove qualquer handler antigo
-    if (handlersRef.current[channelName]) {
-      channel.unsubscribe('message', handlersRef.current[channelName]);
-    }
-  
-    // Adiciona o novo handler
-    channel.subscribe('message', handler);
-  
-    // Salva referência
-    handlersRef.current[channelName] = handler;
-  };
-  
+
 
   const handleAcceptChatRequest = (request: ChatRequest) => {
     if (!ablyClient || !clientId) return;
@@ -674,17 +690,7 @@ export default function Game() {
     
   };
 
-  const closeChatBubble = () => {
-    setIsChatBubbleOpen(false);
-    setChatPartnerName(null);
-    setTypingIndicator({}); // Limpar o indicador de digitação ao fechar o chat
-  };
-
-  const minimizeChatBubble = () => {
-    setIsChatBubbleOpen(false); // Ou trocar para estado de "minimizado"
-  };
   
-
   const handleSendMessage = () => {
     if (!ablyClient || !isChatBubbleOpen || !chatInput.trim() || !clientId) return;
     const chatChannel = ablyClient.channels.get(isChatBubbleOpen);
@@ -1155,11 +1161,11 @@ export default function Game() {
         {isChatBubbleOpen && (
           <motion.div
             className={`fixed bottom-6 right-6 z-50 /* [MODIFICADO] Altera a posição para canto inferior direito quando aberto */
-              w-full max-w-[calc(100vw-16px)] sm:max-w-sm
+              w-full max-w-[calc(90vw-16px)] sm:max-w-sm
               flex flex-col shadow-lg rounded-t-lg
               bg-gray-700 from-blue to-green /* Cores mais vibrantes */
-              border-t-2 border-blue
-              px-2 sm:px-0
+              border-t-2 border-purple
+              px-0 sm:px-0
               rounded-bl-none rounded-br-none
               animate__faster /* Acelera a animação padrão do animate.css */
             `}
@@ -1168,16 +1174,16 @@ export default function Game() {
             exit={{ y: 300, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 100, damping: 15 }}
           >
-            <div className="bg-purple-900 p-3 rounded-t-lg flex justify-between items-center border-b border-purple-800">
-              <span className="font-bold text-purple-200 glow-text">{chatPartnerName}</span>
+            <div className="bg-gray-600 p-3 rounded-t-lg flex justify-between items-center border-b border-purple">
+              <span className="font-bold text-purple glow-text">{chatPartnerName}</span>
               <div className="flex items-center">
                 <button
                   onClick={handleMinimizeChat}
-                  className="text-purple-300 hover:text-purple-200 focus:outline-none mr-2"
+                  className="text-purple hover:text-blue focus:outline-none mr-2"
                 >
                   <Minus className="h-5 w-5 cursor-pointer" /> {/* Ícone de minimizar */}
                 </button>
-                <button onClick={() => setIsChatBubbleOpen(false)} className="text-purple-300 hover:text-purple-200 focus:outline-none">
+                <button onClick={() => setIsChatBubbleOpen(false)} className="text-purple hover:text-blue focus:outline-none">
                   <X className="h-5 w-5 cursor-pointer" />
                 </button>
               </div>
@@ -1188,16 +1194,16 @@ export default function Game() {
                   key={index}
                   className={`mb-2 p-3 rounded-md ${
                     msg.sender === playerName
-                      ? 'bg-purple-800 text-right text-purple-200 self-end shadow-md'
-                      : 'bg-purple-800 text-left text-purple-200 shadow-md'
+                      ? 'bg-blue text-right text-gray-300 self-end shadow-md'
+                      : 'bg-blue text-left text-gray-300 shadow-md'
                   }`}
                 >
-                  <span className="text-xs italic text-purple-300">{msg.sender}:</span>
+                  <span className="text-xs italic text-gray-300">{msg.sender}:</span>
                   <p className="font-medium">{msg.text}</p>
                 </div>
               ))}
               {typingIndicator[isChatBubbleOpen] && (
-                <div className="text-left italic text-purple-400">
+                <div className="text-left italic text-blue">
                   <DotLoader color="#a0aec0" size={15} /> <span className="ml-1">Digitando...</span>
                 </div>
               )}
@@ -1205,7 +1211,7 @@ export default function Game() {
             <div className="p-3 border-t border-purple-800 flex items-center">
               <input
                 type="text"
-                className="bg-purple-900 text-purple-200 rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-cyan-400 shadow-inner"
+                className="bg-purple-900 text-gray-300 border border-purple rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-cyan-400 shadow-inner"
                 placeholder="Enviar mensagem..."
                 value={chatInput}
                 onChange={handleInputChange}
@@ -1213,7 +1219,7 @@ export default function Game() {
               />
               <button
                 onClick={handleSendMessage}
-                className="bg-cyan-500 hover:bg-blue text-white font-bold py-2 px-4 rounded-md ml-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400 cursor-pointer"
+                className="bg-cyan-500 hover:bg-lightblue text-white border border-purple font-bold py-2 px-4 rounded-md ml-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400 cursor-pointer"
               >
                 Enviar
               </button>
