@@ -1,6 +1,6 @@
 /*'use client'*/
 
-import { useEffect, useRef, useState, RefObject } from 'react'
+import { useEffect, useRef, useState, RefObject, useCallback } from 'react'
 import { createAblyClient } from '../lib/ably'
 import type * as Ably from 'ably'
 import { useSession, signOut } from 'next-auth/react'
@@ -43,6 +43,7 @@ type Result = {
 type Player = {
   clientId: string
   name: string
+  avatarUrl?: string;
 }
 
 type ShowNotification =
@@ -55,6 +56,7 @@ type ShowNotification =
 type ChatRequest = {
   fromClientId: string;
   fromName: string;
+  avatarUrl?: string;
 };
 
 type ChatMessage = {
@@ -110,6 +112,8 @@ export default function Game() {
   const [successSound, setSuccessSound] = useState<HTMLAudioElement | null>(null);
 
   const [playersOnline, setPlayersOnline] = useState<Player[]>([])
+  const [chatPartnerAvatar, setChatPartnerAvatar] = useState(''); // [NOVO] Estado para armazenar a URL do avatar do parceiro de chat atual.
+  
   const [hiddenPlayers, setHiddenPlayers] = useState<string[]>([]);
   
   const [showNotification, setShowNotification] = useState<ShowNotification | null>(null)
@@ -121,7 +125,7 @@ export default function Game() {
 
   const [chatRequestsReceived, setChatRequestsReceived] = useState<ChatRequest[]>([]);
   const [activeChats, setActiveChats] = useState<{ [channelName: string]: ChatMessage[] }>({});
-  const [isChatBubbleOpen, setIsChatBubbleOpen] = useState<string | null>(null);
+  const [isChatBubbleOpen, setIsChatBubbleOpen] = useState<string | false>(false);
   const [chatInput, setChatInput] = useState('');
   const [chatPartnerName, setChatPartnerName] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
@@ -141,6 +145,7 @@ export default function Game() {
   const [offset, setOffset] = useState({ x: 130, y: 130 });
   const [visibleModals, setVisibleModals] = useState<Record<string, boolean>>({});
   const [minimizedRequests, setMinimizedRequests] = useState<string[]>([]);
+  const [minimizedChat, setMinimizedChat] = useState<string | false>(false); // [NOVO] Estado para controlar o ID do chat que está minimizado (se estiver `false`, nenhum está minimizado).
 
   const [reviewHistory, setReviewHistory] = useState<ReviewItem[]>([]);
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -152,6 +157,8 @@ export default function Game() {
   const [isReviewPaused, setIsReviewPaused] = useState(false);
 
   const [open, setOpen] = useState(false);
+
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   //const clientId = ablyClient?.auth.clientId;
   const playerName = session?.user?.name || 'Anônimo';
@@ -297,13 +304,7 @@ export default function Game() {
       setIsFlashing(false);
     }
   }, [availableReviews]);
-
-
-  /*const saveProgress = (count: number) => {
-    localStorage.setItem('correctAnswers', JSON.stringify(count));
-  };*/
-
-
+  
   useEffect(() => {
     if (!showCongrats && images.length > 0) {
       setTimeout(() => {
@@ -320,29 +321,7 @@ export default function Game() {
       setIsProverbsUnlocked(true);
     }
   }, [correctAnswersCount]);
-
-  
-  /*useEffect(() => {
-    const socket = io({
-      path: '/api/socketio',
-    })
-
-    if (session?.user?.name) {
-      socket.emit('userJoined', session.user.name)
-    }
-
-    socket.on('userJoined', (name: string) => {
-      if (name !== session?.user?.name) {
-        setShowNotification({ name })
-        setTimeout(() => setShowNotification(null), 4000)
-      }
-    })
-
-    return () => {
-      socket.disconnect()
-    }
-  }, [session?.user?.name])*/
-
+ 
   
   useEffect(() => {
     if (!session) return
@@ -593,7 +572,9 @@ export default function Game() {
     setActiveChats((prev) => ({ ...prev, [chatChannelName]: [] }));
     setIsChatBubbleOpen(chatChannelName);
     setChatPartnerName(request.fromName);
-    //setChatRequestsReceived((prev) => prev.filter((req) => req.fromClientId !== request.fromClientId));
+    const partner = playersOnline.find(p => p.clientId === request.fromClientId);
+    setChatPartnerAvatar(partner?.avatarUrl || '');
+    setMinimizedChat(false);
     
     // ✅ Remove o pedido da lista de recebidos
     setChatRequestsReceived((prev) =>
@@ -628,10 +609,11 @@ export default function Game() {
 
     
     // [ACRESCENTADO] Abrir a bolha de chat após a aceitação
-    openChatBubble({ clientId: request.fromClientId, name: request.fromName });
+    // openChatBubble({ clientId: request.fromClientId, name: request.fromName });
     // Reproduzir som ao aceitar um pedido
     chatRequestResponseSoundRef.current?.play();
   };
+
 
   const handleRejectChatRequest = (request: ChatRequest) => {
     if (!ablyClient || !clientId) return;
@@ -658,6 +640,22 @@ export default function Game() {
     }
   };
 
+  const handleMinimizeChat = useCallback(() => {
+    if (isChatBubbleOpen) {
+      setMinimizedChat(isChatBubbleOpen); // Define o estado `minimizedChat` com o ID do chat atual ao minimizar.
+      setIsChatBubbleOpen(false); // Fecha a caixa de bate-papo principal.
+    }
+  }, [isChatBubbleOpen]);
+
+
+  const handleOpenMinimizedChat = useCallback(() => {
+    if (minimizedChat) {
+      setIsChatBubbleOpen(minimizedChat); // Abre a caixa de bate-papo novamente definindo `isChatBubbleOpen` com o ID minimizado.
+      setMinimizedChat(false); // Limpa o estado de minimizado.
+    }
+  }, [minimizedChat]);
+
+
   const handleOpenMinimizedRequest = (clientId: string) => {
     const request = chatRequestsReceived.find(req => req.fromClientId === clientId);
     if (request) {
@@ -677,13 +675,13 @@ export default function Game() {
   };
 
   const closeChatBubble = () => {
-    setIsChatBubbleOpen(null);
+    setIsChatBubbleOpen(false);
     setChatPartnerName(null);
     setTypingIndicator({}); // Limpar o indicador de digitação ao fechar o chat
   };
 
   const minimizeChatBubble = () => {
-    setIsChatBubbleOpen(null); // Ou trocar para estado de "minimizado"
+    setIsChatBubbleOpen(false); // Ou trocar para estado de "minimizado"
   };
   
 
@@ -986,7 +984,7 @@ export default function Game() {
                   handleRequestChat(player);
                   openChatBubble(player);
                 }}
-                className="bg-gradient-to-br from-blue to-purple hover:from-blue hover:to-purple text-white whitespace-nowrap font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer"
+                className="bg-gradient-to-br from-blue to-green hover:from-blue hover:to-purple text-white whitespace-nowrap font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
@@ -1075,49 +1073,7 @@ export default function Game() {
         <audio ref={enterSoundRef} src="/sounds/received_sound.mp3" preload="auto" />
         <audio ref={chatRequestReceivedSoundRef} src="/sounds/accepted_sound.mp3" preload="auto" />
         <audio ref={chatRequestResponseSoundRef} src="/sounds/message.mp3" preload="auto" />
-        
-        {/*{chatRequestsReceived.length > 0 && (
-          <div className="fixed bottom-0 left-0 w-full bg-gray-900 bg-opacity-70 border-t border-gray-700 py-2 px-4 flex items-center justify-start gap-4 z-40">
-            {chatRequestsReceived.map((request) => (
-              <div
-                key={request.fromClientId}
-                className="bg-gray-800 rounded-md p-2 cursor-pointer hover:bg-gray-700 transition duration-200 ease-in-out"
-                onClick={() => handleOpenChatRequest(request)}
-              >
-                <span className="text-sm text-yellow-300 font-semibold">Novo pedido de: {request.fromName}</span>
-              </div>
-            ))}
-          </div>
-        )}
-        {chatRequestsReceived.map((request) => (
-          <div
-            key={`modal-${request.fromClientId}`}
-            id={`modal-${request.fromClientId}`}
-            className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl p-8 max-w-md w-full shadow-lg border-2 border-gray-600 z-50 animate__animated animate__fadeIn ${visibleModals[request.fromClientId] ? '' : 'hidden'}`}
-          >
-            <h2 className="text-xl font-bold text-yellow mb-6 glow-text">🕹️ Pedido de Bate-papo de {request.fromName}!</h2>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => handleAcceptChatRequest(request)}
-                className="flex items-center justify-center whitespace-nowrap bg-blue hover:bg-blue text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue"
-              >
-                <Check className="h-5 w-5 mr-2 shrink-0" /> Aceitar
-              </button>
-              <button
-                onClick={() => handleRejectChatRequest(request)}
-                className="flex items-center justify-center whitespace-nowrap bg-red hover:bg-red text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red"
-              >
-                <X className="h-5 w-5 mr-2 shrink-0" /> Recusar
-              </button>
-              <button
-                onClick={() => handleMinimizeChatRequest(request.fromClientId)}
-                className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500"
-              >
-                Minimizar
-              </button>
-            </div>
-          </div>
-        ))}*/}
+                
         {minimizedRequests.length > 0 && (
           <div className="fixed bottom-0 left-0 w-full bg-gray-800 bg-opacity-80 border-t border-gray-700 py-2 px-4 flex items-center overflow-x-auto scrollbar-hide z-40">
             {minimizedRequests.map((clientId) => {
@@ -1173,64 +1129,8 @@ export default function Game() {
           </div>
         ))}
       </>
+      
       {/*{isChatBubbleOpen && (
-        <div
-            className={`fixed bottom-0 left-1/2 -translate-x-1/2 z-50
-              w-full max-w-[calc(100vw-16px)] sm:max-w-md
-              flex flex-col shadow-lg rounded-t-lg bg-gradient-to-br from-gray-800 to-gray-700
-              border-t-2 border-gray-600
-              animate__animated animate__slideInUp
-              rounded-bl-none rounded-br-none
-              px-2 sm:px-0
-            `}
-        >
-          
-          <div className="bg-gray-900 p-3 rounded-t-lg flex justify-between items-center border-b border-gray-700">
-            <span className="font-bold text-gray-300 glow-text">{chatPartnerName}</span>
-            <button onClick={closeChatBubble} className="text-gray-400 hover:text-gray-300 focus:outline-none">
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-          <div className="p-3 overflow-y-auto h-64 flex-grow">
-            {activeChats[isChatBubbleOpen]?.map((msg, index) => (
-              <div
-                key={index}
-                className={`mb-2 p-3 rounded-md ${
-                  msg.sender === playerName
-                    ? 'bg-gray-800 text-right text-white self-end shadow-md'
-                    : 'bg-gray-800 text-left text-white shadow-md'
-                }`}
-              >
-                <span className="text-xs italic text-gray-300">{msg.sender}:</span>
-                <p className="font-medium">{msg.text}</p>
-              </div>
-            ))}
-            {typingIndicator[isChatBubbleOpen] && (
-              <div className="text-left italic text-gray-400">
-                <DotLoader color="#a0aec0" size={15} /> <span className="ml-1">Digitando...</span>
-              </div>
-            )}
-          </div>
-          <div className="p-3 border-t border-gray-700 flex items-center">
-            <input
-              type="text"
-              className="bg-gray-900 text-white rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-cyan-400 shadow-inner"
-              placeholder="Enviar mensagem..."
-              value={chatInput}
-              onChange={handleInputChange}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-            />
-            <button
-              onClick={handleSendMessage}
-              className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-md ml-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400"
-            >
-              Enviar
-            </button>
-          </div>
-        </div>
-      )}*/}
-
-      {isChatBubbleOpen && (
         <div
           className="
             fixed bottom-0 left-1/2 -translate-x-1/2 z-50
@@ -1243,11 +1143,11 @@ export default function Game() {
             px-2 sm:px-0
           "
         >
-          {/* Header */}
+          
           <div className="bg-[#0f172a] p-3 rounded-t-2xl flex justify-between items-center border-b border-cyan-600 relative">
             <span className="font-bold text-cyan-300 text-shadow-glow">{chatPartnerName}</span>
             <div className="flex space-x-2">
-              {/* Minimizar botão */}
+              
               <button
                 onClick={minimizeChatBubble}
                 className="text-cyan-400 hover:text-cyan-300 transition transform hover:scale-110"
@@ -1257,7 +1157,7 @@ export default function Game() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
                 </svg>
               </button>
-              {/* Fechar botão */}
+              
               <button
                 onClick={closeChatBubble}
                 className="text-cyan-400 hover:text-red-400 transition transform hover:scale-110"
@@ -1268,7 +1168,7 @@ export default function Game() {
             </div>
           </div>
 
-          {/* Chat messages */}
+          
           <div className="p-3 overflow-y-auto h-64 flex-grow space-y-2">
             {activeChats[isChatBubbleOpen]?.map((msg, index) => (
               <div
@@ -1292,7 +1192,7 @@ export default function Game() {
             )}
           </div>
 
-          {/* Input */}
+          
           <div className="p-3 border-t border-cyan-600 flex items-center bg-[#1e293b] rounded-b-2xl">
             <input
               type="text"
@@ -1310,7 +1210,99 @@ export default function Game() {
             </button>
           </div>
         </div>
+      )}*/}
+
+
+      {/* [NOVO] Botão para abrir a caixa de bate-papo (quando minimizada) */}
+      {minimizedChat && (
+        <motion.button
+          onClick={handleOpenMinimizedChat}
+          className="fixed bottom-6 left-6 bg-gradient-to-br from-purple-700 to-purple-800 hover:from-purple-600 hover:to-purple-700 text-white font-bold py-2 px-3 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 z-50 flex items-center justify-center w-12 h-12 overflow-hidden"
+          initial={{ opacity: 0, scale: 0.8, x: -50 }}
+          animate={{ opacity: 1, scale: 1, x: 0 }}
+          exit={{ opacity: 0, scale: 0.8, x: -50 }}
+        >
+          {chatPartnerAvatar ? (
+            <img src={chatPartnerAvatar} alt={chatPartnerName ? chatPartnerName : "Avatar do Chat"} className="rounded-full w-full h-full object-cover" />
+          ) : (
+            <span className="text-lg">{chatPartnerName && chatPartnerName.substring(0, 2).toUpperCase()}</span>
+          )}
+          <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-purple-800 animate-pulse"></span>
+        </motion.button>
       )}
+
+
+      {/* Caixa de bate-papo */}
+      <AnimatePresence>
+        {isChatBubbleOpen && (
+          <motion.div
+            className={`fixed bottom-6 right-6 z-50 /* [MODIFICADO] Altera a posição para canto inferior direito quando aberto */
+              w-full max-w-sm
+              flex flex-col shadow-lg rounded-t-lg
+              bg-gradient-to-br from-purple-700 to-purple-800 /* Cores mais vibrantes */
+              border-t-2 border-purple-900
+              px-2 sm:px-0
+              rounded-bl-none rounded-br-none
+              animate__faster /* Acelera a animação padrão do animate.css */
+            `}
+            initial={{ y: 300, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 300, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 100, damping: 15 }}
+          >
+            <div className="bg-purple-900 p-3 rounded-t-lg flex justify-between items-center border-b border-purple-800">
+              <span className="font-bold text-purple-200 glow-text">{chatPartnerName}</span>
+              <div className="flex items-center">
+                <button
+                  onClick={handleMinimizeChat}
+                  className="text-purple-300 hover:text-purple-200 focus:outline-none mr-2"
+                >
+                  <Minus className="h-5 w-5" /> {/* Ícone de minimizar */}
+                </button>
+                <button onClick={() => setIsChatBubbleOpen(false)} className="text-purple-300 hover:text-purple-200 focus:outline-none">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+            <div ref={chatContainerRef} className="p-3 overflow-y-auto h-64 flex-grow">
+              {activeChats[isChatBubbleOpen]?.map((msg, index) => (
+                <div
+                  key={index}
+                  className={`mb-2 p-3 rounded-md ${
+                    msg.sender === playerName
+                      ? 'bg-purple-800 text-right text-purple-200 self-end shadow-md'
+                      : 'bg-purple-800 text-left text-purple-200 shadow-md'
+                  }`}
+                >
+                  <span className="text-xs italic text-purple-300">{msg.sender}:</span>
+                  <p className="font-medium">{msg.text}</p>
+                </div>
+              ))}
+              {typingIndicator[isChatBubbleOpen] && (
+                <div className="text-left italic text-purple-400">
+                  <DotLoader color="#a0aec0" size={15} /> <span className="ml-1">Digitando...</span>
+                </div>
+              )}
+            </div>
+            <div className="p-3 border-t border-purple-800 flex items-center">
+              <input
+                type="text"
+                className="bg-purple-900 text-purple-200 rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-cyan-400 shadow-inner"
+                placeholder="Enviar mensagem..."
+                value={chatInput}
+                onChange={handleInputChange}
+                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+              />
+              <button
+                onClick={handleSendMessage}
+                className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-md ml-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+              >
+                Enviar
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
 
       <motion.h1 
@@ -1354,7 +1346,7 @@ export default function Game() {
                
         
         <div className="relative w-full">
-          {/* Botão de abertura */}
+          
           <button
             onClick={() => setOpen(!open)}
             className="w-full flex items-center justify-between py-3 px-6 rounded-xl border-2 border-blue bg-gradient-to-br from-purple-700 to-indigo-800 text-blue shadow-lg shadow-purple-500/40 hover:shadow-xl hover:shadow-pink-500/50 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-2 text-lg tracking-wide font-semibold text-center cursor-pointer transition-all duration-300 ease-out"
@@ -1363,7 +1355,7 @@ export default function Game() {
               `🎯 ${theme}`
             ) : (
               <span className="flex items-center gap-2">
-                {/* Ícone Check animado */}
+                
                 <motion.div
                   initial={{ x: -10, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
