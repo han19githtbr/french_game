@@ -1181,30 +1181,38 @@ export default function Game() {
       <AnimatePresence>
         {isChatBubbleOpen && (
           <motion.div
-            className={`fixed bottom-6 right-6 z-50 /* [MODIFICADO] Altera a posição para canto inferior direito quando aberto */
+            /*className={`fixed bottom-6 right-6 z-50 
               w-full max-w-[calc(90vw-16px)] sm:max-w-sm
               flex flex-col shadow-lg rounded-t-lg
-              bg-gray-700 from-blue to-green /* Cores mais vibrantes */
+              bg-gray-700 from-blue to-green 
               border-t-2 border-purple
               px-0 sm:px-0
               rounded-bl-none rounded-br-none
-              animate__faster /* Acelera a animação padrão do animate.css */
-            `}
+              animate__faster 
+            `}*/
+            className='{fixed bottom-0 left-1/2 -translate-x-1/2 z-50
+              w-full max-w-[calc(100vw-16px)] sm:max-w-md
+              flex flex-col
+              bg-gradient-to-br from-[#1e293b] via-[#334155] to-[#0f172a]
+              border-t-4 border-cyan-500
+              rounded-t-2xl shadow-2xl
+              animate__animated animate__fadeInUp
+              px-2 sm:px-0}'
             initial={{ y: 300, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 300, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 100, damping: 15 }}
           >
-            <div className="bg-gray-600 p-3 rounded-t-lg flex justify-between items-center border-b border-purple">
-              <span className="font-bold text-purple glow-text">{chatPartnerName}</span>
+            <div className="bg-[#0f172a] p-3 rounded-t-2xl flex justify-between items-center border-b border-lightblue relative">
+              <span className="font-bold text-gray-300 text-shadow-glow">{chatPartnerName}</span>
               <div className="flex items-center">
                 <button
                   onClick={handleMinimizeChat}
-                  className="text-purple hover:text-blue focus:outline-none mr-2"
+                  className="text-blue hover:text-red focus:outline-none mr-2"
                 >
                   <Minus className="h-5 w-5 cursor-pointer" /> {/* Ícone de minimizar */}
                 </button>
-                <button onClick={() => setIsChatBubbleOpen(false)} className="text-purple hover:text-blue focus:outline-none">
+                <button onClick={() => setIsChatBubbleOpen(false)} className="text-lightblue hover:text-red focus:outline-none">
                   <X className="h-5 w-5 cursor-pointer" />
                 </button>
               </div>
@@ -1232,7 +1240,7 @@ export default function Game() {
             <div className="p-3 border-t border-purple-800 flex items-center">
               <input
                 type="text"
-                className="bg-purple-900 text-gray-300 border border-purple rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-cyan-400 shadow-inner"
+                className="bg-purple-900 text-gray-300 border border-blue rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-cyan-400 shadow-inner"
                 placeholder="Enviar mensagem..."
                 value={chatInput}
                 onChange={handleInputChange}
@@ -1240,7 +1248,7 @@ export default function Game() {
               />
               <button
                 onClick={handleSendMessage}
-                className="bg-cyan-500 hover:bg-lightblue text-white border border-purple font-bold py-2 px-4 rounded-md ml-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400 cursor-pointer"
+                className="bg-cyan-500 hover:bg-lightblue text-white text-shadow-glow border border-lightblue font-bold py-2 px-4 rounded-md ml-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400 cursor-pointer"
               >
                 Enviar
               </button>

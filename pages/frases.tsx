@@ -1178,7 +1178,7 @@ export default function Frase() {
               {/* Fechar botão */}
               <button
                 onClick={closeChatBubble}
-                className="text-cyan-400 hover:text-red-400 transition transform hover:scale-110"
+                className="text-cyan-400 hover:text-red transition transform hover:scale-110"
                 title="Fechar"
               >
                 <X className="h-5 w-5" />
@@ -1222,7 +1222,7 @@ export default function Frase() {
             />
             <button
               onClick={handleSendMessage}
-              className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-md ml-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+              className="bg-cyan-500 hover:bg-cyan-600 text-white text-shadow-glow font-bold py-2 px-4 rounded-md ml-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400"
             >
               Enviar
             </button>
