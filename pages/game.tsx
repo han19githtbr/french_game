@@ -725,7 +725,7 @@ export default function Game() {
     setIsTyping(false);
     publishTypingStatus(false); 
   };
-  
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setChatInput(e.target.value);
@@ -1047,7 +1047,8 @@ export default function Game() {
           className="bg-gray-900 border border-green rounded p-2 overflow-x-auto"
           style={{
             minHeight: 'calc(17vh - 60px)',
-            whiteSpace: 'nowrap',
+            //whiteSpace: 'nowrap',
+            maxWidth: '100%'
           }}
         >
           <ul className="space-x-3 w-full max-w-none flex flex-row">
