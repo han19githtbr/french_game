@@ -536,6 +536,8 @@ export default function Game() {
     };
   //}, [ablyClient, session, clientId]);
   }, [ablyClient, session, clientId, getChatChannelName, getTypingChannelName, handleChatMessage, handleTypingStatus, subscribeToChatChannel, showToast, chatRequestReceivedSoundRef, chatRequestResponseSoundRef, playersOnline, subscribeToChatAndTypingChannels]);  
+  
+  
   // Atualiza lista de quem está online
   const syncPresence = async () => {
     if (!ablyClient) return;
@@ -691,21 +693,39 @@ export default function Game() {
   };
 
   
-  const handleSendMessage = () => {
+  /*const handleSendMessage = () => {
     if (!ablyClient || !isChatBubbleOpen || !chatInput.trim() || !clientId) return;
     const chatChannel = ablyClient.channels.get(isChatBubbleOpen);
     chatChannel.publish('message', { sender: playerName, text: chatInput, timestamp: Date.now() });
-    /*setActiveChats((prev) => ({
+    setActiveChats((prev) => ({
       ...prev,
       [isChatBubbleOpen]: [
         ...(prev[isChatBubbleOpen] || []),
         { sender: playerName, text: chatInput, timestamp: Date.now() },
       ],
-    }));*/
+    }));
     setChatInput('');
     setIsTyping(false);
     //publishTypingStatus(false);
+  };*/
+
+  const handleSendMessage = () => {
+    if (!ablyClient || !isChatBubbleOpen || !chatInput.trim() || !clientId) return;
+    const chatChannel = ablyClient.channels.get(isChatBubbleOpen);
+    const messageData = { sender: playerName, text: chatInput, timestamp: Date.now() };
+    chatChannel.publish('message', messageData);
+    setActiveChats((prev) => ({
+      ...prev,
+      [isChatBubbleOpen]: [
+        ...(prev[isChatBubbleOpen] || []),
+        messageData,
+      ],
+    }));
+    setChatInput('');
+    setIsTyping(false);
+    publishTypingStatus(false); 
   };
+  
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setChatInput(e.target.value);
