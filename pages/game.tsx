@@ -984,7 +984,7 @@ export default function Game() {
                   handleRequestChat(player);
                   openChatBubble(player);
                 }}
-                className="bg-gradient-to-br from-blue to-green hover:from-blue hover:to-purple text-white whitespace-nowrap font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer"
+                className="bg-gradient-to-br from-blue to-green hover:from-blue hover:to-purple text-white whitespace-nowrap font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:bg-blue focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
@@ -1130,94 +1130,12 @@ export default function Game() {
         ))}
       </>
       
-      {/*{isChatBubbleOpen && (
-        <div
-          className="
-            fixed bottom-0 left-1/2 -translate-x-1/2 z-50
-            w-full max-w-[calc(100vw-16px)] sm:max-w-md
-            flex flex-col
-            bg-gradient-to-br from-[#1e293b] via-[#334155] to-[#0f172a]
-            border-t-4 border-cyan-500
-            rounded-t-2xl shadow-2xl
-            animate__animated animate__fadeInUp
-            px-2 sm:px-0
-          "
-        >
-          
-          <div className="bg-[#0f172a] p-3 rounded-t-2xl flex justify-between items-center border-b border-cyan-600 relative">
-            <span className="font-bold text-cyan-300 text-shadow-glow">{chatPartnerName}</span>
-            <div className="flex space-x-2">
-              
-              <button
-                onClick={minimizeChatBubble}
-                className="text-cyan-400 hover:text-cyan-300 transition transform hover:scale-110"
-                title="Minimizar"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-                </svg>
-              </button>
-              
-              <button
-                onClick={closeChatBubble}
-                className="text-cyan-400 hover:text-red-400 transition transform hover:scale-110"
-                title="Fechar"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-
-          
-          <div className="p-3 overflow-y-auto h-64 flex-grow space-y-2">
-            {activeChats[isChatBubbleOpen]?.map((msg, index) => (
-              <div
-                key={index}
-                className={`p-3 rounded-xl max-w-[80%] shadow-lg transition-all duration-300 ${
-                  msg.sender === playerName
-                    ? 'bg-cyan-700 text-white self-end ml-auto'
-                    : 'bg-gray-700 text-white self-start mr-auto'
-                }`}
-              >
-                <span className="text-xs italic text-cyan-100">{msg.sender}:</span>
-                <p className="font-semibold">{msg.text}</p>
-              </div>
-            ))}
-
-            {typingIndicator[isChatBubbleOpen] && (
-              <div className="text-left italic text-cyan-400 flex items-center space-x-1">
-                <DotLoader color="#22d3ee" size={15} />
-                <span>Digitando...</span>
-              </div>
-            )}
-          </div>
-
-          
-          <div className="p-3 border-t border-cyan-600 flex items-center bg-[#1e293b] rounded-b-2xl">
-            <input
-              type="text"
-              className="bg-gray-800 text-white rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-cyan-400 shadow-inner"
-              placeholder="Enviar mensagem..."
-              value={chatInput}
-              onChange={handleInputChange}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-            />
-            <button
-              onClick={handleSendMessage}
-              className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-md ml-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400"
-            >
-              Enviar
-            </button>
-          </div>
-        </div>
-      )}*/}
-
-
+      
       {/* [NOVO] Botão para abrir a caixa de bate-papo (quando minimizada) */}
       {minimizedChat && (
         <motion.button
           onClick={handleOpenMinimizedChat}
-          className="fixed bottom-6 left-6 bg-gradient-to-br from-purple-700 to-purple-800 hover:from-purple-600 hover:to-purple-700 text-white font-bold py-2 px-3 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 z-50 flex items-center justify-center w-12 h-12 overflow-hidden"
+          className="fixed bottom-12 left-6 bg-gradient-to-br from-purple to-blue hover:from-purple hover:to-green text-white font-bold py-2 px-3 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple z-50 flex items-center justify-center w-12 h-12 overflow-hidden cursor-pointer"
           initial={{ opacity: 0, scale: 0.8, x: -50 }}
           animate={{ opacity: 1, scale: 1, x: 0 }}
           exit={{ opacity: 0, scale: 0.8, x: -50 }}
@@ -1239,8 +1157,8 @@ export default function Game() {
             className={`fixed bottom-6 right-6 z-50 /* [MODIFICADO] Altera a posição para canto inferior direito quando aberto */
               w-full max-w-sm
               flex flex-col shadow-lg rounded-t-lg
-              bg-gradient-to-br from-purple-700 to-purple-800 /* Cores mais vibrantes */
-              border-t-2 border-purple-900
+              bg-gray-700 from-blue to-green /* Cores mais vibrantes */
+              border-t-2 border-blue
               px-2 sm:px-0
               rounded-bl-none rounded-br-none
               animate__faster /* Acelera a animação padrão do animate.css */
@@ -1295,7 +1213,7 @@ export default function Game() {
               />
               <button
                 onClick={handleSendMessage}
-                className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-md ml-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                className="bg-cyan-500 hover:bg-blue text-white font-bold py-2 px-4 rounded-md ml-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400 cursor-pointer"
               >
                 Enviar
               </button>
