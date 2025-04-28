@@ -1475,7 +1475,7 @@ export default function Game() {
                     </select>
                   </div>
 
-                  <button
+                  {/*<button
                       onClick={() => speakPortuguese(img.title)}
                       className="p-2 mt-2 rounded-xl bg-gray-800 border border-lightblue items-center justify-center text-white shadow-md hover:bg-lightblue focus:outline-none focus:ring-2 focus:ring-lightblue transition-colors duration-300 cursor-pointer"
                       style={{
@@ -1487,7 +1487,7 @@ export default function Game() {
                         
                       }}
                     >
-                      {/* Ícone de "play" estilizado */}
+                      
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 20 20"
@@ -1500,7 +1500,7 @@ export default function Game() {
                           clipRule="evenodd"
                         />
                       </svg>
-                  </button>
+                  </button>*/}
 
                   {results[index] && (
                     <motion.div
@@ -1526,7 +1526,7 @@ export default function Game() {
             </div>
 
             <div className="mt-8 flex gap-4">
-              {showRestart && (
+              {/*{showRestart && (
                 <button
                   onClick={() => {
                     loadImages();
@@ -1540,7 +1540,7 @@ export default function Game() {
                 >
                   Recomeçar
                 </button>
-              )}
+              )}*/}
               <button
                 onClick={handleOpenReview}
                 disabled={!isReviewAvailable || reviewHistory.length === 0}
