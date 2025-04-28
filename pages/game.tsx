@@ -1345,6 +1345,7 @@ export default function Game() {
         🎮 Jogo para treinar o Francês
       </motion.h1>
 
+      
       <div className="flex flex-col items-center space-y-6">
         <button
             onClick={() => router.push('/results')}
@@ -1373,6 +1374,7 @@ export default function Game() {
             </svg>
           </div>
           <span>Ver Progresso</span>
+          
         </button>
                
         
