@@ -8,10 +8,11 @@ import { useRouter } from 'next/router'
 import { Check, X, Minus, Lock } from 'lucide-react'
 import { motion , AnimatePresence} from 'framer-motion'
 import { saveProgress } from './results'
-import { LockClosedIcon } from '@heroicons/react/24/solid';
+import { LockClosedIcon, LockOpenIcon } from '@heroicons/react/24/solid';
 import { io } from 'socket.io-client'
 import { DotLoader } from 'react-spinners';
 import { Realtime, Message } from 'ably'
+import { useSound } from 'use-sound';
 
 
 const themes = ['família', 'natureza', 'turismo', 'animais', 'tecnologia', 'gastronomia']
@@ -65,6 +66,8 @@ type ChatMessage = {
   timestamp: number;
 };
 
+type SetterFunction = (value: boolean) => void;
+
 interface ReviewItem {
   url: string;
   title: string;
@@ -76,6 +79,22 @@ const lockMessageVariants = {
   initial: { opacity: 0, y: 10 },
   animate: { opacity: 1, y: 0, transition: { duration: 0.4 } },
   exit: { opacity: 0, y: 10, transition: { duration: 0.1 } },
+};
+
+const unlockButtonVariants = {
+  locked: {},
+  unlocking: {
+    scale: [1, 1.1, 1],
+    rotate: [0, 5, -5, 0],
+    transition: { duration: 0.2 },
+  },
+  unlocked: {},
+};
+
+const unlockAnimationVariants = {
+  initial: { opacity: 0, scale: 0.5 },
+  animate: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
+  exit: { opacity: 0, scale: 0.5, transition: { duration: 0.2 } },
 };
 
 export default function Game() {
@@ -111,7 +130,13 @@ export default function Game() {
 
   const [isProverbsUnlocked, setIsProverbsUnlocked] = useState(false);
   
+  const [isFrasesUnlocking, setIsFrasesUnlocking] = useState(false);
+  const [isProverbsUnlocking, setIsProverbsUnlocking] = useState(false);
+  const [showUnlockFrasesAnimation, setShowUnlockFrasesAnimation] = useState(false);
+  const [showUnlockProverbsAnimation, setShowUnlockProverbsAnimation] = useState(false);
+
   const [successSound, setSuccessSound] = useState<HTMLAudioElement | null>(null);
+  const [playUnlockSound] = useSound('/sounds/unlock.mp3');
 
   const [playersOnline, setPlayersOnline] = useState<Player[]>([])
   const [chatPartnerAvatar, setChatPartnerAvatar] = useState(''); // [NOVO] Estado para armazenar a URL do avatar do parceiro de chat atual.
@@ -167,6 +192,12 @@ export default function Game() {
   
   const handleCloseZoom = () => {
     setZoomedImage(null);
+  };
+
+  const handleUnlockAnimationEnd = (setter: SetterFunction) => {
+    setTimeout(() => {
+      setter(false);
+    }, 3000); // Mantém a animação por 1 segundo
   };
 
   const handleHidePlayer = (clientId: string) => {
@@ -317,13 +348,40 @@ export default function Game() {
   }, [showCongrats, images]);
   
   
-  useEffect(() => {
+  /*useEffect(() => {
     if (correctAnswersCount >= 2) {
       setIsFrasesUnlocked(true);
     } else if(correctAnswersCount >= 1) {
       setIsProverbsUnlocked(true);
     }
-  }, [correctAnswersCount]);
+  }, [correctAnswersCount]);*/
+
+  useEffect(() => {
+    if (correctAnswersCount >= 2) {
+      if (!isFrasesUnlocked) {
+        setIsFrasesUnlocking(true);
+        playUnlockSound();
+        setShowUnlockFrasesAnimation(true);
+        setTimeout(() => {
+          setIsFrasesUnlocked(true);
+          setIsFrasesUnlocking(false);
+          handleUnlockAnimationEnd(setShowUnlockFrasesAnimation);
+        }, 2000); // Tempo para a animação de destravar
+      }
+    } else if (correctAnswersCount >= 1) {
+      if (!isProverbsUnlocked) {
+        setIsProverbsUnlocking(true);
+        playUnlockSound();
+        setShowUnlockProverbsAnimation(true);
+        setTimeout(() => {
+          setIsProverbsUnlocked(true);
+          setIsProverbsUnlocking(false);
+          handleUnlockAnimationEnd(setShowUnlockProverbsAnimation);
+        }, 2000); // Tempo para a animação de destravar
+      }
+    }
+  }, [correctAnswersCount, isFrasesUnlocked, isProverbsUnlocked]);
+
  
   
   useEffect(() => {
@@ -1290,7 +1348,7 @@ export default function Game() {
       <div className="flex flex-col items-center space-y-6">
         <button
             onClick={() => router.push('/results')}
-            className="w-64 border border-lightblue bg-gradient-to-br text-blue from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-6 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 text-lg cursor-pointer flex items-center justify-center space-x-3"
+            className="w-64 border-2 border-lightblue bg-gradient-to-br text-blue from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-6 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 text-lg cursor-pointer flex items-center justify-center space-x-3"
         >
           <div className="flex items-center">
             <svg
@@ -1415,18 +1473,20 @@ export default function Game() {
           {!isFrasesUnlocked && (
             <p className="text-sm text-gray-400 mb-1 text-center">Selecione uma opção e complete 2 acertos para desbloquear este nível.</p>
           )}
-          <button
+          <motion.button
             className={`flex items-center justify-center py-3 px-6 rounded-md mt-2 font-semibold transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75 ${
               isFrasesUnlocked
                 ? 'bg-lightblue hover:bg-green cursor-pointer text-white shadow-md'
                 : 'bg-gray-900 text-gray-400 cursor-not-allowed shadow-sm'
             }`}
             onClick={handleFrasesClick}
-            disabled={!isFrasesUnlocked}
+            disabled={!isFrasesUnlocked || isFrasesUnlocking}
+            variants={unlockButtonVariants}
+            animate={isFrasesUnlocking ? 'unlocking' : 'locked'}
           >
-            {!isFrasesUnlocked && <LockClosedIcon className="w-5 h-5 mr-2 " />}
+            {isFrasesUnlocked ? <LockOpenIcon className="w-5 h-5 mr-2 text-yellow" /> : <LockClosedIcon className="w-5 h-5 mr-2 " />}
             Frases em Francês
-          </button>
+          </motion.button>
 
           
           {/* Mensagem de bloqueio */}
@@ -1443,38 +1503,71 @@ export default function Game() {
               </motion.div>
             )}
           </AnimatePresence>
+        
+          {/* Animação de desbloqueio */}
+          <AnimatePresence>
+            {showUnlockFrasesAnimation && (
+              <motion.div
+                className="absolute top-[-40px] text-green-500 font-bold text-lg"
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                variants={unlockAnimationVariants}
+              >
+                Desbloqueado!
+              </motion.div>
+            )}
+          </AnimatePresence>  
+        
+        
         </div>
 
         {/* Botão "Ditados em Francês" */}
-        <div className="w-64 flex flex-col items-center">
+        <div className="w-64 flex flex-col items-center relative">
           {!isProverbsUnlocked && (
             <p className="text-sm text-gray-400 mb-1 text-center">Selecione uma opção e complete 1 acerto para desbloquear este nível.</p>
           )}
-          <button
+          <motion.button
             className={`flex items-center justify-center py-3 px-6 rounded-md mt-2 font-semibold transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75 ${
               isProverbsUnlocked
                 ? 'bg-lightblue hover:bg-green cursor-pointer text-white shadow-md'
                 : 'bg-gray-700 text-gray-400 cursor-not-allowed shadow-sm'
             }`}
             onClick={handleProverbsClick}
-            disabled={!isProverbsUnlocked}
+            disabled={!isProverbsUnlocked || isProverbsUnlocking}
+            variants={unlockButtonVariants}
+            animate={isProverbsUnlocking ? 'unlocking' : 'locked'}
           >
-            {!isProverbsUnlocked && <LockClosedIcon className="w-5 h-5 mr-2 " />}
+            {isProverbsUnlocked ? <LockOpenIcon className="w-5 h-5 mr-2 text-yellow" /> : <LockClosedIcon className="w-5 h-5 mr-2 " />}
             Ditados em Francês
-          </button>
-          
+          </motion.button>
 
           {/* Mensagem de bloqueio */}
           <AnimatePresence>
             {showLockMessage && !isProverbsUnlocked && (
               <motion.div
-                className="absolute bottom-[-30px] text-sm text-yellow font-semibold"
+                className="absolute bottom-[-30px] text-sm text-yellow-500 font-semibold"
                 initial="initial"
                 animate="animate"
                 exit="exit"
                 variants={lockMessageVariants}
               >
                 Nível bloqueado!
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Animação de desbloqueio */}
+          <AnimatePresence>
+            {showUnlockProverbsAnimation && (
+              <motion.div
+                className="absolute top-[-40px] text-green-500 font-bold text-lg"
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                variants={unlockAnimationVariants}
+              >
+                Desbloqueado!
               </motion.div>
             )}
           </AnimatePresence>
