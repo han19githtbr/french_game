@@ -1208,14 +1208,16 @@ export default function Game() {
               rounded-bl-none rounded-br-none
               animate__faster 
             `}*/
-            className='{fixed bottom-6 right-6 z-50
-              w-full max-w-[calc(90vw-16px)] sm:max-w-md
+            className="
+              fixed bottom-0 left-1/2 -translate-x-1/2 z-50
+              w-full max-w-[calc(100vw-16px)] sm:max-w-md
               flex flex-col
-              bg-gradient-to-br from-[#1e293b] via-[#334155] to-[#0f172a]
-              border-t-4 border-cyan-500
+            bg-gray-800 from-[#1e293b] via-[#334155] to-[#0f172a]
+              border-t-4 border-blue
               rounded-t-2xl shadow-2xl
               animate__animated animate__fadeInUp
-              px-2 sm:px-0}'
+              px-2 sm:px-0
+            "
             initial={{ y: 300, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 300, opacity: 0 }}
@@ -1288,7 +1290,7 @@ export default function Game() {
       <div className="flex flex-col items-center space-y-6">
         <button
             onClick={() => router.push('/results')}
-            className="w-64 border border-blue bg-gradient-to-br text-blue from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-6 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 text-lg cursor-pointer flex items-center justify-center space-x-3"
+            className="w-64 border border-lightblue bg-gradient-to-br text-blue from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-6 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 text-lg cursor-pointer flex items-center justify-center space-x-3"
         >
           <div className="flex items-center">
             <svg
@@ -1320,7 +1322,7 @@ export default function Game() {
           
           <button
             onClick={() => setOpen(!open)}
-            className="w-full flex items-center justify-between py-3 px-6 rounded-xl border-2 border-blue bg-gradient-to-br from-purple-700 to-indigo-800 text-blue shadow-lg shadow-purple-500/40 hover:shadow-xl hover:shadow-pink-500/50 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-2 text-lg tracking-wide font-semibold text-center cursor-pointer transition-all duration-300 ease-out"
+            className="w-full flex items-center justify-between py-3 px-6 rounded-xl border-2 border-lightblue bg-gradient-to-br from-purple-700 to-indigo-800 text-blue shadow-lg shadow-purple-500/40 hover:shadow-xl hover:shadow-pink-500/50 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-2 text-lg tracking-wide font-semibold text-center cursor-pointer transition-all duration-300 ease-out"
           >
             {theme ? (
               `🎯 ${theme}`
@@ -1352,7 +1354,7 @@ export default function Game() {
 
           {/* Lista de opções */}
           {open && (
-            <ul className="absolute mt-2 w-full rounded-xl bg-gray-700 shadow-lg border border-blue max-h-72 overflow-y-auto custom-scrollbar z-10">
+            <ul className="absolute mt-2 w-full rounded-xl bg-gray-700 shadow-lg border-2 border-lightblue max-h-72 overflow-y-auto custom-scrollbar z-10">
               
               {/* Opção padrão */}
               <li
@@ -1416,7 +1418,7 @@ export default function Game() {
           <button
             className={`flex items-center justify-center py-3 px-6 rounded-md mt-2 font-semibold transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75 ${
               isFrasesUnlocked
-                ? 'bg-blue hover:bg-green cursor-pointer text-white shadow-md'
+                ? 'bg-lightblue hover:bg-green cursor-pointer text-white shadow-md'
                 : 'bg-gray-900 text-gray-400 cursor-not-allowed shadow-sm'
             }`}
             onClick={handleFrasesClick}
@@ -1431,7 +1433,7 @@ export default function Game() {
           <AnimatePresence>
             {showLockMessage && !isFrasesUnlocked && (
               <motion.div
-                className="absolute bottom-[-30px] text-sm text-yellow-400 font-semibold"
+                className="absolute bottom-[-30px] text-sm text-yellow font-semibold"
                 initial="initial"
                 animate="animate"
                 exit="exit"
@@ -1451,7 +1453,7 @@ export default function Game() {
           <button
             className={`flex items-center justify-center py-3 px-6 rounded-md mt-2 font-semibold transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75 ${
               isProverbsUnlocked
-                ? 'bg-blue hover:bg-green cursor-pointer text-white shadow-md'
+                ? 'bg-lightblue hover:bg-green cursor-pointer text-white shadow-md'
                 : 'bg-gray-700 text-gray-400 cursor-not-allowed shadow-sm'
             }`}
             onClick={handleProverbsClick}
@@ -1466,7 +1468,7 @@ export default function Game() {
           <AnimatePresence>
             {showLockMessage && !isProverbsUnlocked && (
               <motion.div
-                className="absolute bottom-[-30px] text-sm text-yellow-400 font-semibold"
+                className="absolute bottom-[-30px] text-sm text-yellow font-semibold"
                 initial="initial"
                 animate="animate"
                 exit="exit"
@@ -1497,7 +1499,7 @@ export default function Game() {
       <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-indigo-900 to-purple-900 min-h-screen text-gray-100">
         
         <div className="mb-2 text-center">
-          Rodada: <span className="font-semibold text-blue-300">{round}</span> | Acertos: <span className="font-semibold text-green-300">{correctAnswersCount} / {images.length}</span>
+          Rodada: <span className="font-semibold text-blue">{round}</span> | Acertos: <span className="font-semibold text-green">{correctAnswersCount} / {images.length}</span>
         </div>
 
         {loading ? (
@@ -1526,8 +1528,8 @@ export default function Game() {
                   <div className="relative w-full mt-1">
                     <select
                       className={`
-                        w-full appearance-none p-3 rounded-xl border-2 border-blue
-                        text-blue bg-gradient-to-br from-purple-700 to-indigo-800
+                        w-full appearance-none p-3 rounded-xl border-2 border-lightblue
+                        text-white bg-gradient-to-br from-purple to-lightblue
                         shadow-lg shadow-purple-500/40
                         hover:shadow-xl hover:shadow-pink-500/50
                         transition-all duration-300 ease-out
@@ -1550,7 +1552,7 @@ export default function Game() {
 
                   <button
                       onClick={() => speakFrench(img.title)}
-                      className="p-2 mt-2 rounded-xl bg-gray-800 border border-lightblue items-center justify-center text-white shadow-md hover:bg-lightblue focus:outline-none focus:ring-2 focus:ring-lightblue transition-colors duration-300 cursor-pointer"
+                      className="p-2 mt-2 rounded-xl bg-gray-800 border-2 border-lightblue items-center justify-center text-white shadow-md hover:bg-lightblue focus:outline-none focus:ring-2 focus:ring-lightblue transition-colors duration-300 cursor-pointer"
                       style={{
                         width: '36px',
                         height: '36px',
@@ -1684,7 +1686,7 @@ export default function Game() {
                 >
                   {/* Efeito de fundo sombreado */}
                   <motion.div
-                    className="fixed top-0 left-0 w-full h-full bg-opacity-75 z-40"
+                    className="fixed top-0 left-0 w-full h-full bg-opacity-75 backdrop-blur-md z-40"
                     onClick={handleCloseReview} // Permite fechar ao clicar fora
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
