@@ -70,7 +70,7 @@ interface ReviewItem {
   title: string;
 }
 
-const frenchVoices = ['fr-FR'];
+const frenchVoices = ['fr-FR', 'fr-CA', 'fr-BE', 'fr-CH', 'fr-LU'];
 
 const lockMessageVariants = {
   initial: { opacity: 0, y: 10 },

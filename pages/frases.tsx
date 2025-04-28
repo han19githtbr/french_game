@@ -71,7 +71,7 @@ const lockMessageVariants = {
   exit: { opacity: 0, y: 10, transition: { duration: 0.1 } },
 };
 
-const frenchVoices = ['fr-FR'];
+const frenchVoices = ['fr-FR', 'fr-CA', 'fr-BE', 'fr-CH', 'fr-LU'];
 
 export default function Frase() {
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
