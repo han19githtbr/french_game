@@ -56,6 +56,8 @@ const lockMessageVariants = {
   exit: { opacity: 0, y: 10, transition: { duration: 0.1 } },
 };
 
+const portugueseVoices = ['pt-BR'];
+
 export default function Game() {
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const imageRefs = useRef<(HTMLDivElement | null)[]>([])
@@ -821,6 +823,26 @@ export default function Game() {
   };
   
 
+  const speakPortuguese = (text: string) => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      const synth = window.speechSynthesis;
+      const utterance = new SpeechSynthesisUtterance(text);
+      const frenchVoice = synth.getVoices().find((voice) =>
+        portugueseVoices.includes(voice.lang)
+      );
+
+      if (frenchVoice) {
+        utterance.voice = frenchVoice;
+      } else {
+        console.warn('Voz em francês não encontrada. Usando a voz padrão.');
+      }
+
+      synth.speak(utterance);
+    } else {
+      console.error('A API de Text-to-Speech não é suportada neste navegador.');
+    }
+  }
+
   const handleOpenReview = () => {
     setShowReviewModal(true);
     setCurrentReviewIndex(0);
@@ -1423,7 +1445,7 @@ export default function Game() {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3, delay: index * 0.1 }}
-                  className="bg-transparent text-black p-4 rounded-2xl flex-grow shadow-2xl max-w-[250px] transition transform hover:scale-105 "
+                  className="bg-transparent text-black p-4 rounded-2xl flex-grow shadow-2xl max-w-[250px] transition transform hover:scale-105 flex flex-col items-center "
                 >
                   <img
                     src={img.url}
@@ -1452,6 +1474,33 @@ export default function Game() {
                       ))}
                     </select>
                   </div>
+
+                  <button
+                      onClick={() => speakPortuguese(img.title)}
+                      className="p-2 mt-2 rounded-xl bg-gray-800 border border-lightblue items-center justify-center text-white shadow-md hover:bg-lightblue focus:outline-none focus:ring-2 focus:ring-lightblue transition-colors duration-300 cursor-pointer"
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        
+                      }}
+                    >
+                      {/* Ícone de "play" estilizado */}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        className="w-6 h-6 animate-pulse text-shadow-glow" // Adicionando uma animação simples
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.54.848l3-2a1 1 0 000-1.696l-3-2z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                  </button>
 
                   {results[index] && (
                     <motion.div
@@ -1582,7 +1631,7 @@ export default function Game() {
                         className="w-full rounded-lg shadow-md"
                       />
                       <div className="absolute bottom-2 left-0 right-0 bg-black bg-opacity-60 text-white py-2 rounded-b-lg">
-                        <p className="text-2xl font-bold text-green">{reviewHistory[currentReviewIndex]?.title}</p>
+                        <p className="text-2xl font-bold text-lightblue text-shadow-glow">{reviewHistory[currentReviewIndex]?.title}</p>
                       </div>
                     </div>
                     <div className="mt-4 flex justify-between items-center">
