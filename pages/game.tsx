@@ -6,7 +6,7 @@ import type * as Ably from 'ably'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import { Check, X, Minus, Lock } from 'lucide-react'
-import { motion , AnimatePresence} from 'framer-motion'
+import { motion , AnimatePresence, useMotionValue, useTransform, animate, MotionValue} from 'framer-motion'
 import { saveProgress } from './results'
 import { LockClosedIcon, LockOpenIcon } from '@heroicons/react/24/solid';
 import { io } from 'socket.io-client'
@@ -179,6 +179,14 @@ export default function Game() {
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
   const [availableReviews, setAvailableReviews] = useState(0);
   const reviewIntervalRef: RefObject<ReturnType<typeof setInterval> | null> = useRef(null);
+
+  const [isReviewUnlocking, setIsReviewUnlocking] = useState(false);
+  const [isReviewUnlocked, setIsReviewUnlocked] = useState(false);
+  const [showUnlockReviewAnimation, setShowUnlockReviewAnimation] = useState(false);
+  const lockRotation = useMotionValue(0);
+  const lockY = useMotionValue(0);
+
+  const unlockSound = typeof Audio !== 'undefined' ? new Audio('/sounds/unlock.mp3') : null;
 
   const [isFlashing, setIsFlashing] = useState(false); // Estado para controlar a animação de piscar
   const [isReviewPaused, setIsReviewPaused] = useState(false);
@@ -366,7 +374,7 @@ export default function Game() {
           setIsFrasesUnlocked(true);
           setIsFrasesUnlocking(false);
           handleUnlockAnimationEnd(setShowUnlockFrasesAnimation);
-        }, 2000); // Tempo para a animação de destravar
+        }, 1000); // Tempo para a animação de destravar
       }
     } else if (correctAnswersCount >= 1) {
       if (!isProverbsUnlocked) {
@@ -377,12 +385,34 @@ export default function Game() {
           setIsProverbsUnlocked(true);
           setIsProverbsUnlocking(false);
           handleUnlockAnimationEnd(setShowUnlockProverbsAnimation);
-        }, 2000); // Tempo para a animação de destravar
+        }, 1000); // Tempo para a animação de destravar
       }
+       
+    
     }
-  }, [correctAnswersCount, isFrasesUnlocked, isProverbsUnlocked]);
+  }, [correctAnswersCount, isFrasesUnlocked, isProverbsUnlocked, unlockSound]);
 
  
+  useEffect(() => {
+    if (correctAnswersCount >= 4) { // Defina a condição para desbloquear a revisão (ex: 3 acertos)
+      if (!isReviewUnlocked) {
+        setIsReviewUnlocking(true);
+        setShowUnlockReviewAnimation(true);
+        animate(lockRotation, 45, { duration: 0.4, ease: "easeInOut" }); // Rotação para destravar
+        animate(lockY, -5 as MotionValue<number>["current"], { duration: 0.2, repeat: 3, repeatType: 'mirror', ease: "easeInOut" }); // Pequena trepidação vertical
+        
+        // Reproduzir o som de desbloqueio
+        playUnlockSound();
+        
+        setTimeout(() => {
+          setIsReviewUnlocked(true);
+          setIsReviewUnlocking(false);
+          handleUnlockAnimationEnd(setShowUnlockReviewAnimation);
+        }, 1000);
+      }
+    }
+  }, [correctAnswersCount, isReviewUnlocked, lockRotation, lockY, playUnlockSound]);
+
   
   useEffect(() => {
     if (!session) return
@@ -924,6 +954,9 @@ export default function Game() {
       }));
       if (currentRoundCorrect.length > 0) {
         setReviewHistory(prev => [...prev, ...currentRoundCorrect]);
+        setAvailableReviews(prev => prev + currentRoundCorrect.length);
+        setIsFlashing(true);
+        setTimeout(() => setIsFlashing(false), 2000);
       }
 
       setTimeout(() => {
@@ -940,32 +973,19 @@ export default function Game() {
   };
   
 
-  const speakFrench = (text: string) => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      const synth = window.speechSynthesis;
-      const utterance = new SpeechSynthesisUtterance(text);
-      const frenchVoice = synth.getVoices().find((voice) =>
-        frenchVoices.includes(voice.lang)
-      );
-
-      if (frenchVoice) {
-        utterance.voice = frenchVoice;
-      } else {
-        console.warn('Voz em francês não encontrada. Usando a voz padrão.');
-      }
-
-      synth.speak(utterance);
-    } else {
-      console.error('A API de Text-to-Speech não é suportada neste navegador.');
-    }
-  }
-
   const handleOpenReview = () => {
-    setShowReviewModal(true);
-    setCurrentReviewIndex(0);
-    startReviewVideo();
-    setAvailableReviews(0); // Marca as revisões como assistidas
-    setIsReviewPaused(false); // Inicializa como não pausado ao abrir
+    if (isReviewUnlocked) {
+      setShowReviewModal(true);
+      setCurrentReviewIndex(0);
+      startReviewVideo();
+      setAvailableReviews(0); // Marca as revisões como assistidas
+      setIsReviewPaused(false); // Inicializa como não pausado ao abrir
+    } else {
+      setShowLockMessage(true);
+      setTimeout(() => {
+        setShowLockMessage(false);
+      }, 2000);
+    }
   };
 
   const handleCloseReview = () => {
@@ -999,6 +1019,31 @@ export default function Game() {
   };
 
   const isReviewAvailable = availableReviews > 0;
+
+  const speakFrench = (text: string) => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      const synth = window.speechSynthesis;
+      const utterance = new SpeechSynthesisUtterance(text);
+      const frenchVoice = synth.getVoices().find((voice) =>
+        frenchVoices.includes(voice.lang)
+      );
+
+      if (frenchVoice) {
+        utterance.voice = frenchVoice;
+      } else {
+        console.warn('Voz em francês não encontrada. Usando a voz padrão.');
+      }
+
+      synth.speak(utterance);
+    } else {
+      console.error('A API de Text-to-Speech não é suportada neste navegador.');
+    }
+  }
+
+  const lockIconStyle = {
+    rotate: lockRotation,
+    y: lockY,
+  };
 
   const playAnimalSound = (title: string) => {
     if (theme !== 'animais') return; // só toca se for o tema "animais"
@@ -1548,7 +1593,7 @@ export default function Game() {
           <AnimatePresence>
             {showLockMessage && !isProverbsUnlocked && (
               <motion.div
-                className="absolute bottom-[-30px] text-sm text-yellow-500 font-semibold"
+                className="absolute bottom-[-30px] text-sm text-yellow font-semibold"
                 initial="initial"
                 animate="animate"
                 exit="exit"
@@ -1696,36 +1741,64 @@ export default function Game() {
             </div>
 
             <div className="mt-8 flex gap-4">
-              {/*{showRestart && (
-                <button
-                  onClick={() => {
-                    loadImages();
-                    setShowRestart(false);
-                    setCorrectAnswersCount(0);
-                    setRound(1);
-                    setReviewHistory([]);
-                    setAvailableReviews(0);
-                  }}
-                  className="border border-red text-gray-300 rounded-xl py-2 px-8 cursor-pointer hover:border-green hover:text-white transition-colors"
+              <div className="relative">
+                <motion.button
+                  onClick={handleOpenReview}
+                  disabled={!isReviewUnlocked || reviewHistory.length === 0}
+                  className={`border flex items-center justify-center py-2 px-8 rounded-xl transition-colors font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 ${
+                    isReviewUnlocked && reviewHistory.length > 0
+                      ? 'border-blue hover:border-green hover:text-white cursor-pointer text-blue'
+                      : 'border-gray-300 bg-gray-800 text-gray-400 cursor-not-allowed'
+                  }`}
+                  variants={unlockButtonVariants}
+                  animate={isReviewUnlocking ? 'unlocking' : 'locked'}
                 >
-                  Recomeçar
-                </button>
-              )}*/}
-              <button
-                onClick={handleOpenReview}
-                disabled={!isReviewAvailable || reviewHistory.length === 0}
-                className={`border ${isReviewAvailable && reviewHistory.length > 0 ? 'border-blue hover:border-green hover:text-white cursor-pointer relative' : 'border-gray-300 bg-gray-800 cursor-not-allowed'} text-gray-300 rounded-xl py-2 px-8 transition-colors`}
-              >
-                {!isReviewAvailable || reviewHistory.length === 0 ? <Lock className="inline-block mr-2 mb-1" size={20} /> : null}
-                Revisar os acertos
-                {isReviewAvailable && reviewHistory.length > 0 && (
-                  <span
-                    className={`absolute top-[-10px] right-[-10px] bg-green text-gray-700 rounded-full w-5 h-5 flex items-center justify-center text-sm font-bold ${isFlashing ? 'animate-ping-once' : ''}`}
-                  >
-                    {availableReviews}
-                  </span>
-                )}
-              </button>
+                  {!isReviewUnlocked && (
+                    <motion.div style={lockIconStyle}>
+                      <LockClosedIcon className="inline-block mr-3 mb-1 w-5 h-5" />
+                    </motion.div>
+                  )}
+                  {isReviewUnlocked && <LockOpenIcon className="inline-block mr-2 w-5 h-5 text-yellow" />}
+                  Revisar os acertos
+                  {isReviewAvailable && reviewHistory.length > 0 && (
+                    <span
+                      className={`absolute top-[-10px] right-[-10px] bg-green text-gray-700 rounded-full w-5 h-5 flex items-center justify-center text-sm font-bold ${isFlashing ? 'animate-ping-once' : ''}`}
+                    >
+                      {availableReviews}
+                    </span>
+                  )}
+                </motion.button>
+
+                {/* Mensagem de bloqueio */}
+                <AnimatePresence>
+                  {showLockMessage && !isReviewUnlocked && (
+                    <motion.div
+                      className="absolute bottom-[-30px] text-sm text-yellow font-semibold"
+                      initial="initial"
+                      animate="animate"
+                      exit="exit"
+                      variants={lockMessageVariants}
+                    >
+                      Nível bloqueado!
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Animação de desbloqueio */}
+                <AnimatePresence>
+                  {showUnlockReviewAnimation && (
+                    <motion.div
+                      className="absolute top-[-40px] text-green font-bold text-lg"
+                      initial="initial"
+                      animate="animate"
+                      exit="exit"
+                      variants={unlockAnimationVariants}
+                    >
+                      Desbloqueado!
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
 
             <AnimatePresence>
