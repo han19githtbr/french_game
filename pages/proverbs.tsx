@@ -74,11 +74,12 @@ const unlockAnimationVariants = {
   exit: { opacity: 0, scale: 0.5, transition: { duration: 0.2 } },
 };
 
-const portugueseVoices = ['pt-BR'];
+//const portugueseVoices = ['pt-BR'];
 
 export default function Game() {
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const imageRefs = useRef<(HTMLDivElement | null)[]>([])
+  const lastSpokenTitleRef = useRef<string | null>(null);
   
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -97,6 +98,7 @@ export default function Game() {
   
   //const [results, setResults] = useState<Record<number, Result>>({});
   const [results, setResults] = useState<(Result | null)[]>([]);
+  const [speechSpeeds, setSpeechSpeeds] = useState<number[]>(images.map(() => 1.0));
 
   const [round, setRound] = useState(1);
   const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
@@ -196,7 +198,24 @@ export default function Game() {
       setSuccessSound(new Audio('/sounds/success.mp3'));
     }
   }, [])
+
   
+  // Adicionar voz ao review
+  useEffect(() => {
+    const currentReview = reviewHistory[currentReviewIndex];
+    const currentSpeed = speechSpeeds?.[currentReviewIndex] ?? 1;
+    
+    if (
+      showReviewModal && // <- verifica se o modal está aberto
+      currentReview &&
+      currentReview.title !== lastSpokenTitleRef.current
+    ) {
+      speakPortuguese(currentReview.title, currentSpeed);
+      lastSpokenTitleRef.current = currentReview.title;
+    }
+  }, [currentReviewIndex, reviewHistory, speechSpeeds, showReviewModal]);
+
+
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/')
   }, [status, router]);
@@ -901,25 +920,52 @@ export default function Game() {
 
   const isReviewAvailable = availableReviews > 0;
 
-  const speakPortuguese = (text: string) => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      const synth = window.speechSynthesis;
-      const utterance = new SpeechSynthesisUtterance(text);
-      const frenchVoice = synth.getVoices().find((voice) =>
-        portugueseVoices.includes(voice.lang)
-      );
-
-      if (frenchVoice) {
-        utterance.voice = frenchVoice;
-      } else {
-        console.warn('Voz em francês não encontrada. Usando a voz padrão.');
-      }
-
-      synth.speak(utterance);
-    } else {
+  const speakPortuguese = (text: string, speed: number) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
       console.error('A API de Text-to-Speech não é suportada neste navegador.');
+      return;
     }
-  }
+  
+    const synth = window.speechSynthesis;
+  
+    const speak = () => {
+      const voices = synth.getVoices();
+      const portugueseVoice = voices.find((voice) =>
+        ['pt-BR'].includes(voice.lang)
+      );
+  
+      const utterance = new SpeechSynthesisUtterance(text);
+      if (portugueseVoice) {
+        utterance.voice = portugueseVoice;
+      } else {
+        console.warn('Voz em português não encontrada. Usando a voz padrão.');
+      }
+  
+      utterance.lang = 'pt-BR'; // força o idioma português
+      utterance.rate = speed;
+      synth.speak(utterance);
+    };
+  
+    if (synth.getVoices().length === 0) {
+      // Chrome mobile geralmente precisa desse evento
+      synth.addEventListener('voiceschanged', speak);
+    } else {
+      speak();
+    }
+  };
+  
+  const handleSpeedChange = (index: number, newSpeed: number) => {
+    const newSpeeds = [...speechSpeeds];
+    newSpeeds[index] = newSpeed;
+    setSpeechSpeeds(newSpeeds);
+  };
+
+  useEffect(() => {
+    if (images.length > 0) {
+      setSpeechSpeeds(images.map(() => 1)); // Inicializa todas as velocidades como 1
+    }
+  }, [images]);
+
 
   const lockIconStyle = {
     rotate: lockRotation,
@@ -1535,7 +1581,7 @@ export default function Game() {
                   
 
                   <button
-                    onClick={() => speakPortuguese(img.title)}
+                    onClick={() => speakPortuguese(img.title, speechSpeeds[index])}
                     className="mt-3 p-3 rounded-full bg-blue-500 text-white shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-300 cursor-pointer"
                     style={{
                       width: '48px', // Aumentei um pouco para melhor visualização
@@ -1559,6 +1605,20 @@ export default function Game() {
                       />
                     </svg>
                   </button>
+
+                  <div className="flex items-center mt-2"> 
+                    
+                    <input
+                      type="range"
+                      min="0.5"
+                      max="2"
+                      step="0.1"
+                      value={speechSpeeds[index]}
+                      onChange={(e) => handleSpeedChange(index, parseFloat(e.target.value))}
+                      className="w-24 h-2 rounded-full bg-green cursor-pointer appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-lightblue [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer"
+                    />
+                    <span className="ml-2 mb-1 text-sm text-white font-bold">{(speechSpeeds[index] ?? 1).toFixed(1)}x</span>
+                  </div>
 
                   {results[index] && (
                     <motion.div

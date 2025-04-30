@@ -92,11 +92,12 @@ const lockMessageVariants = {
   exit: { opacity: 0, y: 10, transition: { duration: 0.1 } },
 };
 
-const frenchVoices = ['fr-FR', 'fr-CA', 'fr-BE', 'fr-CH', 'fr-LU'];
+//const frenchVoices = ['fr-FR', 'fr-CA', 'fr-BE', 'fr-CH', 'fr-LU'];
 
 export default function Frase() {
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const imageRefs = useRef<(HTMLDivElement | null)[]>([])
+  const lastSpokenTitleRef = useRef<string | null>(null);
   
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -114,6 +115,8 @@ export default function Frase() {
   
   //const [results, setResults] = useState<Record<number, Result>>({});
   const [results, setResults] = useState<(Result | null)[]>([]);
+  const [speechSpeeds, setSpeechSpeeds] = useState<number[]>(images.map(() => 1.0));
+
   const [round, setRound] = useState(1);
   const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
 
@@ -208,6 +211,23 @@ export default function Frase() {
     }
   }, [])
   
+
+  // Adicionar voz ao review
+  useEffect(() => {
+    const currentReview = reviewHistory[currentReviewIndex];
+    const currentSpeed = speechSpeeds?.[currentReviewIndex] ?? 1;
+  
+    if (
+      showReviewModal && // <- verifica se o modal está aberto
+      currentReview &&
+      currentReview.title !== lastSpokenTitleRef.current
+    ) {
+      speakFrench(currentReview.title, currentSpeed);
+      lastSpokenTitleRef.current = currentReview.title;
+    }
+  }, [currentReviewIndex, reviewHistory, speechSpeeds, showReviewModal]);
+
+
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/')
   }, [status])
@@ -225,6 +245,7 @@ export default function Frase() {
       }
     };
 
+    
     const handleTouchEnd = () => setDragging(false);
     const handleTouchCancel = () => setDragging(false);
 
@@ -889,41 +910,7 @@ export default function Frase() {
     
     }
   }
-  
-
-  const speakFrench = (text: string) => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      console.error('A API de Text-to-Speech não é suportada neste navegador.');
-      return;
-    }
-  
-    const synth = window.speechSynthesis;
-  
-    const speak = () => {
-      const voices = synth.getVoices();
-      const frenchVoice = voices.find((voice) =>
-        ['fr-FR', 'fr-CA', 'fr-BE', 'fr-CH', 'fr-LU'].includes(voice.lang)
-      );
-  
-      const utterance = new SpeechSynthesisUtterance(text);
-      if (frenchVoice) {
-        utterance.voice = frenchVoice;
-      } else {
-        console.warn('Voz em francês não encontrada. Usando a voz padrão.');
-      }
-  
-      utterance.lang = 'fr-FR'; // força o idioma francês
-      synth.speak(utterance);
-    };
-  
-    if (synth.getVoices().length === 0) {
-      // Chrome mobile geralmente precisa desse evento
-      synth.addEventListener('voiceschanged', speak);
-    } else {
-      speak();
-    }
-  };
-  
+    
 
   const handleOpenReview = () => {
     setShowReviewModal(true);
@@ -964,6 +951,52 @@ export default function Frase() {
   };
 
   const isReviewAvailable = availableReviews > 0;
+
+  const speakFrench = (text: string, speed: number) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      console.error('A API de Text-to-Speech não é suportada neste navegador.');
+      return;
+    }
+  
+    const synth = window.speechSynthesis;
+  
+    const speak = () => {
+      const voices = synth.getVoices();
+      const frenchVoice = voices.find((voice) =>
+        ['fr-FR', 'fr-CA', 'fr-BE', 'fr-CH', 'fr-LU'].includes(voice.lang)
+      );
+  
+      const utterance = new SpeechSynthesisUtterance(text);
+      if (frenchVoice) {
+        utterance.voice = frenchVoice;
+      } else {
+        console.warn('Voz em francês não encontrada. Usando a voz padrão.');
+      }
+  
+      utterance.lang = 'fr-FR'; // força o idioma francês
+      utterance.rate = speed;
+      synth.speak(utterance);
+    };
+  
+    if (synth.getVoices().length === 0) {
+      // Chrome mobile geralmente precisa desse evento
+      synth.addEventListener('voiceschanged', speak);
+    } else {
+      speak();
+    }
+  };
+  
+  const handleSpeedChange = (index: number, newSpeed: number) => {
+    const newSpeeds = [...speechSpeeds];
+    newSpeeds[index] = newSpeed;
+    setSpeechSpeeds(newSpeeds);
+  };
+
+  useEffect(() => {
+    if (images.length > 0) {
+      setSpeechSpeeds(images.map(() => 1)); // Inicializa todas as velocidades como 1
+    }
+  }, [images]);
 
   const lockIconStyle = {
     rotate: lockRotation,
@@ -1539,7 +1572,7 @@ export default function Frase() {
                   </div>
 
                   <button
-                    onClick={() => speakFrench(img.title)}
+                    onClick={() => speakFrench(img.title, speechSpeeds[index])}
                     className="mt-3 p-3 rounded-full bg-blue-500 text-white shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-300 cursor-pointer"
                     style={{
                       width: '48px', // Aumentei um pouco para melhor visualização
@@ -1563,6 +1596,20 @@ export default function Frase() {
                       />
                     </svg>
                   </button>
+
+                  <div className="flex items-center mt-2"> 
+                    
+                    <input
+                      type="range"
+                      min="0.5"
+                      max="2"
+                      step="0.1"
+                      value={speechSpeeds[index]}
+                      onChange={(e) => handleSpeedChange(index, parseFloat(e.target.value))}
+                      className="w-24 h-2 rounded-full bg-green cursor-pointer appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-lightblue [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer"
+                    />
+                    <span className="ml-2 mb-1 text-sm text-white font-bold">{(speechSpeeds[index] ?? 1).toFixed(1)}x</span>
+                  </div>
 
                   {results[index] && (
                     <motion.div

@@ -73,7 +73,7 @@ interface ReviewItem {
   title: string;
 }
 
-const frenchVoices = ['fr-FR', 'fr-CA', 'fr-BE', 'fr-CH', 'fr-LU'];
+//const frenchVoices = ['fr-FR', 'fr-CA', 'fr-BE', 'fr-CH', 'fr-LU'];
 
 const lockMessageVariants = {
   initial: { opacity: 0, y: 10 },
@@ -100,6 +100,7 @@ const unlockAnimationVariants = {
 export default function Game() {
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const imageRefs = useRef<(HTMLDivElement | null)[]>([])
+  const lastSpokenTitleRef = useRef<string | null>(null);
   
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -349,6 +350,22 @@ export default function Game() {
   }, [availableReviews]);
   
 
+  // Adicionar voz ao review
+  useEffect(() => {
+    const currentReview = reviewHistory[currentReviewIndex];
+    const currentSpeed = speechSpeeds?.[currentReviewIndex] ?? 1;
+    
+    if (
+      showReviewModal && // <- verifica se o modal está aberto
+      currentReview &&
+      currentReview.title !== lastSpokenTitleRef.current
+    ) {
+      speakFrench(currentReview.title, currentSpeed);
+      lastSpokenTitleRef.current = currentReview.title;
+    }
+  }, [currentReviewIndex, reviewHistory, speechSpeeds, showReviewModal]);
+
+
   useEffect(() => {
     if (!showCongrats && images.length > 0) {
       setTimeout(() => {
@@ -410,7 +427,7 @@ export default function Game() {
           setIsReviewUnlocked(true);
           setIsReviewUnlocking(false);
           handleUnlockAnimationEnd(setShowUnlockReviewAnimation);
-        }, 4000);
+        }, 1000);
       }
     }
   }, [correctAnswersCount, isReviewUnlocked, lockRotation, lockY, playUnlockSound]);
@@ -1743,6 +1760,7 @@ export default function Game() {
                   </button>
 
                   <div className="flex items-center mt-2"> 
+                    
                     <input
                       type="range"
                       min="0.5"
