@@ -1516,7 +1516,7 @@ export default function Game() {
                     <select
                       className={`
                         w-full appearance-none p-3 rounded-xl border-2 border-lightblue
-                        text-blue bg-gradient-to-br from-purple to-lightblue
+                        text-blue bg-gradient-to-br from-gray-800 to-lightblue
                         shadow-lg shadow-purple-500/40
                         hover:shadow-xl hover:shadow-pink-500/50
                         transition-all duration-300 ease-out
@@ -1533,6 +1533,32 @@ export default function Game() {
                     </select>
                   </div>
                   
+
+                  <button
+                    onClick={() => speakPortuguese(img.title)}
+                    className="mt-3 p-3 rounded-full bg-blue-500 text-white shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-300 cursor-pointer"
+                    style={{
+                      width: '48px', // Aumentei um pouco para melhor visualização
+                      height: '48px',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                  >
+                    {/* Ícone de "play" estilizado */}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      className="w-6 h-6 animate-pulse" // Aumentei um pouco o tamanho do ícone
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.54.848l3-2a1 1 0 000-1.696l-3-2z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
 
                   {results[index] && (
                     <motion.div

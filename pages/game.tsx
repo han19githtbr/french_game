@@ -117,6 +117,7 @@ export default function Game() {
   
   //const [results, setResults] = useState<Record<number, Result>>({});
   const [results, setResults] = useState<(Result | null)[]>([]);
+  const [speechSpeeds, setSpeechSpeeds] = useState<number[]>(images.map(() => 1.0));
 
   const [round, setRound] = useState(1);
   const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
@@ -332,6 +333,7 @@ export default function Game() {
       setAvailableReviews(prev => prev + 1);
     }
   }, [results, images.length]);
+
 
   // Efeito para iniciar e parar a animação de piscar quando availableReviews muda
   useEffect(() => {
@@ -1020,25 +1022,51 @@ export default function Game() {
 
   const isReviewAvailable = availableReviews > 0;
 
-  const speakFrench = (text: string) => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      const synth = window.speechSynthesis;
-      const utterance = new SpeechSynthesisUtterance(text);
-      const frenchVoice = synth.getVoices().find((voice) =>
-        frenchVoices.includes(voice.lang)
+  const speakFrench = (text: string, speed: number) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      console.error('A API de Text-to-Speech não é suportada neste navegador.');
+      return;
+    }
+  
+    const synth = window.speechSynthesis;
+  
+    const speak = () => {
+      const voices = synth.getVoices();
+      const frenchVoice = voices.find((voice) =>
+        ['fr-FR', 'fr-CA', 'fr-BE', 'fr-CH', 'fr-LU'].includes(voice.lang)
       );
-
+  
+      const utterance = new SpeechSynthesisUtterance(text);
       if (frenchVoice) {
         utterance.voice = frenchVoice;
       } else {
         console.warn('Voz em francês não encontrada. Usando a voz padrão.');
       }
-
+  
+      utterance.lang = 'fr-FR'; // força o idioma francês
+      utterance.rate = speed;
       synth.speak(utterance);
+    };
+  
+    if (synth.getVoices().length === 0) {
+      // Chrome mobile geralmente precisa desse evento
+      synth.addEventListener('voiceschanged', speak);
     } else {
-      console.error('A API de Text-to-Speech não é suportada neste navegador.');
+      speak();
     }
-  }
+  };
+  
+  const handleSpeedChange = (index: number, newSpeed: number) => {
+    const newSpeeds = [...speechSpeeds];
+    newSpeeds[index] = newSpeed;
+    setSpeechSpeeds(newSpeeds);
+  };
+
+  useEffect(() => {
+    if (images.length > 0) {
+      setSpeechSpeeds(images.map(() => 1)); // Inicializa todas as velocidades como 1
+    }
+  }, [images]);
 
   const lockIconStyle = {
     rotate: lockRotation,
@@ -1075,8 +1103,6 @@ export default function Game() {
       }, 2000); // A mensagem desaparece após 2 segundos
     }
   };
-
-
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-800 to-slate-900 text-white flex flex-col items-center p-4 relative mb-6">
@@ -1669,7 +1695,7 @@ export default function Game() {
                     <select
                       className={`
                         w-full appearance-none p-3 rounded-xl border-2 border-lightblue
-                        text-white bg-gradient-to-br from-purple to-lightblue
+                        text-white bg-gradient-to-br from-gray-800 to-lightblue
                         shadow-lg shadow-purple-500/40
                         hover:shadow-xl hover:shadow-pink-500/50
                         transition-all duration-300 ease-out
@@ -1689,6 +1715,45 @@ export default function Game() {
                     
                   </div>
 
+                  
+                  <button
+                    onClick={() => speakFrench(img.title, speechSpeeds[index])}
+                    className="mt-3 p-3 rounded-full bg-blue-500 text-white shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-300 cursor-pointer"
+                    style={{
+                      width: '48px', // Aumentei um pouco para melhor visualização
+                      height: '48px',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                  >
+                    {/* Ícone de "play" estilizado */}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      className="w-6 h-6 animate-pulse" // Aumentei um pouco o tamanho do ícone
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.54.848l3-2a1 1 0 000-1.696l-3-2z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+
+                  <div className="flex items-center mt-2"> 
+                    <input
+                      type="range"
+                      min="0.5"
+                      max="2"
+                      step="0.1"
+                      value={speechSpeeds[index]}
+                      onChange={(e) => handleSpeedChange(index, parseFloat(e.target.value))}
+                      className="w-24 h-2 rounded-full bg-green cursor-pointer appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-lightblue [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer"
+                    />
+                    <span className="ml-2 mb-1 text-sm text-white font-bold">{(speechSpeeds[index] ?? 1).toFixed(1)}x</span>
+                  </div>
                   
                   {results[index] && (
                     <motion.div
