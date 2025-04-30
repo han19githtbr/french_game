@@ -1,18 +1,18 @@
 /*'use client'*/
 
-import { useEffect, useRef, useState, RefObject } from 'react'
+import { useEffect, useRef, useState, RefObject, useCallback } from 'react'
 import { createAblyClient } from '../lib/ably'
 import type * as Ably from 'ably'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import { Check, X, Minus, ChevronLeft, Lock } from 'lucide-react'
-import { motion , AnimatePresence} from 'framer-motion'
+import { motion , AnimatePresence, useMotionValue, animate, MotionValue} from 'framer-motion'
 import { saveProgress } from './proverbs_results'
-import { LockClosedIcon } from '@heroicons/react/24/solid';
+import { LockClosedIcon, LockOpenIcon } from '@heroicons/react/24/solid';
 import { io } from 'socket.io-client'
 import { DotLoader } from 'react-spinners';
 import { Realtime, Message } from 'ably'
-
+import { useSound } from 'use-sound';
 
 const groups = ['grupo-1', 'grupo-2', 'grupo-3']
 
@@ -45,6 +45,8 @@ type ChatMessage = {
   timestamp: number;
 };
 
+type SetterFunction = (value: boolean) => void;
+
 interface ReviewItem {
   url: string;
   title: string;
@@ -56,6 +58,22 @@ const lockMessageVariants = {
   exit: { opacity: 0, y: 10, transition: { duration: 0.1 } },
 };
 
+const unlockButtonVariants = {
+  locked: {},
+  unlocking: {
+    scale: [1, 1.1, 1],
+    rotate: [0, 5, -5, 0],
+    transition: { duration: 0.2 },
+  },
+  unlocked: {},
+};
+
+const unlockAnimationVariants = {
+  initial: { opacity: 0, scale: 0.5 },
+  animate: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
+  exit: { opacity: 0, scale: 0.5, transition: { duration: 0.2 } },
+};
+
 const portugueseVoices = ['pt-BR'];
 
 export default function Game() {
@@ -64,6 +82,8 @@ export default function Game() {
   
   const { data: session, status } = useSession()
   const router = useRouter()
+
+  const [showLockMessage, setShowLockMessage] = useState(false);
 
   const [isLogoutVisible, setIsLogoutVisible] = useState(false);
   const [logoutTimeoutId, setLogoutTimeoutId] = useState<NodeJS.Timeout | null>(null);
@@ -83,9 +103,9 @@ export default function Game() {
 
   const [correctSound, setCorrectSound] = useState<HTMLAudioElement | null>(null)
   const [wrongSound, setWrongSound] = useState<HTMLAudioElement | null>(null)
-
   
   const [successSound, setSuccessSound] = useState<HTMLAudioElement | null>(null);
+  const [playUnlockSound] = useSound('/sounds/unlock.mp3');
 
   const [playersOnline, setPlayersOnline] = useState<Player[]>([])
   const [chatPartnerAvatar, setChatPartnerAvatar] = useState('');
@@ -100,7 +120,7 @@ export default function Game() {
 
   const [chatRequestsReceived, setChatRequestsReceived] = useState<ChatRequest[]>([]);
   const [activeChats, setActiveChats] = useState<{ [channelName: string]: ChatMessage[] }>({});
-  const [isChatBubbleOpen, setIsChatBubbleOpen] = useState<string | null>(null);
+  const [isChatBubbleOpen, setIsChatBubbleOpen] = useState<string | false>(false);
   const [chatInput, setChatInput] = useState('');
   const [chatPartnerName, setChatPartnerName] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
@@ -120,6 +140,7 @@ export default function Game() {
   const [offset, setOffset] = useState({ x: 130, y: 130 });
   const [visibleModals, setVisibleModals] = useState<Record<string, boolean>>({});
   const [minimizedRequests, setMinimizedRequests] = useState<string[]>([]);
+  const [minimizedChat, setMinimizedChat] = useState<string | false>(false);
 
   const [reviewHistory, setReviewHistory] = useState<ReviewItem[]>([]);
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -127,16 +148,30 @@ export default function Game() {
   const [availableReviews, setAvailableReviews] = useState(0);
   const reviewIntervalRef: RefObject<ReturnType<typeof setInterval> | null> = useRef(null);
   
+  const [isReviewUnlocking, setIsReviewUnlocking] = useState(false);
+  const [isReviewUnlocked, setIsReviewUnlocked] = useState(false);
+  const [showUnlockReviewAnimation, setShowUnlockReviewAnimation] = useState(false);
+  const lockRotation = useMotionValue(0);
+  const lockY = useMotionValue(0);
+
   const [isFlashing, setIsFlashing] = useState(false); // Estado para controlar a animação de piscar
   const [isReviewPaused, setIsReviewPaused] = useState(false);
 
   const [open, setOpen] = useState(false);
+
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   //const clientId = ablyClient?.auth.clientId;
   const playerName = session?.user?.name || 'Anônimo';
   
   const handleCloseZoom = () => {
     setZoomedImage(null);
+  };
+
+  const handleUnlockAnimationEnd = (setter: SetterFunction) => {
+    setTimeout(() => {
+      setter(false);
+    }, 4000); // Mantém a animação por 4 segundos
   };
 
   const handleHidePlayer = (clientId: string) => {
@@ -288,26 +323,25 @@ export default function Game() {
   
   
   
-  /*useEffect(() => {
-    const socket = io({
-      path: '/api/socketio',
-    })
-
-    if (session?.user?.name) {
-      socket.emit('userJoined', session.user.name)
-    }
-
-    socket.on('userJoined', (name: string) => {
-      if (name !== session?.user?.name) {
-        setShowNotification({ name })
-        setTimeout(() => setShowNotification(null), 4000)
+  useEffect(() => {
+    if (correctAnswersCount >= 4) { // Defina a condição para desbloquear a revisão (ex: 3 acertos)
+      if (!isReviewUnlocked) {
+        setIsReviewUnlocking(true);
+        setShowUnlockReviewAnimation(true);
+        animate(lockRotation, 45, { duration: 0.4, ease: "easeInOut" }); // Rotação para destravar
+        animate(lockY, -5 as MotionValue<number>["current"], { duration: 0.2, repeat: 3, repeatType: 'mirror', ease: "easeInOut" }); // Pequena trepidação vertical
+        
+        // Reproduzir o som de desbloqueio
+        playUnlockSound();
+        
+        setTimeout(() => {
+          setIsReviewUnlocked(true);
+          setIsReviewUnlocking(false);
+          handleUnlockAnimationEnd(setShowUnlockReviewAnimation);
+        }, 1000);
       }
-    })
-
-    return () => {
-      socket.disconnect()
     }
-  }, [session?.user?.name])*/
+  }, [correctAnswersCount, isReviewUnlocked, lockRotation, lockY, playUnlockSound]);
 
   
   useEffect(() => {
@@ -392,6 +426,48 @@ export default function Game() {
     }
   };
 
+  
+  const subscribeToChatChannel = (
+    ablyClient: Realtime,
+    channelName: string,
+    handler: (msg: Ably.Message) => void,
+    handlersRef: React.MutableRefObject<Record<string, (msg: Ably.Message) => void>>
+  ) => {
+    const channel = ablyClient.channels.get(channelName);
+  
+    // Remove qualquer handler antigo
+    if (handlersRef.current[channelName]) {
+      channel.unsubscribe('message', handlersRef.current[channelName]);
+    }
+  
+    // Adiciona o novo handler
+    channel.subscribe('message', handler);
+  
+    // Salva referência
+    handlersRef.current[channelName] = handler;
+  };
+  
+
+  const subscribeToChatAndTypingChannels = useCallback((clientId1: string, clientId2: string) => {
+    if (!ablyClient) return;
+
+    const chatChannelName = getChatChannelName(clientId1, clientId2);
+    const chatMessageHandler = useCallback((message: Ably.Message) => {
+      handleChatMessage(message, chatChannelName);
+    }, [handleChatMessage, chatChannelName]);
+
+    subscribeToChatChannel(ablyClient, chatChannelName, chatMessageHandler, chatHandlersRef);
+
+    const typingChannelName = getTypingChannelName(clientId1, clientId2);
+    if (!typingHandlersRef.current[typingChannelName]) {
+      ablyClient.channels
+        .get(typingChannelName)
+        .subscribe('typing', handleTypingStatus);
+      typingHandlersRef.current[typingChannelName] = handleTypingStatus;
+    }
+  }, [ablyClient, getChatChannelName, getTypingChannelName, handleChatMessage, handleTypingStatus, chatHandlersRef, subscribeToChatChannel, typingHandlersRef]);
+  
+
   useEffect(() => {
     if (!ablyClient || !session || !clientId) return;
   
@@ -445,7 +521,7 @@ export default function Game() {
           setIsChatBubbleOpen(chatChannelName);
           setChatPartnerName(fromName);
           
-          if (!chatHandlersRef.current[chatChannelName]) {
+          /*if (!chatHandlersRef.current[chatChannelName]) {
             const chatMessageHandler = (message: Ably.Message) => {
               handleChatMessage(message, chatChannelName);
             };
@@ -456,7 +532,8 @@ export default function Game() {
           // [ACRESCENTADO] Inscrever-se no canal de digitação quando o chat é aceito
           ablyClient.channels
             .get(getTypingChannelName(currentClientId, fromClientId))
-            .subscribe('typing', handleTypingStatus);
+            .subscribe('typing', handleTypingStatus);*/
+          subscribeToChatAndTypingChannels(currentClientId, fromClientId);  
         } else {
           //alert(`❌ ${fromName} negou seu pedido de bate-papo.`);
           showToast(`❌ ${fromName} negou seu pedido de bate-papo.`, 'info');
@@ -490,6 +567,7 @@ export default function Game() {
     };
   }, [ablyClient, session, clientId]);
     
+  
   // Atualiza lista de quem está online
   const syncPresence = async () => {
     if (!ablyClient) return;
@@ -533,27 +611,7 @@ export default function Game() {
     showToast(`⏳ Pedido de bate-papo enviado para ${otherPlayer.name}. Aguardando resposta...`, 'info');
   };
   
-  const subscribeToChatChannel = (
-    ablyClient: Realtime,
-    channelName: string,
-    handler: (msg: Ably.Message) => void,
-    handlersRef: React.MutableRefObject<Record<string, (msg: Ably.Message) => void>>
-  ) => {
-    const channel = ablyClient.channels.get(channelName);
   
-    // Remove qualquer handler antigo
-    if (handlersRef.current[channelName]) {
-      channel.unsubscribe('message', handlersRef.current[channelName]);
-    }
-  
-    // Adiciona o novo handler
-    channel.subscribe('message', handler);
-  
-    // Salva referência
-    handlersRef.current[channelName] = handler;
-  };
-  
-
   const handleAcceptChatRequest = (request: ChatRequest) => {
     if (!ablyClient || !clientId) return;
     const responseChannel = ablyClient.channels.get(`chat-requests:${request.fromClientId}`);
@@ -627,6 +685,23 @@ export default function Game() {
     }
   };
 
+  
+  const handleMinimizeChat = useCallback(() => {
+    if (isChatBubbleOpen) {
+      setMinimizedChat(isChatBubbleOpen); // Define o estado `minimizedChat` com o ID do chat atual ao minimizar.
+      setIsChatBubbleOpen(false); // Fecha a caixa de bate-papo principal.
+    }
+  }, [isChatBubbleOpen]);
+
+
+  const handleOpenMinimizedChat = useCallback(() => {
+    if (minimizedChat) {
+      setIsChatBubbleOpen(minimizedChat); // Abre a caixa de bate-papo novamente definindo `isChatBubbleOpen` com o ID minimizado.
+      setMinimizedChat(false); // Limpa o estado de minimizado.
+    }
+  }, [minimizedChat]);
+
+
   const handleOpenMinimizedRequest = (clientId: string) => {
     const request = chatRequestsReceived.find(req => req.fromClientId === clientId);
     if (request) {
@@ -645,7 +720,7 @@ export default function Game() {
     
   };
 
-  const closeChatBubble = () => {
+  /*const closeChatBubble = () => {
     setIsChatBubbleOpen(null);
     setChatPartnerName(null);
     setTypingIndicator({}); // Limpar o indicador de digitação ao fechar o chat
@@ -653,23 +728,23 @@ export default function Game() {
 
   const minimizeChatBubble = () => {
     setIsChatBubbleOpen(null); // Ou trocar para estado de "minimizado"
-  };
+  };*/
   
 
   const handleSendMessage = () => {
     if (!ablyClient || !isChatBubbleOpen || !chatInput.trim() || !clientId) return;
     const chatChannel = ablyClient.channels.get(isChatBubbleOpen);
     chatChannel.publish('message', { sender: playerName, text: chatInput, timestamp: Date.now() });
-    /*setActiveChats((prev) => ({
+    setActiveChats((prev) => ({
       ...prev,
       [isChatBubbleOpen]: [
         ...(prev[isChatBubbleOpen] || []),
         { sender: playerName, text: chatInput, timestamp: Date.now() },
       ],
-    }));*/
+    }));
     setChatInput('');
     setIsTyping(false);
-    //publishTypingStatus(false);
+    publishTypingStatus(false);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -824,6 +899,8 @@ export default function Game() {
   };
   
 
+  const isReviewAvailable = availableReviews > 0;
+
   const speakPortuguese = (text: string) => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       const synth = window.speechSynthesis;
@@ -844,12 +921,24 @@ export default function Game() {
     }
   }
 
+  const lockIconStyle = {
+    rotate: lockRotation,
+    y: lockY,
+  };
+
   const handleOpenReview = () => {
-    setShowReviewModal(true);
-    setCurrentReviewIndex(0);
-    startReviewVideo();
-    setAvailableReviews(0); // Marca as revisões como assistidas
-    setIsReviewPaused(false); // Inicializa como não pausado ao abrir
+    if (isReviewUnlocked) {
+      setShowReviewModal(true);
+      setCurrentReviewIndex(0);
+      startReviewVideo();
+      setAvailableReviews(0); // Marca as revisões como assistidas
+      setIsReviewPaused(false); // Inicializa como não pausado ao abrir
+    } else {
+      setShowLockMessage(true);
+      setTimeout(() => {
+        setShowLockMessage(false);
+      }, 2000);
+    }
   };
 
   const handleCloseReview = () => {
@@ -882,9 +971,7 @@ export default function Game() {
     }
   };
 
-  const isReviewAvailable = availableReviews > 0;
-
-    
+      
     
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-800 to-slate-900 text-white flex flex-col items-center p-4 relative mb-6">
@@ -1037,48 +1124,61 @@ export default function Game() {
         <audio ref={chatRequestReceivedSoundRef} src="/sounds/accepted_sound.mp3" preload="auto" />
         <audio ref={chatRequestResponseSoundRef} src="/sounds/message.mp3" preload="auto" />
         
-        {/*{chatRequestsReceived.length > 0 && (
-          <div className="fixed bottom-0 left-0 w-full bg-gray-900 bg-opacity-70 border-t border-gray-700 py-2 px-4 flex items-center justify-start gap-4 z-40">
-            {chatRequestsReceived.map((request) => (
-              <div
-                key={request.fromClientId}
-                className="bg-gray-800 rounded-md p-2 cursor-pointer hover:bg-gray-700 transition duration-200 ease-in-out"
-                onClick={() => handleOpenChatRequest(request)}
-              >
-                <span className="text-sm text-yellow-300 font-semibold">Novo pedido de: {request.fromName}</span>
-              </div>
-            ))}
+        {minimizedRequests.length > 0 && (
+          <div className="fixed bottom-0 left-0 w-full bg-gray-800 bg-opacity-80 border-t border-gray-700 py-2 px-4 flex items-center overflow-x-auto scrollbar-hide z-40">
+            {minimizedRequests.map((clientId) => {
+              const request = chatRequestsReceived.find(req => req.fromClientId === clientId);
+              return request ? (
+                <div
+                  key={clientId}
+                  className="bg-gradient-to-br from-yellow-600 to-yellow-500 rounded-full p-2 mr-2 cursor-pointer shadow-md hover:scale-105 transition duration-200 ease-in-out"
+                  onClick={() => handleOpenMinimizedRequest(clientId)}
+                >
+                  <span className="text-xs text-gray-900 font-bold">{request.fromName.substring(0, 2).toUpperCase()}</span> {/* Avatar inicial */}
+                </div>
+              ) : null;
+            })}
           </div>
         )}
+        
         {chatRequestsReceived.map((request) => (
           <div
             key={`modal-${request.fromClientId}`}
             id={`modal-${request.fromClientId}`}
-            className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl p-8 max-w-md w-full shadow-lg border-2 border-gray-600 z-50 animate__animated animate__fadeIn ${visibleModals[request.fromClientId] ? '' : 'hidden'}`}
+            className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl p-6 max-w-md w-full shadow-lg border-2 border-gray-600 z-50 animate__animated animate__fadeIn ${visibleModals[request.fromClientId] ? '' : 'hidden'}
+            sm:p-8`} /* Ajuste padding em telas maiores */
           >
-            <h2 className="text-xl font-bold text-yellow mb-6 glow-text">🕹️ Pedido de Bate-papo de {request.fromName}!</h2>
-            <div className="flex justify-end gap-3">
+            <h2 className="text-xl font-bold text-yellow-400 mb-4 glow-text">
+              <span role="img" aria-label="joystick" className="mr-2">🕹️</span>
+              Pedido de Chat de <span className="text-yellow-300">{request.fromName}</span>!
+            </h2>
+            <p className="text-gray-300 mb-4 text-sm sm:text-base">
+              {/* Você pode adicionar mais informações sobre o pedido aqui, se necessário */}
+              Um jogador quer conversar com você!
+            </p>
+            <div className="flex justify-end gap-2">
               <button
                 onClick={() => handleAcceptChatRequest(request)}
-                className="flex items-center justify-center whitespace-nowrap bg-blue hover:bg-blue text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue"
+                className="flex items-center justify-center whitespace-nowrap bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm sm:text-base"
               >
-                <Check className="h-5 w-5 mr-2 shrink-0" /> Aceitar
+                <Check className="h-4 w-4 mr-2 shrink-0" /> Aceitar
               </button>
               <button
                 onClick={() => handleRejectChatRequest(request)}
-                className="flex items-center justify-center whitespace-nowrap bg-red hover:bg-red text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red"
+                className="flex items-center justify-center whitespace-nowrap bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-400 text-sm sm:text-base"
               >
-                <X className="h-5 w-5 mr-2 shrink-0" /> Recusar
+                <X className="h-4 w-4 mr-2 shrink-0" /> Recusar
               </button>
               <button
                 onClick={() => handleMinimizeChatRequest(request.fromClientId)}
-                className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm sm:text-base"
               >
-                Minimizar
+                <Minus className="h-4 w-4 shrink-0" /> {/* Ícone de minimizar */}
               </button>
             </div>
           </div>
-        ))}*/}
+        ))}
+        
         {minimizedRequests.length > 0 && (
           <div className="fixed bottom-0 left-0 w-full bg-gray-800 bg-opacity-80 border-t border-gray-700 py-2 px-4 flex items-center overflow-x-auto scrollbar-hide z-40">
             {minimizedRequests.map((clientId) => {
@@ -1134,144 +1234,106 @@ export default function Game() {
           </div>
         ))}
       </>
-      {/*{isChatBubbleOpen && (
-        <div
-            className={`fixed bottom-0 left-1/2 -translate-x-1/2 z-50
-              w-full max-w-[calc(100vw-16px)] sm:max-w-md
-              flex flex-col shadow-lg rounded-t-lg bg-gradient-to-br from-gray-800 to-gray-700
-              border-t-2 border-gray-600
-              animate__animated animate__slideInUp
-              rounded-bl-none rounded-br-none
-              px-2 sm:px-0
-            `}
+      
+      {/* [NOVO] Botão para abrir a caixa de bate-papo (quando minimizada) */}
+      {minimizedChat && (
+        <motion.button
+          onClick={handleOpenMinimizedChat}
+          className="fixed bottom-12 left-6 bg-gradient-to-br from-purple to-blue hover:from-purple hover:to-green text-white font-bold py-2 px-3 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple z-50 flex items-center justify-center w-12 h-12 overflow-hidden cursor-pointer"
+          initial={{ opacity: 0, scale: 0.8, x: -50 }}
+          animate={{ opacity: 1, scale: 1, x: 0 }}
+          exit={{ opacity: 0, scale: 0.8, x: -50 }}
         >
-          
-          <div className="bg-gray-900 p-3 rounded-t-lg flex justify-between items-center border-b border-gray-700">
-            <span className="font-bold text-gray-300 glow-text">{chatPartnerName}</span>
-            <button onClick={closeChatBubble} className="text-gray-400 hover:text-gray-300 focus:outline-none">
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-          <div className="p-3 overflow-y-auto h-64 flex-grow">
-            {activeChats[isChatBubbleOpen]?.map((msg, index) => (
-              <div
-                key={index}
-                className={`mb-2 p-3 rounded-md ${
-                  msg.sender === playerName
-                    ? 'bg-gray-800 text-right text-white self-end shadow-md'
-                    : 'bg-gray-800 text-left text-white shadow-md'
-                }`}
-              >
-                <span className="text-xs italic text-gray-300">{msg.sender}:</span>
-                <p className="font-medium">{msg.text}</p>
-              </div>
-            ))}
-            {typingIndicator[isChatBubbleOpen] && (
-              <div className="text-left italic text-gray-400">
-                <DotLoader color="#a0aec0" size={15} /> <span className="ml-1">Digitando...</span>
-              </div>
-            )}
-          </div>
-          <div className="p-3 border-t border-gray-700 flex items-center">
-            <input
-              type="text"
-              className="bg-gray-900 text-white rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-cyan-400 shadow-inner"
-              placeholder="Enviar mensagem..."
-              value={chatInput}
-              onChange={handleInputChange}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-            />
-            <button
-              onClick={handleSendMessage}
-              className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-md ml-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400"
-            >
-              Enviar
-            </button>
-          </div>
-        </div>
-      )}*/}
+          {chatPartnerAvatar ? (
+            <img src={chatPartnerAvatar} alt={chatPartnerName ? chatPartnerName : "Avatar do Chat"} className="rounded-full w-full h-full object-cover" />
+          ) : (
+            <span className="text-lg">{chatPartnerName && chatPartnerName.substring(0, 2).toUpperCase()}</span>
+          )}
+          <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-purple-800 animate-pulse"></span>
+        </motion.button>
+      )}
 
-      {isChatBubbleOpen && (
-        <div
-          className="
-            fixed bottom-0 left-1/2 -translate-x-1/2 z-50
-            w-full max-w-[calc(100vw-16px)] sm:max-w-md
-            flex flex-col
-            bg-gradient-to-br from-[#1e293b] via-[#334155] to-[#0f172a]
-            border-t-4 border-cyan-500
-            rounded-t-2xl shadow-2xl
-            animate__animated animate__fadeInUp
-            px-2 sm:px-0
-          "
-        >
-          {/* Header */}
-          <div className="bg-[#0f172a] p-3 rounded-t-2xl flex justify-between items-center border-b border-cyan-600 relative">
-            <span className="font-bold text-cyan-300 text-shadow-glow">{chatPartnerName}</span>
-            <div className="flex space-x-2">
-              {/* Minimizar botão */}
+      {/* Caixa de bate-papo */}
+      <AnimatePresence>
+        {isChatBubbleOpen && (
+          <motion.div
+            /*className={`fixed bottom-6 right-6 z-50 
+              w-full max-w-[calc(90vw-16px)] sm:max-w-sm
+              flex flex-col shadow-lg rounded-t-lg
+              bg-gray-700 from-blue to-green 
+              border-t-2 border-purple
+              px-0 sm:px-0
+              rounded-bl-none rounded-br-none
+              animate__faster 
+            `}*/
+            className="
+              fixed bottom-0 left-1/2 -translate-x-1/2 z-50
+              w-full max-w-[calc(100vw-16px)] sm:max-w-md
+              flex flex-col
+            bg-gray-800 from-[#1e293b] via-[#334155] to-[#0f172a]
+              border-t-4 border-blue
+              rounded-t-2xl shadow-2xl
+              animate__animated animate__fadeInUp
+              px-2 sm:px-0
+            "
+            initial={{ y: 300, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 300, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 100, damping: 15 }}
+          >
+            <div className="bg-[#0f172a] p-3 rounded-t-2xl flex justify-between items-center border-b border-lightblue relative">
+              <span className="font-bold text-gray-300 text-shadow-glow">{chatPartnerName}</span>
+              <div className="flex items-center">
+                <button
+                  onClick={handleMinimizeChat}
+                  className="text-blue hover:text-red focus:outline-none mr-2"
+                >
+                  <Minus className="h-5 w-5 cursor-pointer" /> {/* Ícone de minimizar */}
+                </button>
+                <button onClick={() => setIsChatBubbleOpen(false)} className="text-lightblue hover:text-red focus:outline-none">
+                  <X className="h-5 w-5 cursor-pointer" />
+                </button>
+              </div>
+            </div>
+            <div ref={chatContainerRef} className="p-3 overflow-y-auto h-64 flex-grow">
+              {activeChats[isChatBubbleOpen]?.map((msg, index) => (
+                <div
+                  key={index}
+                  className={`mb-2 p-3 rounded-md ${
+                    msg.sender === playerName
+                      ? 'bg-blue text-right text-gray-300 self-end shadow-md'
+                      : 'bg-blue text-left text-gray-300 shadow-md'
+                  }`}
+                >
+                  <span className="text-xs italic text-gray-300">{msg.sender}:</span>
+                  <p className="font-medium">{msg.text}</p>
+                </div>
+              ))}
+              {typingIndicator[isChatBubbleOpen] && (
+                <div className="text-left italic text-blue">
+                  <DotLoader color="#a0aec0" size={15} /> <span className="ml-1">Digitando...</span>
+                </div>
+              )}
+            </div>
+            <div className="p-3 border-t border-purple-800 flex items-center">
+              <input
+                type="text"
+                className="bg-purple-900 text-gray-300 border border-blue rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-cyan-400 shadow-inner"
+                placeholder="Enviar mensagem..."
+                value={chatInput}
+                onChange={handleInputChange}
+                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+              />
               <button
-                onClick={minimizeChatBubble}
-                className="text-cyan-400 hover:text-cyan-300 transition transform hover:scale-110"
-                title="Minimizar"
+                onClick={handleSendMessage}
+                className="bg-cyan-500 hover:bg-lightblue text-white text-shadow-glow border border-lightblue font-bold py-2 px-4 rounded-md ml-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400 cursor-pointer"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-                </svg>
-              </button>
-              {/* Fechar botão */}
-              <button
-                onClick={closeChatBubble}
-                className="text-cyan-400 hover:text-red-400 transition transform hover:scale-110"
-                title="Fechar"
-              >
-                <X className="h-5 w-5" />
+                Enviar
               </button>
             </div>
-          </div>
-
-          {/* Chat messages */}
-          <div className="p-3 overflow-y-auto h-64 flex-grow space-y-2">
-            {activeChats[isChatBubbleOpen]?.map((msg, index) => (
-              <div
-                key={index}
-                className={`p-3 rounded-xl max-w-[80%] shadow-lg transition-all duration-300 ${
-                  msg.sender === playerName
-                    ? 'bg-cyan-700 text-white self-end ml-auto'
-                    : 'bg-gray-700 text-white self-start mr-auto'
-                }`}
-              >
-                <span className="text-xs italic text-cyan-100">{msg.sender}:</span>
-                <p className="font-semibold">{msg.text}</p>
-              </div>
-            ))}
-
-            {typingIndicator[isChatBubbleOpen] && (
-              <div className="text-left italic text-cyan-400 flex items-center space-x-1">
-                <DotLoader color="#22d3ee" size={15} />
-                <span>Digitando...</span>
-              </div>
-            )}
-          </div>
-
-          {/* Input */}
-          <div className="p-3 border-t border-cyan-600 flex items-center bg-[#1e293b] rounded-b-2xl">
-            <input
-              type="text"
-              className="bg-gray-800 text-white rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-cyan-400 shadow-inner"
-              placeholder="Enviar mensagem..."
-              value={chatInput}
-              onChange={handleInputChange}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-            />
-            <button
-              onClick={handleSendMessage}
-              className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-md ml-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400"
-            >
-              Enviar
-            </button>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
 
       <motion.h1 
@@ -1470,33 +1532,7 @@ export default function Game() {
                       ))}
                     </select>
                   </div>
-
-                  {/*<button
-                      onClick={() => speakPortuguese(img.title)}
-                      className="p-2 mt-2 rounded-xl bg-gray-800 border border-lightblue items-center justify-center text-white shadow-md hover:bg-lightblue focus:outline-none focus:ring-2 focus:ring-lightblue transition-colors duration-300 cursor-pointer"
-                      style={{
-                        width: '36px',
-                        height: '36px',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        
-                      }}
-                    >
-                      
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        className="w-6 h-6 animate-pulse text-shadow-glow" // Adicionando uma animação simples
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.54.848l3-2a1 1 0 000-1.696l-3-2z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                  </button>*/}
+                  
 
                   {results[index] && (
                     <motion.div
@@ -1522,36 +1558,64 @@ export default function Game() {
             </div>
 
             <div className="mt-8 flex gap-4">
-              {/*{showRestart && (
-                <button
-                  onClick={() => {
-                    loadImages();
-                    setShowRestart(false);
-                    setCorrectAnswersCount(0);
-                    setRound(1);
-                    setReviewHistory([]);
-                    setAvailableReviews(0);
-                  }}
-                  className="border border-red text-gray-300 rounded-xl py-2 px-8 cursor-pointer hover:border-green hover:text-white transition-colors"
+              <div className="relative">
+                <motion.button
+                  onClick={handleOpenReview}
+                  disabled={!isReviewUnlocked || reviewHistory.length === 0}
+                  className={`border flex items-center justify-center py-2 px-8 rounded-xl transition-colors font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 ${
+                    isReviewUnlocked && reviewHistory.length > 0
+                      ? 'border-blue hover:border-green hover:text-white cursor-pointer text-blue'
+                      : 'border-gray-300 bg-gray-800 text-gray-400 cursor-not-allowed'
+                  }`}
+                  variants={unlockButtonVariants}
+                  animate={isReviewUnlocking ? 'unlocking' : 'locked'}
                 >
-                  Recomeçar
-                </button>
-              )}*/}
-              <button
-                onClick={handleOpenReview}
-                disabled={!isReviewAvailable || reviewHistory.length === 0}
-                className={`border ${isReviewAvailable && reviewHistory.length > 0 ? 'border-blue hover:border-green hover:text-white cursor-pointer relative' : 'border-gray-300 bg-gray-800 cursor-not-allowed'} text-gray-300 rounded-xl py-2 px-8 transition-colors`}
-              >
-                {!isReviewAvailable || reviewHistory.length === 0 ? <Lock className="inline-block mr-2 mb-1" size={20} /> : null}
-                Revisar os acertos
-                {isReviewAvailable && reviewHistory.length > 0 && (
-                  <span
-                    className={`absolute top-[-10px] right-[-10px] bg-green text-gray-700 rounded-full w-5 h-5 flex items-center justify-center text-sm font-bold ${isFlashing ? 'animate-ping-once' : ''}`}
-                  >
-                    {availableReviews}
-                  </span>
-                )}
-              </button>
+                  {!isReviewUnlocked && (
+                    <motion.div style={lockIconStyle}>
+                      <LockClosedIcon className="inline-block mr-3 mb-1 w-5 h-5" />
+                    </motion.div>
+                  )}
+                  {isReviewUnlocked && <LockOpenIcon className="inline-block mr-2 w-5 h-5 text-yellow" />}
+                  Revisar os acertos
+                  {isReviewAvailable && reviewHistory.length > 0 && (
+                    <span
+                      className={`absolute top-[-10px] right-[-10px] bg-green text-gray-700 rounded-full w-5 h-5 flex items-center justify-center text-sm font-bold ${isFlashing ? 'animate-ping-once' : ''}`}
+                    >
+                      {availableReviews}
+                    </span>
+                  )}
+                </motion.button>
+
+                {/* Mensagem de bloqueio */}
+                <AnimatePresence>
+                  {showLockMessage && !isReviewUnlocked && (
+                    <motion.div
+                      className="absolute bottom-[-30px] text-sm text-yellow font-semibold"
+                      initial="initial"
+                      animate="animate"
+                      exit="exit"
+                      variants={lockMessageVariants}
+                    >
+                      Nível bloqueado!
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Animação de desbloqueio */}
+                <AnimatePresence>
+                  {showUnlockReviewAnimation && (
+                    <motion.div
+                      className="absolute top-[-40px] text-green font-bold text-lg"
+                      initial="initial"
+                      animate="animate"
+                      exit="exit"
+                      variants={unlockAnimationVariants}
+                    >
+                      Desbloqueado!
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
 
             <AnimatePresence>
