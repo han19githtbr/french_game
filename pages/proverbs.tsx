@@ -1582,7 +1582,7 @@ export default function Game() {
 
                   <button
                     onClick={() => speakPortuguese(img.title, speechSpeeds[index])}
-                    className="mt-3 p-3 rounded-full bg-blue-500 text-white shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-300 cursor-pointer"
+                    className="mt-3 p-3 border border-green rounded-xl bg-blue-500 text-white shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-green transition-colors duration-300 cursor-pointer"
                     style={{
                       width: '48px', // Aumentei um pouco para melhor visualização
                       height: '48px',
