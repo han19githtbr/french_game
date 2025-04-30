@@ -1,14 +1,17 @@
-import { useEffect, useRef, useState, RefObject } from 'react'
+import { useEffect, useRef, useState, RefObject, useCallback } from 'react'
 import { createAblyClient } from '../lib/ably'
 import type * as Ably from 'ably'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/router'
 //import { Button } from '@/components/ui/button'
 import { Check, X, ChevronLeft, Minus, Lock } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue, animate, MotionValue } from 'framer-motion'
 import { saveProgress } from './sentences_results'
 import { DotLoader } from 'react-spinners';
 import { Realtime, Message } from 'ably'
+import { useSound } from 'use-sound';
+import { LockClosedIcon, LockOpenIcon } from '@heroicons/react/24/solid'
+
 
 const themes = ['família', 'natureza', 'turismo', 'animais', 'tecnologia', 'gastronomia']
 
@@ -65,6 +68,24 @@ interface ReviewItem {
   title: string;
 }
 
+type SetterFunction = (value: boolean) => void;
+
+const unlockButtonVariants = {
+  locked: {},
+  unlocking: {
+    scale: [1, 1.1, 1],
+    rotate: [0, 5, -5, 0],
+    transition: { duration: 0.2 },
+  },
+  unlocked: {},
+};
+
+const unlockAnimationVariants = {
+  initial: { opacity: 0, scale: 0.5 },
+  animate: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
+  exit: { opacity: 0, scale: 0.5, transition: { duration: 0.2 } },
+};
+
 const lockMessageVariants = {
   initial: { opacity: 0, y: 10 },
   animate: { opacity: 1, y: 0, transition: { duration: 0.4 } },
@@ -76,6 +97,7 @@ const frenchVoices = ['fr-FR', 'fr-CA', 'fr-BE', 'fr-CH', 'fr-LU'];
 export default function Frase() {
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const imageRefs = useRef<(HTMLDivElement | null)[]>([])
+  
   const { data: session, status } = useSession()
   const router = useRouter()
 
@@ -86,6 +108,7 @@ export default function Frase() {
   const [showCongrats, setShowCongrats] = useState(false)
 
   const [theme, setTheme] = useState('')
+  
   const [images, setImages] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   
@@ -97,8 +120,11 @@ export default function Frase() {
   const [correctSound, setCorrectSound] = useState<HTMLAudioElement | null>(null)
   const [wrongSound, setWrongSound] = useState<HTMLAudioElement | null>(null)
   const [successSound, setSuccessSound] = useState<HTMLAudioElement | null>(null);
+  const [playUnlockSound] = useSound('/sounds/unlock.mp3');
+  const [showLockMessage, setShowLockMessage] = useState(false);
 
   const [playersOnline, setPlayersOnline] = useState<Player[]>([])
+  const [chatPartnerAvatar, setChatPartnerAvatar] = useState('');
   const [hiddenPlayers, setHiddenPlayers] = useState<string[]>([]);
   
   const [showNotification, setShowNotification] = useState<ShowNotification | null>(null)
@@ -112,7 +138,7 @@ export default function Frase() {
   const [chatRequestsSent, setChatRequestsSent] = useState<{ toClientId: string, toName: string }[]>([]);
   
   const [activeChats, setActiveChats] = useState<{ [clientId: string]: ChatMessage[] }>({});
-  const [isChatBubbleOpen, setIsChatBubbleOpen] = useState<string | null>(null);
+  const [isChatBubbleOpen, setIsChatBubbleOpen] = useState<string | false>(false);
   const [chatInput, setChatInput] = useState('');
   const [chatPartnerName, setChatPartnerName] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
@@ -129,6 +155,7 @@ export default function Frase() {
   const [offset, setOffset] = useState({ x: 130, y: 130 });
   const [visibleModals, setVisibleModals] = useState<Record<string, boolean>>({});
   const [minimizedRequests, setMinimizedRequests] = useState<string[]>([]);
+  const [minimizedChat, setMinimizedChat] = useState<string | false>(false);
 
   const [reviewHistory, setReviewHistory] = useState<ReviewItem[]>([]);
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -136,13 +163,27 @@ export default function Frase() {
   const [availableReviews, setAvailableReviews] = useState(0);
   const reviewIntervalRef: RefObject<ReturnType<typeof setInterval> | null> = useRef(null);
   
+  const [isReviewUnlocking, setIsReviewUnlocking] = useState(false);
+  const [isReviewUnlocked, setIsReviewUnlocked] = useState(false);
+  const [showUnlockReviewAnimation, setShowUnlockReviewAnimation] = useState(false);
+  const lockRotation = useMotionValue(0);
+  const lockY = useMotionValue(0);
+
   const [isFlashing, setIsFlashing] = useState(false); // Estado para controlar a animação de piscar
   const [isReviewPaused, setIsReviewPaused] = useState(false);
 
   const [open, setOpen] = useState(false);
 
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+
   //const clientId = ablyClient?.auth.clientId;
   const playerName = session?.user?.name || 'Anônimo';
+
+  const handleUnlockAnimationEnd = (setter: SetterFunction) => {
+    setTimeout(() => {
+      setter(false);
+    }, 4000); // Mantém a animação por 4 segundos
+  };
 
   const handleHidePlayer = (clientId: string) => {
     setHiddenPlayers((prev) => [...prev, clientId]);
@@ -277,7 +318,27 @@ export default function Frase() {
     }
   }, [showCongrats, images]);
 
-  
+
+  useEffect(() => {
+    if (correctAnswersCount >= 4) { // Defina a condição para desbloquear a revisão (ex: 3 acertos)
+      if (!isReviewUnlocked) {
+        setIsReviewUnlocking(true);
+        setShowUnlockReviewAnimation(true);
+        animate(lockRotation, 45, { duration: 0.4, ease: "easeInOut" }); // Rotação para destravar
+        animate(lockY, -5 as MotionValue<number>["current"], { duration: 0.2, repeat: 3, repeatType: 'mirror', ease: "easeInOut" }); // Pequena trepidação vertical
+        
+        // Reproduzir o som de desbloqueio
+        playUnlockSound();
+        
+        setTimeout(() => {
+          setIsReviewUnlocked(true);
+          setIsReviewUnlocking(false);
+          handleUnlockAnimationEnd(setShowUnlockReviewAnimation);
+        }, 1000);
+      }
+    }
+  }, [correctAnswersCount, isReviewUnlocked, lockRotation, lockY, playUnlockSound]);
+
   useEffect(() => {
     if (!session) return
   
@@ -363,100 +424,144 @@ export default function Frase() {
   };
 
 
+  const subscribeToChatChannel = (
+      ablyClient: Realtime,
+      channelName: string,
+      handler: (msg: Ably.Message) => void,
+      handlersRef: React.MutableRefObject<Record<string, (msg: Ably.Message) => void>>
+    ) => {
+      const channel = ablyClient.channels.get(channelName);
+    
+      // Remove qualquer handler antigo
+      if (handlersRef.current[channelName]) {
+        channel.unsubscribe('message', handlersRef.current[channelName]);
+      }
+    
+      // Adiciona o novo handler
+      channel.subscribe('message', handler);
+    
+      // Salva referência
+      handlersRef.current[channelName] = handler;
+  };
+    
+  
+  const subscribeToChatAndTypingChannels = useCallback((clientId1: string, clientId2: string) => {
+      if (!ablyClient) return;
+  
+      const chatChannelName = getChatChannelName(clientId1, clientId2);
+      const chatMessageHandler = useCallback((message: Ably.Message) => {
+        handleChatMessage(message, chatChannelName);
+      }, [handleChatMessage, chatChannelName]);
+  
+      subscribeToChatChannel(ablyClient, chatChannelName, chatMessageHandler, chatHandlersRef);
+  
+      const typingChannelName = getTypingChannelName(clientId1, clientId2);
+      if (!typingHandlersRef.current[typingChannelName]) {
+        ablyClient.channels
+          .get(typingChannelName)
+          .subscribe('typing', handleTypingStatus);
+        typingHandlersRef.current[typingChannelName] = handleTypingStatus;
+      }
+  }, [ablyClient, getChatChannelName, getTypingChannelName, handleChatMessage, handleTypingStatus, chatHandlersRef, subscribeToChatChannel, typingHandlersRef]);
+    
+  
   useEffect(() => {
-    if (!ablyClient || !session || !clientId) return;
-  
-    const presenceChannel = ablyClient.channels.get('game-room')
-    const name = session.user?.name || 'Anônimo'
-    const currentClientId = clientId!
+      if (!ablyClient || !session || !clientId) return;
     
-    const onConnected = async () => {
-      await presenceChannel.presence.enter({ name });
-      await syncPresence();
-    
-      // ▶️ Quando alguém entra
-      presenceChannel.presence.subscribe('enter', (member: any) => {
-        const newPlayer = { name: member.data.name, clientId: member.clientId }
-        if (member.clientId !== currentClientId) {
-          setShowNotification({ name: newPlayer.name, type: 'join' })
-          setTimeout(() => setShowNotification(null), 6000)
-        }
-        syncPresence()
-      });
-        
-      // ⚡ Quando alguém sai
-      presenceChannel.presence.subscribe('leave', (member: any) => {
-        const leavingPlayer = { name: member.data.name, clientId: member.clientId }
-    
-        if (leavingPlayer.clientId !== currentClientId) {
-          setShowNotification({ name: leavingPlayer.name, type: 'leave' })
-          setTimeout(() => setShowNotification(null), 6000)
-        }
-    
-        syncPresence();
-      });
-    
-      const chatRequestChannel = ablyClient.channels.get(`chat-requests:${currentClientId}`);
-      chatRequestChannel.subscribe('request', (message: Ably.Message) => {
-        const request: ChatRequest = message.data;
-        setChatRequestsReceived((prev) => [...prev, request]);
-        chatRequestReceivedSoundRef.current?.play();
-      });
-  
-      chatRequestChannel.subscribe('response', (message: Ably.Message) => {
-        const { accepted, fromClientId, fromName } = message.data;
-        chatRequestResponseSoundRef.current?.play();
-        if (accepted) {
-          //alert(`🤝 ${fromName} aceitou seu pedido de bate-papo!`);
-          showToast(`🤝 ${fromName} aceitou seu pedido de bate-papo!`, 'info');
-          const chatChannelName = getChatChannelName(currentClientId, fromClientId);
-          setActiveChats((prev) => ({ ...prev, [chatChannelName]: [] }));
-          setIsChatBubbleOpen(chatChannelName);
-          setChatPartnerName(fromName);
-          
-          if (!chatHandlersRef.current[chatChannelName]) {
-            const chatMessageHandler = (message: Ably.Message) => {
-              handleChatMessage(message, chatChannelName);
-            };
-            subscribeToChatChannel(ablyClient, chatChannelName, chatMessageHandler, chatHandlersRef);
+      const presenceChannel = ablyClient.channels.get('game-room')
+      const name = session.user?.name || 'Anônimo'
+      const currentClientId = clientId!
+      
+      const onConnected = async () => {
+        await presenceChannel.presence.enter({ name });
+        await syncPresence();
+      
+        // ▶️ Quando alguém entra
+        presenceChannel.presence.subscribe('enter', (member: any) => {
+          const newPlayer = { name: member.data.name, clientId: member.clientId }
+          if (member.clientId !== currentClientId) {
+            setShowNotification({ name: newPlayer.name, type: 'join' })
+            setTimeout(() => setShowNotification(null), 6000)
           }
+          syncPresence()
+        });
           
-          // [ACRESCENTADO] Inscrever-se no canal de digitação quando o chat é aceito
-          ablyClient.channels
-            .get(getTypingChannelName(currentClientId, fromClientId))
-            .subscribe('typing', handleTypingStatus);
-        
-        } else {
-          //alert(`❌ ${fromName} negou seu pedido de bate-papo.`);
-          showToast(`❌ ${fromName} negou seu pedido de bate-papo.`, 'info');
-        }
-      });
+        // ⚡ Quando alguém sai
+        presenceChannel.presence.subscribe('leave', (member: any) => {
+          const leavingPlayer = { name: member.data.name, clientId: member.clientId }
+      
+          if (leavingPlayer.clientId !== currentClientId) {
+            setShowNotification({ name: leavingPlayer.name, type: 'leave' })
+            setTimeout(() => setShowNotification(null), 6000)
+          }
+      
+          syncPresence();
+        });
+      
+        const chatRequestChannel = ablyClient.channels.get(`chat-requests:${currentClientId}`);
+        chatRequestChannel.subscribe('request', (message: Ably.Message) => {
+          const request: ChatRequest = message.data;
+          setChatRequestsReceived((prev) => [...prev, request]);
+          // Reproduzir som ao receber um pedido de bate-papo
+          chatRequestReceivedSoundRef.current?.play();
+        });
+    
+        chatRequestChannel.subscribe('response', (message: Ably.Message) => {
+          const { accepted, fromClientId, fromName } = message.data;
+          if (accepted) {
+            // Reproduzir som ao receber uma resposta (aceitar ou recusar)
+            chatRequestResponseSoundRef.current?.play();
+            //alert(`🤝 ${fromName} aceitou seu pedido de bate-papo!`);
+            showToast(`🤝 ${fromName} aceitou seu pedido de bate-papo!`, 'info');
+            const chatChannelName = getChatChannelName(currentClientId, fromClientId);
+            setActiveChats((prev) => ({ ...prev, [chatChannelName]: [] }));
+            setIsChatBubbleOpen(chatChannelName);
+            setChatPartnerName(fromName);
             
-    };
+            /*if (!chatHandlersRef.current[chatChannelName]) {
+              const chatMessageHandler = (message: Ably.Message) => {
+                handleChatMessage(message, chatChannelName);
+              };
+              subscribeToChatChannel(ablyClient, chatChannelName, chatMessageHandler, chatHandlersRef);
+            }
+            
+           
+            // [ACRESCENTADO] Inscrever-se no canal de digitação quando o chat é aceito
+            ablyClient.channels
+              .get(getTypingChannelName(currentClientId, fromClientId))
+              .subscribe('typing', handleTypingStatus);*/
+            subscribeToChatAndTypingChannels(currentClientId, fromClientId);  
+          } else {
+            //alert(`❌ ${fromName} negou seu pedido de bate-papo.`);
+            showToast(`❌ ${fromName} negou seu pedido de bate-papo.`, 'info');
+          }
+        });
+               
+        
+      };
   
-    // Garante que o client está conectado
-    ablyClient.connection.once('connected', onConnected)
+      ablyClient.connection.once('connected', onConnected);
   
-    return () => {
-      if (ablyClient?.connection?.state === 'connected') {
-        presenceChannel.presence.leave();
-      }
-      presenceChannel.presence.unsubscribe();
-      const chatRequestChannel = ablyClient.channels.get(`chat-requests:${currentClientId}`);
-      chatRequestChannel?.unsubscribe('request');
-      chatRequestChannel?.unsubscribe('response');
-      // [CORRIGIDO] Cancelar a inscrição de todos os canais de chat ativos ao desmontar
-      for (const channelName in activeChats) {
-        ablyClient?.channels.get(channelName)?.unsubscribe('message', chatHandlersRef.current[channelName]);
-        // [ACRESCENTADO] Extrai os clientIds do nome do canal para cancelar a inscrição do canal de digitação
-        const ids = channelName.split(':')[1]?.split('-');
-        if (ids && ids.length === 2) {
-          const typingChannelName = getTypingChannelName(ids[0], ids[1]);
-          ablyClient?.channels.get(typingChannelName)?.unsubscribe('typing', handleTypingStatus);
+      return () => {
+        if (ablyClient?.connection?.state === 'connected') {
+          presenceChannel.presence.leave();
         }
-      }
-      ablyClient.connection.off('connected', onConnected);
-    };
+        presenceChannel.presence.unsubscribe();
+        const chatRequestChannel = ablyClient.channels.get(`chat-requests:${currentClientId}`);
+        chatRequestChannel?.unsubscribe('request');
+        chatRequestChannel?.unsubscribe('response');
+        // [CORRIGIDO] Cancelar a inscrição de todos os canais de chat ativos ao desmontar
+        for (const channelName in activeChats) {
+          ablyClient?.channels.get(channelName).unsubscribe('message', chatHandlersRef.current[channelName]);
+          // [ACRESCENTADO] Extrai os clientIds do nome do canal para cancelar a inscrição do canal de digitação
+          const ids = channelName.split(':')[1]?.split('-');
+          if (ids && ids.length === 2) {
+            const typingChannelName = getTypingChannelName(ids[0], ids[1]);
+            ablyClient?.channels.get(typingChannelName)?.unsubscribe('typing', handleTypingStatus);
+          }
+        }
+        ablyClient.connection.off('connected', onConnected);
+      };
   }, [ablyClient, session, clientId]);
 
 
@@ -500,28 +605,7 @@ export default function Frase() {
 
     showToast(`⏳ Pedido de bate-papo enviado para ${otherPlayer.name}. Aguardando resposta...`, 'info');
   };
-  
-
-  const subscribeToChatChannel = (
-      ablyClient: Realtime,
-      channelName: string,
-      handler: (msg: Ably.Message) => void,
-      handlersRef: React.MutableRefObject<Record<string, (msg: Ably.Message) => void>>
-    ) => {
-      const channel = ablyClient.channels.get(channelName);
     
-      // Remove qualquer handler antigo
-      if (handlersRef.current[channelName]) {
-        channel.unsubscribe('message', handlersRef.current[channelName]);
-      }
-    
-      // Adiciona o novo handler
-      channel.subscribe('message', handler);
-    
-      // Salva referência
-      handlersRef.current[channelName] = handler;
-  };
-
   const handleAcceptChatRequest = (request: ChatRequest) => {
     if (!ablyClient || !clientId) return;
     const responseChannel = ablyClient.channels.get(`chat-requests:${request.fromClientId}`);
@@ -593,6 +677,22 @@ export default function Frase() {
     }
   };
 
+  const handleMinimizeChat = useCallback(() => {
+    if (isChatBubbleOpen) {
+      setMinimizedChat(isChatBubbleOpen); // Define o estado `minimizedChat` com o ID do chat atual ao minimizar.
+      setIsChatBubbleOpen(false); // Fecha a caixa de bate-papo principal.
+    }
+  }, [isChatBubbleOpen]);
+
+
+  const handleOpenMinimizedChat = useCallback(() => {
+    if (minimizedChat) {
+      setIsChatBubbleOpen(minimizedChat); // Abre a caixa de bate-papo novamente definindo `isChatBubbleOpen` com o ID minimizado.
+      setMinimizedChat(false); // Limpa o estado de minimizado.
+    }
+  }, [minimizedChat]);
+
+  
   const handleOpenMinimizedRequest = (clientId: string) => {
     const request = chatRequestsReceived.find(req => req.fromClientId === clientId);
     if (request) {
@@ -611,7 +711,7 @@ export default function Frase() {
     
   };
 
-  const minimizeChatBubble = () => {
+  /*const minimizeChatBubble = () => {
     setIsChatBubbleOpen(null); // Ou trocar para estado de "minimizado"
   };
 
@@ -619,7 +719,7 @@ export default function Frase() {
     setIsChatBubbleOpen(null);
     setChatPartnerName(null);
     setTypingIndicator({}); // Limpar o indicador de digitação ao fechar o chat
-  };
+  };*/
 
   // Apenas publica a mensagem no canal do Ably e limpa o input. Não atualiza o estado activeChats diretamente.
   const handleSendMessage = () => {
@@ -851,6 +951,12 @@ export default function Frase() {
 
   const isReviewAvailable = availableReviews > 0;
 
+  const lockIconStyle = {
+    rotate: lockRotation,
+    y: lockY,
+  };
+
+
   const playAnimalSound = (title: string) => {
     if (theme !== 'animais') return; // só toca se for o tema "animais"
     const soundPath = animalSounds[title]
@@ -982,12 +1088,7 @@ export default function Frase() {
                     {player.name}
                   </span>
                 </div>
-                {/**{hiddenPlayers.includes(player.clientId) && (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                )}**/}
+                
               </li>
             ))}
           </ul>
@@ -1016,48 +1117,61 @@ export default function Frase() {
         <audio ref={chatRequestReceivedSoundRef} src="/sounds/accepted_sound.mp3" preload="auto" />
         <audio ref={chatRequestResponseSoundRef} src="/sounds/message.mp3" preload="auto" />
         
-        {/*{chatRequestsReceived.length > 0 && (
-          <div className="fixed bottom-0 left-0 w-full bg-gray-900 bg-opacity-70 border-t border-gray-700 py-2 px-4 flex items-center justify-start gap-4 z-40">
-            {chatRequestsReceived.map((request) => (
-              <div
-                key={request.fromClientId}
-                className="bg-gray-800 rounded-md p-2 cursor-pointer hover:bg-gray-700 transition duration-200 ease-in-out"
-                onClick={() => handleOpenChatRequest(request)}
-              >
-                <span className="text-sm text-yellow-300 font-semibold">Novo pedido de: {request.fromName}</span>
-              </div>
-            ))}
+        {minimizedRequests.length > 0 && (
+          <div className="fixed bottom-0 left-0 w-full bg-gray-800 bg-opacity-80 border-t border-gray-700 py-2 px-4 flex items-center overflow-x-auto scrollbar-hide z-40">
+            {minimizedRequests.map((clientId) => {
+              const request = chatRequestsReceived.find(req => req.fromClientId === clientId);
+              return request ? (
+                <div
+                  key={clientId}
+                  className="bg-gradient-to-br from-yellow-600 to-yellow-500 rounded-full p-2 mr-2 cursor-pointer shadow-md hover:scale-105 transition duration-200 ease-in-out"
+                  onClick={() => handleOpenMinimizedRequest(clientId)}
+                >
+                  <span className="text-xs text-gray-900 font-bold">{request.fromName.substring(0, 2).toUpperCase()}</span> {/* Avatar inicial */}
+                </div>
+              ) : null;
+            })}
           </div>
         )}
+        
         {chatRequestsReceived.map((request) => (
           <div
             key={`modal-${request.fromClientId}`}
             id={`modal-${request.fromClientId}`}
-            className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl p-8 max-w-md w-full shadow-lg border-2 border-gray-600 z-50 animate__animated animate__fadeIn ${visibleModals[request.fromClientId] ? '' : 'hidden'}`}
+            className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl p-6 max-w-md w-full shadow-lg border-2 border-gray-600 z-50 animate__animated animate__fadeIn ${visibleModals[request.fromClientId] ? '' : 'hidden'}
+            sm:p-8`} /* Ajuste padding em telas maiores */
           >
-            <h2 className="text-xl font-bold text-yellow mb-6 glow-text">🕹️ Pedido de Bate-papo de {request.fromName}!</h2>
-            <div className="flex justify-end gap-3">
+            <h2 className="text-xl font-bold text-yellow-400 mb-4 glow-text">
+              <span role="img" aria-label="joystick" className="mr-2">🕹️</span>
+              Pedido de Chat de <span className="text-yellow-300">{request.fromName}</span>!
+            </h2>
+            <p className="text-gray-300 mb-4 text-sm sm:text-base">
+              {/* Você pode adicionar mais informações sobre o pedido aqui, se necessário */}
+              Um jogador quer conversar com você!
+            </p>
+            <div className="flex justify-end gap-2">
               <button
                 onClick={() => handleAcceptChatRequest(request)}
-                className="flex items-center justify-center whitespace-nowrap bg-blue hover:bg-blue text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue"
+                className="flex items-center justify-center whitespace-nowrap bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm sm:text-base"
               >
-                <Check className="h-5 w-5 mr-2 shrink-0" /> Aceitar
+                <Check className="h-4 w-4 mr-2 shrink-0" /> Aceitar
               </button>
               <button
                 onClick={() => handleRejectChatRequest(request)}
-                className="flex items-center justify-center whitespace-nowrap bg-red hover:bg-red text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red"
+                className="flex items-center justify-center whitespace-nowrap bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-400 text-sm sm:text-base"
               >
-                <X className="h-5 w-5 mr-2 shrink-0" /> Recusar
+                <X className="h-4 w-4 mr-2 shrink-0" /> Recusar
               </button>
               <button
                 onClick={() => handleMinimizeChatRequest(request.fromClientId)}
-                className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm sm:text-base"
               >
-                Minimizar
+                <Minus className="h-4 w-4 shrink-0" /> {/* Ícone de minimizar */}
               </button>
             </div>
           </div>
-        ))}*/}
+        ))}
+        
         {minimizedRequests.length > 0 && (
           <div className="fixed bottom-0 left-0 w-full bg-gray-800 bg-opacity-80 border-t border-gray-700 py-2 px-4 flex items-center overflow-x-auto scrollbar-hide z-40">
             {minimizedRequests.map((clientId) => {
@@ -1114,144 +1228,105 @@ export default function Frase() {
         ))}
       </>
 
-      {/*{isChatBubbleOpen && (
-        <div
-            className={`fixed bottom-0 left-1/2 -translate-x-1/2 z-50
-              w-full max-w-[calc(100vw-16px)] sm:max-w-md
-              flex flex-col shadow-lg rounded-t-lg bg-gradient-to-br from-gray-800 to-gray-700
-              border-t-2 border-gray-600
-              animate__animated animate__slideInUp
-              rounded-bl-none rounded-br-none
-              px-2 sm:px-0
-            `}
+      {/* [NOVO] Botão para abrir a caixa de bate-papo (quando minimizada) */}
+      {minimizedChat && (
+        <motion.button
+          onClick={handleOpenMinimizedChat}
+          className="fixed bottom-12 left-6 bg-gradient-to-br from-purple to-blue hover:from-purple hover:to-green text-white font-bold py-2 px-3 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple z-50 flex items-center justify-center w-12 h-12 overflow-hidden cursor-pointer"
+          initial={{ opacity: 0, scale: 0.8, x: -50 }}
+          animate={{ opacity: 1, scale: 1, x: 0 }}
+          exit={{ opacity: 0, scale: 0.8, x: -50 }}
         >
-          
-          <div className="bg-gray-900 p-3 rounded-t-lg flex justify-between items-center border-b border-gray-700">
-            <span className="font-bold text-gray-300 glow-text">{chatPartnerName}</span>
-            <button onClick={closeChatBubble} className="text-gray-400 hover:text-gray-300 focus:outline-none">
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-          <div className="p-3 overflow-y-auto h-64 flex-grow">
-            {activeChats[isChatBubbleOpen]?.map((msg, index) => (
-              <div
-                key={index}
-                className={`mb-2 p-3 rounded-md ${
-                  msg.sender === playerName
-                    ? 'bg-gray-800 text-right text-white self-end shadow-md'
-                    : 'bg-gray-800 text-left text-white shadow-md'
-                }`}
-              >
-                <span className="text-xs italic text-gray-300">{msg.sender}:</span>
-                <p className="font-medium">{msg.text}</p>
-              </div>
-            ))}
-            {typingIndicator[isChatBubbleOpen] && (
-              <div className="text-left italic text-gray-400">
-                <DotLoader color="#a0aec0" size={15} /> <span className="ml-1">Digitando...</span>
-              </div>
-            )}
-          </div>
-          <div className="p-3 border-t border-gray-700 flex items-center">
-            <input
-              type="text"
-              className="bg-gray-900 text-white rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-cyan-400 shadow-inner"
-              placeholder="Enviar mensagem..."
-              value={chatInput}
-              onChange={handleInputChange}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-            />
-            <button
-              onClick={handleSendMessage}
-              className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-md ml-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400"
-            >
-              Enviar
-            </button>
-          </div>
-        </div>
-      )}*/}
+          {chatPartnerAvatar ? (
+            <img src={chatPartnerAvatar} alt={chatPartnerName ? chatPartnerName : "Avatar do Chat"} className="rounded-full w-full h-full object-cover" />
+          ) : (
+            <span className="text-lg">{chatPartnerName && chatPartnerName.substring(0, 2).toUpperCase()}</span>
+          )}
+          <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-purple-800 animate-pulse"></span>
+        </motion.button>
+      )}
 
-      {isChatBubbleOpen && (
-        <div
-          className="
-            fixed bottom-0 left-1/2 -translate-x-1/2 z-50
-            w-full max-w-[calc(100vw-16px)] sm:max-w-md
-            flex flex-col
+      {/* Caixa de bate-papo */}
+      <AnimatePresence>
+        {isChatBubbleOpen && (
+          <motion.div
+            /*className={`fixed bottom-6 right-6 z-50 
+              w-full max-w-[calc(90vw-16px)] sm:max-w-sm
+              flex flex-col shadow-lg rounded-t-lg
+              bg-gray-700 from-blue to-green 
+              border-t-2 border-purple
+              px-0 sm:px-0
+              rounded-bl-none rounded-br-none
+              animate__faster 
+            `}*/
+            className="
+              fixed bottom-0 left-1/2 -translate-x-1/2 z-50
+              w-full max-w-[calc(100vw-16px)] sm:max-w-md
+              flex flex-col
             bg-gray-800 from-[#1e293b] via-[#334155] to-[#0f172a]
-            border-t-4 border-blue
-            rounded-t-2xl shadow-2xl
-            animate__animated animate__fadeInUp
-            px-2 sm:px-0
-          "
-        >
-          {/* Header */}
-          <div className="bg-[#0f172a] p-3 rounded-t-2xl flex justify-between items-center border-b border-cyan-600 relative">
-            <span className="font-bold text-cyan-300 text-shadow-glow">{chatPartnerName}</span>
-            <div className="flex space-x-2">
-              {/* Minimizar botão */}
+              border-t-4 border-blue
+              rounded-t-2xl shadow-2xl
+              animate__animated animate__fadeInUp
+              px-2 sm:px-0
+            "
+            initial={{ y: 300, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 300, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 100, damping: 15 }}
+          >
+            <div className="bg-[#0f172a] p-3 rounded-t-2xl flex justify-between items-center border-b border-lightblue relative">
+              <span className="font-bold text-gray-300 text-shadow-glow">{chatPartnerName}</span>
+              <div className="flex items-center">
+                <button
+                  onClick={handleMinimizeChat}
+                  className="text-blue hover:text-red focus:outline-none mr-2"
+                >
+                  <Minus className="h-5 w-5 cursor-pointer" /> {/* Ícone de minimizar */}
+                </button>
+                <button onClick={() => setIsChatBubbleOpen(false)} className="text-lightblue hover:text-red focus:outline-none">
+                  <X className="h-5 w-5 cursor-pointer" />
+                </button>
+              </div>
+            </div>
+            <div ref={chatContainerRef} className="p-3 overflow-y-auto h-64 flex-grow">
+              {activeChats[isChatBubbleOpen]?.map((msg, index) => (
+                <div
+                  key={index}
+                  className={`mb-2 p-3 rounded-md ${
+                    msg.sender === playerName
+                      ? 'bg-blue text-right text-gray-300 self-end shadow-md'
+                      : 'bg-blue text-left text-gray-300 shadow-md'
+                  }`}
+                >
+                  <span className="text-xs italic text-gray-300">{msg.sender}:</span>
+                  <p className="font-medium">{msg.text}</p>
+                </div>
+              ))}
+              {typingIndicator[isChatBubbleOpen] && (
+                <div className="text-left italic text-blue">
+                  <DotLoader color="#a0aec0" size={15} /> <span className="ml-1">Digitando...</span>
+                </div>
+              )}
+            </div>
+            <div className="p-3 border-t border-purple-800 flex items-center">
+              <input
+                type="text"
+                className="bg-purple-900 text-gray-300 border border-blue rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-cyan-400 shadow-inner"
+                placeholder="Enviar mensagem..."
+                value={chatInput}
+                onChange={handleInputChange}
+                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+              />
               <button
-                onClick={minimizeChatBubble}
-                className="text-cyan-400 hover:text-green transition transform hover:scale-110 cursor-pointer"
-                title="Minimizar"
+                onClick={handleSendMessage}
+                className="bg-cyan-500 hover:bg-lightblue text-white text-shadow-glow border border-lightblue font-bold py-2 px-4 rounded-md ml-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400 cursor-pointer"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-                </svg>
-              </button>
-              {/* Fechar botão */}
-              <button
-                onClick={closeChatBubble}
-                className="text-cyan-400 hover:text-red transition transform hover:scale-110 cursor-pointer"
-                title="Fechar"
-              >
-                <X className="h-5 w-5" />
+                Enviar
               </button>
             </div>
-          </div>
-
-          {/* Chat messages */}
-          <div className="p-3 overflow-y-auto h-64 flex-grow space-y-2">
-            {activeChats[isChatBubbleOpen]?.map((msg, index) => (
-              <div
-                key={index}
-                className={`p-3 rounded-xl max-w-[80%] shadow-lg transition-all duration-300 ${
-                  msg.sender === playerName
-                    ? 'bg-cyan-700 text-white self-end ml-auto'
-                    : 'bg-gray-700 text-white self-start mr-auto'
-                }`}
-              >
-                <span className="text-xs italic text-cyan-100">{msg.sender}:</span>
-                <p className="font-semibold">{msg.text}</p>
-              </div>
-            ))}
-
-            {typingIndicator[isChatBubbleOpen] && (
-              <div className="text-left italic text-cyan-400 flex items-center space-x-1">
-                <DotLoader color="#22d3ee" size={15} />
-                <span>Digitando...</span>
-              </div>
-            )}
-          </div>
-
-          {/* Input */}
-          <div className="p-3 border-t border-cyan-600 flex items-center bg-[#1e293b] rounded-b-2xl">
-            <input
-              type="text"
-              className="bg-gray-800 text-white rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-cyan-400 shadow-inner"
-              placeholder="Enviar mensagem..."
-              value={chatInput}
-              onChange={handleInputChange}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-            />
-            <button
-              onClick={handleSendMessage}
-              className="bg-cyan-500 hover:text-blue text-white text-shadow-glow font-bold py-2 px-4 rounded-md ml-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400 cursor-pointer"
-            >
-              Enviar
-            </button>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       <motion.h1 
         initial={{ opacity: 0, y: -20 }} 
@@ -1500,36 +1575,64 @@ export default function Frase() {
             </div>
 
             <div className="mt-8 flex gap-4">
-              {/*{showRestart && (
-                <button
-                  onClick={() => {
-                    loadImages();
-                    setShowRestart(false);
-                    setCorrectAnswersCount(0);
-                    setRound(1);
-                    setReviewHistory([]);
-                    setAvailableReviews(0);
-                  }}
-                  className="border border-red text-gray-300 rounded-xl py-2 px-8 cursor-pointer hover:border-green hover:text-white transition-colors"
+              <div className="relative">
+                <motion.button
+                  onClick={handleOpenReview}
+                  disabled={!isReviewUnlocked || reviewHistory.length === 0}
+                  className={`border flex items-center justify-center py-2 px-8 rounded-xl transition-colors font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 ${
+                    isReviewUnlocked && reviewHistory.length > 0
+                      ? 'border-blue hover:border-green hover:text-white cursor-pointer text-blue'
+                      : 'border-gray-300 bg-gray-800 text-gray-400 cursor-not-allowed'
+                  }`}
+                  variants={unlockButtonVariants}
+                  animate={isReviewUnlocking ? 'unlocking' : 'locked'}
                 >
-                  Recomeçar
-                </button>
-              )}*/}
-              <button
-                onClick={handleOpenReview}
-                disabled={!isReviewAvailable || reviewHistory.length === 0}
-                className={`border ${isReviewAvailable && reviewHistory.length > 0 ? 'border-blue hover:border-green hover:text-white cursor-pointer relative' : 'border-gray-300 bg-gray-800 cursor-not-allowed'} text-gray-300 rounded-xl py-2 px-8 transition-colors`}
-              >
-                {!isReviewAvailable || reviewHistory.length === 0 ? <Lock className="inline-block mr-2 mb-1" size={20} /> : null}
-                Revisar os acertos
-                {isReviewAvailable && reviewHistory.length > 0 && (
-                  <span
-                    className={`absolute top-[-10px] right-[-10px] bg-green text-gray-700 rounded-full w-5 h-5 flex items-center justify-center text-sm font-bold ${isFlashing ? 'animate-ping-once' : ''}`}
-                  >
-                    {availableReviews}
-                  </span>
-                )}
-              </button>
+                  {!isReviewUnlocked && (
+                    <motion.div style={lockIconStyle}>
+                      <LockClosedIcon className="inline-block mr-3 mb-1 w-5 h-5" />
+                    </motion.div>
+                  )}
+                  {isReviewUnlocked && <LockOpenIcon className="inline-block mr-2 w-5 h-5 text-yellow" />}
+                  Revisar os acertos
+                  {isReviewAvailable && reviewHistory.length > 0 && (
+                    <span
+                      className={`absolute top-[-10px] right-[-10px] bg-green text-gray-700 rounded-full w-5 h-5 flex items-center justify-center text-sm font-bold ${isFlashing ? 'animate-ping-once' : ''}`}
+                    >
+                      {availableReviews}
+                    </span>
+                  )}
+                </motion.button>
+
+                {/* Mensagem de bloqueio */}
+                <AnimatePresence>
+                  {showLockMessage && !isReviewUnlocked && (
+                    <motion.div
+                      className="absolute bottom-[-30px] text-sm text-yellow font-semibold"
+                      initial="initial"
+                      animate="animate"
+                      exit="exit"
+                      variants={lockMessageVariants}
+                    >
+                      Nível bloqueado!
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Animação de desbloqueio */}
+                <AnimatePresence>
+                  {showUnlockReviewAnimation && (
+                    <motion.div
+                      className="absolute top-[-40px] text-green font-bold text-lg"
+                      initial="initial"
+                      animate="animate"
+                      exit="exit"
+                      variants={unlockAnimationVariants}
+                    >
+                      Desbloqueado!
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
 
             <AnimatePresence>

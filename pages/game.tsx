@@ -205,7 +205,7 @@ export default function Game() {
   const handleUnlockAnimationEnd = (setter: SetterFunction) => {
     setTimeout(() => {
       setter(false);
-    }, 3000); // Mantém a animação por 1 segundo
+    }, 4000); // Mantém a animação por 4 segundos
   };
 
   const handleHidePlayer = (clientId: string) => {
@@ -408,7 +408,7 @@ export default function Game() {
           setIsReviewUnlocked(true);
           setIsReviewUnlocking(false);
           handleUnlockAnimationEnd(setShowUnlockReviewAnimation);
-        }, 1000);
+        }, 4000);
       }
     }
   }, [correctAnswersCount, isReviewUnlocked, lockRotation, lockY, playUnlockSound]);
@@ -1689,34 +1689,7 @@ export default function Game() {
                     
                   </div>
 
-
-                  {/*<button
-                      onClick={() => speakFrench(img.title)}
-                      className="p-2 mt-2 rounded-xl bg-gray-800 border-2 border-lightblue items-center justify-center text-white shadow-md hover:bg-lightblue focus:outline-none focus:ring-2 focus:ring-lightblue transition-colors duration-300 cursor-pointer"
-                      style={{
-                        width: '36px',
-                        height: '36px',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        
-                      }}
-                    >
-                      
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        className="w-6 h-6 animate-pulse text-shadow-glow" // Adicionando uma animação simples
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.54.848l3-2a1 1 0 000-1.696l-3-2z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                  </button>*/}
-
+                  
                   {results[index] && (
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
