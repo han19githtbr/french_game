@@ -675,7 +675,7 @@ export default function ResultsPage() {
         onMouseDown={handleStart}
         onTouchStart={handleStart}
         style={{
-          position: 'fixed',
+          position: 'absolute',
           left: position.x,
           top: position.y,
           width: 'auto',
@@ -683,8 +683,9 @@ export default function ResultsPage() {
           maxHeight: '90vh',
           minWidth: '220px',
           zIndex: 9999,
+          cursor: 'grab',
         }}
-        className="bg-gray-800 text-white p-3 rounded-md shadow-lg border border-blue"
+        className="bg-transparent text-white mt-20 p-3 rounded-md shadow-lg border border-blue"
       >
         <div className="font-bold mb-2 select-none text-blue">Pode arrastar</div>
         <div className="font-bold mb-2 select-none text-green">Jogadores Online</div>
@@ -692,29 +693,23 @@ export default function ResultsPage() {
         <div
           className="bg-gray-900 border border-green rounded p-2 overflow-x-auto"
           style={{
-            minHeight: 'calc(15vh - 60px)',
+            minHeight: 'calc(17vh - 60px)', // Mantém a altura mínima
             whiteSpace: 'nowrap',
+            display: 'flex', // Adicionamos flex para alinhar as bolinhas horizontalmente
+            alignItems: 'center', // Opcional: alinha verticalmente as bolinhas no centro
           }}
         >
-          <ul className="space-x-3 w-full max-w-none flex flex-row">
-            {playersOnline.map((player) => (
-              <li
-                key={player.clientId}
-                className={`bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg p-4 flex items-center justify-between shadow-md border border-gray-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer ${hiddenPlayers.includes(player.clientId) ? 'opacity-50' : ''}`}
-                style={{ display: 'inline-block', minWidth: '200px' }}
-                onClick={() => handleShowPlayer(player.clientId)} // Adicionando a função para reexibir
-                title={hiddenPlayers.includes(player.clientId) ? 'Mostrar Jogador' : ''}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-green mr-1 animate-pulse shrink-0" />
-                  <span className="font-bold text-lg text-white truncate max-w-[140px] sm:max-w-[180px]">
-                    {player.name}
-                  </span>
-                </div>
-                
-              </li>
-            ))}
-          </ul>
+          {playersOnline.map((player) => (
+            <div
+              key={player.clientId}
+              className={`rounded-full w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-md border border-gray-700 cursor-pointer transition duration-300 ease-in-out transform hover:scale-110 mr-2 last:mr-0 ${hiddenPlayers.includes(player.clientId) ? 'opacity-50' : ''}`}
+              onClick={() => handleShowPlayer(player.clientId)}
+              title={hiddenPlayers.includes(player.clientId) ? 'Mostrar Jogador' : player.name}
+              style={{ flexShrink: 0 }} // Impede que as bolinhas encolham
+            >
+              <span className="text-white text-xs sm:text-sm font-semibold">{player.name.charAt(0).toUpperCase()}</span>
+            </div>
+          ))}
         </div>
       </div>*/}
     

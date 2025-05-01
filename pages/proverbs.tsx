@@ -27,6 +27,12 @@ type Player = {
   name: string
 }
 
+interface OnlineNotificationsProps {
+  playersOnline: Player[];
+  handleRequestChat: (player: Player) => void;
+  openChatBubble: (player: Player) => void;
+}
+
 type ShowNotification =
   | {
       name: string;
@@ -161,6 +167,12 @@ export default function Game() {
 
   const [open, setOpen] = useState(false);
 
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [newPlayerAlert, setNewPlayerAlert] = useState('');
+  const alertTimeout = useRef<NodeJS.Timeout | null>(null);
+  
+
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   //const clientId = ablyClient?.auth.clientId;
@@ -259,6 +271,32 @@ export default function Game() {
       document.removeEventListener('touchcancel', handleTouchCancel);
     };
   }, [dragging, offset]);
+
+
+  useEffect(() => {
+      // Simula a chegada de um novo jogador (você precisará adaptar isso à sua lógica real)
+      const newPlayers = playersOnline.filter(player => /* sua lógica para identificar novos jogadores */ true);
+  
+      if (newPlayers.length > 0) {
+        setNotificationCount(prevCount => prevCount + newPlayers.length);
+        setNewPlayerAlert('Novo usuário online!');
+        if (alertTimeout.current) { // Verifica se alertTimeout.current tem um valor
+          clearTimeout(alertTimeout.current);
+        }
+        alertTimeout.current = setTimeout(() => {
+          setNewPlayerAlert('');
+        }, 2000);
+      }
+  }, [playersOnline /*, dependências que indicam novos jogadores */ ]);
+  
+  
+  const toggleNotifications = () => {
+      setShowNotifications(!showNotifications);
+      // Zera a contagem ao abrir as notificações
+      if (!showNotifications) {
+        setNotificationCount(0);
+      }
+  };
 
   const handleMove = (clientX: number, clientY: number) => {
     if (!dragging || !boxRef.current) return;
@@ -1035,9 +1073,9 @@ export default function Game() {
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
-          <div className="flex items-center gap-2 cursor-pointer mt-12">
+          <div className="flex items-center gap-2 cursor-pointer mt-4">
             <span className="text-gray-300 font-medium hidden sm:inline">{session.user.name}</span>
-            <img src={session.user.image || ''} alt="Avatar" className="w-10 h-10 rounded-full border border-white" />
+            <img src={session.user.image || ''} alt="Avatar" className="w-10 h-10 rounded-full border border-green" />
           </div>
           <div
             className={`absolute border border-blue right-0 mt-2 text-black py-2 px-4 rounded shadow-lg z-10 ${
@@ -1052,50 +1090,64 @@ export default function Game() {
         </div>
       )}
 
-      {/*<h1 className="text-2xl font-bold mb-4 mt-6">Jogadores Online</h1>*/}
-      <ul className="space-y-3 w-full max-w-md fixed">
-        {playersOnline
-        .filter((player) => !hiddenPlayers.includes(player.clientId))
-        .map((player) => (
-          <li
-            key={player.clientId}
-            className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg p-4 flex items-center justify-between shadow-md border border-gray-600 transition duration-300 ease-in-out transform hover:scale-105"
+      <div className="fixed top-4 left-4 z-50">
+        {/* Alerta de novo jogador */}
+        {newPlayerAlert && (
+          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 bg-green-500 text-white py-2 px-4 rounded-md shadow-md transition-opacity duration-500 ease-in-out">
+            {newPlayerAlert}
+          </div>
+        )}
+
+        {/* Sininho de Notificações */}
+        <button
+          onClick={toggleNotifications}
+          className="relative border-2 border-lightblue hover:bg-lightblue text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1h9v-1a6 6 0 01-12 0v-1c0-2.485-2.099-4.5-4-4s-4 2.015-4 4v1z" />
+          </svg>
+          {notificationCount > 0 && (
+            <span className="absolute top-0 right-0 transform translate-x-1/4 -translate-y-1/4 bg-green-500 text-white text-xs rounded-full px-2 py-0.5">
+              {notificationCount}
+            </span>
+          )}
+        </button>
+
+        {/* Lista de Jogadores (aparece ao clicar no sininho) */}
+        {showNotifications && (
+          <div 
+            className="fixed top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900 border border-gray-700 rounded-md shadow-lg mt-2 w-64"
+            style={{ zIndex: 9999 }}
           >
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <div className="w-2 h-2 rounded-full bg-green mr-1 animate-pulse shrink-0" />
-              <span className="font-bold text-lg text-white truncate max-w-[140px] sm:max-w-[180px]">
-                {player.name}
-              </span>
-            </div>
-
-            <div className="flex items-center shrink-0">
-              <button
-                onClick={() => handleHidePlayer(player.clientId)}
-                className="bg-blue hover:bg-gray-700 text-white font-bold py-2 px-2 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-gray-500 mr-2 cursor-pointer"
-                title="Ocultar Jogador"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.06 10.06 0 012.19-3.368M6.423 6.423A9.967 9.967 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.05 10.05 0 01-4.128 5.14M15 12a3 3 0 11-6 0 3 3 0 016 0zm-9 9l18-18" />
-                </svg>
-
-              </button>
-
-              <button
-                onClick={() => {
-                  handleRequestChat(player);
-                  openChatBubble(player);
-                }}
-                className="bg-gradient-to-br from-blue to-purple hover:from-blue hover:to-purple text-white whitespace-nowrap font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
-                Solicitar Bate-papo
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
+            <h2 className="text-lg font-semibold text-white p-3 border-b border-gray-800">Jogadores Online</h2>
+            <ul className="divide-y divide-gray-800">
+              {playersOnline.map((player) => (
+                <li key={player.clientId} className="p-3 hover:bg-gray-800 transition duration-200 ease-in-out cursor-pointer">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                      <span className="text-white text-sm truncate">{player.name}</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        handleRequestChat(player);
+                        openChatBubble(player);
+                        setShowNotifications(false); // Fecha a lista após solicitar o chat
+                      }}
+                      className="bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-xs font-semibold py-1 px-2 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    >
+                      Chat
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            {playersOnline.length === 0 && (
+              <div className="text-gray-500 p-3 text-center">Nenhum jogador online no momento.</div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Caixinha de miniaturas arrastável */}
       <div
@@ -1110,7 +1162,7 @@ export default function Game() {
           maxWidth: '90vw',
           maxHeight: '90vh',
           minWidth: '220px',
-          zIndex: 9999,
+          //zIndex: 9999,
           cursor: 'grab',
         }}
         className="bg-transparent text-white mt-20 p-3 rounded-md shadow-lg border border-blue"
@@ -1121,29 +1173,23 @@ export default function Game() {
         <div
           className="bg-gray-900 border border-green rounded p-2 overflow-x-auto"
           style={{
-            minHeight: 'calc(17vh - 60px)',
+            minHeight: 'calc(17vh - 60px)', // Mantém a altura mínima
             whiteSpace: 'nowrap',
+            display: 'flex', // Adicionamos flex para alinhar as bolinhas horizontalmente
+            alignItems: 'center', // Opcional: alinha verticalmente as bolinhas no centro
           }}
         >
-          <ul className="space-x-3 w-full max-w-none flex flex-row">
-            {playersOnline.map((player) => (
-              <li
-                key={player.clientId}
-                className={`bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg p-4 flex items-center justify-between shadow-md border border-gray-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer ${hiddenPlayers.includes(player.clientId) ? 'opacity-50' : ''}`}
-                style={{ display: 'inline-block', minWidth: '200px' }}
-                onClick={() => handleShowPlayer(player.clientId)} // Adicionando a função para reexibir
-                title={hiddenPlayers.includes(player.clientId) ? 'Mostrar Jogador' : ''}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-green mr-1 animate-pulse shrink-0" />
-                  <span className="font-bold text-lg text-white truncate max-w-[140px] sm:max-w-[180px]">
-                    {player.name}
-                  </span>
-                </div>
-                
-              </li>
-            ))}
-          </ul>
+          {playersOnline.map((player) => (
+            <div
+              key={player.clientId}
+              className={`rounded-full w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-md border border-gray-700 cursor-pointer transition duration-300 ease-in-out transform hover:scale-110 mr-2 last:mr-0 ${hiddenPlayers.includes(player.clientId) ? 'opacity-50' : ''}`}
+              onClick={() => handleShowPlayer(player.clientId)}
+              title={hiddenPlayers.includes(player.clientId) ? 'Mostrar Jogador' : player.name}
+              style={{ flexShrink: 0 }} // Impede que as bolinhas encolham
+            >
+              <span className="text-white text-xs sm:text-sm font-semibold">{player.name.charAt(0).toUpperCase()}</span>
+            </div>
+          ))}
         </div>
       </div>
 
