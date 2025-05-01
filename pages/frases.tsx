@@ -70,26 +70,26 @@ interface ReviewItem {
 
 type SetterFunction = (value: boolean) => void;
 
+const lockMessageVariants = {
+  initial: { opacity: 0, y: 10 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+  exit: { opacity: 0, y: 10, transition: { duration: 0.3 } },
+};
+
 const unlockButtonVariants = {
   locked: {},
   unlocking: {
     scale: [1, 1.1, 1],
     rotate: [0, 5, -5, 0],
-    transition: { duration: 0.2 },
+    transition: { duration: 0.4 },
   },
   unlocked: {},
 };
 
 const unlockAnimationVariants = {
   initial: { opacity: 0, scale: 0.5 },
-  animate: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
-  exit: { opacity: 0, scale: 0.5, transition: { duration: 0.2 } },
-};
-
-const lockMessageVariants = {
-  initial: { opacity: 0, y: 10 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.4 } },
-  exit: { opacity: 0, y: 10, transition: { duration: 0.1 } },
+  animate: { opacity: 1, scale: 1, transition: { duration: 0.5 } },
+  exit: { opacity: 0, scale: 0.5, transition: { duration: 0.4 } },
 };
 
 //const frenchVoices = ['fr-FR', 'fr-CA', 'fr-BE', 'fr-CH', 'fr-LU'];
