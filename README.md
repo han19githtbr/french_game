@@ -104,12 +104,12 @@ Enviar e receber notificações entre os usuários enquanto jogam.
 # Construa a imagem Docker:
 
 docker build -t seu-nome/nome-do-jogo .
-
+docker build -t 19handocker/french-learning-app .
 
 # Execute o contêiner Docker:
 
 docker run -p 3000:3000 seu-nome/nome-do-jogo
-
+docker run -p 3000:3000 19handocker/french-learning-app
 
 # Envie a imagem para um registro de contêiner (opcional, mas necessário para deploy em servidores)
 
@@ -119,8 +119,15 @@ docker login
 # Marque sua imagem com o nome do registro:
 
 docker tag seu-nome/nome-do-jogo:latest
-
+docker tag 19handocker/french-learning-app:latest
+docker tag 19handocker/french-learning-app:latest 19handocker/french-learning-app:v1.0
 
 # Envie a imagem:
 
 docker push seu-nome/nome-do-jogo:latest
+docker push 19handocker/french-learning-app:latest
+
+
+## Adicione o arquivo vercel.yml ao Git:
+
+git add .github/workflows/vercel.yml
