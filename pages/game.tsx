@@ -77,8 +77,8 @@ interface ReviewItem {
 
 const lockMessageVariants = {
   initial: { opacity: 0, y: 10 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-  exit: { opacity: 0, y: 10, transition: { duration: 0.3 } },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+  exit: { opacity: 0, y: 10, transition: { duration: 0.2 } },
 };
 
 const unlockButtonVariants = {
@@ -86,15 +86,15 @@ const unlockButtonVariants = {
   unlocking: {
     scale: [1, 1.1, 1],
     rotate: [0, 5, -5, 0],
-    transition: { duration: 0.4 },
+    transition: { duration: 0.2 },
   },
   unlocked: {},
 };
 
 const unlockAnimationVariants = {
   initial: { opacity: 0, scale: 0.5 },
-  animate: { opacity: 1, scale: 1, transition: { duration: 0.5 } },
-  exit: { opacity: 0, scale: 0.5, transition: { duration: 0.4 } },
+  animate: { opacity: 1, scale: 1, transition: { duration: 0.4 } },
+  exit: { opacity: 0, scale: 0.5, transition: { duration: 0.2 } },
 };
 
 export default function Game() {
@@ -1930,7 +1930,7 @@ export default function Game() {
                         className="w-full rounded-lg shadow-md"
                       />
                       <div className="absolute bottom-2 left-0 right-0 bg-black bg-opacity-60 text-white py-2 rounded-b-lg">
-                        <p className="text-2xl font-bold text-lightblue text-shadow-glow">{reviewHistory[currentReviewIndex]?.title}</p>
+                        <p className="text-2xl font-semibold text-lightblue text-shadow-glow">{reviewHistory[currentReviewIndex]?.title}</p>
                       </div>
                     </div>
                     <div className="mt-4 flex justify-between items-center">

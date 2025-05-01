@@ -219,14 +219,14 @@ export default function Home() {
         <span className="font-semibold text-sm mb-1 text-gray-300 items-center">Acessos <span className='text-green'>({dayName})</span></span>
         <div className="flex items-center mr-8">
           
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-25 text-green mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-33 text-green mr-2" fill="none" viewBox="0 0 44 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.237l.051.02C7.414 2.469 7.5 2.716 7.5 3c0 .833-.333 1.5-1 1.5-.667 0-1.333-.667-1-1.5c0-.284.086-.531.262-.763l.051-.02a2 2 0 012.977-1.412c.414.12.85.346 1.15.671a2 2 0 01.668 1.488l.032.029" />
           </svg>
           <span className="font-semibold text-lg text-green mt-3">{dailyAccessCount}</span>
         </div>
       </div>
       <h1
-        className="text-4xl font-bold mt-90 mb-8 text-center"
+        className="text-4xl font-bold mt-94 mb-8 text-center"
         dangerouslySetInnerHTML={{ __html: animatedTitle }}
       />
       
