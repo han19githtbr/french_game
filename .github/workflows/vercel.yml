@@ -24,6 +24,13 @@ jobs:
       - name: Build Next.js app
         run: npm run build
 
+        # Step de teste para verificar o download de outra action
+      - name: Test Hello World Action
+        uses: actions/hello-world-javascript-action@v1
+        with:
+            who-to-greet: 'GitHub Actions'
+
+
       - name: Deploy to Vercel
         uses: vercel/vercel-action@v1.1.0
         with:
