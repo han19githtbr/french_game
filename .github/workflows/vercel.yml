@@ -25,7 +25,7 @@ jobs:
         run: npm run build
 
       - name: Deploy to Vercel
-        uses: vercel/vercel-action@v1
+        uses: vercel/vercel-action@v1.1.0
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           scope: han19githtbr # O nome do seu "Team" ou "User" no Vercel
