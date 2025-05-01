@@ -1195,7 +1195,8 @@ export default function Frase() {
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -30 }}
-            className="fixed top-5 left-5 bg-gradient-to-r from-blue to-purple text-white px-6 py-3 rounded-2xl shadow-xl z-50"
+            className="fixed top-5 left-5 bg-gradient-to-r from-blue to-purple text-white px-6 py-3 rounded-2xl shadow-xl"
+            style={{ zIndex: 9999 }}
           >
           {showNotification.type === 'join' ? (
             <>🎮 {showNotification.name} entrou no jogo!</>
