@@ -35,7 +35,9 @@ const animalSounds: Record<string, string> = {
   'Ce gorille est très docile': '/sounds/gorila.mp3',
   'Ce mouton a perdu sa troupe': '/sounds/sheep.mp3',
   'Ce canard est celui de ma tante!': '/sounds/duck.mp3',
-  'Je me suis réveillé au chant de ce coq!': '/sounds/clucking.mp3'
+  'Je me suis réveillé au chant de ce coq!': '/sounds/clucking.mp3',
+  'Cette vache, c\'est celle de Faubert!': '/sounds/cow.mp3',
+  'J\'aime les lapins.': '/sounds/rabbit.wav'
 }
 
 type Result = {

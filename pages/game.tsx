@@ -34,6 +34,8 @@ const animalSounds: Record<string, string> = {
   'Le Mouton': '/sounds/sheep.mp3',
   'Le Canard': '/sounds/duck.mp3',
   'Un Coq': '/sounds/clucking.mp3',
+  'Un lapin': '/sounds/rabbit.wav',
+  'Une vache': '/sounds/cow.mp3',
 }
 
 type Result = {

@@ -34,6 +34,8 @@ const allImages = {
     { url: '/ghibli/natureza/noite.jpg', title: 'La nuit' },
     { url: '/ghibli/natureza/praia.jpg', title: 'À la plage' },
     { url: '/ghibli/natureza/lua.png', title: 'La lune' },
+    { url: '/ghibli/natureza/furacao.png', title: 'Un cyclone' },
+    { url: '/ghibli/natureza/vulcao.png', title: 'Le volcan' },
         
   ],
   'turismo': [
@@ -67,6 +69,8 @@ const allImages = {
     { url: '/ghibli/animais/pato.png', title: 'Le Canard' },
     { url: '/ghibli/animais/galinha.jpg', title: 'Un Coq' },
     { url: '/ghibli/animais/brincar_cachorro.jpg', title: 'Jouer avec son chien' },
+    { url: '/ghibli/animais/vaca.png', title: 'Une vache' },
+    { url: '/ghibli/animais/coelho.png', title: 'Un lapin' },
   ],
   'tecnologia': [
     { url: '/ghibli/tecnologia/satelite.png', title: 'Une Satellite' },
@@ -81,6 +85,8 @@ const allImages = {
     { url: '/ghibli/tecnologia/ventilador.png', title: 'Le ventilateur' },
     { url: '/ghibli/tecnologia/redes_sociais.png', title: 'Les réseaux sociaux' },
     { url: '/ghibli/tecnologia/trem.png', title: 'Le train' },
+    { url: '/ghibli/tecnologia/computador.png', title: 'Un ordinateur' },
+    { url: '/ghibli/tecnologia/radio.png', title: 'La radio' },
   ],
   'gastronomia': [
     { url: '/ghibli/gastronomia/bolo.png', title: 'Un Gâteau' },

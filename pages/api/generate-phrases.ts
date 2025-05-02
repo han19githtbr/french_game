@@ -38,6 +38,8 @@ const allImages = {
     { url: '/frases/natureza/nuvens.jpg', title: 'Le ciel est rempli de nuages' },
     { url: '/frases/natureza/praia.jpg', title: 'Le couple regarde le coucher du soleil à la plage' },
     { url: '/frases/natureza/lua.png', title: 'C\'est la pleine lune, le moment idéal pour une promenade!' },
+    { url: '/frases/natureza/vulcao.png', title: 'Ce volcan est en éruption' },
+    { url: '/frases/natureza/furacao.png', title: 'Le cyclone est une catastrophe naturelle' },
   ],
   'turismo': [
     { url: '/frases/turismo/aeroporto.png', title: 'Je suis déjà à l\'Aéroport' },
@@ -70,6 +72,8 @@ const allImages = {
     { url: '/frases/animais/pato.png', title: 'Ce canard est celui de ma tante!' },
     { url: '/frases/animais/brincar_cachorro.jpg', title: 'Jean joue avec son chien' },
     { url: '/frases/animais/galinha.jpg', title: 'Je me suis réveillé au chant de ce coq!' },
+    { url: '/frases/animais/vaca.png', title: 'Cette vache, c\'est celle de Faubert!' },
+    { url: '/frases/animais/coelho.png', title: 'J\'aime les lapins.' },
   ],
   'tecnologia': [
     { url: '/frases/tecnologia/satelite.png', title: 'Les satellites sont de grandes inventions' },
@@ -84,6 +88,8 @@ const allImages = {
     { url: '/frases/tecnologia/ventilador.png', title: 'J\'aime dormir au son du ventilateur' },
     { url: '/frases/tecnologia/trem.png', title: 'Le train arrive très vite' },
     { url: '/frases/tecnologia/redes_sociais.png', title: 'L\'usage excessif des réseaux sociaux n\'est pas recommandé' },
+    { url: '/frases/tecnologia/computador.png', title: 'C\'est l\'ordinateur de ma mère'},
+    { url: '/frases/tecnologia/radio.png', title: 'J\'aime écouter la radio' },
   ],
   'gastronomia': [
     { url: '/frases/gastronomia/bolo.png', title: 'C\'est l\'heure de couper le gâteau!' },
