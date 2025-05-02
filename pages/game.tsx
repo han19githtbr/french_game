@@ -11,6 +11,12 @@ import { io } from 'socket.io-client'
 import { DotLoader } from 'react-spinners';
 import { Realtime, Message } from 'ably'
 import { useSound } from 'use-sound';
+import type { RealtimeChannel } from 'ably';
+import dynamic from "next/dynamic";
+//import ChatBox from "@/components/ChatBox"; // ajuste o caminho conforme necessário
+
+
+const Picker = dynamic(() => import("@emoji-mart/react"), { ssr: false });
 
 
 const themes = ['família', 'natureza', 'turismo', 'animais', 'tecnologia', 'gastronomia']
@@ -58,16 +64,17 @@ type ShowNotification =
     }
   | null;
 
-type ChatRequest = {
+interface ChatRequest {
   fromClientId: string;
   fromName: string;
-  avatarUrl?: string;
-};
+  fromAvatar: string;
+  toClientId: string;
+}
 
-type ChatMessage = {
-  sender: string;
-  text: string;
-  timestamp: number;
+type ChatBoxProps = {
+  clientId: string;
+  chatPartner: Player;
+  channel: RealtimeChannel;
 };
 
 type SetterFunction = (value: boolean) => void;
@@ -76,8 +83,6 @@ interface ReviewItem {
   url: string;
   title: string;
 }
-
-//const frenchVoices = ['fr-FR', 'fr-CA', 'fr-BE', 'fr-CH', 'fr-LU'];
 
 const lockMessageVariants = {
   initial: { opacity: 0, y: 10 },
@@ -109,6 +114,26 @@ export default function Game() {
   const { data: session, status } = useSession()
   const router = useRouter()
 
+  const [playersOnline, setPlayersOnline] = useState<Player[]>([])
+  const [showPlayersOnline, setShowPlayersOnline] = useState(false);
+      
+  const [showNotification, setShowNotification] = useState<ShowNotification | null>(null)
+
+  const [notification, setNotification] = useState<{ message: string; type: 'info' | 'success' | 'error' } | null>(null);
+
+  const [ablyClient, setAblyClient] = useState<Ably.Realtime | null>(null)
+  const [clientId, setClientId] = useState<string | null>(null);
+  
+  const [incomingRequest, setIncomingRequest] = useState<ChatRequest | null>(null);
+  const [privateChannel, setPrivateChannel] = useState<RealtimeChannel | null>(null);
+  const [chatPartner, setChatPartner] = useState<Player | null>(null);
+  
+  const [showPicker, setShowPicker] = useState(false);
+  
+
+  const playerName = session?.user?.name || 'Anônimo';
+  const [notificationCount, setNotificationCount] = useState(0);
+    
   const [isLogoutVisible, setIsLogoutVisible] = useState(false);
   const [logoutTimeoutId, setLogoutTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
@@ -119,8 +144,7 @@ export default function Game() {
   
   const [images, setImages] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
-  
-  //const [results, setResults] = useState<Record<number, Result>>({});
+    
   const [results, setResults] = useState<(Result | null)[]>([]);
   const [speechSpeeds, setSpeechSpeeds] = useState<number[]>(images.map(() => 1.0));
 
@@ -129,8 +153,7 @@ export default function Game() {
 
   const [correctSound, setCorrectSound] = useState<HTMLAudioElement | null>(null)
   const [wrongSound, setWrongSound] = useState<HTMLAudioElement | null>(null)
-  //const [correctSound, setCorrectSound] = useState<HTMLAudioElement | null>(null)
-
+  
   const [isFrasesUnlocked, setIsFrasesUnlocked] = useState(false);
   const [showLockMessage, setShowLockMessage] = useState(false);
 
@@ -143,43 +166,7 @@ export default function Game() {
 
   const [successSound, setSuccessSound] = useState<HTMLAudioElement | null>(null);
   const [playUnlockSound] = useSound('/sounds/unlock.mp3');
-
-  //const [playersOnline, setPlayersOnline] = useState<Player[]>([])
-  //const [chatPartnerAvatar, setChatPartnerAvatar] = useState(''); // [NOVO] Estado para armazenar a URL do avatar do parceiro de chat atual.
-  
-  //const [hiddenPlayers, setHiddenPlayers] = useState<string[]>([]);
-  
-  const [showNotification, setShowNotification] = useState<ShowNotification | null>(null)
-
-  const [notification, setNotification] = useState<{ message: string; type: 'info' | 'success' | 'error' } | null>(null);
-
-  //const [ablyClient, setAblyClient] = useState<Ably.Realtime | null>(null)
-  //const [clientId, setClientId] = useState<string | null>(null);
-
-  //const [chatRequestsReceived, setChatRequestsReceived] = useState<ChatRequest[]>([]);
-  //const [activeChats, setActiveChats] = useState<{ [channelName: string]: ChatMessage[] }>({});
-  //const [isChatBubbleOpen, setIsChatBubbleOpen] = useState<string | false>(false);
-  //const [chatInput, setChatInput] = useState('');
-  //const [chatPartnerName, setChatPartnerName] = useState<string | null>(null);
-  //const [isTyping, setIsTyping] = useState(false);
-  //const typingHandlersRef = useRef<Record<string, (msg: Ably.Message) => void>>({});
-
-  //const [typingIndicator, setTypingIndicator] = useState<{ [clientId: string]: boolean }>({});
-  //const enterSoundRef = useRef<HTMLAudioElement | null>(null);
-  //const chatRequestReceivedSoundRef = useRef<HTMLAudioElement | null>(null); // Referência para o som de pedido recebido
-  //const chatRequestResponseSoundRef = useRef<HTMLAudioElement | null>(null); // Referência para o som de resposta ao pedido
-  //const chatHandlersRef = useRef<Record<string, (message: Ably.Message) => void>>({});
-
-  //const [chatRequestsSent, setChatRequestsSent] = useState<{ toClientId: string, toName: string }[]>([]);
-
-  const boxRef = useRef<HTMLDivElement | null>(null);
-  const [position, setPosition] = useState({ x: 20, y: 20 }) // canto superior esquerdo
-  const [dragging, setDragging] = useState(false);
-  const [offset, setOffset] = useState({ x: 130, y: 130 });
-  const [visibleModals, setVisibleModals] = useState<Record<string, boolean>>({});
-  //const [minimizedRequests, setMinimizedRequests] = useState<string[]>([]);
-  //const [minimizedChat, setMinimizedChat] = useState<string | false>(false); // [NOVO] Estado para controlar o ID do chat que está minimizado (se estiver `false`, nenhum está minimizado).
-
+      
   const [reviewHistory, setReviewHistory] = useState<ReviewItem[]>([]);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
@@ -198,19 +185,24 @@ export default function Game() {
   const [isReviewPaused, setIsReviewPaused] = useState(false);
 
   const [open, setOpen] = useState(false);
-
-  const chatContainerRef = useRef<HTMLDivElement>(null);
-
-  const [notificationCount, setNotificationCount] = useState(0);
-  const [showNotifications, setShowNotifications] = useState(false);
-  //const [newPlayerAlert, setNewPlayerAlert] = useState('');
-  const alertTimeout = useRef<NodeJS.Timeout | null>(null);
-
-  //const clientId = ablyClient?.auth.clientId;
-  //const playerName = session?.user?.name || 'Anônimo';
-  
+      
   const handleCloseZoom = () => {
     setZoomedImage(null);
+  };
+
+  const playEnterSound = () => {
+    const audio = new Audio('/sounds/enter.mp3');
+    audio.play().catch((err) => {
+      console.warn('Failed to play sound:', err);
+    });
+  };
+ 
+
+  const playRequestSound = () => {
+    const audio = new Audio('/sounds/request.mp3');
+    audio.play().catch((err) => {
+      console.warn('Failed to play request sound:', err);
+    });
   };
 
   const handleUnlockAnimationEnd = (setter: SetterFunction) => {
@@ -240,91 +232,231 @@ export default function Game() {
   }, [status, router]);
 
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      handleMove(e.clientX, e.clientY);
+    if (!ablyClient) return;
+    const channel = ablyClient.channels.get("presence-chat");
+  
+    const fetchOnlinePlayers = async () => {
+      const members = await channel.presence.get();
+      const players: Player[] = members.map((m) => ({
+        clientId: m.clientId,
+        name: m.data.name,
+        avatarUrl: m.data.avatarUrl,
+      }));
+      setPlayersOnline(players);
     };
+  
+    if (showPlayersOnline) fetchOnlinePlayers();
+  }, [ablyClient, showPlayersOnline]);
 
-    const handleMouseUp = () => setDragging(false);
 
-    const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches.length === 1) {
-        handleMove(e.touches[0].clientX, e.touches[0].clientY);
+  useEffect(() => {
+    if (!ablyClient || !clientId || !playerName) return;
+  
+    const presenceChannel = ablyClient.channels.get("presence-chat");
+  
+    presenceChannel.presence.enter({ name: playerName, avatarUrl: session?.user?.image });
+  
+    presenceChannel.presence.subscribe("enter", (member) => {
+      if (member.clientId !== clientId) {
+        setShowNotification({ name: member.data.name, type: 'join' });
+        setNotificationCount((prev) => prev + 1);
+        playEnterSound();
+      }
+    });
+  
+    presenceChannel.presence.subscribe("leave", (member) => {
+      if (member.clientId !== clientId) {
+        setShowNotification({ name: member.data.name, type: 'leave' });
+        setNotificationCount((prev) => prev + 1);
+      }
+    });
+  
+    return () => {
+      presenceChannel.presence.leave();
+      presenceChannel.presence.unsubscribe();
+    };
+  }, [ablyClient, clientId, playerName]);
+
+
+  useEffect(() => {
+    if (showNotification) {
+      const timeout = setTimeout(() => setShowNotification(null), 3000);
+      return () => clearTimeout(timeout);
+    }
+  }, [showNotification]);
+ 
+
+  // Enviar chat request
+  const sendChatRequest = (toPlayer: Player) => {
+    const request: ChatRequest = {
+      fromClientId: clientId!,
+      fromName: playerName,
+      fromAvatar: session?.user?.image || "",
+      toClientId: toPlayer.clientId,
+    };
+  
+    ablyClient?.channels.get("presence-chat").publish("chat-request", request);
+  };
+
+
+  useEffect(() => {
+    const channel = ablyClient?.channels.get("presence-chat");
+  
+    const handleRequest = (msg: any) => {
+      const req: ChatRequest = msg.data;
+      if (req.toClientId === clientId) {
+        setIncomingRequest(req);
+        playRequestSound();
       }
     };
-
-    const handleTouchEnd = () => setDragging(false);
-    const handleTouchCancel = () => setDragging(false);
-
-    
-    if (dragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      document.addEventListener('touchmove', handleTouchMove, { passive: false });
-      document.addEventListener('touchend', handleTouchEnd);
-      document.addEventListener('touchcancel', handleTouchCancel);
-    } else {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleTouchEnd);
-      document.removeEventListener('touchcancel', handleTouchCancel);
-    }
-
+  
+    channel?.subscribe("chat-request", handleRequest);
+  
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleTouchEnd);
-      document.removeEventListener('touchcancel', handleTouchCancel);
+      channel?.unsubscribe("chat-request", handleRequest);
     };
-  }, [dragging, offset]);
+  }, [ablyClient, clientId]);
 
-   
-  const handleMove = (clientX: number, clientY: number) => {
-    if (!dragging || !boxRef.current) return;
 
-    const newX = clientX - offset.x;
-    const newY = clientY - offset.y;
+  const getPrivateChannelName = (id1: string, id2: string) =>
+    `private-chat:${[id1, id2].sort().join("-")}`;
+  
 
-    const box = boxRef.current;
-    const windowWidth = window.innerWidth;
-    const windowHeight = window.innerHeight;
-
-    const boxWidth = box.offsetWidth;
-    const boxHeight = box.offsetHeight;
-
-    const clampedX = Math.max(0, Math.min(newX, windowWidth - boxWidth));
-    const clampedY = Math.max(0, Math.min(newY, windowHeight - boxHeight));
-
-    setPosition({ x: clampedX, y: clampedY });
+  const acceptRequest = (req: ChatRequest) => {
+    const channelName = getPrivateChannelName(req.fromClientId, clientId!);
+    const channel = ablyClient?.channels.get(channelName);
+  
+    if (!channel) return; // impede erro
+  
+    setChatPartner({
+      clientId: req.fromClientId,
+      name: req.fromName,
+      avatarUrl: req.fromAvatar,
+    });
+    setPrivateChannel(channel);
+    setIncomingRequest(null);
   };
 
-  const handleStart = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
-    if (!boxRef.current) return;
-    setDragging(true);
 
-    let startX: number | undefined;
-    let startY: number | undefined;
-    const rect = boxRef.current.getBoundingClientRect();
+  const ChatBox = ({ clientId, chatPartner, channel }: ChatBoxProps) => {
+    const [messages, setMessages] = useState<{ from: string; text: string }[]>([]);
+    const [input, setInput] = useState("");
+    const [isPartnerTyping, setIsPartnerTyping] = useState(false);
+  
+    useEffect(() => {
+      const handler = (msg: any) => {
+        setMessages((prev) => [...prev, msg.data]);
+        new Audio("/sounds/message.mp3").play();
+      };
+      channel.subscribe("message", handler);
+      return () => channel.unsubscribe("message", handler);
+    }, [channel]);
+  
+    useEffect(() => {
+      const handler = (msg: any) => {
+        if (msg.data.from !== clientId) {
+          setIsPartnerTyping(msg.data.isTyping);
+        }
+      };
+      channel.subscribe("typing", handler);
+      return () => channel.unsubscribe("typing", handler);
+    }, [channel]);
+  
+    useEffect(() => {
+      if (!input) return;
+      const typingEvent = { from: clientId, isTyping: true };
+      channel.publish("typing", typingEvent);
+      const timeout = setTimeout(() => {
+        channel.publish("typing", { from: clientId, isTyping: false });
+      }, 1000);
+      return () => clearTimeout(timeout);
+    }, [input]);
+  
+    const sendMessage = () => {
+      if (!input.trim()) return;
+      const message = { from: clientId, text: input.trim() };
+      channel.publish("message", message);
+      setMessages((prev) => [...prev, message]);
+      setInput("");
+    };
+  
+    
+  return (
+    <>
+      {/* Caixa de bate-papo privado */}
+      <div className="fixed bottom-4 right-4 bg-gray-900 rounded-xl border border-blue-500 shadow-xl w-80 z-50">
+        <div className="bg-blue-800 text-white p-2 rounded-t-xl flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <img src={chatPartner.avatarUrl} className="w-8 h-8 rounded-full" />
+            <span>{chatPartner.name}</span>
+          </div>
+        </div>
 
-    if (e instanceof MouseEvent) {
-      startX = e.clientX;
-      startY = e.clientY;
-    } else if (e instanceof TouchEvent && e.touches.length > 0) {
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-    }
+        <div className="p-2 max-h-64 overflow-y-auto space-y-1 text-white text-sm">
+          {messages.map((msg, i) => (
+            <div
+              key={i}
+              className={`p-2 rounded-md ${
+                msg.from === clientId ? "bg-blue-600 ml-auto text-right" : "bg-gray-700"
+              }`}
+            >
+              {msg.text}
+            </div>
+          ))}
+        </div>
 
-    if (startX !== undefined && startY !== undefined) {
-      setOffset({
-        x: startX - rect.left,
-        y: startY - rect.top,
-      });
-      // Tenta definir a posição inicial para o ponto do clique/toque
-      setPosition({ x: startX - (startX - rect.left), y: startY - (startY - rect.top) });
-    }
-  };
+        <div className="p-2 flex gap-2">
+          {/* Botão de emojis */}
+          <button
+            onClick={() => setShowPicker(!showPicker)}
+            type="button"
+            className="text-white text-lg px-2 hover:scale-110"
+          >
+            😊
+          </button>
 
+          {/* Campo de entrada */}
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            className="flex-1 bg-gray-800 rounded px-2 py-1 text-white"
+            placeholder="Digite..."
+          />
+
+          {/* Botão de enviar */}
+          <button
+            onClick={sendMessage}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 rounded"
+          >
+            Enviar
+          </button>
+
+          {/* Picker de emojis */}
+          {showPicker && (
+            <div className="absolute bottom-14 right-2 z-50">
+              <Picker
+                theme="dark"
+                onSelect={(emoji: any) => {
+                  setInput((prev) => prev + emoji.native);
+                  setShowPicker(false);
+                }}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Indicador de digitação */}
+      {isPartnerTyping && (
+        <div className="text-xs text-gray-300 px-3 py-1 animate-pulse">
+          {chatPartner.name} está digitando...
+        </div>
+      )}
+    </>
+  )
+}
+  
+  
 
   useEffect(() => {
     if (theme) loadImages()
@@ -428,29 +560,6 @@ export default function Game() {
   }, [correctAnswersCount, isReviewUnlocked, lockRotation, lockY, playUnlockSound]);
 
   
-  /*useEffect(() => {
-    if (!session) return
-  
-    const generatedClientId = session.user?.email || Math.random().toString(36).substring(2, 9)
-    const client = createAblyClient(generatedClientId)
-    setAblyClient(client);
-
-    setClientId(generatedClientId);
-  
-    return () => {
-      client.close()
-    }
-  }, [session]);*/
- 
-  
-  // [ACRESCENTADO] Estado para armazenar o clientId assim que estiver disponível
-  /*useEffect(() => {
-    if (ablyClient) {
-      setClientId(ablyClient.auth.clientId);
-    }
-  }, [ablyClient]);*/
-
-
   const handleMouseEnter = () => {
     clearTimeout(logoutTimeoutId as NodeJS.Timeout); // Limpa qualquer timeout pendente
     setIsLogoutVisible(true);
@@ -728,42 +837,87 @@ export default function Game() {
       )}
 
       
+      {/* Notificação de jogadores online */}
       <div className="fixed top-4 left-4 z-50">
-        
-        {/* Sininho de Notificações */}
-        <button
-          
-          className="relative border-2 border-lightblue hover:bg-lightblue text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer mt-4"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1h9v-1a6 6 0 01-12 0v-1c0-2.485-2.099-4.5-4-4s-4 2.015-4 4v1z" />
-          </svg>
-          {notificationCount > 0 && (
-            <span className="absolute top-0 right-0 transform translate-x-1/4 -translate-y-1/4 bg-green-500 text-white text-xs rounded-full px-2 py-0.5">
-              {notificationCount}
-            </span>
-          )}
-        </button>
+            <button
+                onClick={() => {
+                  setShowPlayersOnline((prev) => !prev);
+                  setNotificationCount(0); // Zera as notificações
+                }}
+                className="relative border-2 border-lightblue hover:bg-lightblue text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer mt-4"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1h9v-1a6 6 0 01-12 0v-1c0-2.485-2.099-4.5-4-4s-4 2.015-4 4v1z" />
+                </svg>
+                {notificationCount > 0 && (
+                  <span className="absolute top-0 right-0 transform translate-x-1/4 -translate-y-1/4 bg-green text-green text-xs rounded-full px-2 py-0.5">
+                      {notificationCount}
+                  </span>
+                )}
+            </button>
       </div>
       
-      {/*<AnimatePresence>
-        {showNotification && (
-          <motion.div
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -30 }}
-            className="fixed top-5 left-5 bg-gradient-to-r from-blue to-purple text-white px-6 py-3 rounded-2xl shadow-xl"
-            style={{ zIndex: 9999 }}
-          >
-          {showNotification.type === 'join' ? (
-            <>🎮 {showNotification.name} entrou no jogo!</>
-          ) : (
-            <>⚡ {showNotification.name} saiu do jogo.</>
-          )}
-          </motion.div>
-        )}
-      </AnimatePresence>*/}
+      {/* Exibição dos jogadores online */}
+      {showPlayersOnline && (
+            <div className="absolute top-26 left-4 bg-gray-900 rounded-xl shadow-lg p-4 w-72 z-50 border border-blue-400">
+                <h3 className="text-white font-semibold mb-2">Jogadores online</h3>
+                <ul className="space-y-2 max-h-64 overflow-y-auto">
+                {playersOnline
+                    .filter((p) => p.clientId !== clientId)
+                    .map((player) => (
+                    <li
+                        key={player.clientId}
+                        className="flex items-center justify-between bg-gray-800 px-3 py-2 rounded-lg hover:bg-gray-700 transition"
+                    >
+                        <div className="flex items-center space-x-2">
+                          <img src={player.avatarUrl} alt="avatar" className="w-8 h-8 rounded-full" />
+                          <span className="text-white">{player.name}</span>
+                        </div>
+                        <button
+                          onClick={() => sendChatRequest(player)}
+                          className="text-sm bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-full"
+                        >
+                          Bate-papo
+                        </button>
+                    </li>
+                    ))}
+                </ul>
+            </div>
+      )}
+
+
+      {/* Notificação de solicitação de chat */}
+      {incomingRequest && (
+            <div className="fixed bottom-4 right-4 bg-gray-800 border border-blue-500 rounded-xl p-4 shadow-xl z-50 animate-bounce-in">
+                <div className="flex items-center gap-3 mb-3">
+                  <img src={incomingRequest.fromAvatar} className="w-10 h-10 rounded-full" />
+                  <span className="text-white font-semibold">
+                      {incomingRequest.fromName} quer bater papo!
+                  </span>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <button
+                      className="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600"
+                      onClick={() => acceptRequest(incomingRequest)}
+                  >
+                      Aceitar
+                  </button>
+                  <button
+                      className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600"
+                      onClick={() => setIncomingRequest(null)}
+                  >
+                      Recusar
+                  </button>
+                </div>
+            </div>
+      )}
       
+
+      {/* Caixa de bate-papo privado */}
+      {chatPartner && privateChannel && (
+        <ChatBox clientId={clientId!} chatPartner={chatPartner} channel={privateChannel} />
+      )}
+
 
       <motion.h1 
         initial={{ opacity: 0, y: -20 }} 
