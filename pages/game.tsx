@@ -13,7 +13,6 @@ import { Realtime, Message } from 'ably'
 import { useSound } from 'use-sound';
 import type { RealtimeChannel } from 'ably';
 import dynamic from "next/dynamic";
-//import ChatBox from "@/components/ChatBox"; // ajuste o caminho conforme necessário
 
 
 const Picker = dynamic(() => import("@emoji-mart/react"), { ssr: false });
