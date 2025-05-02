@@ -7,9 +7,6 @@ import { Check, X, Minus, Lock } from 'lucide-react'
 import { motion , AnimatePresence, useMotionValue, useTransform, animate, MotionValue} from 'framer-motion'
 import { saveProgress } from './results'
 import { LockClosedIcon, LockOpenIcon } from '@heroicons/react/24/solid';
-import { io } from 'socket.io-client'
-import { DotLoader } from 'react-spinners';
-import { Realtime, Message } from 'ably'
 import { useSound } from 'use-sound';
 import type { RealtimeChannel } from 'ably';
 import dynamic from "next/dynamic";
@@ -50,19 +47,6 @@ type Player = {
   avatarUrl?: string;
 }
 
-interface OnlineNotificationsProps {
-  playersOnline: Player[];
-  handleRequestChat: (player: Player) => void;
-  openChatBubble: (player: Player) => void;
-}
-
-type ShowNotification =
-  | {
-      name: string;
-      type: 'join' | 'leave';
-    }
-  | null;
-
 interface ChatRequest {
   fromClientId: string;
   fromName: string;
@@ -75,6 +59,19 @@ type ChatBoxProps = {
   chatPartner: Player;
   channel: RealtimeChannel;
 };
+
+interface OnlineNotificationsProps {
+  playersOnline: Player[];
+  handleRequestChat: (player: Player) => void;
+  openChatBubble: (player: Player) => void;
+}
+
+type ShowNotification =
+  | {
+      name: string;
+      type: 'join' | 'leave';
+    }
+  | null;
 
 type SetterFunction = (value: boolean) => void;
 
@@ -119,10 +116,7 @@ export default function Game() {
   const [showNotification, setShowNotification] = useState<ShowNotification | null>(null)
 
   const [notification, setNotification] = useState<{ message: string; type: 'info' | 'success' | 'error' } | null>(null);
-
-  const [ablyClient, setAblyClient] = useState<Ably.Realtime | null>(null)
-  const [clientId, setClientId] = useState<string | null>(null);
-  
+    
   const [incomingRequest, setIncomingRequest] = useState<ChatRequest | null>(null);
   const [privateChannel, setPrivateChannel] = useState<RealtimeChannel | null>(null);
   const [chatPartner, setChatPartner] = useState<Player | null>(null);
@@ -184,11 +178,52 @@ export default function Game() {
   const [isReviewPaused, setIsReviewPaused] = useState(false);
 
   const [open, setOpen] = useState(false);
-      
-  const handleCloseZoom = () => {
-    setZoomedImage(null);
-  };
+  const [ablyClient, setAblyClient] = useState<Ably.Realtime | null>(null)
+  const [clientId, setClientId] = useState<string | null>(null);
+  
+  // Cria o Ably client assim que clientId estiver disponível
+  useEffect(() => {
+    if (!clientId) return;
 
+    const client = createAblyClient(clientId);
+    setAblyClient(client);
+
+    return () => {
+      client.close();
+    };
+  }, [clientId]);
+
+  
+  useEffect(() => {
+    if (!ablyClient || !clientId || !playerName) return;
+  
+    const presenceChannel = ablyClient.channels.get("presence-chat");
+    const avatarUrl = session?.user?.image ?? "";
+
+    presenceChannel.presence.enter({ name: playerName, avatarUrl});
+  
+    presenceChannel.presence.subscribe("enter", (member) => {
+      if (member.clientId !== clientId) {
+        setShowNotification({ name: member.data.name, type: 'join' });
+        setNotificationCount((prev) => prev + 1);
+        playEnterSound();
+      }
+    });
+  
+    presenceChannel.presence.subscribe("leave", (member) => {
+      if (member.clientId !== clientId) {
+        setShowNotification({ name: member.data.name, type: 'leave' });
+        setNotificationCount((prev) => prev + 1);
+      }
+    });
+  
+    return () => {
+      presenceChannel.presence.leave();
+      presenceChannel.presence.unsubscribe();
+    };
+  }, [ablyClient, clientId, playerName]);
+
+  
   const playEnterSound = () => {
     const audio = new Audio('/sounds/enter.mp3');
     audio.play().catch((err) => {
@@ -203,6 +238,16 @@ export default function Game() {
       console.warn('Failed to play request sound:', err);
     });
   };
+
+  useEffect(() => {
+    if (status === 'unauthenticated') router.push('/')
+  }, [status, router]);
+
+
+  const handleCloseZoom = () => {
+    setZoomedImage(null);
+  };
+ 
 
   const handleUnlockAnimationEnd = (setter: SetterFunction) => {
     setTimeout(() => {
@@ -226,10 +271,7 @@ export default function Game() {
     }
   }, []);
   
-  useEffect(() => {
-    if (status === 'unauthenticated') router.push('/')
-  }, [status, router]);
-
+      
   useEffect(() => {
     if (!ablyClient) return;
     const channel = ablyClient.channels.get("presence-chat");
@@ -246,35 +288,6 @@ export default function Game() {
   
     if (showPlayersOnline) fetchOnlinePlayers();
   }, [ablyClient, showPlayersOnline]);
-
-
-  useEffect(() => {
-    if (!ablyClient || !clientId || !playerName) return;
-  
-    const presenceChannel = ablyClient.channels.get("presence-chat");
-  
-    presenceChannel.presence.enter({ name: playerName, avatarUrl: session?.user?.image });
-  
-    presenceChannel.presence.subscribe("enter", (member) => {
-      if (member.clientId !== clientId) {
-        setShowNotification({ name: member.data.name, type: 'join' });
-        setNotificationCount((prev) => prev + 1);
-        playEnterSound();
-      }
-    });
-  
-    presenceChannel.presence.subscribe("leave", (member) => {
-      if (member.clientId !== clientId) {
-        setShowNotification({ name: member.data.name, type: 'leave' });
-        setNotificationCount((prev) => prev + 1);
-      }
-    });
-  
-    return () => {
-      presenceChannel.presence.leave();
-      presenceChannel.presence.unsubscribe();
-    };
-  }, [ablyClient, clientId, playerName]);
 
 
   useEffect(() => {
@@ -361,16 +374,30 @@ export default function Game() {
       return () => channel.unsubscribe("typing", handler);
     }, [channel]);
   
+    const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    
     useEffect(() => {
-      if (!input) return;
-      const typingEvent = { from: clientId, isTyping: true };
-      channel.publish("typing", typingEvent);
-      const timeout = setTimeout(() => {
+      if (!input || !channel) return;
+    
+      channel?.publish("typing", { from: clientId, isTyping: true });
+    
+      if (typingTimeout.current) {
+        clearTimeout(typingTimeout.current);
+      }
+    
+      typingTimeout.current = setTimeout(() => {
         channel.publish("typing", { from: clientId, isTyping: false });
       }, 1000);
-      return () => clearTimeout(timeout);
-    }, [input]);
+    
+      return () => {
+        if (typingTimeout.current) {
+          clearTimeout(typingTimeout.current);
+        }
+      };
+    }, [input, channel]);
   
+
     const sendMessage = () => {
       if (!input.trim()) return;
       const message = { from: clientId, text: input.trim() };
