@@ -216,7 +216,7 @@ export default function Game() {
 
 
   const playEnterSound = () => {
-    const audio = new Audio('/sounds/enter.mp3');
+    const audio = new Audio('/sounds/login.mp3');
     audio.play().catch((err) => {
       console.warn('Failed to play sound:', err);
     });
@@ -224,7 +224,7 @@ export default function Game() {
  
 
   const playRequestSound = () => {
-    const audio = new Audio('/sounds/request.mp3');
+    const audio = new Audio('/sounds/received_sound.mp3');
     audio.play().catch((err) => {
       console.warn('Failed to play request sound:', err);
     });
