@@ -19,6 +19,7 @@ const themes = ['família', 'natureza', 'turismo', 'animais', 'tecnologia', 'gas
 
 const animalSounds: Record<string, string> = {
   'Le Chien': '/sounds/cachorro.mp3',
+  'Jouer avec son chien': '/sounds/cachorro.mp3',
   'Le Chat': '/sounds/gato.mp3',
   'L\'Éléphant': '/sounds/elefante.mp3',
   'Le Lion': '/sounds/lion.mp3',
@@ -36,6 +37,8 @@ const animalSounds: Record<string, string> = {
   'Un Coq': '/sounds/clucking.mp3',
   'Un lapin': '/sounds/rabbit.wav',
   'Une vache': '/sounds/cow.mp3',
+  'Une sauterelle': '/sounds/grasshopper.mp3',
+  'Un loup': '/sounds/wolf.wav',
 }
 
 type Result = {

@@ -74,6 +74,8 @@ const allImages = {
     { url: '/frases/animais/galinha.jpg', title: 'Je me suis réveillé au chant de ce coq!' },
     { url: '/frases/animais/vaca.png', title: 'Cette vache, c\'est celle de Faubert!' },
     { url: '/frases/animais/coelho.png', title: 'J\'aime les lapins.' },
+    { url: '/frases/animais/lobo.png', title: 'Le loup est un animal sauvage' },
+    { url: '/frases/animais/gafanhoto.png', title: 'Le cri des sauterelles me tranquilise' },
   ],
   'tecnologia': [
     { url: '/frases/tecnologia/satelite.png', title: 'Les satellites sont de grandes inventions' },

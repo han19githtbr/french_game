@@ -71,6 +71,8 @@ const allImages = {
     { url: '/ghibli/animais/brincar_cachorro.jpg', title: 'Jouer avec son chien' },
     { url: '/ghibli/animais/vaca.png', title: 'Une vache' },
     { url: '/ghibli/animais/coelho.png', title: 'Un lapin' },
+    { url: '/ghibli/animais/gafanhoto.png', title: 'Une sauterelle' },
+    { url: '/ghibli/animais/lobo.png', title: 'Un loup' },
   ],
   'tecnologia': [
     { url: '/ghibli/tecnologia/satelite.png', title: 'Une Satellite' },
