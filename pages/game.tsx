@@ -1,5 +1,3 @@
-/*'use client'*/
-
 import { useEffect, useRef, useState, RefObject, useCallback } from 'react'
 import { createAblyClient } from '../lib/ably'
 import type * as Ably from 'ably'
