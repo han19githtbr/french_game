@@ -6,11 +6,15 @@ import { useRouter } from 'next/router'
 import { Check, X, Minus, Lock } from 'lucide-react'
 import { motion , AnimatePresence, useMotionValue, useTransform, animate, MotionValue} from 'framer-motion'
 import { saveProgress } from './results'
-import { LockClosedIcon, LockOpenIcon } from '@heroicons/react/24/solid';
+import { LockClosedIcon, LockOpenIcon, MusicalNoteIcon } from '@heroicons/react/24/solid';
 import { useSound } from 'use-sound';
 import type { RealtimeChannel } from 'ably';
 import dynamic from "next/dynamic";
+import { BiPlay, BiPause, BiVolumeFull, BiVolumeMute } from 'react-icons/bi';
+import { FaSpinner } from 'react-icons/fa';
 
+
+const FREESOUND_API_KEY = 'SbW3xMpvC1XDTCf9Pesz75rwFKteNYZ84YRcnZwI';
 
 const Picker = dynamic(() => import("@emoji-mart/react"), { ssr: false });
 
@@ -107,7 +111,9 @@ const unlockAnimationVariants = {
   exit: { opacity: 0, scale: 0.5, transition: { duration: 0.2 } },
 };
 
-export default function Game() {
+interface GameProps {}
+
+export default function Game({}: GameProps) {
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const imageRefs = useRef<(HTMLDivElement | null)[]>([])
   const lastSpokenTitleRef = useRef<string | null>(null);
@@ -186,6 +192,135 @@ export default function Game() {
   const [ablyClient, setAblyClient] = useState<Ably.Realtime | null>(null)
   const [clientId, setClientId] = useState<string | null>(null);
   
+  const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
+  const [currentSoundUrl, setCurrentSoundUrl] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [volume, setVolume] = useState(0.5);
+  const [isMuted, setIsMuted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchStatus, setSearchStatus] = useState<'idle' | 'searching' | 'results' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showRelaxSounds, setShowRelaxSounds] = useState(false);
+  const [currentSoundInfo, setCurrentSoundInfo] = useState<any | null>(null); // Para armazenar informações do som atual
+
+  
+  useEffect(() => {
+    if (selectedTheme) {
+      setSearchStatus('searching');
+      setErrorMessage(null);
+      setCurrentSoundUrl(null);
+      setSearchResults([]);
+      setCurrentSoundInfo(null);
+
+      const query = selectedTheme;
+
+      fetch(`https://freesound.org/apiv2/search/text/?query=${query}&token=${FREESOUND_API_KEY}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Erro na busca: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          setSearchResults(data.results);
+          if (data.results.length > 0) {
+            setSearchStatus('results');
+          } else {
+            setSearchStatus('results');
+            setErrorMessage(`Nenhum som encontrado para "${query}".`);
+          }
+        })
+        .catch(error => {
+          console.error("Erro ao buscar sons:", error);
+          setErrorMessage("Erro ao buscar sons.");
+          setSearchStatus('error');
+        })
+        .finally(() => {
+          setIsSearching(false);
+        });
+    } else {
+      setCurrentSoundUrl(null);
+      setIsPlaying(false);
+      setSearchStatus('idle');
+      setSearchResults([]);
+      setErrorMessage(null);
+      setCurrentSoundInfo(null);
+    }
+  }, [selectedTheme]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+      audioRef.current.muted = isMuted;
+    }
+  }, [volume, isMuted]);
+
+  const handleThemeSelect = (theme: string) => {
+    setSelectedTheme(theme);
+  };
+
+  const loadAndPlaySound = (soundId: number) => {
+    fetch(`https://freesound.org/apiv2/sounds/${soundId}/?token=${FREESOUND_API_KEY}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Erro ao obter detalhes do som: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(soundDetails => {
+        setCurrentSoundUrl(soundDetails.previews['preview-hq-mp3']);
+        setCurrentSoundInfo(soundDetails);
+        setIsPlaying(true);
+        if (audioRef.current) {
+          audioRef.current.play().catch(error => console.error("Erro ao tocar o áudio:", error));
+        }
+      })
+      .catch(error => {
+        console.error("Erro ao obter detalhes do som:", error);
+        setErrorMessage("Erro ao obter detalhes do som.");
+        setSearchStatus('error');
+      });
+  };
+
+  const togglePlay = () => {
+    if (currentSoundUrl) {
+      if (isPlaying) {
+        audioRef.current?.pause();
+      } else {
+        audioRef.current?.play().catch(error => console.error("Erro ao tocar o áudio:", error));
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const handleVolumeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setVolume(parseFloat(event.target.value));
+  };
+
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
+  };
+
+  const handleSoundEnded = () => {
+    if (currentSoundUrl && audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(error => console.error("Erro ao tocar o áudio:", error));
+      setIsPlaying(true);
+    }
+  };
+
+  const toggleRelaxSoundsVisibility = () => {
+    setShowRelaxSounds(!showRelaxSounds);
+    setSelectedTheme(null);
+    setCurrentSoundUrl(null);
+    setIsPlaying(false);
+    setSearchResults([]);
+    setCurrentSoundInfo(null);
+  };
+
+
   // Cria o Ably client assim que clientId estiver disponível
   useEffect(() => {
     if (!clientId) return;
@@ -868,25 +1003,149 @@ export default function Game() {
       )}
 
       
-      {/* Notificação de jogadores online */}
-      <div className="fixed top-4 left-4 z-50">
-            <button
-                onClick={() => {
-                  setShowPlayersOnline((prev) => !prev);
-                  setNotificationCount(0); // Zera as notificações
-                }}
-                className="relative border-2 border-lightblue hover:bg-lightblue text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer mt-4"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1h9v-1a6 6 0 01-12 0v-1c0-2.485-2.099-4.5-4-4s-4 2.015-4 4v1z" />
-                </svg>
-                {notificationCount > 0 && (
-                  <span className="absolute top-0 right-0 transform translate-x-1/4 -translate-y-1/4 bg-green text-green text-xs rounded-full px-2 py-0.5">
-                      {notificationCount}
-                  </span>
+      <div className='relative'>
+        {/* Notificação de jogadores online */}
+        <div className="fixed top-4 left-4 z-50">
+              <button
+                  onClick={() => {
+                    setShowPlayersOnline((prev) => !prev);
+                    setNotificationCount(0); // Zera as notificações
+                  }}
+                  className="relative border-2 border-lightblue hover:bg-lightblue text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer mt-4"
+              >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1h9v-1a6 6 0 01-12 0v-1c0-2.485-2.099-4.5-4-4s-4 2.015-4 4v1z" />
+                  </svg>
+                  {notificationCount > 0 && (
+                    <span className="absolute top-0 right-0 transform translate-x-1/4 -translate-y-1/4 bg-green text-green text-xs rounded-full px-2 py-0.5">
+                        {notificationCount}
+                    </span>
+                  )}
+              </button>
+        </div>
+      
+        {/* Botão para mostrar/ocultar sons relaxantes */}
+        <div className="fixed top-20 left-4 z-50">
+          <button
+            onClick={toggleRelaxSoundsVisibility}
+            className="relative border-2 border-lightblue hover:bg-purple text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4"
+          >
+            <MusicalNoteIcon className="h-6 w-6" />
+          </button>
+        </div>
+      
+        
+        {showRelaxSounds && (
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900 bg-opacity-90 rounded-xl shadow-lg p-6 z-50 border-2 border-purple max-h-96 overflow-y-auto w-96">
+            <h2 className="text-xl text-white font-semibold mb-4">Sons Relaxantes (Freesound)</h2>
+
+            <div className="flex space-x-4 mb-4">
+              <button
+                onClick={() => handleThemeSelect('nature')}
+                className={`rounded-full px-4 py-2 text-white font-semibold transition duration-300 ease-in-out ${
+                  selectedTheme === 'nature' ? 'bg-green hover:bg-lightblue' : 'bg-gray-700 hover:bg-gray-600'
+                } focus:outline-none focus:ring-2 focus:ring-green cursor-pointer`}
+              >
+                Natureza
+              </button>
+              <button
+                onClick={() => handleThemeSelect('rain')}
+                className={`rounded-full px-4 py-2 text-white font-semibold transition duration-300 ease-in-out ${
+                  selectedTheme === 'rain' ? 'bg-blue hover:bg-lightblue' : 'bg-gray-700 hover:bg-gray-600'
+                } focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer`}
+              >
+                Chuva
+              </button>
+              {/* Adicione mais temas aqui */}
+            </div>
+
+            <div className="mb-4 text-white">
+              {selectedTheme && searchStatus === 'searching' && (
+                <div className="flex items-center space-x-2">
+                  <FaSpinner className="animate-spin text-purple" />
+                  <span>Buscando sons de {selectedTheme} no Freesound...</span>
+                </div>
+              )}
+              {selectedTheme && searchStatus === 'results' && searchResults.length > 0 && (
+                <div className="mb-4">
+                  <h3 className="text-lg text-white font-semibold mb-2">Resultados da Busca:</h3>
+                  <ul>
+                    {searchResults.map((sound) => (
+                      <li key={sound.id} className="flex items-center justify-between py-2 border-b border-gray-700">
+                        <span className="text-white text-sm">{sound.name}</span>
+                        <button
+                          onClick={() => loadAndPlaySound(sound.id)}
+                          className="p-1 rounded-full bg-blue hover:bg-blue text-white focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer"
+                        >
+                          <BiPlay className="h-4 w-4" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {selectedTheme && searchStatus === 'results' && searchResults.length === 0 && errorMessage && (
+                <span className="text-yellow">{errorMessage}</span>
+              )}
+              {selectedTheme && searchStatus === 'error' && errorMessage && (
+                <span className="text-red">Erro ao buscar: {errorMessage}</span>
+              )}
+            </div>
+
+            {currentSoundUrl && currentSoundInfo && (
+              <div className="mb-4 text-white text-sm">
+                <p>Tocando: {currentSoundInfo.name}</p>
+                {currentSoundInfo?.user?.username && <p>Autor: {currentSoundInfo.user.username}</p>}
+                {currentSoundInfo?.url && (
+                  <a href={currentSoundInfo.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Ver no Freesound</a>
                 )}
+              </div>
+            )}
+
+            {currentSoundUrl && (
+              <div className="flex items-center space-x-4">
+                <audio ref={audioRef} src={currentSoundUrl} loop onEnded={handleSoundEnded} />
+                <button
+                  onClick={togglePlay}
+                  className="p-2 rounded-full bg-blue hover:bg-lightblue text-white focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer"
+                >
+                  {isPlaying ? <BiPause className="h-6 w-6" /> : <BiPlay className="h-6 w-6" />}
+                </button>
+
+                <div className="flex items-center space-x-2">
+                  <button onClick={toggleMute} className="text-white focus:outline-none">
+                    {isMuted ? <BiVolumeMute className="h-5 w-5" /> : <BiVolumeFull className="h-5 w-5" />}
+                  </button>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={volume}
+                    onChange={handleVolumeChange}
+                    className="rounded-md bg-gray-700 cursor-pointer"
+                  />
+                </div>
+              </div>
+            )}
+
+            {!selectedTheme && (
+              <p className="text-gray-400 text-sm">Selecione um tema para buscar sons no Freesound.</p>
+            )}
+
+            <button
+              onClick={toggleRelaxSoundsVisibility}
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
+          </div>
+        )}
+
       </div>
+            
       
       {/* Exibição dos jogadores online */}
       {showPlayersOnline && (
