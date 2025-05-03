@@ -1080,7 +1080,7 @@ export default function Frase({}: GameProps) {
       
         
         {showRelaxSounds && (
-          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900 bg-opacity-90 rounded-xl shadow-lg p-6 z-50 border-2 border-purple max-h-96 overflow-y-auto w-96">
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900 bg-opacity-90 rounded-xl shadow-lg p-6 z-50 border-2 border-purple max-h-96 overflow-y-auto w-full sm:w-96">
             <h2 className="text-xl text-white font-semibold mb-4">Sons Relaxantes (Freesound)</h2>
 
             <div className="flex space-x-4 mb-4">
