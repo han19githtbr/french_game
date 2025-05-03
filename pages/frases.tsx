@@ -1047,7 +1047,7 @@ export default function Frase({}: GameProps) {
       )}
 
 
-<div className='relative'>
+      <div className='relative'>
         {/* Notificação de jogadores online */}
         <div className="fixed top-4 left-4 z-50">
               <button
@@ -1080,13 +1080,19 @@ export default function Frase({}: GameProps) {
       
         
         {showRelaxSounds && (
-          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900 bg-opacity-90 rounded-xl shadow-lg p-6 z-50 border-2 border-purple max-h-96 overflow-y-auto w-full sm:w-96">
-            <h2 className="text-xl text-white font-semibold mb-4">Sons Relaxantes (Freesound)</h2>
+          <div 
+            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900 bg-opacity-90 rounded-xl shadow-lg p-6 z-50 border-2 border-blue max-h-96 overflow-y-auto w-full sm:w-96"
+            style={{
+              scrollbarWidth: 'thin', /* Para Firefox */
+              scrollbarColor: '#lightblue #374151', /* Para Firefox (thumb track) */
+            }}
+          >
+            <h2 className="text-xl text-gray-300 font-semibold mb-4">Sons Relaxantes <span className='text-blue'>(Freesound)</span></h2>
 
             <div className="flex space-x-4 mb-4">
               <button
                 onClick={() => handleThemeSelect('nature')}
-                className={`rounded-full px-4 py-2 text-white font-semibold transition duration-300 ease-in-out ${
+                className={`rounded-xl px-4 py-2 text-gray-300 font-semibold transition duration-300 ease-in-out ${
                   selectedTheme === 'nature' ? 'bg-green hover:bg-lightblue' : 'bg-gray-700 hover:bg-gray-600'
                 } focus:outline-none focus:ring-2 focus:ring-green cursor-pointer`}
               >
@@ -1094,8 +1100,8 @@ export default function Frase({}: GameProps) {
               </button>
               <button
                 onClick={() => handleThemeSelect('rain')}
-                className={`rounded-full px-4 py-2 text-white font-semibold transition duration-300 ease-in-out ${
-                  selectedTheme === 'rain' ? 'bg-blue hover:bg-lightblue' : 'bg-gray-700 hover:bg-gray-600'
+                className={`rounded-xl px-4 py-2 text-white font-semibold transition duration-300 ease-in-out ${
+                  selectedTheme === 'rain' ? 'bg-lightblue hover:bg-lightblue' : 'bg-gray-700 hover:bg-gray-600'
                 } focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer`}
               >
                 Chuva
@@ -1106,22 +1112,22 @@ export default function Frase({}: GameProps) {
             <div className="mb-4 text-white">
               {selectedTheme && searchStatus === 'searching' && (
                 <div className="flex items-center space-x-2">
-                  <FaSpinner className="animate-spin text-purple" />
+                  <FaSpinner className="animate-spin text-green" />
                   <span>Buscando sons de {selectedTheme} no Freesound...</span>
                 </div>
               )}
               {selectedTheme && searchStatus === 'results' && searchResults.length > 0 && (
                 <div className="mb-4">
-                  <h3 className="text-lg text-white font-semibold mb-2">Resultados da Busca:</h3>
+                  <h3 className="text-lg text-gray-300 font-semibold mb-2">Resultados da Busca:</h3>
                   <ul>
                     {searchResults.map((sound) => (
                       <li key={sound.id} className="flex items-center justify-between py-2 border-b border-gray-700">
-                        <span className="text-white text-sm">{sound.name}</span>
+                        <span className="text-green text-sm">{sound.name}</span>
                         <button
                           onClick={() => loadAndPlaySound(sound.id)}
-                          className="p-1 rounded-full bg-blue hover:bg-blue text-white focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer"
+                          className="p-1 rounded-full bg-lightblue hover:bg-blue text-white focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer"
                         >
-                          <BiPlay className="h-4 w-4" />
+                          <BiPlay className="h-4 w-4 text-green" />
                         </button>
                       </li>
                     ))}
@@ -1137,7 +1143,7 @@ export default function Frase({}: GameProps) {
             </div>
 
             {currentSoundUrl && currentSoundInfo && (
-              <div className="mb-4 text-white text-sm">
+              <div className="mb-4 text-blue text-sm">
                 <p>Tocando: {currentSoundInfo.name}</p>
                 {currentSoundInfo?.user?.username && <p>Autor: {currentSoundInfo.user.username}</p>}
                 {currentSoundInfo?.url && (
@@ -1151,9 +1157,9 @@ export default function Frase({}: GameProps) {
                 <audio ref={audioRef} src={currentSoundUrl} loop onEnded={handleSoundEnded} />
                 <button
                   onClick={togglePlay}
-                  className="p-2 rounded-full bg-blue hover:bg-lightblue text-white focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer"
+                  className="p-2 rounded-full bg-lightblue hover:bg-lightblue text-white focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer"
                 >
-                  {isPlaying ? <BiPause className="h-6 w-6" /> : <BiPlay className="h-6 w-6" />}
+                  {isPlaying ? <BiPause className="h-6 w-6 text-green" /> : <BiPlay className="h-6 w-6 text-green" />}
                 </button>
 
                 <div className="flex items-center space-x-2">
@@ -1189,8 +1195,6 @@ export default function Frase({}: GameProps) {
         )}
 
       </div>
-
-    
 
 
       {/* Exibição dos jogadores online */}
