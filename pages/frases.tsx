@@ -8,7 +8,7 @@ import { Check, X, ChevronLeft, Minus, Lock } from 'lucide-react'
 import { motion, AnimatePresence, useMotionValue, animate, MotionValue } from 'framer-motion'
 import { saveProgress } from './sentences_results'
 import { useSound } from 'use-sound';
-import { LockClosedIcon, LockOpenIcon, MusicalNoteIcon } from '@heroicons/react/24/solid'
+import { LockClosedIcon, LockOpenIcon, MusicalNoteIcon, GlobeAmericasIcon, CloudIcon, BeakerIcon } from '@heroicons/react/24/solid'
 import type { RealtimeChannel } from 'ably';
 import dynamic from "next/dynamic";
 import { BiPlay, BiPause, BiVolumeFull, BiVolumeMute } from 'react-icons/bi';
@@ -1090,23 +1090,30 @@ export default function Frase({}: GameProps) {
             <h2 className="text-xl text-gray-300 font-semibold mb-4">Sons Relaxantes <span className='text-blue'>(Freesound)</span></h2>
 
             <div className="flex space-x-4 mb-4">
-              <button
+            <button
                 onClick={() => handleThemeSelect('nature')}
-                className={`rounded-xl px-4 py-2 text-gray-300 font-semibold transition duration-300 ease-in-out ${
+                className={`rounded-xl px-2 py-2 text-gray-300 font-semibold transition duration-300 ease-in-out ${
                   selectedTheme === 'nature' ? 'bg-green hover:bg-lightblue' : 'bg-gray-700 hover:bg-gray-600'
                 } focus:outline-none focus:ring-2 focus:ring-green cursor-pointer`}
               >
-                Natureza
+                <GlobeAmericasIcon className="h-5 w-5 mr-2 inline-block" /> Nature
               </button>
               <button
                 onClick={() => handleThemeSelect('rain')}
-                className={`rounded-xl px-4 py-2 text-white font-semibold transition duration-300 ease-in-out ${
+                className={`rounded-xl px-2 py-2 text-white font-semibold transition duration-300 ease-in-out ${
                   selectedTheme === 'rain' ? 'bg-lightblue hover:bg-lightblue' : 'bg-gray-700 hover:bg-gray-600'
                 } focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer`}
               >
-                Chuva
+                <CloudIcon className="h-5 w-5 mr-2 inline-block" /> Rain
               </button>
-              {/* Adicione mais temas aqui */}
+              <button
+                onClick={() => handleThemeSelect('birds')}
+                className={`rounded-xl px-2 py-2 text-white font-semibold transition duration-300 ease-in-out ${
+                  selectedTheme === 'birds' ? 'bg-lightblue hover:bg-lightblue' : 'bg-gray-700 hover:bg-gray-600'
+                } focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer`}
+              >
+                <BeakerIcon className="h-5 w-5 mr-2 inline-block" /> Birds
+              </button>
             </div>
 
             <div className="mb-4 text-white">
