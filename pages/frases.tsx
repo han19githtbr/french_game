@@ -1063,7 +1063,7 @@ export default function Frase({}: GameProps) {
         >
           <div className="flex items-center gap-2 cursor-pointer mt-6 mr-1">
             <span className="text-gray-300 font-medium hidden sm:inline">{session.user.name}</span>
-            <img src={session.user.image || ''} alt="Avatar" className="w-10 h-10 rounded-full border border-green" />
+            <img src={session.user.image || ''} alt="Avatar" className="w-10 h-10 rounded-full border-2 border-lightblue" />
           </div>
           <div
             className={`absolute border border-blue right-0 mt-2 text-black py-2 px-4 rounded shadow-lg z-10 ${
