@@ -333,33 +333,61 @@ export default function Game({}: GameProps) {
     };
   }, [clientId]);
 
+
+  const hasEnteredRef = useRef(false);
   
   useEffect(() => {
-    if (!ablyClient || !clientId || !playerName) return;
+    if (!ablyClient || !clientId || !playerName  || hasEnteredRef.current) return;
   
     const presenceChannel = ablyClient.channels.get("presence-chat");
     const avatarUrl = session?.user?.image ?? "";
 
-    presenceChannel.presence.enter({ name: playerName, avatarUrl});
-  
-    presenceChannel.presence.subscribe("enter", (member) => {
+    const handleEnter = (member: any) => {
       if (member.clientId !== clientId) {
+        setPlayersOnline((prev) => [...prev, {
+          clientId: member.clientId,
+          name: member.data.name,
+          avatarUrl: member.data.avatarUrl,
+        }]);
         setShowNotification({ name: member.data.name, type: 'join' });
         setNotificationCount((prev) => prev + 1);
         playEnterSound();
       }
-    });
-  
-    presenceChannel.presence.subscribe("leave", (member) => {
+    };
+
+    const handleLeave = (member: any) => {
       if (member.clientId !== clientId) {
+        setPlayersOnline((prev) => prev.filter(p => p.clientId !== member.clientId));
         setShowNotification({ name: member.data.name, type: 'leave' });
         setNotificationCount((prev) => prev + 1);
       }
+    };
+
+    // Primeiro inscreve-se nos eventos
+    presenceChannel.presence.subscribe("enter", handleEnter);
+    presenceChannel.presence.subscribe("leave", handleLeave);
+
+    // Entrar no canal
+    presenceChannel.presence.enter({ name: playerName, avatarUrl }).then(() => {
+      hasEnteredRef.current = true;
+            
+      presenceChannel.presence.get().then((members) => {
+        const players: Player[] = members
+          .filter(m => m.clientId !== clientId) // ignora a si mesmo
+          .map((m) => ({
+            clientId: m.clientId,
+            name: m.data.name,
+            avatarUrl: m.data.avatarUrl,
+          }));
+        setPlayersOnline(players);
+      });
     });
-  
+        
     return () => {
       presenceChannel.presence.leave();
-      presenceChannel.presence.unsubscribe();
+      presenceChannel.presence.unsubscribe("enter", handleEnter);
+      presenceChannel.presence.unsubscribe("leave", handleLeave);
+      hasEnteredRef.current = false;
     };
   }, [ablyClient, clientId, playerName]);
 

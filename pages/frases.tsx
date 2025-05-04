@@ -254,20 +254,20 @@ export default function Frase({}: GameProps) {
         setErrorMessage(null);
         setCurrentSoundInfo(null);
       }
-    }, [selectedTheme]);
+  }, [selectedTheme]);
   
-    useEffect(() => {
+  useEffect(() => {
       if (audioRef.current) {
         audioRef.current.volume = volume;
         audioRef.current.muted = isMuted;
       }
-    }, [volume, isMuted]);
+  }, [volume, isMuted]);
   
-    const handleThemeSelect = (theme: string) => {
+  const handleThemeSelect = (theme: string) => {
       setSelectedTheme(theme);
-    };
+  };
   
-    const loadAndPlaySound = (soundId: number) => {
+  const loadAndPlaySound = (soundId: number) => {
       fetch(`https://freesound.org/apiv2/sounds/${soundId}/?token=${FREESOUND_API_KEY}`)
         .then(response => {
           if (!response.ok) {
@@ -288,9 +288,9 @@ export default function Frase({}: GameProps) {
           setErrorMessage("Erro ao obter detalhes do som.");
           setSearchStatus('error');
         });
-    };
+  };
   
-    const togglePlay = () => {
+  const togglePlay = () => {
       if (currentSoundUrl) {
         if (isPlaying) {
           audioRef.current?.pause();
@@ -299,25 +299,25 @@ export default function Frase({}: GameProps) {
         }
         setIsPlaying(!isPlaying);
       }
-    };
+  };
   
-    const handleVolumeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVolumeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
       setVolume(parseFloat(event.target.value));
-    };
+  };
   
-    const toggleMute = () => {
+  const toggleMute = () => {
       setIsMuted(!isMuted);
-    };
+  };
   
-    const handleSoundEnded = () => {
+  const handleSoundEnded = () => {
       if (currentSoundUrl && audioRef.current) {
         audioRef.current.currentTime = 0;
         audioRef.current.play().catch(error => console.error("Erro ao tocar o áudio:", error));
         setIsPlaying(true);
       }
-    };
+  };
   
-    const toggleRelaxSoundsVisibility = () => {
+  const toggleRelaxSoundsVisibility = () => {
       setShowRelaxSounds(!showRelaxSounds);
       setSelectedTheme(null);
       setCurrentSoundUrl(null);
@@ -329,61 +329,93 @@ export default function Frase({}: GameProps) {
 
   // Cria o Ably client assim que clientId estiver disponível
   useEffect(() => {
-    if (!clientId) return;
-
-    const client = createAblyClient(clientId);
-    setAblyClient(client);
-
-    return () => {
-      client.close();
-    };
+      if (!clientId) return;
+  
+      const client = createAblyClient(clientId);
+      setAblyClient(client);
+  
+      return () => {
+        client.close();
+      };
   }, [clientId]);
-
-
+  
+  
+  const hasEnteredRef = useRef(false);
+    
   useEffect(() => {
-    if (!ablyClient || !clientId || !playerName) return;
+      if (!ablyClient || !clientId || !playerName  || hasEnteredRef.current) return;
+    
+      const presenceChannel = ablyClient.channels.get("presence-chat");
+      const avatarUrl = session?.user?.image ?? "";
   
-    const presenceChannel = ablyClient.channels.get("presence-chat");
-    const avatarUrl = session?.user?.image ?? "";
-
-    presenceChannel.presence.enter({ name: playerName, avatarUrl});
+      const handleEnter = (member: any) => {
+        if (member.clientId !== clientId) {
+          setPlayersOnline((prev) => [...prev, {
+            clientId: member.clientId,
+            name: member.data.name,
+            avatarUrl: member.data.avatarUrl,
+          }]);
+          setShowNotification({ name: member.data.name, type: 'join' });
+          setNotificationCount((prev) => prev + 1);
+          playEnterSound();
+        }
+      };
   
-    presenceChannel.presence.subscribe("enter", (member) => {
-      if (member.clientId !== clientId) {
-        setShowNotification({ name: member.data.name, type: 'join' });
-        setNotificationCount((prev) => prev + 1);
-        playEnterSound();
-      }
-    });
+      const handleLeave = (member: any) => {
+        if (member.clientId !== clientId) {
+          setPlayersOnline((prev) => prev.filter(p => p.clientId !== member.clientId));
+          setShowNotification({ name: member.data.name, type: 'leave' });
+          setNotificationCount((prev) => prev + 1);
+        }
+      };
   
-    presenceChannel.presence.subscribe("leave", (member) => {
-      if (member.clientId !== clientId) {
-        setShowNotification({ name: member.data.name, type: 'leave' });
-        setNotificationCount((prev) => prev + 1);
-      }
-    });
+      // Primeiro inscreve-se nos eventos
+      presenceChannel.presence.subscribe("enter", handleEnter);
+      presenceChannel.presence.subscribe("leave", handleLeave);
   
-    return () => {
-      presenceChannel.presence.leave();
-      presenceChannel.presence.unsubscribe();
-    };
+      // Entrar no canal
+      presenceChannel.presence.enter({ name: playerName, avatarUrl }).then(() => {
+        hasEnteredRef.current = true;
+              
+        presenceChannel.presence.get().then((members) => {
+          const players: Player[] = members
+            .filter(m => m.clientId !== clientId) // ignora a si mesmo
+            .map((m) => ({
+              clientId: m.clientId,
+              name: m.data.name,
+              avatarUrl: m.data.avatarUrl,
+            }));
+          setPlayersOnline(players);
+        });
+      });
+          
+      return () => {
+        presenceChannel.presence.leave();
+        presenceChannel.presence.unsubscribe("enter", handleEnter);
+        presenceChannel.presence.unsubscribe("leave", handleLeave);
+        hasEnteredRef.current = false;
+      };
   }, [ablyClient, clientId, playerName]);
-
-
+  
+    
   const playEnterSound = () => {
-    const audio = new Audio('/sounds/login.mp3');
-    audio.play().catch((err) => {
-      console.warn('Failed to play sound:', err);
-    });
+      const audio = new Audio('/sounds/login.mp3');
+      audio.play().catch((err) => {
+        console.warn('Failed to play sound:', err);
+      });
   };
- 
-
+   
+  
   const playRequestSound = () => {
-    const audio = new Audio('/sounds/received_sound.mp3');
-    audio.play().catch((err) => {
-      console.warn('Failed to play request sound:', err);
-    });
+      const audio = new Audio('/sounds/received_sound.mp3');
+      audio.play().catch((err) => {
+        console.warn('Failed to play request sound:', err);
+      });
   };
+  
+  useEffect(() => {
+      if (status === 'unauthenticated') router.push('/')
+  }, [status, router]);
 
 
   const handleUnlockAnimationEnd = (setter: SetterFunction) => {
@@ -410,138 +442,138 @@ export default function Frase({}: GameProps) {
   
 
   useEffect(() => {
-    if (!ablyClient) return;
-    const channel = ablyClient.channels.get("presence-chat");
-  
-    const fetchOnlinePlayers = async () => {
-      const members = await channel.presence.get();
-      const players: Player[] = members.map((m) => ({
-        clientId: m.clientId,
-        name: m.data.name,
-        avatarUrl: m.data.avatarUrl,
-      }));
-      setPlayersOnline(players);
-    };
-  
-    if (showPlayersOnline) fetchOnlinePlayers();
+      if (!ablyClient) return;
+      const channel = ablyClient.channels.get("presence-chat");
+    
+      const fetchOnlinePlayers = async () => {
+        const members = await channel.presence.get();
+        const players: Player[] = members.map((m) => ({
+          clientId: m.clientId,
+          name: m.data.name,
+          avatarUrl: m.data.avatarUrl,
+        }));
+        setPlayersOnline(players);
+      };
+    
+      if (showPlayersOnline) fetchOnlinePlayers();
   }, [ablyClient, showPlayersOnline]);
-
-
+  
+  
   useEffect(() => {
-    if (showNotification) {
-      const timeout = setTimeout(() => setShowNotification(null), 3000);
-      return () => clearTimeout(timeout);
-    }
+      if (showNotification) {
+        const timeout = setTimeout(() => setShowNotification(null), 3000);
+        return () => clearTimeout(timeout);
+      }
   }, [showNotification]);
-
-
+   
+  
   // Enviar chat request
   const sendChatRequest = (toPlayer: Player) => {
-    const request: ChatRequest = {
-      fromClientId: clientId!,
-      fromName: playerName,
-      fromAvatar: session?.user?.image || "",
-      toClientId: toPlayer.clientId,
-    };
-  
-    ablyClient?.channels.get("presence-chat").publish("chat-request", request);
-  };
-
-
-  useEffect(() => {
-    const channel = ablyClient?.channels.get("presence-chat");
-  
-    const handleRequest = (msg: any) => {
-      const req: ChatRequest = msg.data;
-      if (req.toClientId === clientId) {
-        setIncomingRequest(req);
-        playRequestSound();
-      }
-    };
-  
-    channel?.subscribe("chat-request", handleRequest);
-  
-    return () => {
-      channel?.unsubscribe("chat-request", handleRequest);
-    };
-  }, [ablyClient, clientId]);
-
-
-  const getPrivateChannelName = (id1: string, id2: string) =>
-    `private-chat:${[id1, id2].sort().join("-")}`;
-  
-
-  const acceptRequest = (req: ChatRequest) => {
-    const channelName = getPrivateChannelName(req.fromClientId, clientId!);
-    const channel = ablyClient?.channels.get(channelName);
-  
-    if (!channel) return; // impede erro
-  
-    setChatPartner({
-      clientId: req.fromClientId,
-      name: req.fromName,
-      avatarUrl: req.fromAvatar,
-    });
-    setPrivateChannel(channel);
-    setIncomingRequest(null);
-  };
-
-
-  const ChatBox = ({ clientId, chatPartner, channel }: ChatBoxProps) => {
-    const [messages, setMessages] = useState<{ from: string; text: string }[]>([]);
-    const [input, setInput] = useState("");
-    const [isPartnerTyping, setIsPartnerTyping] = useState(false);
-  
-    useEffect(() => {
-      const handler = (msg: any) => {
-        setMessages((prev) => [...prev, msg.data]);
-        new Audio("/sounds/message.mp3").play();
+      const request: ChatRequest = {
+        fromClientId: clientId!,
+        fromName: playerName,
+        fromAvatar: session?.user?.image || "",
+        toClientId: toPlayer.clientId,
       };
-      channel.subscribe("message", handler);
-      return () => channel.unsubscribe("message", handler);
-    }, [channel]);
+    
+      ablyClient?.channels.get("presence-chat").publish("chat-request", request);
+  };
   
-    useEffect(() => {
-      const handler = (msg: any) => {
-        if (msg.data.from !== clientId) {
-          setIsPartnerTyping(msg.data.isTyping);
+  
+  useEffect(() => {
+      const channel = ablyClient?.channels.get("presence-chat");
+    
+      const handleRequest = (msg: any) => {
+        const req: ChatRequest = msg.data;
+        if (req.toClientId === clientId) {
+          setIncomingRequest(req);
+          playRequestSound();
         }
       };
-      channel.subscribe("typing", handler);
-      return () => channel.unsubscribe("typing", handler);
-    }, [channel]);
-  
-    const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
     
-    useEffect(() => {
-      if (!input || !channel) return;
-    
-      channel?.publish("typing", { from: clientId, isTyping: true });
-    
-      if (typingTimeout.current) {
-        clearTimeout(typingTimeout.current);
-      }
-    
-      typingTimeout.current = setTimeout(() => {
-        channel.publish("typing", { from: clientId, isTyping: false });
-      }, 1000);
+      channel?.subscribe("chat-request", handleRequest);
     
       return () => {
+        channel?.unsubscribe("chat-request", handleRequest);
+      };
+  }, [ablyClient, clientId]);
+  
+  
+  const getPrivateChannelName = (id1: string, id2: string) =>
+    `private-chat:${[id1, id2].sort().join("-")}`;
+    
+  
+  const acceptRequest = (req: ChatRequest) => {
+      const channelName = getPrivateChannelName(req.fromClientId, clientId!);
+      const channel = ablyClient?.channels.get(channelName);
+    
+      if (!channel) return; // impede erro
+    
+      setChatPartner({
+        clientId: req.fromClientId,
+        name: req.fromName,
+        avatarUrl: req.fromAvatar,
+      });
+      setPrivateChannel(channel);
+      setIncomingRequest(null);
+  };
+  
+  
+  const ChatBox = ({ clientId, chatPartner, channel }: ChatBoxProps) => {
+      const [messages, setMessages] = useState<{ from: string; text: string }[]>([]);
+      const [input, setInput] = useState("");
+      const [isPartnerTyping, setIsPartnerTyping] = useState(false);
+    
+      useEffect(() => {
+        const handler = (msg: any) => {
+          setMessages((prev) => [...prev, msg.data]);
+          new Audio("/sounds/message.mp3").play();
+        };
+        channel.subscribe("message", handler);
+        return () => channel.unsubscribe("message", handler);
+      }, [channel]);
+    
+      useEffect(() => {
+        const handler = (msg: any) => {
+          if (msg.data.from !== clientId) {
+            setIsPartnerTyping(msg.data.isTyping);
+          }
+        };
+        channel.subscribe("typing", handler);
+        return () => channel.unsubscribe("typing", handler);
+      }, [channel]);
+    
+      const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+      
+      useEffect(() => {
+        if (!input || !channel) return;
+      
+        channel?.publish("typing", { from: clientId, isTyping: true });
+      
         if (typingTimeout.current) {
           clearTimeout(typingTimeout.current);
         }
-      };
-    }, [input, channel]);
+      
+        typingTimeout.current = setTimeout(() => {
+          channel.publish("typing", { from: clientId, isTyping: false });
+        }, 1000);
+      
+        return () => {
+          if (typingTimeout.current) {
+            clearTimeout(typingTimeout.current);
+          }
+        };
+      }, [input, channel]);
+    
   
-
-    const sendMessage = () => {
-      if (!input.trim()) return;
-      const message = { from: clientId, text: input.trim() };
-      channel.publish("message", message);
-      setMessages((prev) => [...prev, message]);
-      setInput("");
-    };
+      const sendMessage = () => {
+        if (!input.trim()) return;
+        const message = { from: clientId, text: input.trim() };
+        channel.publish("message", message);
+        setMessages((prev) => [...prev, message]);
+        setInput("");
+      };
   
 
   return (

@@ -100,7 +100,7 @@ select option:hover {
 }
 
 .custom-scrollbar::-webkit-scrollbar {
-  width: 12px; /* largura da scrollbar */
+  width: 6px; /* largura da scrollbar */
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -124,12 +124,12 @@ select option:hover {
 }
 
 ::-webkit-scrollbar-track {
-  background: #374151;
+  background: #373a51;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: '#lightblue';
+  background: '#0e25d3';
   border-radius: 4px;
 }
 
