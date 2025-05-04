@@ -13,6 +13,7 @@ import type { RealtimeChannel } from 'ably';
 import dynamic from "next/dynamic";
 import { BiPlay, BiPause, BiVolumeFull, BiVolumeMute } from 'react-icons/bi';
 import { FaSpinner } from 'react-icons/fa';
+import Notification from '../Notification'
 
 
 const FREESOUND_API_KEY = 'SbW3xMpvC1XDTCf9Pesz75rwFKteNYZ84YRcnZwI';
@@ -134,7 +135,7 @@ export default function Frase({}: GameProps) {
   const [playersOnline, setPlayersOnline] = useState<Player[]>([])
   const [showPlayersOnline, setShowPlayersOnline] = useState(false);
       
-  const [showNotification, setShowNotification] = useState<ShowNotification | null>(null)
+  //const [showNotification, setShowNotification] = useState<ShowNotification | null>(null)
 
   const [notification, setNotification] = useState<{ message: string; type: 'info' | 'success' | 'error' } | null>(null);
     
@@ -210,6 +211,10 @@ export default function Frase({}: GameProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showRelaxSounds, setShowRelaxSounds] = useState(false);
   const [currentSoundInfo, setCurrentSoundInfo] = useState<any | null>(null); // Para armazenar informações do som atual
+  const [showNotification, setShowNotification] = useState<{
+      name: string;
+      type: "join" | "leave";
+    } | null>(null);
   
     
   useEffect(() => {
@@ -346,15 +351,21 @@ export default function Frase({}: GameProps) {
       if (!ablyClient || !clientId || !playerName  || hasEnteredRef.current) return;
     
       const presenceChannel = ablyClient.channels.get("presence-chat");
+              
       const avatarUrl = session?.user?.image ?? "";
   
       const handleEnter = (member: any) => {
         if (member.clientId !== clientId) {
-          setPlayersOnline((prev) => [...prev, {
-            clientId: member.clientId,
-            name: member.data.name,
-            avatarUrl: member.data.avatarUrl,
-          }]);
+          setPlayersOnline((prev) => {
+            const alreadyExists = prev.some(p => p.clientId === member.clientId);
+            if (alreadyExists) return prev;
+            return [...prev, {
+              clientId: member.clientId,
+              name: member.data.name,
+              avatarUrl: member.data.avatarUrl,
+            }];
+          });
+          
           setShowNotification({ name: member.data.name, type: 'join' });
           setNotificationCount((prev) => prev + 1);
           playEnterSound();
@@ -373,19 +384,21 @@ export default function Frase({}: GameProps) {
       presenceChannel.presence.subscribe("enter", handleEnter);
       presenceChannel.presence.subscribe("leave", handleLeave);
   
-      // Entrar no canal
-      presenceChannel.presence.enter({ name: playerName, avatarUrl }).then(() => {
-        hasEnteredRef.current = true;
-              
-        presenceChannel.presence.get().then((members) => {
-          const players: Player[] = members
-            .filter(m => m.clientId !== clientId) // ignora a si mesmo
-            .map((m) => ({
-              clientId: m.clientId,
-              name: m.data.name,
-              avatarUrl: m.data.avatarUrl,
-            }));
-          setPlayersOnline(players);
+      // ✅ Aguarda a conexão com Ably antes de entrar no canal
+      ablyClient.connection.once('connected', () => {
+        presenceChannel.presence.enter({ name: playerName, avatarUrl }).then(() => {
+          hasEnteredRef.current = true;
+  
+          presenceChannel.presence.get().then((members) => {
+            const players: Player[] = members
+              .filter(m => m.clientId !== clientId)
+              .map((m) => ({
+                clientId: m.clientId,
+                name: m.data.name,
+                avatarUrl: m.data.avatarUrl,
+              }));
+            setPlayersOnline(players);
+          });
         });
       });
           
@@ -395,7 +408,7 @@ export default function Frase({}: GameProps) {
         presenceChannel.presence.unsubscribe("leave", handleLeave);
         hasEnteredRef.current = false;
       };
-  }, [ablyClient, clientId, playerName]);
+  }, [ablyClient, clientId, playerName, session]);
   
     
   const playEnterSound = () => {
@@ -414,7 +427,7 @@ export default function Frase({}: GameProps) {
   };
   
   useEffect(() => {
-      if (status === 'unauthenticated') router.push('/')
+    if (status === 'unauthenticated') router.push('/')
   }, [status, router]);
 
 
@@ -456,19 +469,22 @@ export default function Frase({}: GameProps) {
       };
     
       if (showPlayersOnline) fetchOnlinePlayers();
-  }, [ablyClient, showPlayersOnline]);
+    }, [ablyClient, showPlayersOnline]);
   
   
-  useEffect(() => {
+    useEffect(() => {
       if (showNotification) {
         const timeout = setTimeout(() => setShowNotification(null), 3000);
         return () => clearTimeout(timeout);
       }
-  }, [showNotification]);
+    }, [showNotification]);
    
   
-  // Enviar chat request
-  const sendChatRequest = (toPlayer: Player) => {
+    // Enviar chat request
+    const sendChatRequest = (toPlayer: Player) => {
+      // Checagem de integridade mínima
+      if (!ablyClient || !clientId || !toPlayer?.clientId) return;
+      
       const request: ChatRequest = {
         fromClientId: clientId!,
         fromName: playerName,
@@ -477,10 +493,10 @@ export default function Frase({}: GameProps) {
       };
     
       ablyClient?.channels.get("presence-chat").publish("chat-request", request);
-  };
+    };
   
   
-  useEffect(() => {
+    useEffect(() => {
       const channel = ablyClient?.channels.get("presence-chat");
     
       const handleRequest = (msg: any) => {
@@ -496,14 +512,14 @@ export default function Frase({}: GameProps) {
       return () => {
         channel?.unsubscribe("chat-request", handleRequest);
       };
-  }, [ablyClient, clientId]);
+    }, [ablyClient, clientId]);
   
   
-  const getPrivateChannelName = (id1: string, id2: string) =>
-    `private-chat:${[id1, id2].sort().join("-")}`;
+    const getPrivateChannelName = (id1: string, id2: string) =>
+      `private-chat:${[id1, id2].sort().join("-")}`;
     
   
-  const acceptRequest = (req: ChatRequest) => {
+    const acceptRequest = (req: ChatRequest) => {
       const channelName = getPrivateChannelName(req.fromClientId, clientId!);
       const channel = ablyClient?.channels.get(channelName);
     
@@ -516,24 +532,28 @@ export default function Frase({}: GameProps) {
       });
       setPrivateChannel(channel);
       setIncomingRequest(null);
-  };
+    };
   
   
-  const ChatBox = ({ clientId, chatPartner, channel }: ChatBoxProps) => {
+    const ChatBox = ({ clientId, chatPartner, channel }: ChatBoxProps) => {
       const [messages, setMessages] = useState<{ from: string; text: string }[]>([]);
       const [input, setInput] = useState("");
       const [isPartnerTyping, setIsPartnerTyping] = useState(false);
     
       useEffect(() => {
+        if (!channel || !clientId) return;
+  
         const handler = (msg: any) => {
           setMessages((prev) => [...prev, msg.data]);
           new Audio("/sounds/message.mp3").play();
         };
         channel.subscribe("message", handler);
         return () => channel.unsubscribe("message", handler);
-      }, [channel]);
+      }, [channel, clientId]);
     
       useEffect(() => {
+        if (!channel || !clientId) return;
+  
         const handler = (msg: any) => {
           if (msg.data.from !== clientId) {
             setIsPartnerTyping(msg.data.isTyping);
@@ -541,13 +561,13 @@ export default function Frase({}: GameProps) {
         };
         channel.subscribe("typing", handler);
         return () => channel.unsubscribe("typing", handler);
-      }, [channel]);
+      }, [channel, clientId]);
     
       const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   
       
       useEffect(() => {
-        if (!input || !channel) return;
+        if (!channel || !clientId || !input) return;
       
         channel?.publish("typing", { from: clientId, isTyping: true });
       
@@ -564,7 +584,7 @@ export default function Frase({}: GameProps) {
             clearTimeout(typingTimeout.current);
           }
         };
-      }, [input, channel]);
+      }, [input, channel, clientId]);
     
   
       const sendMessage = () => {
@@ -1740,7 +1760,16 @@ export default function Frase({}: GameProps) {
           </motion.div>
         </motion.div>
       )}
-       
+
+      {/* Notificação flutuante no topo */}
+      {showNotification && (
+        <Notification
+          show={!!showNotification}
+          name={showNotification.name}
+          type={showNotification.type}
+        />
+      )}
+
     </div>
   )
 }
