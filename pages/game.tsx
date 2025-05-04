@@ -1071,7 +1071,7 @@ export default function Game({}: GameProps) {
               scrollbarColor: '#lightblue #374151', /* Para Firefox (thumb track) */
             }}
           >
-            <h2 className="text-xl text-gray-300 font-semibold mb-4">Sons Relaxantes <span className='text-blue'>(Freesound)</span></h2>
+            <h2 className="text-xl text-gray-300 font-semibold mb-4">Sons Relaxantes <span className='text-purple'>(Freesound)</span></h2>
 
             <div className="flex space-x-4 mb-4">
               <button

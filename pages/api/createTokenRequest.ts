@@ -4,7 +4,7 @@ import Ably from 'ably'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from './auth/[...nextauth]' // ajuste para o seu path real
 
-const ablyRest = new Ably.Rest(process.env.ABLY_API_KEY!)
+const ablyRest = new Ably.Rest(process.env.NEXT_PUBLIC_ABLY_API_KEY!)
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions)
