@@ -1076,27 +1076,27 @@ export default function Game({}: GameProps) {
             <div className="flex space-x-4 mb-4">
               <button
                 onClick={() => handleThemeSelect('nature')}
-                className={`rounded-xl px-2 py-2 text-gray-300 font-semibold transition duration-300 ease-in-out ${
-                  selectedTheme === 'nature' ? 'bg-green hover:bg-lightblue' : 'bg-gray-700 hover:bg-gray-600'
-                } focus:outline-none focus:ring-2 focus:ring-green cursor-pointer`}
+                className={`rounded-xl px-2 py-2 text-white font-semibold transition duration-300 ease-in-out ${
+                  selectedTheme === 'nature' ? 'bg-lightblue hover:bg-lightblue' : 'bg-gray-700 hover:bg-gray-600'
+                } focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer`}
               >
-                <GlobeAmericasIcon className="h-5 w-5 mr-2 inline-block" /> Nature
+                <GlobeAmericasIcon className="h-5 w-5 mr-2 inline-block text-green" /> Nature
               </button>
               <button
                 onClick={() => handleThemeSelect('rain')}
                 className={`rounded-xl px-2 py-2 text-white font-semibold transition duration-300 ease-in-out ${
                   selectedTheme === 'rain' ? 'bg-lightblue hover:bg-lightblue' : 'bg-gray-700 hover:bg-gray-600'
-                } focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer`}
+                } focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer`}
               >
-                <CloudIcon className="h-5 w-5 mr-2 inline-block" /> Rain
+                <CloudIcon className="h-5 w-5 mr-2 inline-block text-green" /> Rain
               </button>
               <button
                 onClick={() => handleThemeSelect('birds')}
                 className={`rounded-xl px-2 py-2 text-white font-semibold transition duration-300 ease-in-out ${
                   selectedTheme === 'birds' ? 'bg-lightblue hover:bg-lightblue' : 'bg-gray-700 hover:bg-gray-600'
-                } focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer`}
+                } focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer`}
               >
-                <BeakerIcon className="h-5 w-5 mr-2 inline-block" /> Birds
+                <BeakerIcon className="h-5 w-5 mr-2 inline-block text-green" /> Birds
               </button>
               {/* Adicione mais temas aqui */}
             </div>
