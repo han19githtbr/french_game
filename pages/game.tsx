@@ -804,7 +804,7 @@ export default function Game({}: GameProps) {
   const loadImages = async () => {
     setLoading(true)
     setResults([]);
-      
+    console.log('Tema sendo enviado:', theme);  
     try {
       const res = await fetch('/api/generate-images', {
         method: 'POST',
