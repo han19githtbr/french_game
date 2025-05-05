@@ -135,4 +135,5 @@ select option:hover {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #6dd6ed;
+  cursor: grab;
 }

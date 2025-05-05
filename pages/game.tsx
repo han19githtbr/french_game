@@ -1093,13 +1093,13 @@ export default function Game({}: GameProps) {
         
         {showRelaxSounds && (
           <div 
-            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900 bg-opacity-90 rounded-xl shadow-lg p-6 z-50 border-2 border-blue max-h-96 overflow-y-auto w-full sm:w-96"
+            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900 bg-opacity-90 rounded-xl shadow-lg p-6 z-50 border-2 border-gray-300 max-h-96 overflow-y-auto w-full sm:w-96"
             style={{
               scrollbarWidth: 'thin', /* Para Firefox */
               scrollbarColor: '#lightblue #374151', /* Para Firefox (thumb track) */
             }}
           >
-            <h2 className="text-xl text-gray-300 font-semibold mb-4">Sons Relaxantes <span className='text-purple'>(Freesound)</span></h2>
+            <h2 className="text-xl text-gray-300 font-semibold mb-4">Sons Relaxantes <span className='text-lightblue'>(Freesound)</span></h2>
 
             <div className="flex space-x-4 mb-4">
               <button
@@ -1133,7 +1133,7 @@ export default function Game({}: GameProps) {
               {selectedTheme && searchStatus === 'searching' && (
                 <div className="flex items-center space-x-2">
                   <FaSpinner className="animate-spin text-green" />
-                  <span>Buscando sons de {selectedTheme} no Freesound...</span>
+                  <span>Buscando sons de <span className='text-green'>{selectedTheme}</span> no Freesound...</span>
                 </div>
               )}
               {selectedTheme && searchStatus === 'results' && searchResults.length > 0 && (
@@ -1142,7 +1142,7 @@ export default function Game({}: GameProps) {
                   <ul>
                     {searchResults.map((sound) => (
                       <li key={sound.id} className="flex items-center justify-between py-2 border-b border-gray-700">
-                        <span className="text-green text-sm">{sound.name}</span>
+                        <span className="text-blue text-sm">{sound.name}</span>
                         <button
                           onClick={() => loadAndPlaySound(sound.id)}
                           className="p-1 rounded-full bg-lightblue hover:bg-blue text-white focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer"
@@ -1163,7 +1163,7 @@ export default function Game({}: GameProps) {
             </div>
 
             {currentSoundUrl && currentSoundInfo && (
-              <div className="mb-4 text-blue text-sm">
+              <div className="mb-4 text-green text-sm">
                 <p>Tocando: {currentSoundInfo.name}</p>
                 {currentSoundInfo?.user?.username && <p>Autor: {currentSoundInfo.user.username}</p>}
                 {currentSoundInfo?.url && (
@@ -1205,7 +1205,7 @@ export default function Game({}: GameProps) {
 
             <button
               onClick={toggleRelaxSoundsVisibility}
-              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
+              className="absolute top-2 right-2 text-gray-400 hover:text-blue focus:outline-none cursor-pointer"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
