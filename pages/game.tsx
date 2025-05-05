@@ -341,9 +341,7 @@ export default function Game({}: GameProps) {
     const client = createAblyClient(clientId);
     setAblyClient(client);
 
-    return () => {
-      client.close();
-    };
+    return () => client.close();
   }, [clientId]);
 
 
