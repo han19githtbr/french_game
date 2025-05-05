@@ -137,7 +137,7 @@ export default function Game({}: GameProps) {
   const [showRestart, setShowRestart] = useState(false)
   const [showCongrats, setShowCongrats] = useState(false)
   
-  const [group, setGroup] = useState('')
+  const [theme, setTheme] = useState('')
   const [images, setImages] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
     
@@ -762,8 +762,8 @@ export default function Game({}: GameProps) {
 
 
   useEffect(() => {
-    if (group) loadImages()
-  }, [group, round])
+    if (theme) loadImages()
+  }, [theme, round])
 
 
   useEffect(() => {
@@ -846,7 +846,7 @@ export default function Game({}: GameProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ group }),
+        body: JSON.stringify({ theme }),
       });
   
       if (!res.ok) {
@@ -923,8 +923,8 @@ export default function Game({}: GameProps) {
       }
 
       setTimeout(() => {
-        const nextGroup = groups.filter(t => t !== group)[Math.floor(Math.random() * (groups.length - 1))]
-        setGroup(nextGroup)
+        const nextGroup = groups.filter(t => t !== theme)[Math.floor(Math.random() * (groups.length - 1))]
+        setTheme(nextGroup)
         setRound(r => r + 1)
         setShowCongrats(false)
       }, 3000);
@@ -1335,8 +1335,8 @@ export default function Game({}: GameProps) {
             onClick={() => setOpen(!open)}
             className="w-full flex items-center justify-between py-3 px-6 rounded-xl border-2 border-lightblue bg-gradient-to-br from-purple-700 to-indigo-800 text-blue shadow-lg shadow-purple-500/40 hover:shadow-xl hover:shadow-pink-500/50 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-2 text-lg tracking-wide font-semibold text-center cursor-pointer transition-all duration-300 ease-out"
           >
-            {group ? (
-              `🎯 ${group}`
+            {theme ? (
+              `🎯 ${theme}`
             ) : (
               <span className="flex items-center gap-2">
                 {/* Ícone Check animado */}
@@ -1370,7 +1370,7 @@ export default function Game({}: GameProps) {
               {/* Opção padrão */}
               <li
                 onClick={() => {
-                  setGroup('');
+                  setTheme('');
                   setOpen(false);
               }}
                 className="flex items-center justify-start gap-3 px-6 py-3 hover:bg-lightblue text-black text-lg font-semibold cursor-pointer transition-all duration-300"
@@ -1399,7 +1399,7 @@ export default function Game({}: GameProps) {
                 <li
                   key={t}
                   onClick={() => {
-                    setGroup(t);
+                    setTheme(t);
                     setOpen(false);
                   }}
                   className="flex items-center justify-start gap-3 px-6 py-3 hover:bg-lightblue text-black text-lg font-semibold cursor-pointer transition-all duration-300"
@@ -1435,7 +1435,7 @@ export default function Game({}: GameProps) {
 
       </div>
 
-      {group && <h2 className="text-2xl text-gray-300 font-semibold mt-4 mb-6 text-center">Opção: {group}</h2>}
+      {theme && <h2 className="text-2xl text-gray-300 font-semibold mt-4 mb-6 text-center">Opção: {theme}</h2>}
 
       <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-indigo-900 to-purple-900 min-h-screen text-gray-100">
         
