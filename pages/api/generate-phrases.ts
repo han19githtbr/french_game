@@ -37,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const db: Db = client.db();
 
     const themeImages = await db
-      .collection<ImageData>('french_images')
+      .collection<ImageData>('french_sentences')
       .find({ theme: theme.toLowerCase() })
       .toArray();
 

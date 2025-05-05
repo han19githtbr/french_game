@@ -26,9 +26,9 @@ const randomOptions = (correct: string, allTitles: string[]) => {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { group } = req.body
+  const { theme } = req.body
   
-  if (!group) {
+  if (!theme) {
     return res.status(400).json({ error: 'O tema é obrigatório.' });
   }
 
@@ -36,17 +36,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const client = await connectDB();
     const db: Db = client.db();
 
-    const groupImages = await db
-      .collection<ImageData>('french_images')
-      .find({ group: group.toLowerCase() })
+    const themeImages = await db
+      .collection<ImageData>('french_proverbs')
+      .find({ theme: theme.toLowerCase() })
       .toArray();
 
-    if (!groupImages || groupImages.length === 0) {
+    if (!themeImages || themeImages.length === 0) {
       return res.status(404).json({ error: 'Nenhuma imagem encontrada para este tema.' });
     }
 
-    const selectedImages = shuffle(groupImages).slice(0, 4);
-    const allTitles = groupImages.map(img => img.title);
+    const selectedImages = shuffle(themeImages).slice(0, 4);
+    const allTitles = themeImages.map(img => img.title);
 
     const imagesWithOptions = selectedImages.map(img => ({
       url: img.url,
