@@ -195,6 +195,14 @@ export default function Game({}: GameProps) {
     type: "join" | "leave";
   } |null>(null);
   
+
+  useEffect(() => {
+    if (showNotification) {
+      const timeout = setTimeout(() => setShowNotification(null), 3000);
+      return () => clearTimeout(timeout);
+    }
+  }, [showNotification]);
+
     
   useEffect(() => {
       if (selectedTheme) {
@@ -339,12 +347,12 @@ export default function Game({}: GameProps) {
             if (alreadyExists) return prev;
             return [...prev, {
               clientId: member.clientId,
-              name: member.data.name,
-              avatarUrl: member.data.avatarUrl,
+              name: member.data?.name ?? "Desconhecido",
+              avatarUrl: member.data?.avatarUrl ?? "",
             }];
           });
           
-          setShowNotification({ name: member.data.name, type: 'join' });
+          setShowNotification({ name: member.data?.name ?? "Desconhecido", type: 'join' });
           setNotificationCount((prev) => prev + 1);
           playEnterSound();
         }
@@ -353,7 +361,7 @@ export default function Game({}: GameProps) {
       const handleLeave = (member: any) => {
         if (member.clientId !== clientId) {
           setPlayersOnline((prev) => prev.filter(p => p.clientId !== member.clientId));
-          setShowNotification({ name: member.data.name, type: 'leave' });
+          setShowNotification({ name: member.data?.name ?? "Desconhecido", type: 'leave' });
           setNotificationCount((prev) => prev + 1);
         }
       };
@@ -372,8 +380,8 @@ export default function Game({}: GameProps) {
               .filter(m => m.clientId !== clientId)
               .map((m) => ({
                 clientId: m.clientId,
-                name: m.data.name,
-                avatarUrl: m.data.avatarUrl,
+                name: m.data?.name ?? "Desconhecido",
+                avatarUrl: m.data?.avatarUrl ?? "",
               }));
             setPlayersOnline(players);
           });
@@ -444,24 +452,17 @@ export default function Game({}: GameProps) {
         const members = await channel.presence.get();
         const players: Player[] = members.map((m) => ({
           clientId: m.clientId,
-          name: m.data.name,
-          avatarUrl: m.data.avatarUrl,
+          name: m.data?.name ?? "Desconhecido",
+          avatarUrl: m.data?.avatarUrl ?? "",
         }));
         setPlayersOnline(players);
       };
     
-      if (showPlayersOnline) fetchOnlinePlayers();
+      fetchOnlinePlayers();
     }, [ablyClient, showPlayersOnline]);
   
   
-    useEffect(() => {
-      if (showNotification) {
-        const timeout = setTimeout(() => setShowNotification(null), 3000);
-        return () => clearTimeout(timeout);
-      }
-    }, [showNotification]);
-   
-  
+      
     // Enviar chat request
     const sendChatRequest = (toPlayer: Player) => {
       // Checagem de integridade mínima
@@ -479,6 +480,8 @@ export default function Game({}: GameProps) {
   
   
     useEffect(() => {
+      if (!ablyClient || !clientId) return;
+
       const channel = ablyClient?.channels.get("presence-chat");
     
       const handleRequest = (msg: any) => {
@@ -521,7 +524,8 @@ export default function Game({}: GameProps) {
       const [messages, setMessages] = useState<{ from: string; text: string }[]>([]);
       const [input, setInput] = useState("");
       const [isPartnerTyping, setIsPartnerTyping] = useState(false);
-    
+      const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
       useEffect(() => {
         if (!channel || !clientId) return;
   
@@ -545,9 +549,7 @@ export default function Game({}: GameProps) {
         return () => channel.unsubscribe("typing", handler);
       }, [channel, clientId]);
     
-      const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  
-      
+            
       useEffect(() => {
         if (!channel || !clientId || !input) return;
       
