@@ -1,18 +1,18 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from './auth/[...nextauth]'
-//import connectDB from '../../lib/mongodb';
-//import { Db } from 'mongodb';
+import connectDB from '../../lib/mongodb';
+import { Db } from 'mongodb';
 
 
-/*interface ImageData {
+interface ImageData {
   url: string;
   title: string;
   theme: string;
-}*/
+}
 
 // Embaralhar um array
-/*const shuffle = <T>(array: T[]): T[] =>
+const shuffle = <T>(array: T[]): T[] =>
   [...array].sort(() => Math.random() - 0.5)
 
 
@@ -59,10 +59,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.error('Erro ao conectar ao MongoDB ou buscar imagens:', e);
     res.status(500).json({ error: 'Erro interno ao buscar as imagens.' });
   }
-}*/
+}
 
 
-const allImages = {
+/*const allImages = {
   'família': [
     { url: '/frases/familia/família.png', title: 'La famille est réunie' },
     { url: '/frases/familia/casa.png', title: 'Quelle jolie maison!' },
@@ -204,7 +204,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   }))
 
   res.status(200).json(imagesWithOptions)
-}
+}*/
 
 
 

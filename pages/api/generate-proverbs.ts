@@ -1,18 +1,18 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from './auth/[...nextauth]'
-//import connectDB from '../../lib/mongodb'
-//import { Db } from 'mongodb';
+import connectDB from '../../lib/mongodb'
+import { Db } from 'mongodb';
 
 
-/*interface ImageData {
+interface ImageData {
   url: string;
   title: string;
   theme: string;
 }
 
 // Embaralhar um array
-/*const shuffle = <T>(array: T[]): T[] =>
+const shuffle = <T>(array: T[]): T[] =>
   [...array].sort(() => Math.random() - 0.5)
 
 
@@ -60,10 +60,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(500).json({ error: 'Erro interno ao buscar as imagens.' });
   }
 
-}*/
+}
 
 
-const allImages = {
+/*const allImages = {
   'grupo-1': [
     { url: '/proverbios/grupo-1/courage.jpg', title: 'Réunir as suas forças' },
     { url: '/proverbios/grupo-1/a_cheval.jpg', title: 'Levar algo muito a sério' },
@@ -138,4 +138,4 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   }))
 
   res.status(200).json(imagesWithOptions)
-}
+}*/
