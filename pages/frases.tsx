@@ -14,6 +14,7 @@ import dynamic from "next/dynamic";
 import { BiPlay, BiPause, BiVolumeFull, BiVolumeMute } from 'react-icons/bi';
 import { FaSpinner } from 'react-icons/fa';
 import Notification from '../Notification'
+import { FaLinkedin, FaInstagram, FaFacebook, FaGithub } from 'react-icons/fa';
 
 
 const FREESOUND_API_KEY = 'SbW3xMpvC1XDTCf9Pesz75rwFKteNYZ84YRcnZwI';
@@ -1640,6 +1641,57 @@ export default function Frase({}: GameProps) {
               </div>
             </div>
 
+            {/* Seção de Redes Sociais */}
+            <motion.div
+                className="absolute bottom-4 left-15 flex flex-col items-start"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.6 }}
+            >
+                <h3 className="text-md font-bold mb-2 text-blue">
+                    Me siga nas redes sociais
+                </h3>
+                <div className="flex items-center space-x-6">
+                    <motion.a
+                        href="https://www.linkedin.com/in/handy-claude-marie-milliance-95785099/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        whileHover={{ scale: 1.1, y: -2 }}
+                        whileTap={{ scale: 0.9 }}
+                    >
+                        <FaLinkedin size={28} className="text-blue" />
+                    </motion.a>
+                    <motion.a
+                        href="https://www.instagram.com/handyclaudemarie?igsh=aGNieHVpOXIzdjBy"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        whileHover={{ scale: 1.1, y: -2 }}
+                        whileTap={{ scale: 0.9 }}
+                    >
+                        <FaInstagram size={28} className="text-pink" />
+                    </motion.a>
+                    <motion.a
+                        href="https://www.facebook.com/handyclaudemarie.milliance"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        whileHover={{ scale: 1.1, y: -2 }}
+                        whileTap={{ scale: 0.9 }}
+                    >
+                        <FaFacebook size={28} className="text-lightblue" />
+                    </motion.a>
+                    <motion.a
+                        href="https://github.com/han19githtbr"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        whileHover={{ scale: 1.1, y: -2 }}
+                        whileTap={{ scale: 0.9 }}
+                    >
+                        <FaGithub size={28} className="text-gray-400" />
+                    </motion.a>
+                </div>
+            </motion.div>
+            
+            
             <AnimatePresence>
               {zoomedImage && (
                 <motion.div

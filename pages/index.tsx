@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 //import { cn } from "@/lib/utils";
 import { cn } from '../lib/utils';
+import { FaLinkedin, FaInstagram, FaFacebook, FaGithub } from 'react-icons/fa';
+
 
 const DAILY_ACCESS_KEY = 'frenchLearningDailyAccess';
 const LAST_RESET_KEY = 'frenchLearningLastReset';
@@ -145,17 +147,8 @@ export default function Home() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className={cn(
-            "bg-white bg-opacity-10 rounded-xl shadow-lg p-4 mb-6",
-            "backdrop-blur-md "
-          )}
-        >
-          <h2 className={cn(
-            "text-lg font-semibold mb-2",
-            "text-gray-300",
-            "sm:text-xl md:text-2xl",
-            "tracking-wide"
-          )}>
+          className={cn("bg-white bg-opacity-10 rounded-xl shadow-lg p-4 mb-6", "backdrop-blur-md ")}>
+          <h2 className={cn("text-lg font-semibold mb-2", "text-gray-300", "sm:text-xl md:text-2xl", "tracking-wide")}>
             Ditados usados no dia a dia!
           </h2>
           <motion.div
@@ -164,23 +157,11 @@ export default function Home() {
             transition={{ delay: 0.2, duration: 0.3 }}
             className="space-y-2"
           >
-            <p className={cn(
-              "text-md italic",
-              "text-white",
-              "sm:text-lg md:text-xl",
-              "leading-relaxed",
-              "font-serif"
-            )}>
+            <p className={cn("text-md italic", "text-white", "sm:text-lg md:text-xl", "leading-relaxed", "font-serif")}>
               {proverb ? `"${proverb.french}"` : "Carregando provérbio..."}
             </p>
             {proverb && (
-              <p className={cn(
-                "text-sm italic",
-                "text-gray-300",
-                "sm:text-base md:text-lg",
-                "text-center",
-
-              )}>
+              <p className={cn("text-sm italic", "text-gray-300", "sm:text-base md:text-lg", "text-center",)}>
                 {proverb.portuguese}
               </p>
             )}
@@ -257,6 +238,58 @@ export default function Home() {
         />
         
       </button>
+    
+    
+      {/* Seção de Redes Sociais */}
+      <motion.div
+          className="absolute bottom-4 left-15 flex flex-col items-start"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+      >
+          <h3 className="text-md font-bold mb-2 text-blue">
+              Me siga nas redes sociais
+          </h3>
+          <div className="flex items-center space-x-6">
+              <motion.a
+                  href="https://www.linkedin.com/in/handy-claude-marie-milliance-95785099/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileHover={{ scale: 1.1, y: -2 }}
+                  whileTap={{ scale: 0.9 }}
+              >
+                  <FaLinkedin size={28} className="text-blue" />
+              </motion.a>
+              <motion.a
+                  href="https://www.instagram.com/handyclaudemarie?igsh=aGNieHVpOXIzdjBy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileHover={{ scale: 1.1, y: -2 }}
+                  whileTap={{ scale: 0.9 }}
+              >
+                  <FaInstagram size={28} className="text-pink" />
+              </motion.a>
+              <motion.a
+                  href="https://www.facebook.com/handyclaudemarie.milliance"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileHover={{ scale: 1.1, y: -2 }}
+                  whileTap={{ scale: 0.9 }}
+              >
+                  <FaFacebook size={28} className="text-lightblue" />
+              </motion.a>
+              <motion.a
+                  href="https://github.com/han19githtbr"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileHover={{ scale: 1.1, y: -2 }}
+                  whileTap={{ scale: 0.9 }}
+              >
+                  <FaGithub size={28} className="text-gray-400" />
+              </motion.a>
+          </div>
+      </motion.div>
+    
     </div>
   )
 }
