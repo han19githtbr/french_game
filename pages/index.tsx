@@ -213,7 +213,7 @@ export default function Home() {
       
       <button
         onClick={handleSignInClick}
-        className="flex mb-20 sm:mb-16 items-center gap-3 bg-transparent hover:border-green border border-blue text-gray-300 font-semibold px-6 py-3 rounded-lg shadow-md hover:shadow-xl transition duration-300 cursor-pointer"
+        className="flex sm:mb-20 items-center gap-3 bg-transparent hover:border-green border border-blue text-gray-300 font-semibold px-6 py-3 rounded-lg shadow-md hover:shadow-xl transition duration-300 cursor-pointer"
       >
         <svg className="w-6 h-6" viewBox="0 0 533.5 544.3">
           <path
