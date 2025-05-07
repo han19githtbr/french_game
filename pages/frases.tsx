@@ -15,7 +15,6 @@ import { BiPlay, BiPause, BiVolumeFull, BiVolumeMute } from 'react-icons/bi';
 import { FaSpinner } from 'react-icons/fa';
 import Notification from '../Notification'
 import { FaLinkedin, FaInstagram, FaFacebook, FaGithub } from 'react-icons/fa';
-import 'emoji-mart/css/emoji-mart.css';
 
 
 const FREESOUND_API_KEY = 'SbW3xMpvC1XDTCf9Pesz75rwFKteNYZ84YRcnZwI';
@@ -136,22 +135,20 @@ export default function Frase({}: GameProps) {
 
   const [playersOnline, setPlayersOnline] = useState<Player[]>([])
   const [showPlayersOnline, setShowPlayersOnline] = useState(false);
+      
+  //const [showNotification, setShowNotification] = useState<ShowNotification | null>(null)
+
   const [notification, setNotification] = useState<{ message: string; type: 'info' | 'success' | 'error' } | null>(null);
+    
   const [incomingRequest, setIncomingRequest] = useState<ChatRequest | null>(null);
   const [privateChannel, setPrivateChannel] = useState<RealtimeChannel | null>(null);
   const [chatPartner, setChatPartner] = useState<Player | null>(null);
+  
   const [showPicker, setShowPicker] = useState(false);
+  
+
   const playerName = session?.user?.name || 'Anônimo';
   const [notificationCount, setNotificationCount] = useState(0);
-  const [ablyClient, setAblyClient] = useState<Ably.Realtime | null>(null)
-  const clientId = session?.user?.name || 'anonymous';
-  const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<{ from: string; text: string }[]>([]);
-  const [isPartnerTyping, setIsPartnerTyping] = useState(false);
-  const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [sentRequestTo, setSentRequestTo] = useState<string | null>(null); // ✅ Estado para feedback do pedido
-  const [isLoadingPlayers, setIsLoadingPlayers] = useState(false); // ✅ Estado para carregamento dos jogadores
-  
 
   const [isLogoutVisible, setIsLogoutVisible] = useState(false);
   const [logoutTimeoutId, setLogoutTimeoutId] = useState<NodeJS.Timeout | null>(null);
@@ -197,9 +194,12 @@ export default function Frase({}: GameProps) {
 
   const [isFlashing, setIsFlashing] = useState(false); // Estado para controlar a animação de piscar
   const [isReviewPaused, setIsReviewPaused] = useState(false);
-    
+  
+  
   const [open, setOpen] = useState(false);
-    
+  const [ablyClient, setAblyClient] = useState<Ably.Realtime | null>(null)
+  const [clientId, setClientId] = useState<string | null>(null);
+  
   const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
   const [currentSoundUrl, setCurrentSoundUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -213,9 +213,10 @@ export default function Frase({}: GameProps) {
   const [showRelaxSounds, setShowRelaxSounds] = useState(false);
   const [currentSoundInfo, setCurrentSoundInfo] = useState<any | null>(null); // Para armazenar informações do som atual
   const [showNotification, setShowNotification] = useState<{
-    name: string;
-    type: "join" | "leave";
-  } | null>(null);
+      name: string;
+      type: "join" | "leave";
+    } | null>(null);
+  
   
   useEffect(() => {
     if (showNotification) {
@@ -347,7 +348,9 @@ export default function Frase({}: GameProps) {
       const client = createAblyClient(clientId);
       setAblyClient(client);
   
-      return () => client.close();
+      return () => {
+        client.close();
+      };
   }, [clientId]);
   
   
@@ -396,7 +399,6 @@ export default function Frase({}: GameProps) {
           hasEnteredRef.current = true;
   
           presenceChannel.presence.get().then((members) => {
-            //const alreadyPresent = members.some(m => m.clientId === clientId);
             const players: Player[] = members
               .filter(m => m.clientId !== clientId)
               .map((m) => ({
@@ -434,7 +436,7 @@ export default function Frase({}: GameProps) {
   };
   
   useEffect(() => {
-      if (status === 'unauthenticated') router.push('/')
+    if (status === 'unauthenticated') router.push('/')
   }, [status, router]);
 
 
@@ -466,60 +468,38 @@ export default function Frase({}: GameProps) {
       const channel = ablyClient.channels.get("presence-chat");
     
       const fetchOnlinePlayers = async () => {
-        setIsLoadingPlayers(true); // ✅ Define o estado de carregamento como true
-        try {
-            const members = await channel.presence.get();
-            const players: Player[] = members.map((m) => ({
-                clientId: m.clientId,
-                name: m.data?.name ?? "Desconhecido",
-                avatarUrl: m.data?.avatarUrl ?? "",
-            }));
-            setPlayersOnline(players);
-        } catch (error) {
-            console.error("Erro ao buscar jogadores online:", error);
-            // ✅ Aqui você pode adicionar lógica para exibir uma mensagem de erro ao usuário
-        } finally {
-            setIsLoadingPlayers(false); // ✅ Define o estado de carregamento como false
-        }
+        const members = await channel.presence.get();
+        const players: Player[] = members.map((m) => ({
+          clientId: m.clientId,
+          name: m.data?.name ?? "Desconhecido",
+          avatarUrl: m.data?.avatarUrl ?? "",
+        }));
+        setPlayersOnline(players);
       };
     
       fetchOnlinePlayers();
     }, [ablyClient, showPlayersOnline]);
   
-  
-    // Enviar chat request com feedback visual
     
-    const handleSendChatRequestWithFeedback = (toPlayer: Player) => {
+    // Enviar chat request
+    const sendChatRequest = (toPlayer: Player) => {
+      // Checagem de integridade mínima
       if (!ablyClient || !clientId || !toPlayer?.clientId) return;
-  
-      setSentRequestTo(toPlayer.clientId); // ✅ Define o estado de pedido enviado
-  
+      
       const request: ChatRequest = {
-          fromClientId: clientId!,
-          fromName: playerName,
-          fromAvatar: session?.user?.image || "",
-          toClientId: toPlayer.clientId,
+        fromClientId: clientId!,
+        fromName: playerName,
+        fromAvatar: session?.user?.image || "",
+        toClientId: toPlayer.clientId,
       };
-  
-      ablyClient?.channels.get("presence-chat").publish("chat-request", request)
-          .then(() => {
-              // ✅ Lógica para lidar com o sucesso do envio
-              setTimeout(() => {
-                  setSentRequestTo(null);
-              }, 5000); // Limpa após 5 segundos (ajuste conforme necessário)
-          })
-          .catch((err) => {
-              // ✅ Lógica para lidar com o erro no envio
-              console.error("Erro ao enviar pedido de chat:", err);
-              setSentRequestTo(null); // ✅ Limpa o estado em caso de erro
-              // ✅ Aqui você pode adicionar lógica para exibir uma mensagem de erro ao usuário
-          });
+    
+      ablyClient?.channels.get("presence-chat").publish("chat-request", request);
     };
   
   
     useEffect(() => {
       if (!ablyClient || !clientId) return;
-  
+
       const channel = ablyClient?.channels.get("presence-chat");
     
       const handleRequest = (msg: any) => {
@@ -563,7 +543,7 @@ export default function Frase({}: GameProps) {
       const [input, setInput] = useState("");
       const [isPartnerTyping, setIsPartnerTyping] = useState(false);
       const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-    
+
       useEffect(() => {
         if (!channel || !clientId) return;
   
@@ -587,7 +567,7 @@ export default function Frase({}: GameProps) {
         return () => channel.unsubscribe("typing", handler);
       }, [channel, clientId]);
     
-          
+            
       useEffect(() => {
         if (!channel || !clientId || !input) return;
       
@@ -622,80 +602,69 @@ export default function Frase({}: GameProps) {
     <>
       {/* Caixa de bate-papo privado */}
       <div className="fixed bottom-4 right-4 bg-gray-900 rounded-xl border border-blue-500 shadow-xl w-80 z-50">
-        {chatPartner && ( // ✅ Melhor tratamento de chatPartner nulo: Renderiza apenas se chatPartner existir
-          <>
-            <div className="bg-blue-800 text-white p-2 rounded-t-xl flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {chatPartner.avatarUrl && ( // ✅ Evita erro se avatarUrl for undefined
-                  <img src={chatPartner.avatarUrl} className="w-8 h-8 rounded-full" alt="Avatar do parceiro" />
-                )}
-                <span>{chatPartner.name}</span>
-              </div>
-            </div>
-
-            <div className="p-2 max-h-64 overflow-y-auto space-y-1 text-white text-sm">
-              {messages.map((msg, i) => (
-                <div
-                  key={i}
-                  className={`p-2 rounded-md ${
-                    msg.from === clientId ? "bg-blue-600 ml-auto text-right" : "bg-gray-700"
-                  }`}
-                >
-                  {msg.text}
-                </div>
-              ))}
-            </div>
-
-            <div className="p-2 flex gap-2">
-              {/* Botão de emojis */}
-              <button
-                onClick={() => setShowPicker(!showPicker)}
-                type="button"
-                className="text-white text-lg px-2 hover:scale-110"
-              >
-                😊
-              </button>
-
-              {/* Campo de entrada */}
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                className="flex-1 bg-gray-800 rounded px-2 py-1 text-white"
-                placeholder="Digite..."
-              />
-
-              {/* Botão de enviar */}
-              <button
-                onClick={sendMessage}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-3 rounded"
-              >
-                Enviar
-              </button>
-
-              {/* Picker de emojis */}
-              {showPicker && (
-                <div className="absolute bottom-14 right-2 z-50">
-                  <Picker
-                    theme="dark"
-                    onSelect={(emoji: any) => {
-                      setInput((prev) => prev + emoji.native);
-                      setShowPicker(false);
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-          </>
-        )}
-        {!chatPartner && ( // ✅ Melhor tratamento de chatPartner nulo: Mensagem se nenhum parceiro estiver selecionado
-          <div className="p-4 text-white text-center">
-            Nenhum bate-papo selecionado.
+        <div className="bg-blue-800 text-white p-2 rounded-t-xl flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <img src={chatPartner.avatarUrl} className="w-8 h-8 rounded-full" />
+            <span>{chatPartner.name}</span>
           </div>
-        )}
+        </div>
+
+        <div className="p-2 max-h-64 overflow-y-auto space-y-1 text-white text-sm">
+          {messages.map((msg, i) => (
+            <div
+              key={i}
+              className={`p-2 rounded-md ${
+                msg.from === clientId ? "bg-blue-600 ml-auto text-right" : "bg-gray-700"
+              }`}
+            >
+              {msg.text}
+            </div>
+          ))}
+        </div>
+
+        <div className="p-2 flex gap-2">
+          {/* Botão de emojis */}
+          <button
+            onClick={() => setShowPicker(!showPicker)}
+            type="button"
+            className="text-white text-lg px-2 hover:scale-110"
+          >
+            😊
+          </button>
+
+          {/* Campo de entrada */}
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            className="flex-1 bg-gray-800 rounded px-2 py-1 text-white"
+            placeholder="Digite..."
+          />
+
+          {/* Botão de enviar */}
+          <button
+            onClick={sendMessage}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 rounded"
+          >
+            Enviar
+          </button>
+
+          {/* Picker de emojis */}
+          {showPicker && (
+            <div className="absolute bottom-14 right-2 z-50">
+              <Picker
+                theme="dark"
+                onSelect={(emoji: any) => {
+                  setInput((prev) => prev + emoji.native);
+                  setShowPicker(false);
+                }}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Indicador de digitação */}
-      {isPartnerTyping && chatPartner && ( // ✅ Garante que chatPartner não seja nulo antes de acessar o nome
+      {isPartnerTyping && (
         <div className="text-xs text-gray-300 px-3 py-1 animate-pulse">
           {chatPartner.name} está digitando...
         </div>
@@ -1135,22 +1104,22 @@ export default function Frase({}: GameProps) {
       <div className='relative'>
         {/* Notificação de jogadores online */}
         <div className="fixed top-4 left-4 z-50">
-          <button
-            onClick={() => {
-              setShowPlayersOnline((prev) => !prev);
-              setNotificationCount(0); // Zera as notificações
-            }}
-            className="relative border-2 border-lightblue hover:bg-lightblue text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer mt-4"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1h9v-1a6 6 0 01-12 0v-1c0-2.485-2.099-4.5-4-4s-4 2.015-4 4v1z" />
-            </svg>
-            {notificationCount > 0 && (
-              <span className="absolute top-0 right-0 transform translate-x-1/4 -translate-y-1/4 bg-green text-green text-xs rounded-full px-2 py-0.5">
-                {notificationCount}
-              </span>
-            )}
-          </button>
+              <button
+                  onClick={() => {
+                    setShowPlayersOnline((prev) => !prev);
+                    setNotificationCount(0); // Zera as notificações
+                  }}
+                  className="relative border-2 border-lightblue hover:bg-lightblue text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer mt-4"
+              >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1h9v-1a6 6 0 01-12 0v-1c0-2.485-2.099-4.5-4-4s-4 2.015-4 4v1z" />
+                  </svg>
+                  {notificationCount > 0 && (
+                    <span className="absolute top-0 right-0 transform translate-x-1/4 -translate-y-1/4 bg-green text-green text-xs rounded-full px-2 py-0.5">
+                        {notificationCount}
+                    </span>
+                  )}
+              </button>
         </div>
       
         {/* Botão para mostrar/ocultar sons relaxantes */}
@@ -1292,67 +1261,57 @@ export default function Frase({}: GameProps) {
 
       {/* Exibição dos jogadores online */}
       {showPlayersOnline && (
-        <div className="absolute top-26 left-4 bg-gray-900 rounded-xl shadow-lg p-4 w-72 z-50 border border-blue-400">
-          <h3 className="text-white font-semibold mb-2">Jogadores online</h3>
-          <ul className="space-y-2 max-h-64 overflow-y-auto">
-            {playersOnline
-              .filter((p) => p.clientId !== clientId)
-              .map((player) => (
-                <li
-                  key={player.clientId}
-                  className="flex items-center justify-between bg-gray-800 px-3 py-2 rounded-lg hover:bg-gray-700 transition"
-                >
-                  <div className="flex items-center space-x-2">
-                    {player.avatarUrl && ( // ✅ Evita erro se avatarUrl for undefined
-                      <img src={player.avatarUrl} alt="avatar" className="w-8 h-8 rounded-full" />
-                    )}
-                    <span className="text-white">{player.name}</span>
-                  </div>
-                  <button
-                    onClick={() => handleSendChatRequestWithFeedback(player)} // ✅ Adiciona feedback visual ao enviar pedido
-                    className={`text-sm bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-full ${
-                      sentRequestTo === player.clientId ? 'opacity-50 cursor-not-allowed' : '' // ✅ Desabilita e muda a aparência se o pedido foi enviado
-                    }`}
-                    disabled={sentRequestTo === player.clientId} // ✅ Desabilita o botão se o pedido já foi enviado
-                  >
-                    {sentRequestTo === player.clientId ? 'Enviado...' : 'Bate-papo'}
-                  </button>
-                </li>
-              ))}
-          </ul>
-          {isLoadingPlayers && ( // ✅ Estado de carregamento: Exibe mensagem enquanto carrega
-            <div className="text-white text-center mt-2">Carregando jogadores...</div>
-          )}
-        </div>
+            <div className="absolute top-26 left-4 bg-gray-900 rounded-xl shadow-lg p-4 w-72 z-50 border border-blue-400">
+                <h3 className="text-white font-semibold mb-2">Jogadores online</h3>
+                <ul className="space-y-2 max-h-64 overflow-y-auto">
+                {playersOnline
+                    .filter((p) => p.clientId !== clientId)
+                    .map((player) => (
+                    <li
+                        key={player.clientId}
+                        className="flex items-center justify-between bg-gray-800 px-3 py-2 rounded-lg hover:bg-gray-700 transition"
+                    >
+                        <div className="flex items-center space-x-2">
+                          <img src={player.avatarUrl} alt="avatar" className="w-8 h-8 rounded-full" />
+                          <span className="text-white">{player.name}</span>
+                        </div>
+                        <button
+                          onClick={() => sendChatRequest(player)}
+                          className="text-sm bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-full"
+                        >
+                          Bate-papo
+                        </button>
+                    </li>
+                    ))}
+                </ul>
+            </div>
       )}
 
 
       {/* Notificação de solicitação de chat */}
       {incomingRequest && (
-        <div className="fixed bottom-4 right-4 bg-gray-800 border border-blue-500 rounded-xl p-4 shadow-xl z-50 animate-bounce-in">
-          <div className="flex items-center gap-3 mb-3">
-            {incomingRequest.fromAvatar && ( // ✅ Evita erro se fromAvatar for undefined
-              <img src={incomingRequest.fromAvatar} className="w-10 h-10 rounded-full" alt="Avatar de quem solicitou" />
-            )}
-            <span className="text-white font-semibold">
-              {incomingRequest.fromName} quer bater papo!
-            </span>
-          </div>
-          <div className="flex justify-end gap-2">
-            <button
-              className="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600"
-              onClick={() => acceptRequest(incomingRequest)}
-            >
-              Aceitar
-            </button>
-            <button
-              className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600"
-              onClick={() => setIncomingRequest(null)}
-            >
-              Recusar
-            </button>
-          </div>
-        </div>
+            <div className="fixed bottom-4 right-4 bg-gray-800 border border-blue-500 rounded-xl p-4 shadow-xl z-50 animate-bounce-in">
+                <div className="flex items-center gap-3 mb-3">
+                  <img src={incomingRequest.fromAvatar} className="w-10 h-10 rounded-full" />
+                  <span className="text-white font-semibold">
+                      {incomingRequest.fromName} quer bater papo!
+                  </span>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <button
+                      className="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600"
+                      onClick={() => acceptRequest(incomingRequest)}
+                  >
+                      Aceitar
+                  </button>
+                  <button
+                      className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600"
+                      onClick={() => setIncomingRequest(null)}
+                  >
+                      Recusar
+                  </button>
+                </div>
+            </div>
       )}
       
 
