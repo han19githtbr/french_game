@@ -1661,7 +1661,7 @@ export default function Game({}: GameProps) {
               ))}
             </div>
 
-            <div className="mt-8 flex gap-4">
+            <div className="mt-8 flex gap-4 mb-20">
               <div className="relative">
                 <motion.button
                   onClick={handleOpenReview}
@@ -1724,7 +1724,7 @@ export default function Game({}: GameProps) {
 
             {/* Seção de Redes Sociais */}
             <motion.div
-                className="absolute bottom-4 left-15 flex flex-col items-start"
+                className="absolute mt-4 bottom-4 left-5 flex flex-col items-start"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.6 }}

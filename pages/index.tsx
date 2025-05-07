@@ -213,7 +213,7 @@ export default function Home() {
       
       <button
         onClick={handleSignInClick}
-        className="flex items-center gap-3 bg-transparent hover:border-green border border-blue text-gray-300 font-semibold px-6 py-3 rounded-lg shadow-md hover:shadow-xl transition duration-300 cursor-pointer"
+        className="flex mb-20 items-center gap-3 bg-transparent hover:border-green border border-blue text-gray-300 font-semibold px-6 py-3 rounded-lg shadow-md hover:shadow-xl transition duration-300 cursor-pointer"
       >
         <svg className="w-6 h-6" viewBox="0 0 533.5 544.3">
           <path
@@ -242,7 +242,7 @@ export default function Home() {
     
       {/* Seção de Redes Sociais */}
       <motion.div
-          className="absolute bottom-4 left-15 flex flex-col items-start"
+          className="absolute bottom-4 left-5 flex flex-col items-start"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.6 }}
