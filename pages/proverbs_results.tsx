@@ -841,7 +841,7 @@ export default function ResultsPage() {
             {progress_answers.map((p, i) => (
               <div
               key={i}
-              className={`bg-white text-black p-4 rounded-xl shadow-md flex justify-between items-center ${p.correct_proverb === bestRound.correct_proverb ? 'border-2 border-yellow-400' : ''}`}
+              className={`bg-white text-black p-4 rounded-xl shadow-md flex justify-between items-center ${p.correct_proverb === bestRound.correct_proverb ? 'border-2 border-green' : ''}`}
             >
               <span>Jogada {p.round}</span>
               <span>
