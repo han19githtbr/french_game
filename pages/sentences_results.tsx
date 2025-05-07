@@ -1,7 +1,7 @@
 // pages/results.tsx
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/router'
-import { ChevronLeft, Trash2 } from 'lucide-react'
+import { ChevronLeft, Trash } from 'lucide-react'
 import { createAblyClient } from '../lib/ably'
 import type * as Ably from 'ably'
 import { useSession, signOut } from 'next-auth/react'
@@ -9,7 +9,7 @@ import { motion , AnimatePresence} from 'framer-motion'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { Check, X } from 'lucide-react'
 //import { signOut, useSession } from 'next-auth/react'
-import { FaMedal } from 'react-icons/fa';
+import { FaChartBar, FaMedal } from 'react-icons/fa';
 import { DotLoader } from 'react-spinners';
 import { Realtime, Message } from 'ably'
 
@@ -141,27 +141,55 @@ export default function ResultsPage() {
           <div className="flex justify-center mb-8">
               <button
                 onClick={clearProgress}
-                className="flex items-center border border-white bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75 cursor-pointer"
+                className="flex items-center border border-red bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75 cursor-pointer"
               >
-                <Trash2 className="mr-2" color="red" /> Limpar Jogadas
+                <Trash className="mr-2" color="red" /> Limpar Jogadas
               </button>
           </div>
 
-          <h2 className="text-2xl font-semibold text-center mb-4">Estatísticas de Acertos</h2>
-          <div className="h-72 w-full max-w-3xl mx-auto">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={progress_answers}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="round" label={{ value: 'Jogada', position: 'insideBottomRight', offset: -5 }} />
-                <YAxis label={{ value: 'Acertos', angle: -90, position: 'insideLeft' }} allowDecimals={false} />
-                <Tooltip />
-                <Bar dataKey="correct_answer" fill="#6366f1" />
-              </BarChart>
-            </ResponsiveContainer>
+          <h2 className="text-3xl font-bold text-center text-indigo-600 flex items-center justify-center gap-2 mb-6">
+              <FaChartBar className="text-blue text-2xl mt-1" />
+              Estatísticas de Acertos
+          </h2>
+          
+          <div className="h-80 w-full max-w-4xl mx-auto rounded-2xl bg-white shadow-xl p-4 dark:bg-zinc-900 dark:shadow-none">
+              <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={progress_answers}>
+                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                     <XAxis 
+                       dataKey="round" 
+                       label={{ value: 'Jogada', position: 'insideBottomRight', offset: -5 }}
+                       tick={{ fill: "#6b7280", fontSize: 12 }}
+                       axisLine={{ stroke: '#d1d5db' }}
+                     />
+                     <YAxis 
+                       label={{ value: 'Acertos', angle: -90, position: 'insideLeft' }}
+                       tick={{ fill: "#6b7280", fontSize: 12 }}
+                       axisLine={{ stroke: '#d1d5db' }}
+                       allowDecimals={false}
+                     />
+                     <Tooltip
+                       contentStyle={{ backgroundColor: "#fff", borderColor: "#d1d5db", borderRadius: "8px", padding: "10px" }}
+                       labelStyle={{ color: "#4b5563", fontWeight: "bold" }}
+                     />
+                     <Bar 
+                       dataKey="correct_answer"
+                       fill="#6366f1"
+                       radius={[6, 6, 0, 0]}
+                       animationDuration={800}
+                     />
+                     <defs>
+                       <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
+                         <stop offset="5%" stopColor="#6366f1" stopOpacity={0.9} />
+                         <stop offset="95%" stopColor="#a5b4fc" stopOpacity={0.5} />
+                       </linearGradient>
+                     </defs>
+                  </BarChart>
+              </ResponsiveContainer>
           </div>
-
-          <div className="text-center mt-8 text-lg">
-            🏆 Melhor desempenho: <strong>{bestRound.correct_answer}</strong> acertos na jogada {bestRound.round}
+          
+          <div className="text-center mt-10 text-lg text-zinc-700 dark:text-zinc-300">
+            🏆 Melhor desempenho: <strong className="text-green dark:text-blue">{bestRound.correct_answer}</strong> acertos na jogada <strong className='text-green'>{bestRound.round}</strong>
           </div>
         </>
 
