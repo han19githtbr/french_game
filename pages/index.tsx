@@ -242,7 +242,7 @@ export default function Home() {
     
       {/* Seção de Redes Sociais */}
       <motion.div
-          className="absolute bottom-4 left-5 flex flex-col items-start"
+          className="absolute bottom-4 left-5 flex flex-col items-start sm:mt-16 mt-8"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.6 }}
