@@ -194,6 +194,10 @@ export default function Frase({}: GameProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showRelaxSounds, setShowRelaxSounds] = useState(false);
   const [currentSoundInfo, setCurrentSoundInfo] = useState<any | null>(null); // Para armazenar informações do som atual
+  const synth = typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis : null;
+  const [voicesLoaded, setVoicesLoaded] = useState(false);
+  const timeoutId = useRef<NodeJS.Timeout | null>(null);
+  
   const [showNotification, setShowNotification] = useState<{
       name: string;
       type: "join" | "leave";
@@ -851,30 +855,7 @@ export default function Frase({}: GameProps) {
     }
   }, [correctAnswersCount, isReviewUnlocked, lockRotation, lockY, playUnlockSound]);
 
-  /*useEffect(() => {
-    if (!session) return
   
-    const generatedClientId = session.user?.email || Math.random().toString(36).substring(2, 9)
-    const client = createAblyClient(generatedClientId)
-    setAblyClient(client);
-
-    setClientId(generatedClientId);
-  
-    return () => {
-      client.close()
-    }
-  }, [session]);*/
-
-
-  
-  // [ACRESCENTADO] Estado para armazenar o clientId assim que estiver disponível
-  /*useEffect(() => {
-    if (ablyClient) {
-      setClientId(ablyClient.auth.clientId);
-    }
-  }, [ablyClient]);*/
-
-
   const handleMouseEnter = () => {
     clearTimeout(logoutTimeoutId as NodeJS.Timeout); // Limpa qualquer timeout pendente
     setIsLogoutVisible(true);
@@ -1032,38 +1013,68 @@ export default function Frase({}: GameProps) {
 
   const isReviewAvailable = availableReviews > 0;
 
-  const speakFrench = (text: string, speed: number) => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+  useEffect(() => {
+    if (!synth) return;
+
+    const handleVoicesChanged = () => {
+      setVoicesLoaded(true);
+    };
+
+    if (synth.getVoices().length === 0) {
+      synth.addEventListener('voiceschanged', handleVoicesChanged);
+    } else {
+      setVoicesLoaded(true);
+    }
+
+    return () => {
+      if (synth) {
+        synth.removeEventListener('voiceschanged', handleVoicesChanged);
+        if (timeoutId.current) {
+          clearTimeout(timeoutId.current);
+        }
+      }
+    };
+  }, [synth]);
+
+
+  const speakFrench = useCallback((text: string, speed: number) => {
+    if (!synth) {
       console.error('A API de Text-to-Speech não é suportada neste navegador.');
       return;
     }
-  
-    const synth = window.speechSynthesis;
-  
+
     const speak = () => {
       const voices = synth.getVoices();
       const frenchVoice = voices.find((voice) =>
         ['fr-FR', 'fr-CA', 'fr-BE', 'fr-CH', 'fr-LU'].includes(voice.lang)
       );
-  
+
       const utterance = new SpeechSynthesisUtterance(text);
       if (frenchVoice) {
         utterance.voice = frenchVoice;
       } else {
         console.warn('Voz em francês não encontrada. Usando a voz padrão.');
       }
-  
+
       utterance.lang = 'fr-FR'; // força o idioma francês
       utterance.rate = speed;
       synth.speak(utterance);
     };
-  
-    if (synth.getVoices().length === 0) {
-      // Chrome mobile geralmente precisa desse evento
-      synth.addEventListener('voiceschanged', speak);
+
+    if (!voicesLoaded && synth.getVoices().length === 0) {
+      // Timeout para tentar falar mesmo que 'voiceschanged' demore
+      timeoutId.current = setTimeout(() => {
+        console.warn('Evento voiceschanged demorou muito. Tentando falar com a voz padrão.');
+        speak();
+      }, 5000); // Ajuste o tempo limite conforme necessário
     } else {
       speak();
     }
+  }, [synth, voicesLoaded]);
+
+  
+  const handleSpeak = () => {
+    speakFrench("Bonjour le monde!", 0.8);
   };
   
   const handleSpeedChange = (index: number, newSpeed: number) => {

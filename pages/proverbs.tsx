@@ -173,6 +173,8 @@ export default function Game({}: GameProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showRelaxSounds, setShowRelaxSounds] = useState(false);
   const [currentSoundInfo, setCurrentSoundInfo] = useState<any | null>(null); // Para armazenar informações do som atual
+  
+  
   const [showNotification, setShowNotification] = useState<{
     name: string;
     type: "join" | "leave";
