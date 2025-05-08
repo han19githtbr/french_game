@@ -1113,12 +1113,12 @@ export default function Game({}: GameProps) {
 
             <div className="flex space-x-4 mb-4">
               <button
-                onClick={() => handleThemeSelect('nature')}
+                onClick={() => handleThemeSelect('trees')}
                 className={`rounded-xl px-2 py-2 text-white font-semibold transition duration-300 ease-in-out ${
-                  selectedTheme === 'nature' ? 'bg-lightblue hover:bg-lightblue' : 'bg-gray-700 hover:bg-gray-600'
+                  selectedTheme === 'trees' ? 'bg-lightblue hover:bg-lightblue' : 'bg-gray-700 hover:bg-gray-600'
                 } focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer`}
               >
-                <GlobeAmericasIcon className="h-5 w-5 mr-2 inline-block text-green" /> Nature
+                <GlobeAmericasIcon className="h-5 w-5 mr-2 inline-block text-green" /> Trees
               </button>
               <button
                 onClick={() => handleThemeSelect('rain')}
