@@ -1500,9 +1500,12 @@ export default function Game({}: GameProps) {
             <p className="text-sm text-gray-400 mb-1 text-center">Selecione uma opção e complete 2 acertos para desbloquear este nível.</p>
           )}
           <motion.button
-            className={`flex items-center justify-center py-3 px-6 rounded-md mt-2 font-semibold transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75 ${
+            className={`flex items-center justify-center py-3 px-6 rounded-md mt-2 font-semibold transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75 shadow-[0_0_15px_rgba(0,255,255,0.6)] hover:shadow-[0_0_25px_rgba(0,255,255,0.8)]
+                        active:scale-95
+                        focus:ring-neon-pink focus:ring-offset-2 focus:ring-offset-gray-900
+                        animate-pulse-slow ${
               isFrasesUnlocked
-                ? 'bg-lightblue hover:bg-green cursor-pointer text-white shadow-md'
+                ? 'bg-lightblue hover:bg-green cursor-pointer text-white shadow-md '
                 : 'bg-gray-900 text-gray-400 cursor-not-allowed shadow-sm'
             }`}
             onClick={handleFrasesClick}
@@ -1554,7 +1557,9 @@ export default function Game({}: GameProps) {
             <p className="text-sm text-gray-400 mb-1 text-center">Selecione uma opção e complete 1 acerto para desbloquear este nível.</p>
           )}
           <motion.button
-            className={`flex items-center justify-center py-3 px-6 rounded-md mt-2 font-semibold transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75 ${
+            className={`flex items-center justify-center py-3 px-6 rounded-md mt-4 font-semibold transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75 shadow-[0_0_15px_rgba(0,255,255,0.6)] hover:shadow-[0_0_25px_rgba(0,255,255,0.8 active:scale-95
+                        focus:ring-neon-pink focus:ring-offset-2 focus:ring-offset-gray-900
+                        animate-pulse-slow ${
               isProverbsUnlocked
                 ? 'bg-lightblue hover:bg-green cursor-pointer text-white shadow-md'
                 : 'bg-gray-700 text-gray-400 cursor-not-allowed shadow-sm'

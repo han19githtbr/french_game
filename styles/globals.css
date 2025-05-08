@@ -7,7 +7,8 @@
 @theme {
   --color-*: initial;
 
-  --neon-blue: #00f0ff;
+  /*--neon-blue: #00f0ff;*/
+  --neon-blue: #0000ff;
   --neon-pink: #ff00ff;
   --dark-purple: #1a0033;
 
@@ -15,7 +16,7 @@
   --color-red: #ff0000;
   --color-yellow: #ffc700;
   --color-blue: #6f9de2;
-  --color-lightblue: #2552c0;
+  --color-lightblue: #100cd6;
   --color-purple: #541093;
   --color-pink: #ff00e5;
 
