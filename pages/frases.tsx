@@ -1544,22 +1544,44 @@ export default function Frase({}: GameProps) {
                   <div className="relative w-full mt-1">
                     <select
                       className={`
-                        w-full appearance-none p-3 rounded-xl border-2 border-lightblue
-                        text-white bg-gradient-to-br from-gray-800 to-blue
-                        shadow-lg shadow-purple-500/40
-                        hover:shadow-xl hover:shadow-pink-500/50
-                        transition-all duration-300 ease-out
-                        focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-1
-                        cursor-pointer text-lg tracking-wide font-semibold
+                        w-full p-4 rounded-xl border-2 border-neon-blue
+                        bg-gradient-to-br from-dark-purple to-neon-blue
+                        text-white font-bold text-lg tracking-wide
+                        appearance-none cursor-pointer
+                        shadow-[0_0_15px_rgba(0,255,255,0.6)] hover:shadow-[0_0_25px_rgba(0,255,255,0.8)]
+                        active:scale-95
+                        transition-all duration-300 ease-in-out
+                        focus:outline-none focus:ring-2 focus:ring-neon-pink focus:ring-offset-2 focus:ring-offset-dark-purple
+                        animate-pulse-slow
+                        sm:p-3 sm:text-base
+                        touch-manipulation
                       `}
                       onChange={e => checkAnswer(index, e.target.value)}
                       disabled={!!results[index]}
                     >
-                      <option value="">✅ Selecione</option>
+                      <option value="" className="bg-gray-900 text-white font-semibold">✅ Selecione</option>
                       {img.options.map((opt: string, i: number) => (
-                        <option className='cursor-pointer' key={i} value={opt}>{opt}</option>
+                        <option
+                          className="bg-gray-900 text-white font-semibold hover:bg-neon-blue active:bg-neon-pink transition-colors duration-200"
+                          key={i}
+                          value={opt}
+                        >
+                          {opt}
+                        </option>
                       ))}
                     </select>
+                    {/* Custom dropdown arrow */}
+                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                      <svg
+                        className="w-6 h-6 text-neon-pink sm:w-5 sm:h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
                   </div>
 
                   <button
