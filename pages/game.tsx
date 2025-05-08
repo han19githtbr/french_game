@@ -1874,7 +1874,6 @@ export default function Game({}: GameProps) {
                     exit={{ scale: 0.8 }}
                   >
                     <h2 className="text-2xl font-bold text-green-600 mb-4">Parabéns! Você acertou tudo! 🎉</h2>
-                    <p className="text-gray-700 mb-4">Próxima rodada em breve...</p>
                   </motion.div>
                 </motion.div>
               )}
