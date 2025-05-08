@@ -1186,10 +1186,10 @@ export default function Game({}: GameProps) {
                   <ul>
                     {searchResults.map((sound) => (
                       <li key={sound.id} className="flex items-center justify-between py-2 border-b border-gray-700">
-                        <span className="text-blue text-sm">{sound.name}</span>
+                        <span className="text-blue text-sm font-bold">{sound.name}</span>
                         <button
                           onClick={() => loadAndPlaySound(sound.id)}
-                          className="p-1 rounded-full bg-lightblue hover:bg-blue text-white focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer"
+                          className="p-1 rounded-full bg-transparent border-2 border-b-lightblue hover:bg-lightblue text-white focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer"
                         >
                           <BiPlay className="h-4 w-4 text-green" />
                         </button>
@@ -1211,7 +1211,7 @@ export default function Game({}: GameProps) {
                 <p>Tocando: {currentSoundInfo.name}</p>
                 {currentSoundInfo?.user?.username && <p>Autor: {currentSoundInfo.user.username}</p>}
                 {currentSoundInfo?.url && (
-                  <a href={currentSoundInfo.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Ver no Freesound</a>
+                  <a href={currentSoundInfo.url} target="_blank" rel="noopener noreferrer" className="text-blue hover:underline">Ver no Freesound</a>
                 )}
               </div>
             )}
@@ -1551,12 +1551,12 @@ export default function Game({}: GameProps) {
                     
                     <input
                       type="range"
-                      min="0.5"
+                      min="0.1"
                       max="2"
-                      step="0.1"
+                      step="0.01"
                       value={speechSpeeds[index]}
                       onChange={(e) => handleSpeedChange(index, parseFloat(e.target.value))}
-                      className="w-24 h-2 rounded-full bg-green cursor-pointer appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-lightblue [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer"
+                      className="w-34 h-3 rounded-full bg-transparent border-1 border-green cursor-pointer appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-lightblue [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer"
                     />
                     <span className="ml-2 mb-1 text-sm text-white font-bold">{(speechSpeeds[index] ?? 1).toFixed(1)}x</span>
                   </div>
