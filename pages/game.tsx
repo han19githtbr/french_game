@@ -68,7 +68,8 @@ interface ChatRequest {
 type ChatBoxProps = {
   clientId: string;
   chatPartner: Player;
-  channel: RealtimeChannel;
+  //channel: RealtimeChannel;
+  channel: any;
 };
 
 interface OnlineNotificationsProps {
@@ -389,11 +390,11 @@ export default function Game({}: GameProps) {
       presenceChannel.presence.enter({ name: playerName, avatarUrl }).then(() => {
         hasEnteredRef.current = true;
 
-        presenceChannel.presence.get().then((members) => {
+        presenceChannel.presence.get().then((members: any) => {
           //const alreadyPresent = members.some(m => m.clientId === clientId);
           const players: Player[] = members
-            .filter(m => m.clientId !== clientId)
-            .map((m) => ({
+            .filter((m: any) => m.clientId !== clientId)
+            .map((m: any) => ({
               clientId: m.clientId,
               name: m.data?.name ?? "Desconhecido",
               avatarUrl: m.data?.avatarUrl ?? "",
@@ -502,17 +503,39 @@ export default function Game({}: GameProps) {
     const handleRequest = (msg: any) => {
       const req: ChatRequest = msg.data;
       if (req.toClientId === clientId) {
-        setIncomingRequest(req);
-        playRequestSound();
+        // Verificar se o solicitante ainda está online
+        channel.presence.get().then((members: any) => {
+          const requesterOnline = members.some((m: any) => m.clientId === req.fromClientId);
+          if (requesterOnline) {
+            setIncomingRequest(req);
+            playRequestSound();
+          } else {
+            setShowNotification({ name: req.fromName, type: "leave" });
+          }
+        });
+      }
+    };
+
+    const handleRequestAccepted = (msg: any) => {
+      const { fromClientId, toClientId } = msg.data;
+      if (toClientId === clientId) {
+        const channelName = getPrivateChannelName(fromClientId, clientId);
+        const channel = ablyClient.channels.get(channelName);
+        const partner = playersOnline.find((p) => p.clientId === fromClientId);
+        if (partner) {
+          setChatPartner(partner);
+          setPrivateChannel(channel);
+        }
       }
     };
   
     channel?.subscribe("chat-request", handleRequest);
+    channel.subscribe("chat-accepted", handleRequestAccepted);
   
     return () => {
       channel?.unsubscribe("chat-request", handleRequest);
     };
-  }, [ablyClient, clientId]);
+  }, [ablyClient, clientId, playersOnline]);
 
 
   const getPrivateChannelName = (id1: string, id2: string) =>
@@ -532,6 +555,13 @@ export default function Game({}: GameProps) {
     });
     setPrivateChannel(channel);
     setIncomingRequest(null);
+
+    // Notificar o solicitante que a solicitação foi aceita
+    if (!ablyClient) return; // Impede erro se ablyClient for null
+    ablyClient.channels.get("presence-chat").publish("chat-accepted", {
+      fromClientId: clientId,
+      toClientId: req.fromClientId,
+    });
   };
 
 
@@ -544,6 +574,13 @@ export default function Game({}: GameProps) {
     useEffect(() => {
       if (!channel || !clientId) return;
 
+      channel.history({ limit: 100 }).then((messagePage: any) => {
+        const history = messagePage.items
+          .filter((msg: any) => msg.name === "message")
+          .map((msg: any) => msg.data);
+        setMessages(history.reverse());
+      });
+
       const handler = (msg: any) => {
         setMessages((prev) => [...prev, msg.data]);
         new Audio("/sounds/message.mp3").play();
@@ -552,6 +589,7 @@ export default function Game({}: GameProps) {
       return () => channel.unsubscribe("message", handler);
     }, [channel, clientId]);
   
+
     useEffect(() => {
       if (!channel || !clientId) return;
 
@@ -560,8 +598,17 @@ export default function Game({}: GameProps) {
           setIsPartnerTyping(msg.data.isTyping);
         }
       };
-      channel.subscribe("typing", handler);
-      return () => channel.unsubscribe("typing", handler);
+      // Redefinir indicador de digitação se o parceiro sair
+      channel.presence.subscribe("leave", (member: any) => {
+        if (member.clientId !== clientId) {
+          setIsPartnerTyping(false);
+        }
+      });
+
+      return () => {
+        channel.unsubscribe("typing", handler);
+        channel.presence.unsubscribe("leave");
+      };
     }, [channel, clientId]);
   
         
