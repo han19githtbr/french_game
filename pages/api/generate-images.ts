@@ -16,8 +16,8 @@ const allImages = {
     { url: '/ghibli/familia/natal.png', title: 'La Noël' },
     { url: '/ghibli/familia/plane.png', title: 'Dans l\'avion' },
     { url: '/ghibli/familia/praia.png', title: 'À la plage' },
-    { url: '/ghibli/familia/teatro', title: 'À la salle de Théâtre' },
-    { url: '/ghibli/familia/tv.jpg', title: 'Regarder la télévision' },
+    { url: '/ghibli/familia/teatro.png', title: 'À la salle de Théâtre' },
+    { url: '/ghibli/familia/tv.png', title: 'Regarder la télévision' },
   ],
   'natureza': [
     { url: '/ghibli/natureza/árvore.png', title: 'Un Arbre' },
