@@ -1557,9 +1557,7 @@ export default function Game({}: GameProps) {
             <p className="text-sm text-gray-400 mb-1 text-center">Selecione uma opção e complete 1 acerto para desbloquear este nível.</p>
           )}
           <motion.button
-            className={`flex items-center justify-center py-3 px-6 rounded-md mt-4 font-semibold transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75 shadow-[0_0_15px_rgba(0,255,255,0.6)] hover:shadow-[0_0_25px_rgba(0,255,255,0.8 active:scale-95
-                        focus:ring-neon-pink focus:ring-offset-2 focus:ring-offset-gray-900
-                        animate-pulse-slow ${
+            className={`flex items-center justify-center py-3 px-6 rounded-md mt-4 font-semibold transition duration-300 ease-in-out focus:outline-none animate-pulse-slow ${
               isProverbsUnlocked
                 ? 'bg-lightblue hover:bg-green cursor-pointer text-white shadow-md'
                 : 'bg-gray-700 text-gray-400 cursor-not-allowed shadow-sm'
@@ -1763,8 +1761,8 @@ export default function Game({}: GameProps) {
                   disabled={!isReviewUnlocked || reviewHistory.length === 0}
                   className={`border flex items-center justify-center py-2 px-8 rounded-xl transition-colors font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 ${
                     isReviewUnlocked && reviewHistory.length > 0
-                      ? 'border-blue hover:border-green hover:text-white cursor-pointer text-blue'
-                      : 'border-gray-300 bg-gray-800 text-gray-400 cursor-not-allowed'
+                      ? 'border-blue hover:border-green hover:text-white cursor-pointer text-blue animate-pulse-slow'
+                      : 'border-gray-300 bg-gray-800 text-gray-400 cursor-not-allowed animate-pulse-slow'
                   }`}
                   variants={unlockButtonVariants}
                   animate={isReviewUnlocking ? 'unlocking' : 'locked'}

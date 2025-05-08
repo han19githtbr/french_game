@@ -1613,8 +1613,8 @@ export default function Game({}: GameProps) {
                   disabled={!isReviewUnlocked || reviewHistory.length === 0}
                   className={`border flex items-center justify-center py-2 px-8 rounded-xl transition-colors font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 ${
                     isReviewUnlocked && reviewHistory.length > 0
-                      ? 'border-blue hover:border-green hover:text-white cursor-pointer text-blue'
-                      : 'border-gray-300 bg-gray-800 text-gray-400 cursor-not-allowed'
+                      ? 'border-blue hover:border-green hover:text-white cursor-pointer text-blue animate-pulse-slow'
+                      : 'border-gray-300 bg-gray-800 text-gray-400 cursor-not-allowed animate-pulse-slow'
                   }`}
                   variants={unlockButtonVariants}
                   animate={isReviewUnlocking ? 'unlocking' : 'locked'}

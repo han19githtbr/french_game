@@ -104,7 +104,7 @@ export default function ResultsPage() {
       
       {/* Barra de Progresso */}
       <div className="mb-6 max-w-md mx-auto">
-        <div className="bg-gray-800 rounded-full h-4 relative overflow-hidden">
+        <div className="bg-gray-800 rounded-full h-4 relative overflow-hidden animate-pulse-slow">
           <div
             className={`bg-green h-full rounded-full transition-all duration-500 ease-out absolute left-0 top-0 ${
               isFlashing ? 'animate-progress-flash' : ''
@@ -115,7 +115,7 @@ export default function ResultsPage() {
             {currentProgress} / 4
           </span>
         </div>
-        <p className="text-sm text-gray-400 mt-1 text-center">Progresso para a Medalha de Ouro</p>
+        <p className="text-sm text-gray-400 mt-3 text-center">Progresso para a Medalha de Ouro</p>
       </div>
 
       {progress_answers.length === 0 ? (
@@ -126,7 +126,7 @@ export default function ResultsPage() {
             {progress_answers.map((p, i) => (
               <div
               key={i}
-              className={`bg-white text-black p-4 rounded-xl shadow-md flex justify-between items-center ${p.correct_answer === bestRound.correct_answer ? 'border-2 border-green' : ''}`}
+              className={`bg-white text-black p-4 rounded-xl shadow-md flex justify-between items-center ${p.correct_answer === bestRound.correct_answer ? 'border-2 border-green ' : ''}`}
             >
               <span>Jogada {p.round}</span>
               <span>
