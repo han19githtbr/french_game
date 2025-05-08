@@ -48,6 +48,13 @@ const animalSounds: Record<string, string> = {
   'J\'aime les lapins.': '/sounds/rabbit.wav',
   'Le cri des sauterelles me tranquilise': '/sounds/grasshopper.mp3',
   'Le loup est un animal sauvage': '/sounds/wolf.wav',
+  'les baleines sont de grande taille': '/sounds/whales.mp3',
+  'Ce cabrit est celui de mon voisin.': '/sounds/goat.mp3',
+  'Les dauphins sont parfois dangereux': '/sounds/dolphin.mp3',
+  'Ce porc est celui de mon oncle': '/sounds/pig.mp3',
+  'Les trois frères sont heureux': '/sounds/laughing.mp3',
+  'Une famille à la salle de Théâtre': '/sounds/laughing.mp3',
+  'J\'aime aller au cinéma': '/sounds/laughing.mp3',
 }
 
 type Result = {

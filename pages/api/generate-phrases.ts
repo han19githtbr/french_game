@@ -1,65 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from './auth/[...nextauth]'
-//import connectDB from '../../lib/mongodb';
-//import { Db } from 'mongodb';
-
-
-/*interface ImageData {
-  url: string;
-  title: string;
-  theme: string;
-}*/
-
-// Embaralhar um array
-/*const shuffle = <T>(array: T[]): T[] =>
-  [...array].sort(() => Math.random() - 0.5)
-
-
-const randomOptions = (correct: string, allTitles: string[]) => {
-  const otherTitles = allTitles.filter(title => title !== correct)
-  const options = shuffle([
-    correct,
-    ...shuffle(otherTitles).slice(0, 3)
-  ])
-  return options
-}
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { theme } = req.body
-  
-  if (!theme) {
-    return res.status(400).json({ error: 'O tema é obrigatório.' });
-  }
-
-  try {
-    const client = await connectDB();
-    const db: Db = client.db();
-
-    const themeImages = await db
-      .collection<ImageData>('french_sentences')
-      .find({ theme: theme.toLowerCase() })
-      .toArray();
-
-    if (!themeImages || themeImages.length === 0) {
-      return res.status(404).json({ error: 'Nenhuma imagem encontrada para este tema.' });
-    }
-
-    const selectedImages = shuffle(themeImages).slice(0, 4);
-    const allTitles = themeImages.map(img => img.title);
-
-    const imagesWithOptions = selectedImages.map(img => ({
-      url: img.url,
-      title: img.title,
-      options: randomOptions(img.title, allTitles),
-    }))
-  
-    res.status(200).json(imagesWithOptions);
-  } catch (e) {
-    console.error('Erro ao conectar ao MongoDB ou buscar imagens:', e);
-    res.status(500).json({ error: 'Erro interno ao buscar as imagens.' });
-  }
-}*/
 
 
 const allImages = {
@@ -72,6 +13,11 @@ const allImages = {
     { url: '/frases/familia/mae.png', title: 'Ma soeur est enceinte de six mois' },
     { url: '/frases/familia/casal.jpg', title: 'Le couple se promène main dans la main' },
     { url: '/frases/familia/rir.jpg', title: 'Les trois frères sont heureux' },
+    { url: '/frases/familia/natal.png', title: 'La famille se réunit pour ouvrir les cadeaux!' },
+    { url: '/frases/familia/plane.png', title: 'La famille est en voyage' },
+    { url: '/frases/familia/praia.png', title: 'La famille se promène à la plage' },
+    { url: '/frases/familia/teatro.jpg', title: 'Une famille à la salle de Théâtre' },
+    { url: '/frases/familia/tv.png', title: 'La famille se réunit pour regarder la télévision' },
   ],
   'natureza': [
     { url: '/frases/natureza/árvore.png', title: 'Il y a quelqu\'un sous l\'arbre' },
@@ -136,6 +82,10 @@ const allImages = {
     { url: '/frases/animais/coelho.png', title: 'J\'aime les lapins.' },
     { url: '/frases/animais/lobo.png', title: 'Le loup est un animal sauvage' },
     { url: '/frases/animais/gafanhoto.png', title: 'Le cri des sauterelles me tranquilise' },
+    { url: '/frases/animais/baleia.png', title: 'les baleines sont de grande taille' },
+    { url: '/frases/animais/cabrito.png', title: 'Ce cabrit est celui de mon voisin.' },
+    { url: '/frases/animais/golfinho.png', title: 'Les dauphins sont parfois dangereux' },
+    { url: '/frases/animais/porco.png', title: 'Ce porc est celui de mon oncle' },
   ],
   'tecnologia': [
     { url: '/frases/tecnologia/satelite.png', title: 'Les satellites sont de grandes inventions' },

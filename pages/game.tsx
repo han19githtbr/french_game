@@ -45,6 +45,13 @@ const animalSounds: Record<string, string> = {
   'Une vache': '/sounds/cow.mp3',
   'Une sauterelle': '/sounds/grasshopper.mp3',
   'Un loup': '/sounds/wolf.wav',
+  'Une baleine': '/sounds/whales.mp3',
+  'Un cabrit': '/sounds/goat.mp3',
+  'Un dauphin': '/sounds/dolphin.mp3',
+  'Un porc': '/sounds/pig.mp3',
+  'Rire': '/sounds/laughing.mp3',
+  'Une Salle de cinéma': '/sounds/laughing.mp3',
+  'À la salle de Théâtre': '/sounds/laughing.mp3',
 }
 
 type Result = {

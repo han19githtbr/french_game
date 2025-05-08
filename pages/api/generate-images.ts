@@ -13,6 +13,11 @@ const allImages = {
     { url: '/ghibli/familia/mae.png', title: 'Une femme enceinte' },
     { url: '/ghibli/familia/casal.jpg', title: 'Un couple' },
     { url: '/ghibli/familia/rir.jpg', title: 'Rire' },
+    { url: '/ghibli/familia/natal.png', title: 'La Noël' },
+    { url: '/ghibli/familia/plane.png', title: 'Dans l\'avion' },
+    { url: '/ghibli/familia/praia.png', title: 'À la plage' },
+    { url: '/ghibli/familia/teatro', title: 'À la salle de Théâtre' },
+    { url: '/ghibli/familia/tv.jpg', title: 'Regarder la télévision' },
   ],
   'natureza': [
     { url: '/ghibli/natureza/árvore.png', title: 'Un Arbre' },
@@ -74,6 +79,10 @@ const allImages = {
     { url: '/ghibli/animais/coelho.png', title: 'Un lapin' },
     { url: '/ghibli/animais/gafanhoto.png', title: 'Une sauterelle' },
     { url: '/ghibli/animais/lobo.png', title: 'Un loup' },
+    { url: '/ghibli/animais/baleia.png', title: 'Une baleine' },
+    { url: '/ghibli/animais/cabrito.png', title: 'Un cabrit' },
+    { url: '/ghibli/animais/golfinho.png', title: 'Un dauphin' },
+    { url: '/ghibli/animais/porco.png', title: 'Un porc' },
   ],
   'tecnologia': [
     { url: '/ghibli/tecnologia/satelite.png', title: 'Une Satellite' },
