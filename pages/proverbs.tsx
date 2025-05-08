@@ -51,28 +51,10 @@ interface ChatRequest {
 type ChatBoxProps = {
   clientId: string;
   chatPartner: Player;
-  channel: RealtimeChannel;
+  //channel: RealtimeChannel;
+  channel: any;
 };
 
-interface OnlineNotificationsProps {
-  playersOnline: Player[];
-  handleRequestChat: (player: Player) => void;
-  openChatBubble: (player: Player) => void;
-}
-
-type ShowNotification =
-  | {
-      name: string;
-      type: 'join' | 'leave';
-    }
-  | null;
-
-
-type ChatMessage = {
-  sender: string;
-  text: string;
-  timestamp: number;
-};
 
 type SetterFunction = (value: boolean) => void;
 
@@ -321,80 +303,79 @@ export default function Game({}: GameProps) {
 
   // Cria o Ably client assim que clientId estiver disponível
   useEffect(() => {
-      if (!clientId) return;
-  
-      const client = createAblyClient(clientId);
-      setAblyClient(client);
-  
-      return () => {
-        client.close();
-      };
+    if (!clientId) return;
+
+    const client = createAblyClient(clientId);
+    setAblyClient(client);
+
+    return () => client.close();
   }, [clientId]);
   
   
   const hasEnteredRef = useRef(false);
     
   useEffect(() => {
-      if (!ablyClient || !clientId || !playerName  || hasEnteredRef.current) return;
-    
-      const presenceChannel = ablyClient.channels.get("presence-chat");
-              
-      const avatarUrl = session?.user?.image ?? "";
+    if (!ablyClient || !clientId || !playerName  || hasEnteredRef.current) return;
   
-      const handleEnter = (member: any) => {
-        if (member.clientId !== clientId) {
-          setPlayersOnline((prev) => {
-            const alreadyExists = prev.some(p => p.clientId === member.clientId);
-            if (alreadyExists) return prev;
-            return [...prev, {
-              clientId: member.clientId,
-              name: member.data?.name ?? "Desconhecido",
-              avatarUrl: member.data?.avatarUrl ?? "",
-            }];
-          });
-          
-          setShowNotification({ name: member.data?.name ?? "Desconhecido", type: 'join' });
-          setNotificationCount((prev) => prev + 1);
-          playEnterSound();
-        }
-      };
-  
-      const handleLeave = (member: any) => {
-        if (member.clientId !== clientId) {
-          setPlayersOnline((prev) => prev.filter(p => p.clientId !== member.clientId));
-          setShowNotification({ name: member.data?.name ?? "Desconhecido", type: 'leave' });
-          setNotificationCount((prev) => prev + 1);
-        }
-      };
-  
-      // Primeiro inscreve-se nos eventos
-      presenceChannel.presence.subscribe("enter", handleEnter);
-      presenceChannel.presence.subscribe("leave", handleLeave);
-  
-      // ✅ Aguarda a conexão com Ably antes de entrar no canal
-      ablyClient.connection.once('connected', () => {
-        presenceChannel.presence.enter({ name: playerName, avatarUrl }).then(() => {
-          hasEnteredRef.current = true;
-  
-          presenceChannel.presence.get().then((members) => {
-            const players: Player[] = members
-              .filter(m => m.clientId !== clientId)
-              .map((m) => ({
-                clientId: m.clientId,
-                name: m.data?.name ?? "Desconhecido",
-                avatarUrl: m.data?.avatarUrl ?? "",
-              }));
-            setPlayersOnline(players);
-          });
+    const presenceChannel = ablyClient.channels.get("presence-chat");
+            
+    const avatarUrl = session?.user?.image ?? "";
+
+    const handleEnter = (member: any) => {
+      if (member.clientId !== clientId) {
+        setPlayersOnline((prev) => {
+          const alreadyExists = prev.some(p => p.clientId === member.clientId);
+          if (alreadyExists) return prev;
+          return [...prev, {
+            clientId: member.clientId,
+            name: member.data?.name ?? "Desconhecido",
+            avatarUrl: member.data?.avatarUrl ?? "",
+          }];
+        });
+        
+        setShowNotification({ name: member.data?.name ?? "Desconhecido", type: 'join' });
+        setNotificationCount((prev) => prev + 1);
+        playEnterSound();
+      }
+    };
+
+    const handleLeave = (member: any) => {
+      if (member.clientId !== clientId) {
+        setPlayersOnline((prev) => prev.filter(p => p.clientId !== member.clientId));
+        setShowNotification({ name: member.data?.name ?? "Desconhecido", type: 'leave' });
+        setNotificationCount((prev) => prev + 1);
+      }
+    };
+
+    // Primeiro inscreve-se nos eventos
+    presenceChannel.presence.subscribe("enter", handleEnter);
+    presenceChannel.presence.subscribe("leave", handleLeave);
+
+    // ✅ Aguarda a conexão com Ably antes de entrar no canal
+    ablyClient.connection.once('connected', () => {
+      presenceChannel.presence.enter({ name: playerName, avatarUrl }).then(() => {
+        hasEnteredRef.current = true;
+
+        presenceChannel.presence.get().then((members: any) => {
+          //const alreadyPresent = members.some(m => m.clientId === clientId);
+          const players: Player[] = members
+            .filter((m: any) => m.clientId !== clientId)
+            .map((m: any) => ({
+              clientId: m.clientId,
+              name: m.data?.name ?? "Desconhecido",
+              avatarUrl: m.data?.avatarUrl ?? "",
+            }));
+          setPlayersOnline(players);
         });
       });
-          
-      return () => {
-        presenceChannel.presence.leave();
-        presenceChannel.presence.unsubscribe("enter", handleEnter);
-        presenceChannel.presence.unsubscribe("leave", handleLeave);
-        hasEnteredRef.current = false;
-      };
+    });
+        
+    return () => {
+      presenceChannel.presence.leave();
+      presenceChannel.presence.unsubscribe("enter", handleEnter);
+      presenceChannel.presence.unsubscribe("leave", handleLeave);
+      hasEnteredRef.current = false;
+    };
   }, [ablyClient, clientId, playerName, session]);
   
     
@@ -445,8 +426,8 @@ export default function Game({}: GameProps) {
   }, [])
 
   
-  useEffect(() => {
-      if (!ablyClient) return;
+    useEffect(() => {
+      if (!ablyClient || !showPlayersOnline) return;
       const channel = ablyClient.channels.get("presence-chat");
     
       const fetchOnlinePlayers = async () => {
@@ -482,24 +463,47 @@ export default function Game({}: GameProps) {
   
     useEffect(() => {
       if (!ablyClient || !clientId) return;
-
+  
       const channel = ablyClient?.channels.get("presence-chat");
     
       const handleRequest = (msg: any) => {
         const req: ChatRequest = msg.data;
         if (req.toClientId === clientId) {
-          setIncomingRequest(req);
-          playRequestSound();
+          // Verificar se o solicitante ainda está online
+          channel.presence.get().then((members: any) => {
+            const requesterOnline = members.some((m: any) => m.clientId === req.fromClientId);
+            if (requesterOnline) {
+              setIncomingRequest(req);
+              playRequestSound();
+            } else {
+              setShowNotification({ name: req.fromName, type: "leave" });
+            }
+          });
+        }
+      };
+  
+      const handleRequestAccepted = (msg: any) => {
+        const { fromClientId, toClientId } = msg.data;
+        if (toClientId === clientId) {
+          const channelName = getPrivateChannelName(fromClientId, clientId);
+          const channel = ablyClient.channels.get(channelName);
+          const partner = playersOnline.find((p) => p.clientId === fromClientId);
+          if (partner) {
+            setChatPartner(partner);
+            setPrivateChannel(channel);
+          }
         }
       };
     
       channel?.subscribe("chat-request", handleRequest);
+      channel.subscribe("chat-accepted", handleRequestAccepted);
     
       return () => {
         channel?.unsubscribe("chat-request", handleRequest);
       };
-    }, [ablyClient, clientId]);
+    }, [ablyClient, clientId, playersOnline]);
   
+
   
     const getPrivateChannelName = (id1: string, id2: string) =>
       `private-chat:${[id1, id2].sort().join("-")}`;
@@ -518,6 +522,13 @@ export default function Game({}: GameProps) {
       });
       setPrivateChannel(channel);
       setIncomingRequest(null);
+  
+      // Notificar o solicitante que a solicitação foi aceita
+      if (!ablyClient) return; // Impede erro se ablyClient for null
+      ablyClient.channels.get("presence-chat").publish("chat-accepted", {
+        fromClientId: clientId,
+        toClientId: req.fromClientId,
+      });
     };
   
   
@@ -526,9 +537,16 @@ export default function Game({}: GameProps) {
       const [input, setInput] = useState("");
       const [isPartnerTyping, setIsPartnerTyping] = useState(false);
       const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+    
       useEffect(() => {
         if (!channel || !clientId) return;
+  
+        channel.history({ limit: 100 }).then((messagePage: any) => {
+          const history = messagePage.items
+            .filter((msg: any) => msg.name === "message")
+            .map((msg: any) => msg.data);
+          setMessages(history.reverse());
+        });
   
         const handler = (msg: any) => {
           setMessages((prev) => [...prev, msg.data]);
@@ -538,6 +556,7 @@ export default function Game({}: GameProps) {
         return () => channel.unsubscribe("message", handler);
       }, [channel, clientId]);
     
+  
       useEffect(() => {
         if (!channel || !clientId) return;
   
@@ -546,11 +565,20 @@ export default function Game({}: GameProps) {
             setIsPartnerTyping(msg.data.isTyping);
           }
         };
-        channel.subscribe("typing", handler);
-        return () => channel.unsubscribe("typing", handler);
+        // Redefinir indicador de digitação se o parceiro sair
+        channel.presence.subscribe("leave", (member: any) => {
+          if (member.clientId !== clientId) {
+            setIsPartnerTyping(false);
+          }
+        });
+  
+        return () => {
+          channel.unsubscribe("typing", handler);
+          channel.presence.unsubscribe("leave");
+        };
       }, [channel, clientId]);
     
-            
+          
       useEffect(() => {
         if (!channel || !clientId || !input) return;
       
