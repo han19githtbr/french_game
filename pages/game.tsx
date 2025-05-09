@@ -112,7 +112,7 @@ const unlockButtonVariants = {
   locked: {},
   unlocking: {
     scale: [1, 1.1, 1],
-    rotate: [0, 5, -5, 0],
+    //rotate: [0, 5, -5, 0],
     transition: { duration: 0.2 },
   },
   unlocked: {},
