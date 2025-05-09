@@ -1719,7 +1719,7 @@ export default function Frase({}: GameProps) {
         transition={{ duration: 0.6 }}
         className="text-3xl text-gray-300 font-bold mb-8 mt-104 text-center drop-shadow-md"
       >
-        🗨️ Construa frases em Francês
+        ✒️ Construa frases em Francês
       </motion.h1>
 
       <div className="flex flex-col items-center space-y-6 mt-8">

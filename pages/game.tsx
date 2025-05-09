@@ -1776,7 +1776,7 @@ export default function Game({}: GameProps) {
         transition={{ duration: 0.6 }}
         className="text-3xl text-gray-300 font-bold mb-8 mt-72 text-center drop-shadow-md"
       >
-        🎮 Jogo para treinar o Francês
+        💬 Jogo para treinar o Francês
       </motion.h1>
 
       

@@ -1666,7 +1666,7 @@ export default function Game({}: GameProps) {
         transition={{ duration: 0.6 }}
         className="text-3xl text-gray-300 font-bold mb-8 mt-92 text-center drop-shadow-md"
       >
-        🗨️ Ditados comuns em Francês
+        📜 Ditados comuns em Francês
       </motion.h1>
 
       <div className="flex flex-col items-center space-y-6">
