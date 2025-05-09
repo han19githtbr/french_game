@@ -1623,7 +1623,7 @@ export default function Game({}: GameProps) {
                     <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white p-1 text-xs text-center">
                       {conquest.user}
                     </div>
-                    <div className="absolute top-1 right-1 bg-gray-800 bg-opacity-70 text-white rounded-md p-1 flex items-center text-xs">
+                    <div className="absolute top-1 right-1 bg-gray-800 bg-opacity-70 text-white rounded-md p-1 flex items-center text-xs ">
                       <BsEyeFill className="w-3 h-3 mr-1 text-green" />
                       <span>{conquest.views}</span>
                     </div>
