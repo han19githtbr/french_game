@@ -1620,7 +1620,7 @@ export default function Game({}: GameProps) {
                       <FaTrophy className="text-3xl text-yellow" />
                     )}
                     <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white p-1 text-xs text-center">
-                      {conquest.user}
+                      <span className='text-green text-md font-bold'>{conquest.user.length > 20 ? conquest.user.substring(0, 17) + '....' : conquest.user}</span>
                     </div>
                     <div className="absolute top-1 right-1 bg-gray-800 bg-opacity-70 text-white rounded-md p-1 flex items-center text-xs ">
                       <BsEyeFill className="w-3 h-3 mr-1 text-green" />
@@ -1631,7 +1631,7 @@ export default function Game({}: GameProps) {
               </div>
               <button
                 onClick={closeConquestCarousel}
-                className="mt-6 bg-gray-800 hover:bg-gray-300 text-white font-bold py-1 px-4 rounded focus:outline-none focus:shadow-outline cursor-pointer"
+                className="mt-6 bg-gray-800 hover:bg-lightblue text-white font-bold py-1 px-4 rounded focus:outline-none focus:shadow-outline cursor-pointer"
               >
                 Fechar
               </button>
