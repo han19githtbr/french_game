@@ -11,9 +11,12 @@ import { useSound } from 'use-sound';
 import type { RealtimeChannel } from 'ably';
 import dynamic from "next/dynamic";
 import { BiPlay, BiPause, BiVolumeFull, BiVolumeMute } from 'react-icons/bi';
-import { FaSpinner } from 'react-icons/fa';
+import { FaSpinner, FaTrophy } from 'react-icons/fa';
 import Notification from '../Notification'
 import { FaLinkedin, FaInstagram, FaFacebook, FaGithub } from 'react-icons/fa';
+import { BsEyeFill, BsPlayFill } from 'react-icons/bs';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 const FREESOUND_API_KEY = 'SbW3xMpvC1XDTCf9Pesz75rwFKteNYZ84YRcnZwI';
@@ -123,6 +126,25 @@ const unlockAnimationVariants = {
 
 interface GameProps {}
 
+
+interface Conquest {
+  user: string;
+  plays: any[]; // Defina um tipo mais específico se souber a estrutura de 'plays'
+  views: number;
+  timestamp: Date;
+  date: string;
+}
+
+// Função auxiliar para obter a data atual no formato YYYY-MM-DD
+const getFormattedDate = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+
 export default function Game({}: GameProps) {
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const imageRefs = useRef<(HTMLDivElement | null)[]>([])
@@ -218,6 +240,27 @@ export default function Game({}: GameProps) {
   const [voicesLoaded, setVoicesLoaded] = useState(false);
   const timeoutId = useRef<NodeJS.Timeout | null>(null);
   
+  const [showWins, setShowWins] = useState(false);
+
+  // Novos estados para a funcionalidade de publicação
+  const [showPublishButton, setShowPublishButton] = useState(false);
+  const [currentRoundPlays, setCurrentRoundPlays] = useState<any[]>([]); // Armazenar as jogadas da rodada atual
+  // Estado para armazenar as conquistas publicadas (simulação de persistência)
+  const [publishedConquests, setPublishedConquests] = useState<any[]>([]);
+  const [isReplaying, setIsReplaying] = useState(false);
+  const [currentReplayIndex, setCurrentReplayIndex] = useState(0);
+  const [replayPlays, setReplayPlays] = useState<any[]>([]);
+  const [showReplayOnTrophyClick, setShowReplayOnTrophyClick] = useState(false);
+  const [replayIndex, setReplayIndex] = useState(0);
+  const [replayIntervalId, setReplayIntervalId] = useState<NodeJS.Timeout | null>(null);
+  const [hasNewConquest, setHasNewConquest] = useState(false);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [currentConquest, setCurrentConquest] = useState<Conquest | null>(null); // A conquista a ser exibida no modal
+  const [showConquestCarousel, setShowConquestCarousel] = useState(false);
+  const [selectedConquestIndex, setSelectedConquestIndex] = useState(0);
+  const [newConquestCount, setNewConquestCount] = useState(0); // Contador de novas conquistas
+
+
   const [showNotification, setShowNotification] = useState<{
     name: string;
     type: "join" | "leave";
@@ -346,6 +389,19 @@ export default function Game({}: GameProps) {
   };
 
 
+  const toggleShowWins = () => {
+    setShowWins(!showWins);
+    setShowConquestCarousel(!showConquestCarousel);
+    //setHasNewConquest(false);
+    setNewConquestCount(0); // Resetar o contador ao abrir o carrossel
+    setCurrentConquest(null); // Resetar a conquista selecionada ao abrir/fechar o carrossel
+    if (replayIntervalId) {
+      clearInterval(replayIntervalId);
+      setReplayIntervalId(null);
+      setReplayIndex(0);
+    }
+  };
+
   // Cria o Ably client assim que clientId estiver disponível
   useEffect(() => {
     if (!clientId) return;
@@ -431,7 +487,6 @@ export default function Game({}: GameProps) {
     });
   };
  
-
   const playRequestSound = () => {
     const audio = new Audio('/sounds/received_sound.mp3');
     audio.play().catch((err) => {
@@ -439,22 +494,69 @@ export default function Game({}: GameProps) {
     });
   };
 
+
+  // Localmente
+  
+  /*useEffect(() => {
+    if (status === 'unauthenticated') router.push('/');
+    const storedConquests = localStorage.getItem('conquests');
+    if (storedConquests) {
+      const parsedConquests: Conquest[] = JSON.parse(storedConquests);
+      // Filtrar as conquistas para manter apenas as do dia atual
+      const currentDate = getFormattedDate();
+      const filteredConquests = parsedConquests.filter((conquest: Conquest) => conquest.date === currentDate); // Use a interface Conquest no filtro
+      setPublishedConquests(filteredConquests);
+
+    }
+  }, [status, router]);*/
+
+
+  const fetchDailyConquests = async () => {
+    try {
+      const response = await fetch('/api/conquests/today');
+      if (response.ok) {
+        const data: Conquest[] = await response.json();
+        setPublishedConquests(data);
+        console.log('Conquistas do dia carregadas do servidor:', data);
+      } else {
+        const errorData = await response.json();
+        console.error('Erro ao carregar as conquistas do dia:', errorData);
+        toast.error('Erro ao carregar as conquistas do dia.', { /* ... */ });
+      }
+    } catch (error) {
+      console.error('Erro ao conectar ao servidor para buscar conquistas:', error);
+      toast.error('Erro ao conectar ao servidor.', { /* ... */ });
+    }
+  };
+  
+  
   useEffect(() => {
-    if (status === 'unauthenticated') router.push('/')
+    if (status === 'authenticated') {
+      
+      fetchDailyConquests();
+    } else if (status === 'unauthenticated') {
+      router.push('/');
+    }
   }, [status, router]);
+
+
+  // Salvar as conquistas no localStorage sempre que publishedConquests mudar
+  useEffect(() => {
+    // Adicionar a data atual a cada conquista antes de salvar
+    const conquestsWithDate = publishedConquests.map(conquest => ({ ...conquest, date: getFormattedDate() }));
+    localStorage.setItem('conquests', JSON.stringify(conquestsWithDate));
+  }, [publishedConquests]);
 
 
   const handleCloseZoom = () => {
     setZoomedImage(null);
   };
  
-
   const handleUnlockAnimationEnd = (setter: SetterFunction) => {
     setTimeout(() => {
       setter(false);
     }, 4000); // Mantém a animação por 4 segundos
   };
-
   
   const showToast = (message: string, type: 'info' | 'success' | 'error') => {
     setNotification({ message, type });
@@ -897,7 +999,11 @@ export default function Game({}: GameProps) {
     newResults[index] = { correct_word, selected: userAnswer };  
   
     setResults(newResults);
-        
+       
+    // Armazenar a jogada atual para a gravação
+    setCurrentRoundPlays(prev => [...prev, { image: images[index], answer: userAnswer, correct: correct_word }]);
+
+
     // ⏬ Scroll para a próxima imagem ainda não respondida (com pequeno delay)
     setTimeout(() => {
       const nextUnansweredIndex = newResults.findIndex((res, i) => !res && i > index)
@@ -923,7 +1029,8 @@ export default function Game({}: GameProps) {
       
     if (currentCorrectCount === totalCount) {
       setShowCongrats(true)
-        
+      setShowPublishButton(true); // Mostrar o botão de publicação
+
       // Salvar progresso no localStorage
       const prevProgress = JSON.parse(localStorage.getItem('progress') || '[]')
       localStorage.setItem('progress', JSON.stringify([...prevProgress, { round, correct: currentCorrectCount }]))
@@ -944,8 +1051,9 @@ export default function Game({}: GameProps) {
         const nextTheme = themes.filter(t => t !== theme)[Math.floor(Math.random() * (themes.length - 1))]
         setTheme(nextTheme)
         setRound(r => r + 1)
-        setShowCongrats(false)
-      }, 3000);
+        setShowCongrats(false);
+        setShowPublishButton(false); // Esconder o botão após a transição
+      }, 10000);
   
       if (successSound) {
         successSound.play();
@@ -953,6 +1061,180 @@ export default function Game({}: GameProps) {
     }
   };
   
+
+  // localmente
+  /*const handlePublishConquest = () => {
+    const videoData: Conquest = {
+      user: session?.user?.name || 'Anônimo',
+      plays: currentRoundPlays,
+      views: 0,
+      timestamp: new Date(),
+      date: getFormattedDate(),
+
+    };
+    setPublishedConquests(prev => [...prev, videoData]);
+    setNewConquestCount(prev => prev + 1);
+    toast.success('Conquista publicada com sucesso!', {
+      position: "top-right", // Onde a notificação aparecerá
+      autoClose: 3000, // Tempo em milissegundos para fechar automaticamente
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light", // Ou "dark", se preferir
+    });
+    setShowPublishButton(false);
+    setCurrentRoundPlays([]);
+  };*/
+
+
+  const handlePublishConquest = async () => {
+    const videoData: Conquest = {
+      user: session?.user?.name || 'Anônimo',
+      plays: currentRoundPlays,
+      views: 0,
+      timestamp: new Date(),
+      date: getFormattedDate(),
+    };
+
+    try {
+      const response = await fetch('/api/conquests/publish', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(videoData),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Conquista publicada com sucesso:', data);
+        toast.success('Conquista publicada com sucesso!', { position: "top-right", autoClose: 3000, hideProgressBar: false, closeOnClick: true, pauseOnHover: true, draggable: true, progress: undefined, theme: "light" });
+        setShowPublishButton(false);
+        setCurrentRoundPlays([]);
+        // Não precisamos mais adicionar ao estado local imediatamente,
+        // pois as conquistas do dia serão carregadas do servidor.
+        // setPublishedConquests(prev => [...prev, videoData]);
+        setNewConquestCount(prev => prev + 1);
+        // Call the useEffect hook to re-run the effect
+        fetchDailyConquests();
+          
+        
+      } else {
+        const errorData = await response.json();
+        console.error('Erro ao publicar a conquista:', errorData);
+        toast.error('Erro ao publicar a conquista.', { position: "top-right", autoClose: 5000, hideProgressBar: false, closeOnClick: true, pauseOnHover: true, draggable: true, progress: undefined, theme: "light" });
+      }
+    } catch (error) {
+      console.error('Erro ao enviar a requisição de publicação:', error);
+      toast.error('Erro ao conectar ao servidor.', { position: "top-right", autoClose: 5000, hideProgressBar: false, closeOnClick: true, pauseOnHover: true, draggable: true, progress: undefined, theme: "light" });
+    }
+  };
+
+
+  const startAutomaticReplay = (plays: any[]) => {
+    setReplayPlays(plays);
+    setReplayIndex(0);
+    stopAutomaticReplay();
+    const intervalId = setInterval(() => {
+      setReplayIndex(prev => {
+        if (prev < plays.length - 1) {
+          return prev + 1;
+        } else {
+          clearInterval(intervalId);
+          setReplayIntervalId(null);
+          return prev;
+        }
+      });
+    }, 6000); // Ajuste o tempo (em ms) entre as jogadas
+    setReplayIntervalId(intervalId);
+  };
+
+  
+  const stopAutomaticReplay = () => {
+    if (replayIntervalId) {
+      clearInterval(replayIntervalId);
+      setReplayIntervalId(null);
+      setReplayIndex(0);
+    }
+  };
+
+  const closeConquestCarousel = () => {
+    setShowConquestCarousel(false);
+    setCurrentConquest(null);
+    stopAutomaticReplay();
+  };
+
+
+  const closeReplay = () => {
+    setShowReplayOnTrophyClick(false);
+    setReplayPlays([]);
+    setReplayIndex(0);
+    if (replayIntervalId) {
+      clearInterval(replayIntervalId);
+      setReplayIntervalId(null);
+    }
+  };
+
+  const handleSelectConquest = (index: number) => {
+    setSelectedConquestIndex(index);
+    setCurrentConquest(publishedConquests[index]);
+    incrementViewCount(index);
+    startAutomaticReplay(publishedConquests[index].plays);
+  };
+
+
+  // Localmente
+
+  // Função para incrementar o contador de visualizações
+  /*const incrementViewCount = (index: number) => {
+    const updatedConquests = [...publishedConquests];
+    updatedConquests[index].views += 1;
+    setPublishedConquests(updatedConquests);
+  };*/
+
+
+  const incrementViewCount = async (index: number) => {
+    const conquestToUpdate = publishedConquests[index];
+    if (conquestToUpdate && conquestToUpdate._id) { // Certifique-se de que a conquista tem um ID do MongoDB
+      const updatedConquests = [...publishedConquests];
+      updatedConquests[index].views += 1;
+      setPublishedConquests(updatedConquests); // Atualizar o estado local imediatamente para feedback
+
+      try {
+        const response = await fetch(`/api/conquests/${conquestToUpdate._id}/views`, {
+          method: 'POST',
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Contagem de visualizações atualizada no servidor:', data);
+          // O estado local já foi atualizado, não precisamos fazer nada aqui,
+          // a menos que a resposta do servidor traga alguma informação adicional.
+        } else {
+          const errorData = await response.json();
+          console.error('Erro ao atualizar a contagem de visualizações no servidor:', errorData);
+          toast.error('Erro ao atualizar a contagem de visualizações.', { position: "top-right", autoClose: 5000, hideProgressBar: false, closeOnClick: true, pauseOnHover: true, draggable: true, progress: undefined, theme: "light" });
+          // Em caso de erro, você pode optar por reverter a atualização local
+          setPublishedConquests(prev => {
+             const revertedConquests = [...prev];
+             revertedConquests[index].views -= 1;
+             return revertedConquests;
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao enviar a requisição de atualização de visualizações:', error);
+        toast.error('Erro ao conectar ao servidor.', { position: "top-right", autoClose: 5000, hideProgressBar: false, closeOnClick: true, pauseOnHover: true, draggable: true, progress: undefined, theme: "light" });
+      }
+    } else {
+      console.warn('Não foi possível atualizar a contagem de visualizações: ID da conquista não encontrado.');
+    }
+  };
+
+
+  const currentReplayPlay = currentConquest?.plays[replayIndex];
+    
 
   const handleOpenReview = () => {
     if (isReviewUnlocked) {
@@ -1295,6 +1577,145 @@ export default function Game({}: GameProps) {
           </div>
         )}
 
+
+        {/* Botão para mostrar/ocultar as conquistas e o replay */}
+        <div className="fixed top-36 left-4 z-50 ml-1">
+          <button
+            onClick={toggleShowWins}
+            className="relative border-2 border-lightblue hover:bg-purple text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4 animate-pulse-slow"
+          >
+            <FaTrophy className="h-6 w-6" />
+            {newConquestCount > 0 && (
+              <span className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 bg-green text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold animate-pulse-slow">
+                {newConquestCount}
+              </span>
+            )}
+          </button>
+        </div>
+
+            
+        {/* Carrossel de Miniaturas de Conquistas */}
+        {showConquestCarousel && publishedConquests.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 flex items-center justify-center z-40 bg-black bg-opacity-70 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.8 }}
+              transition={{ type: 'spring', damping: 15, stiffness: 100 }}
+              className="bg-white rounded-2xl p-8 shadow-2xl text-center w-full max-w-md"
+            >
+              <h3 className="text-xl font-bold mb-4">As Conquistas de Hoje</h3>
+              <div className="overflow-x-auto whitespace-nowrap scroll-smooth" ref={carouselRef} style={{ display: 'flex', gap: '10px' }}>
+                {publishedConquests.map((conquest, index) => (
+                  <motion.div
+                    key={index}
+                    onClick={() => handleSelectConquest(index)} // Ao clicar na miniatura, seleciona a conquista para replay
+                    className={`w-40 h-32 rounded-md shadow-md cursor-pointer overflow-hidden relative ${
+                      index === selectedConquestIndex ? 'border-2 border-blue' : 'hover:scale-105 transition-transform duration-300'
+                    }`}
+                    style={{ background: '#eee', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                  >
+                    {/* Exibir uma miniatura da primeira jogada ou um ícone representativo */}
+                    {conquest.plays[0]?.image?.url ? (
+                      <img
+                        src={conquest.plays[0].image.url}
+                        alt={`Miniatura da Conquista de ${conquest.user}`}
+                        className="object-cover w-full h-full"
+                      />
+                    ) : (
+                      <FaTrophy className="text-3xl text-yellow" />
+                    )}
+                    <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white p-1 text-xs text-center">
+                      {conquest.user}
+                    </div>
+                    <div className="absolute top-1 right-1 bg-gray-800 bg-opacity-70 text-white rounded-md p-1 flex items-center text-xs">
+                      <BsEyeFill className="w-3 h-3 mr-1 text-green" />
+                      <span>{conquest.views}</span>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+              <button
+                onClick={closeConquestCarousel}
+                className="mt-6 bg-gray-800 hover:bg-gray-300 text-white font-bold py-1 px-4 rounded focus:outline-none focus:shadow-outline cursor-pointer"
+              >
+                Fechar
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+        
+        
+        {showConquestCarousel && currentConquest && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-70 backdrop-blur-md"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                  closeConquestCarousel();
+                }
+              }}
+            >
+              <motion.div
+                initial={{ scale: 0.8 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0.8 }}
+                transition={{ type: 'spring', damping: 15, stiffness: 100 }}
+                className="bg-gray-900 rounded-2xl p-6 shadow-2xl text-center text-white w-full max-w-md" // Fundo escuro e largura máxima
+              >
+                <h3 className="text-sm font-bold mb-3">Replay de: <span className='text-green'>{currentConquest.user}</span></h3>
+                {currentReplayPlay ? (
+                  <div className="mb-3 relative rounded-md overflow-hidden shadow-md"> {/* Container com overflow hidden para as bordas */}
+                    <img
+                      src={currentReplayPlay.image.url}
+                      alt={currentReplayPlay.image.title}
+                      className="w-full h-auto block" // Largura total e altura automática
+                      style={{ maxHeight: '400px', objectFit: 'contain' }} // Altura máxima e manter proporção
+                    />
+                    <div className="absolute top-2 mb-4 right-2 bg-gray-800 bg-opacity-70 text-white rounded-md p-1 flex items-center text-xs animate-pulse-slow">
+                      <BsEyeFill className="w-4 h-4 mr-1 text-green" />
+                      <span>{currentConquest?.views}</span>
+                    </div>
+                    <div className="mt-2 text-sm">
+                        Sua resposta: <span className={currentReplayPlay.correct ? 'text-green font-semibold' : 'text-red font-semibold'}>
+                        {currentReplayPlay.answer}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      Resposta correta: <span className="text-green">{currentReplayPlay.image.title}</span>
+                    </div>
+                    {replayIndex === currentConquest.plays.length - 1 && (
+                      <div className="flex justify-center gap-3 mt-4 mb-6">
+                        <button
+                          onClick={closeConquestCarousel}
+                          className="bg-red hover:bg-gray-700 text-white font-bold py-1 px-3 rounded focus:outline-none focus:shadow-outline cursor-pointer text-sm"
+                        >
+                          Fechar
+                        </button>
+                        <button
+                          onClick={() => startAutomaticReplay(currentConquest.plays)}
+                          className="bg-lightblue hover:bg-blue text-white font-bold py-1 px-3 rounded focus:outline-none focus:shadow-outline cursor-pointer text-sm"
+                        >
+                          Assistir Novamente
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="mb-4 text-sm">Fim da reprodução!</p>
+                )}
+              </motion.div>
+            </motion.div>
+        )}
+        <ToastContainer />
+      
       </div>
             
       
@@ -1776,7 +2197,7 @@ export default function Game({}: GameProps) {
                   Revisar os acertos
                   {isReviewAvailable && reviewHistory.length > 0 && (
                     <span
-                      className={`absolute top-[-10px] right-[-10px] bg-green text-gray-700 rounded-full w-5 h-5 flex items-center justify-center text-sm font-bold ${isFlashing ? 'animate-ping-once' : ''}`}
+                      className={`absolute top-[-10px] right-[-10px] bg-green text-gray-700 rounded-full w-5 h-5 flex items-center justify-center text-sm font-bold animate-pulse-slow ${isFlashing ? 'animate-ping-once' : ''}`}
                     >
                       {availableReviews}
                     </span>
@@ -1984,6 +2405,24 @@ export default function Game({}: GameProps) {
           >
             🎉 Parabéns! Você acertou tudo!
           </motion.div>
+                  
+        </motion.div>
+      )}
+
+      {showPublishButton && (
+        <motion.div
+          className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50" // Posicionado na parte inferior
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
+          transition={{ duration: 0.4, delay: 0.5 }}
+        >
+          <motion.button
+            onClick={handlePublishConquest}
+            className="bg-gradient-to-r from-purple to-blue hover:from-pink hover:to-yellow text-white font-bold py-3 px-6 rounded-xl shadow-lg animate-pulse focus:outline-none focus:ring-2 focus:ring-purple"
+          >
+            Publicar Conquista
+          </motion.button>
         </motion.div>
       )}
 
@@ -1995,7 +2434,7 @@ export default function Game({}: GameProps) {
           type={showNotification.type}
         />
       )}
-
+      {/*<ToastContainer />*/}
     </div>
   )
 }
