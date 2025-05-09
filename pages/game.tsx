@@ -1618,7 +1618,7 @@ export default function Game({}: GameProps) {
                     className={`w-40 h-32 rounded-md shadow-md cursor-pointer overflow-hidden relative ${
                       index === selectedConquestIndex ? 'border-2 border-blue' : 'hover:scale-105 transition-transform duration-300'
                     }`}
-                    style={{ background: '#eee', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                    style={{ background: '#eee', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}
                   >
                     {/* Exibir uma miniatura da primeira jogada ou um ícone representativo */}
                     {conquest.plays[0]?.image?.url ? (
