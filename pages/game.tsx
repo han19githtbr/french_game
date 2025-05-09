@@ -907,7 +907,6 @@ export default function Game({}: GameProps) {
           handleUnlockAnimationEnd(setShowUnlockProverbsAnimation);
         }, 1000); // Tempo para a animação de destravar
       }
-       
     
     }
   }, [correctAnswersCount, isFrasesUnlocked, isProverbsUnlocked, unlockSound]);
@@ -1053,7 +1052,7 @@ export default function Game({}: GameProps) {
         setRound(r => r + 1)
         setShowCongrats(false);
         setShowPublishButton(false); // Esconder o botão após a transição
-      }, 15000);
+      }, 20000);
   
       if (successSound) {
         successSound.play();
@@ -1572,9 +1571,9 @@ export default function Game({}: GameProps) {
         <div className="fixed top-36 left-4 z-50 ml-1">
           <button
             onClick={toggleShowWins}
-            className="relative border-2 border-lightblue hover:bg-purple text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4 animate-pulse-slow"
+            className="relative border-2 border-lightblue hover:bg-green text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4 animate-pulse-slow"
           >
-            <FaTrophy className="h-6 w-6" />
+            <FaTrophy className="h-6 w-6 text-yellow" />
             {newConquestCount > 0 && (
               <span className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 bg-green text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold animate-pulse-slow">
                 {newConquestCount}
