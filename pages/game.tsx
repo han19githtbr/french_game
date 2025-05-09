@@ -1053,7 +1053,7 @@ export default function Game({}: GameProps) {
         setRound(r => r + 1)
         setShowCongrats(false);
         setShowPublishButton(false); // Esconder o botão após a transição
-      }, 10000);
+      }, 15000);
   
       if (successSound) {
         successSound.play();
@@ -1166,17 +1166,7 @@ export default function Game({}: GameProps) {
     stopAutomaticReplay();
   };
 
-
-  const closeReplay = () => {
-    setShowReplayOnTrophyClick(false);
-    setReplayPlays([]);
-    setReplayIndex(0);
-    if (replayIntervalId) {
-      clearInterval(replayIntervalId);
-      setReplayIntervalId(null);
-    }
-  };
-
+ 
   const handleSelectConquest = (index: number) => {
     setSelectedConquestIndex(index);
     setCurrentConquest(publishedConquests[index]);
@@ -2419,7 +2409,7 @@ export default function Game({}: GameProps) {
         >
           <motion.button
             onClick={handlePublishConquest}
-            className="bg-gradient-to-r from-purple to-blue hover:from-pink hover:to-yellow text-white font-bold py-3 px-6 rounded-xl shadow-lg animate-pulse focus:outline-none focus:ring-2 focus:ring-purple"
+            className="bg-gradient-to-r from-lighblue to-blue hover:from-pink hover:to-yellow text-white font-bold py-3 px-6 rounded-xl shadow-lg animate-pulse focus:outline-none focus:ring-2 focus:ring-purple cursor-pointer"
           >
             Publicar Conquista
           </motion.button>
