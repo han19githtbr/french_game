@@ -1270,7 +1270,7 @@ export default function Game({}: GameProps) {
     
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-800 to-slate-900 text-white flex flex-col items-center p-4 relative mb-6">
-      <div className="absolute top-66 left-4 z-50">
+      <div className="absolute top-66 left-4 z-30">
         <button
           onClick={() => router.push('/game')}
           className="flex border border-blue text-gray-300 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75 cursor-pointer"
@@ -1343,10 +1343,10 @@ export default function Game({}: GameProps) {
           >
             <h2 className="text-xl text-gray-300 font-semibold mb-4">Sons Relaxantes <span className='text-green'>(Freesound)</span></h2>
 
-            <div className="flex space-x-8 mb-4">
+            <div className="flex space-x-4 mb-4">
               <button
                 onClick={() => handleThemeSelect('trees')}
-                className={`rounded-xl px-2 py-1 text-white font-semibold transition duration-300 ease-in-out ${
+                className={`rounded-md px-2 py-1 text-white font-semibold transition duration-300 ease-in-out ${
                   selectedTheme === 'trees' ? 'bg-lightblue hover:bg-lightblue' : 'bg-gray-700 hover:bg-gray-600'
                 } focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer`}
               >
@@ -1354,7 +1354,7 @@ export default function Game({}: GameProps) {
               </button>
               <button
                 onClick={() => handleThemeSelect('rain')}
-                className={`rounded-xl px-2 py-1 text-white font-semibold transition duration-300 ease-in-out ${
+                className={`rounded-md px-2 py-1 text-white font-semibold transition duration-300 ease-in-out ${
                   selectedTheme === 'rain' ? 'bg-lightblue hover:bg-lightblue' : 'bg-gray-700 hover:bg-gray-600'
                 } focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer`}
               >
@@ -1362,7 +1362,7 @@ export default function Game({}: GameProps) {
               </button>
               <button
                 onClick={() => handleThemeSelect('birds')}
-                className={`rounded-xl px-2 py-1 text-white font-semibold transition duration-300 ease-in-out ${
+                className={`rounded-md px-2 py-1 text-white font-semibold transition duration-300 ease-in-out ${
                   selectedTheme === 'birds' ? 'bg-lightblue hover:bg-lightblue' : 'bg-gray-700 hover:bg-gray-600'
                 } focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer`}
               >
