@@ -1399,7 +1399,7 @@ export default function Frase({}: GameProps) {
             <div className="flex space-x-4 mb-4">
               <button
                 onClick={() => handleThemeSelect('trees')}
-                className={`rounded-md px-2 py-1 text-white font-semibold transition duration-300 ease-in-out ${
+                className={`rounded-md px-2 py-1 text-white bg-gray-800 border border-green font-semibold transition duration-300 ease-in-out ${
                   selectedTheme === 'trees' ? 'bg-lightblue hover:bg-lightblue' : 'bg-gray-700 hover:bg-gray-600'
                 } focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer`}
               >
@@ -1407,7 +1407,7 @@ export default function Frase({}: GameProps) {
               </button>
               <button
                 onClick={() => handleThemeSelect('rain')}
-                className={`rounded-md px-2 py-1 text-white font-semibold transition duration-300 ease-in-out ${
+                className={`rounded-md px-2 py-1 text-white bg-gray-800 border border-green font-semibold transition duration-300 ease-in-out ${
                   selectedTheme === 'rain' ? 'bg-lightblue hover:bg-lightblue' : 'bg-gray-700 hover:bg-gray-600'
                 } focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer`}
               >
@@ -1415,7 +1415,7 @@ export default function Frase({}: GameProps) {
               </button>
               <button
                 onClick={() => handleThemeSelect('birds')}
-                className={`rounded-md px-2 py-1 text-white font-semibold transition duration-300 ease-in-out ${
+                className={`rounded-md px-2 py-1 text-white bg-gray-800 border border-green font-semibold transition duration-300 ease-in-out ${
                   selectedTheme === 'birds' ? 'bg-lightblue hover:bg-lightblue' : 'bg-gray-700 hover:bg-gray-600'
                 } focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer`}
               >
