@@ -5,7 +5,7 @@ import { authOptions } from './auth/[...nextauth]'
 
 const allImages = {
   'família': [
-    { url: '/ghibli/familia/família.png', title: 'La Famille' },
+    { url: '/ghibli/familia/família.png', title: 'Une grande famille' },
     { url: '/ghibli/familia/casa.png', title: 'Une Maison' },
     { url: '/ghibli/familia/sopa.png', title: 'La Soupe' },
     { url: '/ghibli/familia/almoço.png', title: 'Un Dîner en famille' },
@@ -34,7 +34,7 @@ const allImages = {
     { url: '/ghibli/natureza/ceu.jpg', title: 'Le ciel est bleu' },
     { url: '/ghibli/natureza/flores.jpg', title: 'Des fleurs' },
     { url: '/ghibli/natureza/fotografo.jpg', title: 'Un photographe' },
-    { url: '/ghibli/natureza/guarda-chuva.jpg', title: 'Un parapluie' },
+    { url: '/ghibli/natureza/guarda-chuva.jpg', title: 'Ouvrir son parapluie' },
     { url: '/ghibli/natureza/guitarra.jpg', title: 'La musique et la nature' },
     { url: '/ghibli/natureza/mergulho.jpg', title: 'Sous l\'eau' },
     { url: '/ghibli/natureza/noite.jpg', title: 'La nuit' },

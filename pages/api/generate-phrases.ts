@@ -5,7 +5,7 @@ import { authOptions } from './auth/[...nextauth]'
 
 const allImages = {
   'família': [
-    { url: '/frases/familia/família.png', title: 'La famille est réunie' },
+    { url: '/frases/familia/família.png', title: 'Le chef de famille est barbu' },
     { url: '/frases/familia/casa.png', title: 'Quelle jolie maison!' },
     { url: '/frases/familia/sopa.png', title: 'Tu dois manger ta soupe!' },
     { url: '/frases/familia/almoço.png', title: 'La famille se réunit pour dîner!' },

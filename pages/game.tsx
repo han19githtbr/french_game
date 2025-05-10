@@ -52,10 +52,18 @@ const animalSounds: Record<string, string> = {
   'Un cabrit': '/sounds/goat.mp3',
   'Un dauphin': '/sounds/dolphin.mp3',
   'Un porc': '/sounds/pig.mp3',
+}
+
+
+const familySounds: Record<string, string> = {
   'Rire': '/sounds/laughing.mp3',
-  'Une Salle de cinéma': '/sounds/laughing.mp3',
   'À la salle de Théâtre': '/sounds/laughing.mp3',
 }
+
+const tecnologySounds: Record<string, string> = {
+  'Une Salle de cinéma': '/sounds/laughing.mp3',
+}
+
 
 type Result = {
   correct_word: boolean
@@ -318,6 +326,7 @@ export default function Game({}: GameProps) {
     }
   }, [selectedTheme]);
 
+
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = volume;
@@ -547,23 +556,13 @@ export default function Game({}: GameProps) {
     localStorage.setItem('conquests', JSON.stringify(conquestsWithDate));
   }, [publishedConquests]);
 
-
-  const handleCloseZoom = () => {
-    setZoomedImage(null);
-  };
- 
+   
   const handleUnlockAnimationEnd = (setter: SetterFunction) => {
     setTimeout(() => {
       setter(false);
     }, 4000); // Mantém a animação por 4 segundos
   };
-  
-  const showToast = (message: string, type: 'info' | 'success' | 'error') => {
-    setNotification({ message, type });
-    setTimeout(() => {
-      setNotification(null);
-    }, 3000); // Exibir por 3 segundos
-  };
+   
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -885,7 +884,7 @@ export default function Game({}: GameProps) {
   
     
   useEffect(() => {
-    if (correctAnswersCount >= 2) {
+    if (correctAnswersCount == 4) {
       if (!isFrasesUnlocked) {
         setIsFrasesUnlocking(true);
         playUnlockSound();
@@ -896,7 +895,7 @@ export default function Game({}: GameProps) {
           handleUnlockAnimationEnd(setShowUnlockFrasesAnimation);
         }, 1000); // Tempo para a animação de destravar
       }
-    } else if (correctAnswersCount >= 1) {
+    } else if (correctAnswersCount == 2) {
       if (!isProverbsUnlocked) {
         setIsProverbsUnlocking(true);
         playUnlockSound();
@@ -987,7 +986,9 @@ export default function Game({}: GameProps) {
 
   const checkAnswer = (index: number, userAnswer: string) => {
     playAnimalSound(images[index].title)
-      
+    playFamilySound(images[index].title)
+    playTecnologySound(images[index].title)
+    
     const correct_word = images[index].title.toLowerCase() === userAnswer.toLowerCase()
     const alreadyCorrect = results[index]?.correct_word
       
@@ -1360,6 +1361,24 @@ export default function Game({}: GameProps) {
     if (soundPath) {
       const audio = new Audio(soundPath)
       audio.play().catch(err => console.error('Erro ao tocar som do animal:', err))
+    }
+  }
+
+  const playFamilySound = (title: string) => {
+    if (theme !== 'família') return; // só toca se for o tema "animais"
+    const soundPath = familySounds[title]
+    if (soundPath) {
+      const audio = new Audio(soundPath)
+      audio.play().catch(err => console.error('Erro ao tocar som da família:', err))
+    }
+  }
+
+  const playTecnologySound = (title: string) => {
+    if (theme !== 'tecnologia') return; // só toca se for o tema "animais"
+    const soundPath = tecnologySounds[title]
+    if (soundPath) {
+      const audio = new Audio(soundPath)
+      audio.play().catch(err => console.error('Erro ao tocar som da tecnologia:', err))
     }
   }
   
@@ -1907,7 +1926,7 @@ export default function Game({}: GameProps) {
         {/* Botão "Frases em Francês" */}
         <div className="w-64 flex flex-col items-center">
           {!isFrasesUnlocked && (
-            <p className="text-sm text-gray-400 mb-1 text-center">Selecione uma opção e complete 2 acertos para desbloquear este nível.</p>
+            <p className="text-sm text-gray-400 mb-1 text-center">Selecione uma opção e complete 4 acertos para desbloquear este nível.</p>
           )}
           <motion.button
             className={`flex items-center justify-center py-3 px-6 rounded-md mt-2 font-semibold transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75 shadow-[0_0_15px_rgba(0,255,255,0.6)] hover:shadow-[0_0_25px_rgba(0,255,255,0.8)]
@@ -1964,7 +1983,7 @@ export default function Game({}: GameProps) {
         {/* Botão "Ditados em Francês" */}
         <div className="w-64 flex flex-col items-center relative">
           {!isProverbsUnlocked && (
-            <p className="text-sm text-gray-400 mb-1 text-center">Selecione uma opção e complete 1 acerto para desbloquear este nível.</p>
+            <p className="text-sm text-gray-400 mb-1 text-center">Selecione uma opção e complete 2 acertos para desbloquear este nível.</p>
           )}
           <motion.button
             className={`flex items-center justify-center py-3 px-6 rounded-md mt-4 font-semibold transition duration-300 ease-in-out focus:outline-none animate-pulse-slow ${
@@ -2372,27 +2391,27 @@ export default function Game({}: GameProps) {
 
       {showCongrats && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
+          initial={{ opacity: 0.5, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.4 }}
           className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-70 backdrop-blur-md" // Adicionado backdrop-blur-md para o efeito de sobreamento
         >
           <motion.div
-            className="bg-white text-black rounded-2xl p-8 shadow-2xl text-center text-3xl font-bold animate-pulse"
+            className="bg-white text-green rounded-2xl p-8 shadow-2xl text-center text-3xl font-bold animate-pulse"
             style={{
               boxShadow: '0 0 20px rgba(255, 255, 0, 0.8)', // Adicionado brilho amarelo
               textShadow: '0 0 10px rgba(255, 255, 0, 0.8)', // Adicionado brilho no texto
             }}
-            initial={{ opacity: 0, scale: 0.7 }}
+            initial={{ opacity: 0.5, scale: 0.7 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: 'spring', damping: 10, stiffness: 100 }}
+            transition={{ type: 'spring', damping: 15, stiffness: 100 }}
             onAnimationComplete={() => {
               if (successSound) {
                 successSound.play();
               }
             }}
           >
-            🎉 Parabéns! Você acertou tudo!
+            🎉 Parabéns! Você acertou tudo! 🎉
           </motion.div>
                   
         </motion.div>

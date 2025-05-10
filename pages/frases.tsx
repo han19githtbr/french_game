@@ -57,8 +57,19 @@ const animalSounds: Record<string, string> = {
   'Ce porc est celui de mon oncle': '/sounds/pig.mp3',
   'Les trois frères sont heureux': '/sounds/laughing.mp3',
   'Une famille à la salle de Théâtre': '/sounds/laughing.mp3',
-  'J\'aime aller au cinéma': '/sounds/laughing.mp3',
+  'La famille est réunie à la salle de cinéma': '/sounds/laughing.mp3',
 }
+
+
+const familySounds: Record<string, string> = {
+  'Les trois frères sont heureux': '/sounds/laughing.mp3',
+  'Une famille à la salle de Théâtre': '/sounds/laughing.mp3',
+}
+
+const tecnologySounds: Record<string, string> = {
+  'La famille est réunie à la salle de cinéma': '/sounds/laughing.mp3',
+}
+
 
 type Result = {
   correct_answer: boolean
@@ -979,6 +990,8 @@ export default function Frase({}: GameProps) {
 
   const checkAnswer = (index: number, userAnswer: string) => {
     playAnimalSound(images[index].title)
+    playFamilySound(images[index].title)
+    playTecnologySound(images[index].title)
       
     const correct_answer = images[index].title.toLowerCase() === userAnswer.toLowerCase()
     const alreadyCorrect = results[index]?.correct_answer
@@ -1316,6 +1329,24 @@ export default function Frase({}: GameProps) {
     if (soundPath) {
       const audio = new Audio(soundPath)
       audio.play().catch(err => console.error('Erro ao tocar som do animal:', err))
+    }
+  }
+
+  const playFamilySound = (title: string) => {
+    if (theme !== 'família') return; // só toca se for o tema "animais"
+    const soundPath = familySounds[title]
+    if (soundPath) {
+      const audio = new Audio(soundPath)
+      audio.play().catch(err => console.error('Erro ao tocar som da família:', err))
+    }
+  }
+
+  const playTecnologySound = (title: string) => {
+    if (theme !== 'tecnologia') return; // só toca se for o tema "animais"
+    const soundPath = tecnologySounds[title]
+    if (soundPath) {
+      const audio = new Audio(soundPath)
+      audio.play().catch(err => console.error('Erro ao tocar som da tecnologia:', err))
     }
   }
 
@@ -2142,7 +2173,7 @@ export default function Frase({}: GameProps) {
                     animate={{ scale: 1 }}
                     exit={{ scale: 0.8 }}
                   >
-                    <h2 className="text-2xl font-bold text-green-600 mb-4">Parabéns! Você acertou tudo! 🎉</h2>
+                    <h2 className="text-2xl font-bold text-green-600 mb-4">🎉 Parabéns! Você acertou tudo! 🎉</h2>
                     
                   </motion.div>
                 </motion.div>
@@ -2203,28 +2234,29 @@ export default function Frase({}: GameProps) {
 
       {showCongrats && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
+          initial={{ opacity: 0.5, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.4 }}
           className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-70 backdrop-blur-md" // Adicionado backdrop-blur-md para o efeito de sobreamento
         >
           <motion.div
-            className="bg-white text-black rounded-2xl p-8 shadow-2xl text-center text-3xl font-bold animate-pulse"
+            className="bg-white text-green rounded-2xl p-8 shadow-2xl text-center text-3xl font-bold animate-pulse"
             style={{
               boxShadow: '0 0 20px rgba(255, 255, 0, 0.8)', // Adicionado brilho amarelo
               textShadow: '0 0 10px rgba(255, 255, 0, 0.8)', // Adicionado brilho no texto
             }}
-            initial={{ opacity: 0, scale: 0.7 }}
+            initial={{ opacity: 0.5, scale: 0.7 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: 'spring', damping: 10, stiffness: 100 }}
+            transition={{ type: 'spring', damping: 15, stiffness: 100 }}
             onAnimationComplete={() => {
               if (successSound) {
                 successSound.play();
               }
             }}
           >
-            🎉 Parabéns! Você acertou tudo!
+            🎉 Parabéns! Você acertou tudo! 🎉
           </motion.div>
+                  
         </motion.div>
       )}
 

@@ -2153,28 +2153,29 @@ export default function Game({}: GameProps) {
 
       {showCongrats && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
+          initial={{ opacity: 0.5, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.4 }}
           className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-70 backdrop-blur-md" // Adicionado backdrop-blur-md para o efeito de sobreamento
         >
           <motion.div
-            className="bg-white text-black rounded-2xl p-8 shadow-2xl text-center text-3xl font-bold animate-pulse"
+            className="bg-white text-green rounded-2xl p-8 shadow-2xl text-center text-3xl font-bold animate-pulse"
             style={{
               boxShadow: '0 0 20px rgba(255, 255, 0, 0.8)', // Adicionado brilho amarelo
               textShadow: '0 0 10px rgba(255, 255, 0, 0.8)', // Adicionado brilho no texto
             }}
-            initial={{ opacity: 0, scale: 0.7 }}
+            initial={{ opacity: 0.5, scale: 0.7 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: 'spring', damping: 10, stiffness: 100 }}
+            transition={{ type: 'spring', damping: 15, stiffness: 100 }}
             onAnimationComplete={() => {
               if (successSound) {
                 successSound.play();
               }
             }}
           >
-            🎉 Parabéns! Você acertou tudo!
+            🎉 Parabéns! Você acertou tudo! 🎉
           </motion.div>
+                  
         </motion.div>
       )}
 
