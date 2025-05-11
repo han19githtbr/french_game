@@ -270,7 +270,16 @@ export default function Game({}: GameProps) {
   const [selectedConquestIndex, setSelectedConquestIndex] = useState(0);
   const [newConquestCount, setNewConquestCount] = useState(0); // Contador de novas conquistas
   const { hasNewGift, setShowGiftModal, setPopularSaying } = useGift();
+  const [hasClickedNotification, setHasClickedNotification] = useState(false);
 
+
+  useEffect(() => {
+    const storedClicked = localStorage.getItem('hasClickedNotification');
+    if (storedClicked === 'true') {
+      setHasClickedNotification(true);
+    }
+  }, [hasClickedNotification]);
+  
 
   const handleOpenGiftModal = () => {
     setShowGiftModal(true);
