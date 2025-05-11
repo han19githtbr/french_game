@@ -1412,7 +1412,7 @@ export default function Frase({}: GameProps) {
             onClick={toggleRelaxSoundsVisibility}
             className="relative border-2 border-lightblue hover:bg-purple text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4"
           >
-            <MusicalNoteIcon className="h-6 w-6" />
+            <MusicalNoteIcon className="h-6 w-6 text-green" />
           </button>
         </div>
       
@@ -1819,7 +1819,7 @@ export default function Frase({}: GameProps) {
         
           {/* Lista de opções */}
           {open && (
-            <ul className="absolute mt-2 w-full rounded-xl bg-gray-700 shadow-lg border-2 border-lightblue max-h-72 overflow-y-auto custom-scrollbar z-10">
+            <ul className="absolute mt-2 w-full rounded-xl bg-gray-900 shadow-lg border-2 border-lightblue max-h-72 overflow-y-auto custom-scrollbar z-10">
                       
               {/* Opção padrão */}
               <li
@@ -1827,7 +1827,7 @@ export default function Frase({}: GameProps) {
                   setTheme('');
                   setOpen(false);
               }}
-                className="flex items-center justify-start gap-3 px-6 py-3 hover:bg-lightblue text-black text-lg font-semibold cursor-pointer transition-all duration-300"
+                className="flex items-center justify-start gap-3 px-5 py-3 hover:bg-lightblue text-gray-400 text-lg font-semibold cursor-pointer transition-all duration-300"
               >
                 <motion.div
                   initial={{ x: -10, opacity: 0 }}
@@ -1951,7 +1951,7 @@ export default function Frase({}: GameProps) {
                     {/* Custom dropdown arrow */}
                     <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
                       <svg
-                        className="w-6 h-6 text-neon-pink sm:w-5 sm:h-5"
+                        className="w-6 h-6 text-neon-blue sm:w-5 sm:h-5"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"

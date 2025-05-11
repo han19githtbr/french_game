@@ -17,6 +17,8 @@ import { FaLinkedin, FaInstagram, FaFacebook, FaGithub } from 'react-icons/fa';
 import { BsEyeFill, BsPlayFill } from 'react-icons/bs';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { GiPresent } from 'react-icons/gi';
+import { useGift } from '../contexts/GiftContext'
 
 
 const FREESOUND_API_KEY = 'SbW3xMpvC1XDTCf9Pesz75rwFKteNYZ84YRcnZwI';
@@ -267,6 +269,12 @@ export default function Game({}: GameProps) {
   const [showConquestCarousel, setShowConquestCarousel] = useState(false);
   const [selectedConquestIndex, setSelectedConquestIndex] = useState(0);
   const [newConquestCount, setNewConquestCount] = useState(0); // Contador de novas conquistas
+  const { hasNewGift, setShowGiftModal, setPopularSaying } = useGift();
+
+
+  const handleOpenGiftModal = () => {
+    setShowGiftModal(true);
+  };
 
 
   const [showNotification, setShowNotification] = useState<{
@@ -985,56 +993,59 @@ export default function Game({}: GameProps) {
 
 
   const checkAnswer = (index: number, userAnswer: string) => {
-    playAnimalSound(images[index].title)
-    playFamilySound(images[index].title)
-    playTecnologySound(images[index].title)
-    
-    const correct_word = images[index].title.toLowerCase() === userAnswer.toLowerCase()
-    const alreadyCorrect = results[index]?.correct_word
-      
-    if (correct_word && !alreadyCorrect && correctSound) correctSound.play()
-    if (!correct_word && wrongSound) wrongSound.play()
-      
+    playAnimalSound(images[index].title);
+    playFamilySound(images[index].title);
+    playTecnologySound(images[index].title);
+
+    const correct_word = images[index].title.toLowerCase() === userAnswer.toLowerCase();
+    const alreadyCorrect = results[index]?.correct_word;
+
+    if (correct_word && !alreadyCorrect && correctSound) correctSound.play();
+    if (!correct_word && wrongSound) wrongSound.play();
+
     const newResults = [...results]; // agora é um array!
-    newResults[index] = { correct_word, selected: userAnswer };  
-  
+    newResults[index] = { correct_word, selected: userAnswer };
+
     setResults(newResults);
-       
+
     // Armazenar a jogada atual para a gravação
     setCurrentRoundPlays(prev => [...prev, { image: images[index], answer: userAnswer, correct: correct_word }]);
 
-
     // ⏬ Scroll para a próxima imagem ainda não respondida (com pequeno delay)
     setTimeout(() => {
-      const nextUnansweredIndex = newResults.findIndex((res, i) => !res && i > index)
-      const nextRef = imageRefs.current[nextUnansweredIndex]
+      const nextUnansweredIndex = newResults.findIndex((res, i) => !res && i > index);
+      const nextRef = imageRefs.current[nextUnansweredIndex];
       if (nextUnansweredIndex !== -1 && nextRef) {
-        nextRef.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        nextRef.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
-    }, 300)
-        
+    }, 300);
+
     const currentCorrectCount = Object.values(newResults).filter((r) => r?.correct_word).length;
     setCorrectAnswersCount(currentCorrectCount);
-    const totalCount = images.length
-    const hasWrong = Object.values(newResults).some(r => r && !r.correct_word)
-  
-    //saveProgress(correctCount);
-  
+    const totalCount = images.length;
+    const hasWrong = Object.values(newResults).some(r => r && !r.correct_word);
+
+    // Salvar progresso no localStorage
     saveProgress(currentCorrectCount);
-      
+
+    // Registrar o progresso salvo
+    const savedProgress = localStorage.getItem('progress_answers');
+    const parsedProgress = savedProgress ? JSON.parse(savedProgress) : [];
+    console.log('Progresso Salvo:', { round: parsedProgress.length + 1, correct_word: currentCorrectCount });
+
     // Se errou alguma imagem, mostra botão para recomeçar
     if (hasWrong) {
-      setShowRestart(true)
+      setShowRestart(true);
     }
-      
+
     if (currentCorrectCount === totalCount) {
-      setShowCongrats(true)
+      setShowCongrats(true);
       setShowPublishButton(true); // Mostrar o botão de publicação
 
-      // Salvar progresso no localStorage
-      const prevProgress = JSON.parse(localStorage.getItem('progress') || '[]')
-      localStorage.setItem('progress', JSON.stringify([...prevProgress, { round, correct: currentCorrectCount }]))
-          
+      // Salvar progresso no localStorage (esta parte parece redundante, já estamos salvando acima com saveProgress)
+      // const prevProgress = JSON.parse(localStorage.getItem('progress') || '[]');
+      // localStorage.setItem('progress', JSON.stringify([...prevProgress, { round, correct: currentCorrectCount }]));
+
       // Adiciona os acertos da rodada ao histórico de revisão
       const currentRoundCorrect = images.filter((_, i) => newResults[i]?.correct_word).map(img => ({
         url: img.url,
@@ -1045,16 +1056,16 @@ export default function Game({}: GameProps) {
         setAvailableReviews(prev => prev + currentRoundCorrect.length);
         setIsFlashing(true);
         setTimeout(() => setIsFlashing(false), 2000);
-      } 
-      
+      }
+
       setTimeout(() => {
-        const nextTheme = themes.filter(t => t !== theme)[Math.floor(Math.random() * (themes.length - 1))]
-        setTheme(nextTheme)
-        setRound(r => r + 1)
+        const nextTheme = themes.filter(t => t !== theme)[Math.floor(Math.random() * (themes.length - 1))];
+        setTheme(nextTheme);
+        setRound(r => r + 1);
         setShowCongrats(false);
         setShowPublishButton(false); // Esconder o botão após a transição
       }, 20000);
-  
+
       if (successSound) {
         successSound.play();
       }
@@ -1457,7 +1468,7 @@ export default function Game({}: GameProps) {
             onClick={toggleRelaxSoundsVisibility}
             className="relative border-2 border-lightblue hover:bg-purple text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4"
           >
-            <MusicalNoteIcon className="h-6 w-6" />
+            <MusicalNoteIcon className="h-6 w-6 text-green" />
           </button>
         </div>
       
@@ -1867,7 +1878,7 @@ export default function Game({}: GameProps) {
 
           {/* Lista de opções */}
           {open && (
-            <ul className="absolute mt-2 w-full rounded-xl bg-gray-700 shadow-lg border-2 border-lightblue max-h-72 overflow-y-auto custom-scrollbar z-10">
+            <ul className="absolute mt-2 w-full rounded-xl bg-gray-900 shadow-lg border-2 border-lightblue max-h-72 overflow-y-auto custom-scrollbar z-10">
               
               {/* Opção padrão */}
               <li
@@ -1875,7 +1886,7 @@ export default function Game({}: GameProps) {
                   setTheme('');
                   setOpen(false);
                 }}
-                className="flex items-center justify-start gap-3 px-6 py-3 hover:bg-lightblue text-black text-lg font-semibold cursor-pointer transition-all duration-300"
+                className="flex items-center justify-start gap-3 px-5 py-3 hover:bg-lightblue text-gray-400 text-lg font-semibold cursor-pointer transition-all duration-300"
               >
                 <motion.div
                   initial={{ x: -10, opacity: 0 }}
@@ -2094,10 +2105,10 @@ export default function Game({}: GameProps) {
                       onChange={e => checkAnswer(index, e.target.value)}
                       disabled={!!results[index]}
                     >
-                      <option value="" className="bg-gray-900 text-white font-semibold">✅ Selecione</option>
+                      <option value="" className="bg-gray-900 text-white font-semibold cursor-pointer">✅ Selecione</option>
                       {img.options.map((opt: string, i: number) => (
                         <option
-                          className="bg-gray-900 text-white font-semibold hover:bg-neon-blue active:bg-neon-pink transition-colors duration-200"
+                          className="bg-gray-900 text-white font-semibold hover:bg-neon-blue active:bg-neon-pink transition-colors duration-200 "
                           key={i}
                           value={opt}
                         >
@@ -2108,7 +2119,7 @@ export default function Game({}: GameProps) {
                     {/* Custom dropdown arrow */}
                     <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
                       <svg
-                        className="w-6 h-6 text-neon-pink sm:w-5 sm:h-5"
+                        className="w-6 h-6 text-neon-blue sm:w-5 sm:h-5"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
