@@ -1897,15 +1897,20 @@ export default function Game({}: GameProps) {
                     </select>
                     {/* Custom dropdown arrow */}
                     <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-                      <svg
-                        className="w-6 h-6 text-neon-blue sm:w-5 sm:h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
+                      <motion.div
+                        animate={{
+                          y: [0, 5, 0], // sobe e desce
+                          opacity: [0.8, 1, 0.8], // animação de leve brilho
+                        }}
+                        transition={{
+                          duration: 0.4,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                        className="text-white flex justify-center items-center"
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                      </svg>
+                        <ChevronDown size={28} strokeWidth={2.5} />
+                      </motion.div>
                     </div>
                   </div>
                   
