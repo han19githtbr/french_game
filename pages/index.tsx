@@ -2,14 +2,15 @@ import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
+//import { cn } from "@/lib/utils";
 import { cn } from '../lib/utils';
-import LoadingScreen from '../components/LoadingScreen';
 
 
 const DAILY_ACCESS_KEY = 'frenchLearningDailyAccess';
 const LAST_RESET_KEY = 'frenchLearningLastReset';
 const PROVERBS_KEY = 'frenchLearningProverbs';
 const LAST_PROVERB_DATE_KEY = 'frenchLearningLastProverbDate';
+
 
 interface Proverb {
   french: string;
@@ -51,7 +52,7 @@ export default function Home() {
   const [dailyAccessCount, setDailyAccessCount] = useState(0);
   const [dayName, setDayName] = useState('');
   const [proverb, setProverb] = useState<Proverb | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+
 
   useEffect(() => {
     const resetDailyAccessIfNeeded = () => {
@@ -140,7 +141,6 @@ export default function Home() {
 
   return (
     <div className="h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500 to-pink-500 text-white">
-      {isLoading && <LoadingScreen />}
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 text-center w-full px-4">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -174,7 +174,24 @@ export default function Home() {
             Fonte: Ditados Franceses
           </motion.div>
         </motion.div>
-              
+      
+        {/* AdSense ad slot */}
+        {/*<div className="mb-4">
+          <ins
+            className="adsbygoogle"
+            style={{ display: "block" }}
+            data-ad-client="YOUR_AD_CLIENT_ID" // Substitua pelo seu ID do AdSense
+            data-ad-slot="YOUR_AD_SLOT_ID"     // Substitua pelo seu ID do slot de anúncio
+            data-ad-format="horizontal"      // Adapte o formato do anúncio
+          ></ins>
+          
+          {!document.getElementById('adsense-script') &&
+            <script
+              id='adsense-script'
+              async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"
+            ></script>
+          }
+        </div>*/}
       </div>
       
       <div className="absolute top-60 left-1/2 transform -translate-x-1/2 bg-white bg-opacity-10 rounded-md shadow-md p-3 flex flex-col items-center justify-center">
@@ -189,7 +206,7 @@ export default function Home() {
         </div>
       </div>
       <h1
-        className="text-3xl font-bold mt-94 mb-8 text-center"
+        className="text-2xl font-bold mt-94 mb-8 text-center"
         dangerouslySetInnerHTML={{ __html: animatedTitle }}
       />
       
@@ -220,7 +237,8 @@ export default function Home() {
         />
         
       </button>
-           
+        
+          
     </div>
   )
 }

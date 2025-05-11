@@ -134,13 +134,10 @@ const unlockAnimationVariants = {
   exit: { opacity: 0, scale: 0.5, transition: { duration: 0.2 } },
 };
 
-const STORAGE_KEY_BADGE_COUNT = 'newPublicationBadgeCount';
-
 interface GameProps {}
 
 
 interface Conquest {
-  _id?: string;
   user: string;
   plays: any[]; // Defina um tipo mais específico se souber a estrutura de 'plays'
   views: number;
@@ -270,39 +267,8 @@ export default function Game({}: GameProps) {
   const carouselRef = useRef<HTMLDivElement>(null);
   const [currentConquest, setCurrentConquest] = useState<Conquest | null>(null); // A conquista a ser exibida no modal
   const [showConquestCarousel, setShowConquestCarousel] = useState(false);
-  
   const [selectedConquestIndex, setSelectedConquestIndex] = useState(0);
-  
-  const [newConquestCount, setNewConquestCount] = useState(0); // Inicialize com 0
-  const [hasClickedNotification, setHasClickedNotification] = useState(false); // Inicialize com false
-
-  useEffect(() => {
-    // Executa apenas no cliente após a montagem
-    const storedBadgeCount = localStorage.getItem(STORAGE_KEY_BADGE_COUNT);
-    if (storedBadgeCount) {
-      setNewConquestCount(parseInt(storedBadgeCount, 10));
-    }
-
-    const storedClicked = localStorage.getItem('hasClickedNotification');
-    if (storedClicked === 'true') {
-      setHasClickedNotification(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (typeof navigator !== 'undefined' && 'setAppBadge' in navigator && newConquestCount > 0) {
-      navigator.setAppBadge(newConquestCount);
-    } else if (typeof navigator !== 'undefined' && 'clearAppBadge' in navigator && newConquestCount === 0) {
-      navigator.clearAppBadge();
-    }
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY_BADGE_COUNT, newConquestCount.toString());
-      localStorage.setItem('hasClickedNotification', hasClickedNotification.toString());
-    }
-  }, [newConquestCount, hasClickedNotification]);
-
-
-
+  const [newConquestCount, setNewConquestCount] = useState(0); // Contador de novas conquistas
   const { hasNewGift, setShowGiftModal, setPopularSaying } = useGift();
 
 
@@ -589,17 +555,6 @@ export default function Game({}: GameProps) {
       router.push('/');
     }
   }, [status, router]);
-
-
-  /*useEffect(() => {
-    if ('setAppBadge' in navigator && newConquestCount > 0) {
-      navigator.setAppBadge(newConquestCount);
-    } else if ('clearAppBadge' in navigator && newConquestCount === 0) {
-      navigator.clearAppBadge();
-    }
-    localStorage.setItem(STORAGE_KEY_BADGE_COUNT, newConquestCount.toString());
-    localStorage.setItem('hasClickedNotification', hasClickedNotification.toString());
-  }, [newConquestCount, hasClickedNotification]);*/
 
 
   // Salvar as conquistas no localStorage sempre que publishedConquests mudar
@@ -1189,14 +1144,6 @@ export default function Game({}: GameProps) {
   };
 
 
-  const handleNotificationClick = () => {
-    setHasClickedNotification(true);
-    localStorage.setItem('hasClickedNotification', 'true');
-    setNewConquestCount(0);
-    setShowConquestCarousel(true);
-  }
-
-
   const startAutomaticReplay = (plays: any[]) => {
     setReplayPlays(plays);
     setReplayIndex(0);
@@ -1651,34 +1598,17 @@ export default function Game({}: GameProps) {
 
 
         {/* Botão para mostrar/ocultar as conquistas e o replay */}
-        <div className="fixed top-36 left-3 z-40">
+        <div className="fixed top-36 left-4 z-40">
           <button
             onClick={toggleShowWins}
             className="relative border-2 border-lightblue hover:bg-green text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4 animate-pulse-slow"
           >
-            <div onClick={handleNotificationClick} style={{ position: 'relative', display: 'inline-block', cursor: 'pointer', fontSize: '24px', color: 'white' }}>
-              🏆
-              {newConquestCount > 0 && !hasClickedNotification && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '-15px',
-                    right: '-15px',
-                    backgroundColor: 'green',
-                    color: 'white',
-                    borderRadius: '50%',
-                    width: '24px',
-                    height: '24px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '14px',
-                  }}
-                >
-                  {newConquestCount}
-                </div>
-              )}
-            </div>
+            <FaTrophy className="h-6 w-6 text-yellow" />
+            {newConquestCount > 0 && (
+              <span className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 bg-green text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold animate-pulse-slow">
+                {newConquestCount}
+              </span>
+            )}
           </button>
         </div>
 
@@ -1874,7 +1804,7 @@ export default function Game({}: GameProps) {
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }} 
         transition={{ duration: 0.6 }}
-        className="text-3xl xs:text-sm sm:text-md text-gray-300 font-bold mb-8 mt-72 text-center drop-shadow-md"
+        className="text-3xl text-gray-300 font-bold mb-8 mt-72 text-center drop-shadow-md"
       >
         Jogo para treinar o Francês
       </motion.h1>
@@ -2118,7 +2048,7 @@ export default function Game({}: GameProps) {
               setRound(r => r + 1)
               setShowRestart(false)
             }}
-            className="mt-6 border border-red text-red bg-transparent hover:bg-lightblue hover:text-white px-4 py-2 rounded shadow transition cursor-pointer"
+            className="mt-6 border border-red text-red bg-transparent hover:bg-gray-300 hover:text-white px-4 py-2 rounded shadow transition cursor-pointer"
           >
             ❌ Jogue de novo
           </button>
