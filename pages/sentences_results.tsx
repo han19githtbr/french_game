@@ -147,9 +147,8 @@ export default function ResultsPage() {
               </button>
           </div>
 
-          <h2 className="text-3xl font-bold text-center text-indigo-600 flex items-center justify-center gap-2 mb-6">
-              <FaChartBar className="text-blue text-2xl mt-1" />
-              Estatísticas de Acertos
+          <h2 className="text-2xl font-bold text-center text-gray-300 flex items-center justify-center gap-2 mb-6">
+            Estatísticas de Acertos
           </h2>
           
           <div className="h-80 w-full max-w-4xl mx-auto rounded-2xl bg-white shadow-xl p-4 dark:bg-zinc-900 dark:shadow-none">
