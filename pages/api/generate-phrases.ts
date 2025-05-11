@@ -15,7 +15,7 @@ const allImages = {
     { url: '/frases/familia/rir.jpg', title: 'Les trois frères sont heureux' },
     { url: '/frases/familia/natal.png', title: 'La famille se réunit pour ouvrir les cadeaux!' },
     { url: '/frases/familia/plane.png', title: 'La famille est en voyage' },
-    { url: '/frases/familia/praia.png', title: 'La famille se promène à la plage' },
+    { url: '/frases/familia/praia.png', title: 'La famille se réjouit à la plage' },
     { url: '/frases/familia/teatro.png', title: 'Une famille à la salle de Théâtre' },
     { url: '/frases/familia/tv.png', title: 'La famille se réunit pour regarder la télévision' },
   ],

@@ -1851,7 +1851,7 @@ export default function Frase({}: GameProps) {
                   setTheme('');
                   setOpen(false);
               }}
-                className="flex items-center justify-start gap-3 px-5 py-3 hover:bg-lightblue text-gray-400 text-lg font-semibold cursor-pointer transition-all duration-300"
+                className="flex items-center justify-start gap-3 px-8 py-3 hover:bg-lightblue text-gray-400 text-lg font-semibold cursor-pointer transition-all duration-300"
               >
                 <motion.div
                   initial={{ x: -10, opacity: 0 }}
