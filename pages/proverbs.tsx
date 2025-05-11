@@ -1296,7 +1296,14 @@ export default function Game({}: GameProps) {
           onMouseLeave={handleMouseLeave}
         >
           <div className="flex items-center gap-2 cursor-pointer mt-4">
-            <span className="text-gray-300 font-medium hidden sm:inline">{session.user.name}</span>
+            <span className="text-gray-300 font-medium hidden sm:inline">
+              {session && session.user && session.user.name
+                ? session.user.name.length > 20
+                  ? session.user.name.substring(0, 17) + '....'
+                  : session.user.name
+                : ''
+              }
+            </span>
             <img src={session.user.image || ''} alt="Avatar" className="w-10 h-10 rounded-full border-2 border-lightblue" />
           </div>
           <div
