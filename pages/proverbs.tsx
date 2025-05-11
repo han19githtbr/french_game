@@ -221,12 +221,34 @@ export default function Game({}: GameProps) {
   const [showConquestCarousel, setShowConquestCarousel] = useState(false);
   const [selectedConquestIndex, setSelectedConquestIndex] = useState(0);
   //const [newConquestCount, setNewConquestCount] = useState(0); // Contador de novas conquistas
-  const [newConquestCount, setNewConquestCount] = useState(() => {
-    return parseInt(localStorage.getItem(STORAGE_KEY_BADGE_COUNT) || '0', 10);
-  });
-  const [hasClickedNotification, setHasClickedNotification] = useState(() => {
-    return localStorage.getItem('hasClickedNotification') === 'true';
-  });
+  const [newConquestCount, setNewConquestCount] = useState(0); // Inicialize com 0
+  const [hasClickedNotification, setHasClickedNotification] = useState(false); // Inicialize com false
+    
+  useEffect(() => {
+        // Executa apenas no cliente após a montagem
+        const storedBadgeCount = localStorage.getItem(STORAGE_KEY_BADGE_COUNT);
+        if (storedBadgeCount) {
+          setNewConquestCount(parseInt(storedBadgeCount, 10));
+        }
+    
+        const storedClicked = localStorage.getItem('hasClickedNotification');
+        if (storedClicked === 'true') {
+          setHasClickedNotification(true);
+        }
+  }, []);
+    
+  
+  useEffect(() => {
+        if (typeof navigator !== 'undefined' && 'setAppBadge' in navigator && newConquestCount > 0) {
+          navigator.setAppBadge(newConquestCount);
+        } else if (typeof navigator !== 'undefined' && 'clearAppBadge' in navigator && newConquestCount === 0) {
+          navigator.clearAppBadge();
+        }
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem(STORAGE_KEY_BADGE_COUNT, newConquestCount.toString());
+          localStorage.setItem('hasClickedNotification', hasClickedNotification.toString());
+        }
+  }, [newConquestCount, hasClickedNotification]);
 
 
   const [showNotification, setShowNotification] = useState<{
@@ -494,7 +516,7 @@ export default function Game({}: GameProps) {
   }, [status, router]);
 
 
-  useEffect(() => {
+  /*useEffect(() => {
     if ('setAppBadge' in navigator && newConquestCount > 0) {
       navigator.setAppBadge(newConquestCount);
     } else if ('clearAppBadge' in navigator && newConquestCount === 0) {
@@ -502,7 +524,7 @@ export default function Game({}: GameProps) {
     }
     localStorage.setItem(STORAGE_KEY_BADGE_COUNT, newConquestCount.toString());
     localStorage.setItem('hasClickedNotification', hasClickedNotification.toString());
-  }, [newConquestCount, hasClickedNotification]);
+  }, [newConquestCount, hasClickedNotification]);*/
 
 
   // Salvar as conquistas no localStorage sempre que publishedConquests mudar
@@ -1165,7 +1187,7 @@ export default function Game({}: GameProps) {
     setShowConquestCarousel(true); // Abre o carrossel ao clicar na notificação
   };
 
-  
+
   const startAutomaticReplay = (plays: any[]) => {
     setReplayPlays(plays);
     setReplayIndex(0);
