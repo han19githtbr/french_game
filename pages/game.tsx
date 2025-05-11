@@ -3,7 +3,7 @@ import { createAblyClient } from '../lib/ably'
 import type * as Ably from 'ably'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/router'
-import { Check, X, Minus, Lock } from 'lucide-react'
+import { Check, X, Minus, Lock, ChevronDown, ChevronRight } from 'lucide-react'
 import { motion , AnimatePresence, useMotionValue, useTransform, animate, MotionValue} from 'framer-motion'
 import { saveProgress } from './results'
 import { LockClosedIcon, LockOpenIcon, MusicalNoteIcon, GlobeAmericasIcon, CloudIcon, BeakerIcon } from '@heroicons/react/24/solid';
@@ -1882,7 +1882,20 @@ export default function Game({}: GameProps) {
                 <span>Escolha uma opção</span>
               </span>
             )}
-            <span className="ml-2">▼</span>
+            <motion.div
+              animate={{
+                y: [0, 5, 0], // sobe e desce
+                opacity: [0.8, 1, 0.8], // animação de leve brilho
+              }}
+              transition={{
+                duration: 0.4,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              className="text-green flex justify-center items-center"
+            >
+              <ChevronDown size={32} strokeWidth={2.5} />
+            </motion.div>
           </button>
 
           {/* Lista de opções */}
@@ -1895,7 +1908,7 @@ export default function Game({}: GameProps) {
                   setTheme('');
                   setOpen(false);
                 }}
-                className="flex items-center justify-start gap-3 px-5 py-3 hover:bg-lightblue text-gray-400 text-lg font-semibold cursor-pointer transition-all duration-300"
+                className="flex items-center justify-start gap-3 px-8 py-3 hover:bg-lightblue text-gray-400 text-lg font-semibold cursor-pointer transition-all duration-300"
               >
                 <motion.div
                   initial={{ x: -10, opacity: 0 }}
@@ -1928,12 +1941,18 @@ export default function Game({}: GameProps) {
                 >
                   {/* Setinha animada */}
                   <motion.div
-                    initial={{ x: 10, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ duration: 0.4, type: "spring" }}
-                    className="text-green"
+                    animate={{
+                      x: [0, 5, 0], // sobe e desce
+                      opacity: [0.8, 1, 0.8], // animação de leve brilho
+                    }}
+                    transition={{
+                      duration: 1.2,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                    className="text-green flex justify-center items-center"
                   >
-                    ➤
+                    <ChevronRight size={32} strokeWidth={2.5} />
                   </motion.div>
                   {t.charAt(0).toUpperCase() + t.slice(1)}
                 </li>
@@ -2057,7 +2076,7 @@ export default function Game({}: GameProps) {
               setRound(r => r + 1)
               setShowRestart(false)
             }}
-            className="mt-6 border border-red text-red bg-transparent hover:bg-gray-300 hover:text-white px-4 py-2 rounded shadow transition cursor-pointer"
+            className="mt-6 border border-red text-red bg-transparent hover:bg-lightblue hover:text-white px-4 py-2 rounded shadow transition cursor-pointer"
           >
             ❌ Jogue de novo
           </button>
