@@ -6,7 +6,7 @@ import { useRouter } from 'next/router'
 import { Check, X, Minus, Lock, ChevronDown, ChevronRight } from 'lucide-react'
 import { motion , AnimatePresence, useMotionValue, useTransform, animate, MotionValue} from 'framer-motion'
 import { saveProgress } from './results'
-import { LockClosedIcon, LockOpenIcon, MusicalNoteIcon, GlobeAmericasIcon, CloudIcon, BeakerIcon } from '@heroicons/react/24/solid';
+import { LockClosedIcon, LockOpenIcon, MusicalNoteIcon, GlobeAmericasIcon, CloudIcon, BeakerIcon, VideoCameraIcon, FilmIcon, LanguageIcon } from '@heroicons/react/24/solid';
 import { useSound } from 'use-sound';
 import type { RealtimeChannel } from 'ably';
 import dynamic from "next/dynamic";
@@ -19,6 +19,8 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { GiPresent } from 'react-icons/gi';
 import { useGift } from '../contexts/GiftContext'
+import { youtube_v3 } from '@googleapis/youtube';
+
 
 
 const FREESOUND_API_KEY = 'SbW3xMpvC1XDTCf9Pesz75rwFKteNYZ84YRcnZwI';
@@ -135,6 +137,14 @@ const unlockAnimationVariants = {
 };
 
 interface GameProps {}
+
+
+interface Video {
+  id: string;
+  name: string;
+  url: string;
+  user?: { username: string };
+}
 
 
 interface Conquest {
@@ -271,6 +281,82 @@ export default function Game({}: GameProps) {
   const [newConquestCount, setNewConquestCount] = useState(0); // Contador de novas conquistas
   const { hasNewGift, setShowGiftModal, setPopularSaying } = useGift();
   const [hasClickedNotification, setHasClickedNotification] = useState(false);
+
+
+  const [showYouTubeVideos, setShowYouTubeVideos] = useState(false);
+  const [selectedThemeVideo, setSelectedThemeVideo] = useState<string | null>(null);
+  const [searchStatusVideo, setSearchStatusVideo] = useState<'idle' | 'searching' | 'results' | 'error'>('idle');
+  const [searchResultsVideo, setSearchResultsVideo] = useState<Video[]>([]);
+  const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
+  const [currentVideoInfo, setCurrentVideoInfo] = useState<Video | null>(null);
+  const videoRef = useRef<HTMLIFrameElement>(null);
+
+
+  const handleThemeVideoSelect = async (theme: string) => {
+    setSelectedThemeVideo(theme);
+    setSearchStatusVideo('searching');
+    setSearchResultsVideo([]);
+    setErrorMessage(null);
+
+    try {
+      const response = await fetch('/api/youtube', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ theme }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch videos');
+      }
+
+      const data = await response.json();
+      if (data.videos && data.videos.length > 0) {
+        setSearchResultsVideo(data.videos);
+        setSearchStatusVideo('results');
+      } else {
+        setSearchStatusVideo('results');
+        setErrorMessage('No videos found for this theme.');
+      }
+    } catch (error) {
+      setSearchStatusVideo('error');
+      setErrorMessage(error instanceof Error ? error.message : 'An unexpected error occurred');
+    }
+  };
+
+
+  const loadAndPlayVideo = (videoId: string) => {
+    const video = searchResultsVideo.find((v) => v.id === videoId);
+    if (video) {
+      setCurrentVideoUrl(`https://www.youtube.com/watch?v=${videoId}`);
+      setCurrentVideoInfo(video);
+      setIsPlaying(true);
+    }
+  };
+
+
+  const togglePlayVideo = () => {
+    setIsPlaying(!isPlaying);
+  };
+
+  const toggleMuteVideo = () => {
+    setIsMuted(!isMuted);
+  };
+
+
+  const handleVolumeVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVolume = parseFloat(e.target.value);
+    setVolume(newVolume);
+  };
+
+  const handleVideoEnded = () => {
+    setIsPlaying(false);
+    setCurrentVideoUrl(null);
+    setCurrentVideoInfo(null);
+  };
+
+  const toggleVideosVisibility = () => {
+    setShowYouTubeVideos(!showYouTubeVideos);
+  };
 
 
   useEffect(() => {
@@ -1541,7 +1627,7 @@ export default function Game({}: GameProps) {
                   <ul>
                     {searchResults.map((sound) => (
                       <li key={sound.id} className="flex items-center justify-between py-2 border-b border-gray-700">
-                        <span className="text-blue text-sm font-bold">{sound.name}</span>
+                        <span className="text-blue text-sm font-thin">{sound.name}</span>
                         <button
                           onClick={() => loadAndPlaySound(sound.id)}
                           className="p-1 rounded-full bg-transparent border-2 border-b-lightblue hover:bg-lightblue text-white focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer"
@@ -1612,6 +1698,161 @@ export default function Game({}: GameProps) {
             </button>
           </div>
         )}
+
+
+        {/* Botão para mostrar/ocultar vídeos no youtube */}
+        <div className="fixed top-52 left-4 z-50">
+          <button
+            onClick={toggleVideosVisibility}
+            className="relative border-2 border-lightblue hover:bg-purple text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4"
+          >
+            <FilmIcon className="h-6 w-6 text-green" />
+          </button>
+        </div>
+
+
+        <>
+          {showYouTubeVideos && (
+            <div
+              className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900 bg-opacity-90 rounded-xl shadow-lg p-6 z-50 border-2 border-gray-300 max-h-96 overflow-y-auto w-full sm:w-96"
+              style={{
+                scrollbarWidth: 'thin',
+                scrollbarColor: '#lightblue #374151',
+              }}
+            >
+              <h2 className="text-xl text-gray-300 font-semibold mb-4">
+                Videos em Francês no: <span className="text-green">Youtube</span>
+              </h2>
+
+              <div className="flex space-x-1 mb-4">
+                <button
+                  onClick={() => handleThemeVideoSelect('music')}
+                  className={`rounded-md px-1 py-1 text-white bg-gray-800 border border-blue font-semibold transition duration-300 ease-in-out ${
+                    selectedThemeVideo === 'music' ? 'bg-lightblue hover:bg-blue' : 'bg-gray-700 hover:bg-gray-600'
+                  } focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer`}
+                >
+                  <MusicalNoteIcon className="h-5 w-5 mr-2 inline-block text-white" /> Musics
+                </button>
+                <button
+                  onClick={() => handleThemeVideoSelect('language')}
+                  className={`rounded-md px-1 py-1 text-white bg-gray-800 border border-blue font-semibold transition duration-300 ease-in-out ${
+                    selectedThemeVideo === 'language' ? 'bg-lightblue hover:bg-blue' : 'bg-gray-700 hover:bg-gray-600'
+                  } focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer`}
+                >
+                  <LanguageIcon className="h-5 w-5 mr-2 inline-block text-white" /> Language
+                </button>
+                <button
+                  onClick={() => handleThemeVideoSelect('nature')}
+                  className={`rounded-md px-1 py-1 text-white bg-gray-800 border border-blue font-semibold transition duration-300 ease-in-out ${
+                    selectedThemeVideo === 'nature' ? 'bg-lightblue hover:bg-blue' : 'bg-gray-700 hover:bg-gray-600'
+                  } focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer`}
+                >
+                  <GlobeAmericasIcon className="h-5 w-5 mr-2 inline-block text-white" /> Nature
+                </button>
+              </div>
+
+              <div className="mb-4 text-white">
+                {selectedThemeVideo && searchStatusVideo === 'searching' && (
+                  <div className="flex items-center space-x-2">
+                    <FaSpinner className="animate-spin text-blue" />
+                    <span>
+                      Buscando videos de <span className="text-blue">{selectedThemeVideo}</span> no Youtube...
+                    </span>
+                  </div>
+                )}
+                {selectedThemeVideo && searchStatusVideo === 'results' && searchResultsVideo.length > 0 && (
+                  <div className="mb-4">
+                    <h3 className="text-lg text-gray-300 font-semibold mb-2">Resultados da Busca:</h3>
+                    <ul>
+                      {searchResultsVideo.map((video) => (
+                        <li key={video.id} className="flex items-center justify-between py-2 border-b border-gray-700">
+                          <span className="text-blue text-sm font-thin">{video.name}</span>
+                          <button
+                            onClick={() => loadAndPlayVideo(video.id)}
+                            className="p-1 rounded-full bg-transparent border-2 border-blue hover:bg-blue-500 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                          >
+                            <BiPlay className="h-4 w-4 text-green" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {selectedThemeVideo && searchStatusVideo === 'results' && searchResultsVideo.length === 0 && errorMessage && (
+                  <span className="text-yellow-500">{errorMessage}</span>
+                )}
+                {selectedThemeVideo && searchStatusVideo === 'error' && errorMessage && (
+                  <span className="text-red-500">Erro ao buscar: {errorMessage}</span>
+                )}
+              </div>
+
+              {currentVideoUrl && currentVideoInfo && (
+                <div className="mb-4 text-sm">
+                  <p className='text-white'>Tocando: {currentVideoInfo.name}</p>
+                  {currentVideoInfo?.user?.username && <p className='text-green'>Autor: {currentVideoInfo.user.username}</p>}
+                  {currentVideoInfo?.url && (
+                    <a href={currentVideoInfo.url} target="_blank" rel="noopener noreferrer" className="text-blue hover:underline">
+                      Ver no Youtube
+                    </a>
+                  )}
+                </div>
+              )}
+
+              {currentVideoUrl && (
+                <div className="inline-block items-center space-x-4">
+                  {/* Using iframe for YouTube video playback */}
+                  <iframe
+                    ref={videoRef}
+                    width="100%"
+                    height="200"
+                    src={`https://www.youtube.com/embed/${currentVideoInfo?.id}?autoplay=${isPlaying ? 1 : 0}&mute=${isMuted ? 1 : 0}&volume=${volume * 100}`}
+                    title="YouTube video player"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                  <div className='flex -ml-1'>
+                    <button
+                      onClick={togglePlayVideo}
+                      className="p-2 rounded-full bg-lightblue mt-2 hover:bg-transparent text-green focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                    >
+                      {isPlaying ? <BiPause className="h-6 w-6 text-green" /> : <BiPlay className="h-6 w-6 text-green" />}
+                    </button>
+                    
+                    <div className="flex items-center space-x-2">
+                      <button onClick={toggleMuteVideo} className="text-white mt-2 ml-4 focus:outline-none">
+                        {isMuted ? <BiVolumeMute className="h-5 w-5" /> : <BiVolumeFull className="h-5 w-5" />}
+                      </button>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value={volume}
+                        onChange={handleVolumeVideoChange}
+                        className="rounded-md bg-gray-700 text-lightblue cursor-pointer mt-2"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {!selectedThemeVideo && (
+                <p className="text-gray-400 text-sm">Selecione um tema para buscar sons no Youtube.</p>
+              )}
+
+              <button
+                onClick={toggleVideosVisibility}
+                className="absolute top-2 right-2 text-gray-400 hover:text-blue focus:outline-none cursor-pointer"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              
+            </div>
+          )}
+        </>
 
 
         {/* Botão para mostrar/ocultar as conquistas e o replay */}
