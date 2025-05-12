@@ -8,7 +8,7 @@ import { Check, X, ChevronLeft, Minus, Lock, ChevronDown, ChevronRight } from 'l
 import { motion, AnimatePresence, useMotionValue, animate, MotionValue } from 'framer-motion'
 import { saveProgress } from './sentences_results'
 import { useSound } from 'use-sound';
-import { LockClosedIcon, LockOpenIcon, MusicalNoteIcon, GlobeAmericasIcon, CloudIcon, BeakerIcon, VideoCameraIcon, FilmIcon, LanguageIcon } from '@heroicons/react/24/solid';
+import { LockClosedIcon, LockOpenIcon, MusicalNoteIcon, GlobeAmericasIcon, CloudIcon, BeakerIcon, VideoCameraIcon, FilmIcon, LanguageIcon, DeviceTabletIcon } from '@heroicons/react/24/solid';
 import type { RealtimeChannel } from 'ably';
 import dynamic from "next/dynamic";
 import { BiPlay, BiPause, BiVolumeFull, BiVolumeMute } from 'react-icons/bi';
@@ -1669,12 +1669,12 @@ export default function Frase({}: GameProps) {
 
               <div className="flex space-x-1 mb-4">
                 <button
-                  onClick={() => handleThemeVideoSelect('music')}
+                  onClick={() => handleThemeVideoSelect('tecnology')}
                   className={`rounded-md px-1 py-1 text-white bg-gray-800 border border-blue font-semibold transition duration-300 ease-in-out ${
-                    selectedThemeVideo === 'music' ? 'bg-lightblue hover:bg-blue' : 'bg-gray-700 hover:bg-gray-600'
+                    selectedThemeVideo === 'tecnology' ? 'bg-lightblue hover:bg-blue' : 'bg-gray-700 hover:bg-gray-600'
                   } focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer`}
                 >
-                  <MusicalNoteIcon className="h-5 w-5 mr-2 inline-block text-white" /> Musics
+                  <DeviceTabletIcon className="h-5 w-5 mr-2 inline-block text-white" /> Learn
                 </button>
                 <button
                   onClick={() => handleThemeVideoSelect('language')}
