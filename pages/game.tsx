@@ -1439,7 +1439,7 @@ export default function Game({}: GameProps) {
                 ? session.user.name.length > 20
                   ? session.user.name.substring(0, 17) + '....'
                   : session.user.name
-                : ''
+                : '' // Ou algum outro valor padrão que faça sentido para o seu caso
               }
             </span>
             <img src={session.user.image || ''} alt="Avatar" className="w-10 h-10 rounded-full border-2 border-lightblue" />
