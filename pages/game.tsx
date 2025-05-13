@@ -1746,7 +1746,7 @@ export default function Game({}: GameProps) {
 
 
         {/* Botão para mostrar/ocultar vídeos no youtube */}
-        <div className="fixed top-52 left-4 z-50">
+        <div className="fixed top-52 left-4 z-40">
           <button
             onClick={toggleVideosVisibility}
             className="relative border-2 border-lightblue hover:bg-purple text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4"
