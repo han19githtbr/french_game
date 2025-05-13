@@ -19,8 +19,8 @@ export async function searchYouTubeVideos(theme: string): Promise<Video[]> {
       part: ['id,snippet'],
       q: `${theme} french`,
       type: ['video'],
-      videoDuration: 'short', // Videos up to 4 minutes
-      maxResults: 10,
+      videoDuration: 'medium', // Videos up to 4 minutes
+      maxResults: 30,
       regionCode: 'FR', // Prioritize French content
       relevanceLanguage: 'fr', // French language relevance
     });

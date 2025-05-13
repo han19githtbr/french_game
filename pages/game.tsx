@@ -144,6 +144,7 @@ interface Video {
   name: string;
   url: string;
   user?: { username: string };
+  duration?: string;
 }
 
 
@@ -292,6 +293,17 @@ export default function Game({}: GameProps) {
   const videoRef = useRef<HTMLIFrameElement>(null);
 
 
+  const parseDuration = (duration: string): number => {
+    const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
+    if (!match) return 0;
+
+    const hours = parseInt(match[1] || '0') * 3600;
+    const minutes = parseInt(match[2] || '0') * 60;
+    const seconds = parseInt(match[3] || '0');
+    return hours + minutes + seconds;
+  };
+
+
   const handleThemeVideoSelect = async (theme: string) => {
     setSelectedThemeVideo(theme);
     setSearchStatusVideo('searching');
@@ -311,7 +323,15 @@ export default function Game({}: GameProps) {
 
       const data = await response.json();
       if (data.videos && data.videos.length > 0) {
-        setSearchResultsVideo(data.videos);
+        // Filtrar vídeos com duração de até 20 minutos (1200 segundos)
+        const filteredVideos = data.videos.filter((video: Video) => {
+          if (video.duration) {
+            const durationInSeconds = parseDuration(video.duration);
+            return durationInSeconds <= 1200;
+          }
+          return true; // Se não houver duração, incluir por padrão (caso raro)
+        });
+        setSearchResultsVideo(filteredVideos);
         setSearchStatusVideo('results');
       } else {
         setSearchStatusVideo('results');
@@ -335,17 +355,42 @@ export default function Game({}: GameProps) {
 
 
   const togglePlayVideo = () => {
-    setIsPlaying(!isPlaying);
+    setIsPlaying((prev) => !prev);
+    const iframe = document.querySelector('iframe');
+    if (iframe) {
+      const message = JSON.stringify({
+        event: 'command',
+        func: isPlaying ? 'pauseVideo' : 'playVideo',
+      });
+      iframe.contentWindow?.postMessage(message, '*');
+    }
   };
 
   const toggleMuteVideo = () => {
-    setIsMuted(!isMuted);
+    setIsMuted((prev) => !prev);
+    const iframe = videoRef.current;
+    if (iframe) {
+      const message = JSON.stringify({
+        event: 'command',
+        func: isMuted ? 'unMute' : 'mute',
+      });
+      iframe.contentWindow?.postMessage(message, '*');
+    }
   };
 
 
   const handleVolumeVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value);
     setVolume(newVolume);
+    const iframe = videoRef.current;
+    if (iframe) {
+      const message = JSON.stringify({
+        event: 'command',
+        func: 'setVolume',
+        args: [newVolume * 100], // YouTube API usa escala de 0 a 100
+      });
+      iframe.contentWindow?.postMessage(message, '*');
+    }
   };
 
   const handleVideoEnded = () => {
