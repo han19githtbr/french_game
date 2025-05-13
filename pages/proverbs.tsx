@@ -1715,7 +1715,7 @@ export default function Game({}: GameProps) {
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                   />
-                  <div className='flex -ml-1'>
+                  {/*<div className='flex -ml-1'>
                     <button
                       onClick={togglePlayVideo}
                       className="p-2 rounded-full bg-lightblue mt-2 hover:bg-transparent text-green focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
@@ -1737,7 +1737,7 @@ export default function Game({}: GameProps) {
                         className="rounded-md bg-gray-700 text-lightblue cursor-pointer mt-2"
                       />
                     </div>
-                  </div>
+                  </div>*/}
                 </div>
               )}
         
