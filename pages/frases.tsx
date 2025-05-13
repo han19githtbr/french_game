@@ -1757,7 +1757,7 @@ export default function Frase({}: GameProps) {
                           <span className="text-blue text-sm font-thin">{video.name}</span>
                           <button
                             onClick={() => loadAndPlayVideo(video.id)}
-                            className="p-1 rounded-full bg-transparent border-2 border-blue hover:bg-blue-500 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                            className="p-1 rounded-full bg-transparent border-2 border-lightblue hover:bg-blue-500 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                           >
                             <BiPlay className="h-4 w-4 text-green" />
                           </button>
