@@ -1473,7 +1473,7 @@ export default function Game({}: GameProps) {
         <div className="fixed top-20 left-4 z-50">
           <button
             onClick={toggleRelaxSoundsVisibility}
-            className="relative border-2 border-lightblue hover:bg-purple text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4"
+            className="relative border-2 border-lightblue hover:bg-lightblue text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4"
           >
             <MusicalNoteIcon className="h-6 w-6 text-green" />
           </button>
@@ -1608,9 +1608,9 @@ export default function Game({}: GameProps) {
         <div className="fixed top-52 left-4 z-40">
           <button
             onClick={toggleVideosVisibility}
-            className="relative border-2 border-lightblue hover:bg-purple text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4"
+            className="relative border-2 border-lightblue hover:bg-lightblue text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4"
           >
-            <FilmIcon className="h-6 w-6 text-green" />
+            <VideoCameraIcon className="h-6 w-6 text-green" />
           </button>
         </div>
         
@@ -1763,9 +1763,9 @@ export default function Game({}: GameProps) {
         <div className="fixed top-36 left-4 z-40">
           <button
             onClick={toggleShowWins}
-            className="relative border-2 border-lightblue hover:bg-green text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4 animate-pulse-slow"
+            className="relative border-2 border-lightblue hover:bg-lightblue text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4 animate-pulse-slow"
           >
-            <FaTrophy className="h-6 w-6 text-yellow" />
+            <FaTrophy className="h-6 w-6 text-white" />
             {newConquestCount > 0 && (
               <span className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 bg-green text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold animate-pulse-slow">
                 {newConquestCount}
