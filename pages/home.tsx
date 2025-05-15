@@ -52,7 +52,7 @@ export default function Home() {
             <div className="absolute top-12 right-0 bg-white shadow-lg rounded-md overflow-hidden w-22 z-50">
               <button
                 onClick={() => signOut({ redirect: true, callbackUrl: '/' })}
-                className="block w-full text-left px-4 py-2 text-gray-200 hover:bg-lightblue border border-blue focus:outline-none transition duration-150 ease-in-out cursor-pointer"
+                className="block w-full text-left px-4 py-2 text-gray-200 hover:bg-lightblue border border-blue bg-gray-700 focus:outline-none transition duration-150 ease-in-out cursor-pointer"
               >
                 Sair
               </button>
