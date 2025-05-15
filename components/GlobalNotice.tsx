@@ -30,8 +30,8 @@ export default function GlobalNotice() {
   if (!notice) return null;
 
   return (
-    <div className="fixed top-0 left-0 w-full z-50 flex items-center justify-center">
-      <div className="animate-pulse-slow bg-transparent text-green p-4 rounded-b-xl shadow-xl w-[90%] max-w-xl mt-2 text-center">
+    <div className="fixed top-0 left-0 w-64 z-50 flex items-center justify-center">
+      <div className="animate-pulse bg-transparent text-green p-4 rounded-xl shadow-xl w-[60%] max-w-xl mt-2 text-center">
         <h3 className="font-bold text-lg mb-1">{notice.title}</h3>
         <p>{notice.message}</p>
       </div>
