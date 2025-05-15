@@ -76,7 +76,7 @@ export default function Home() {
           )}
         </div>
 
-        <h1 className="absolute text-2xl font-thin text-gray-300 mb-6 mt-35 text-left z-30">
+        <h1 className="absolute text-2xl font-thin text-gray-300 mb-6 mt-55 text-left z-30">
           Bem-vindo: <span className='text-green'>{session?.user?.name}</span>
         </h1>
 
