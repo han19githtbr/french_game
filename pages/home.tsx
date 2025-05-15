@@ -49,10 +49,10 @@ export default function Home() {
 
           {/* Dropdown de Logout */}
           {dropdownOpen && (
-            <div className="absolute top-12 right-0 bg-white shadow-lg rounded-md overflow-hidden w-22 z-50">
+            <div className="absolute top-12 right-0 bg-white shadow-lg rounded-md overflow-hidden w-26 z-50">
               <button
                 onClick={() => signOut({ redirect: true, callbackUrl: '/' })}
-                className="block w-full text-left px-4 py-2 text-gray-200 hover:bg-lightblue border border-blue bg-gray-700 focus:outline-none transition duration-150 ease-in-out cursor-pointer"
+                className="block w-full text-left px-6 py-1 text-gray-200 text-sm hover:bg-lightblue border border-blue bg-gray-700 focus:outline-none transition duration-150 ease-in-out cursor-pointer"
               >
                 Sair
               </button>
@@ -60,7 +60,7 @@ export default function Home() {
           )}
         </div>
 
-        <h1 className="absolute text-2xl font-thin text-gray-300 mb-6 mt-16 text-left z-30">Bem-vindo: <span className='text-green'>{session?.user?.name}</span></h1>
+        <h1 className="absolute text-2xl font-thin text-gray-300 mb-6 mt-20 text-left z-30">Bem-vindo: <span className='text-green'>{session?.user?.name}</span></h1>
 
       </div>
     );
