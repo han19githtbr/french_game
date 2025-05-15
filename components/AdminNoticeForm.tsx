@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react';
+import { toast, ToastContainer } from 'react-toastify';
+
 
 export default function AdminNoticeForm() {
   const [title, setTitle] = useState('');
@@ -22,13 +24,15 @@ export default function AdminNoticeForm() {
     });
 
     if (res.ok) {
-        alert('Aviso publicado com sucesso!');
+        //alert('Aviso publicado com sucesso!');
+        toast.success('Aviso publicado com sucesso!', { position: "top-right", autoClose: 3000, hideProgressBar: false, closeOnClick: true, pauseOnHover: true, draggable: true, progress: undefined, theme: "light" });
         setTitle('');
         setMessage('');
         setDuration(1);
     } else {
         const data = await res.json();
-        alert('Erro ao publicar: ' + data.error);
+        //alert('Erro ao publicar: ' + data.error);
+        toast.success('Erro ao publicar: ' + data.error, { position: "top-right", autoClose: 3000, hideProgressBar: false, closeOnClick: true, pauseOnHover: true, draggable: true, progress: undefined, theme: "light" });
     }
   };
   
