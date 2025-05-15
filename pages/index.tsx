@@ -282,7 +282,7 @@ export default function Home() {
         dangerouslySetInnerHTML={{ __html: animatedTitle }}
       />
             
-      <div className="mt-16 flex flex-col items-center space-y-4 sm:space-y-6">
+      <div className="mt-10 mb-10 flex flex-col items-center space-y-4 sm:space-y-6">
         
         {providers?.google && (
           <button
