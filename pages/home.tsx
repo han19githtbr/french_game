@@ -60,7 +60,7 @@ export default function Home() {
           )}
         </div>
 
-        <h1 className="absolute text-2xl font-thin text-gray-300 mb-6 mt-20 text-left z-30">Bem-vindo: <span className='text-green'>{session?.user?.name}</span></h1>
+        <h1 className="absolute text-2xl font-thin text-gray-300 mb-6 mt-24 text-left z-30">Bem-vindo: <span className='text-green'>{session?.user?.name}</span></h1>
 
       </div>
     );
