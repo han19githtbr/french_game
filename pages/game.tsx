@@ -20,8 +20,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { GiPresent } from 'react-icons/gi';
 import { useGift } from '../contexts/GiftContext'
 import { youtube_v3 } from '@googleapis/youtube';
-import ChatManager from '../components/ChatManager'
 import GlobalNotice from '../components/GlobalNotice'
+import ChatWidget from '../components/Chat/ChatWidget'
 
 
 const FREESOUND_API_KEY = 'SbW3xMpvC1XDTCf9Pesz75rwFKteNYZ84YRcnZwI';
@@ -1560,6 +1560,7 @@ export default function Game({}: GameProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-800 to-slate-900 text-white flex flex-col items-center p-4 relative mb-6">
+      
       {session?.user && (
         <div 
           className="fixed top-4 right-4 z-50 group"
@@ -1590,7 +1591,9 @@ export default function Game({}: GameProps) {
         </div>
       )}
 
-      {/*<GlobalNotice />*/}
+      <div className="absolute top-4 right-4">
+        <ChatWidget /> {/* Renderize o ChatWidget aqui */}
+      </div>
 
       <div className='relative'>
         {/* Notificação de jogadores online */}

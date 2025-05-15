@@ -2,8 +2,8 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import ChatManager from '../components/ChatManager';
 import AdminNoticeForm from '../components/AdminNoticeForm';
+import ChatWidget from '../components/Chat/ChatWidget';
 
 
 export default function Home() {
@@ -28,20 +28,8 @@ export default function Home() {
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-800 to-slate-900 text-white flex flex-col items-center p-4 relative mb-6">
-        
-        {/* ChatManager fixado no canto inferior direito */}
-        {session?.user?.name && session?.user?.email && (
-          <ChatManager
-            currentUser={{
-              name: session.user.name,
-              email: session.user.email,
-              image: session.user.image || '',
-            }}
-          />
-        )}
-
-        {/* Container para nome e foto no canto superior direito */}
-        <div className="absolute top-5 left-4 flex items-center z-10">
+        <ChatWidget /> {/* Renderize o ChatWidget aqui */}
+        <div className="absolute top-12 left-4 flex items-center z-10">
           
           <button
             onClick={toggleDropdown}
@@ -51,19 +39,16 @@ export default function Home() {
               <Image src={session.user.image} alt={session.user.name ?? 'Admin'} layout="fill" objectFit="cover" />
             ) : (
               <div className="flex items-center justify-center w-full h-full border-2 border-lightblue bg-transparent hover:bg-blue text-gray-200 text-sm">
-                {/* Adicione uma imagem padrão ou inicial aqui se desejar */}
                 <span>{session?.user?.name?.charAt(0).toUpperCase() || 'A'}</span>
               </div>
             )}
           </button>
-
-          <div className="text-right ml-2">
+          <div className="text-right ml-4">
             <span className="block text-gray-200 font-semibold text-sm md:text-base">
               {session?.user?.name || 'Administrador'}
             </span>
           </div>
-
-          {/* Dropdown de Logout */}
+          
           {dropdownOpen && (
             <div className="absolute top-12 right-0 bg-white shadow-lg rounded-md overflow-hidden w-26 z-50">
               <button
@@ -76,9 +61,6 @@ export default function Home() {
           )}
         </div>
         
-              
-        <AdminNoticeForm />
-      
       </div>
     );
   }
