@@ -8,16 +8,28 @@ export default function AdminNoticeForm() {
   const [duration, setDuration] = useState(1);  
 
 
-  const handlePublish = () => {
-    const now = new Date().getTime();
-    const expiration = now + duration * 60 * 1000;
+  const handlePublish = async () => {
+    const expirationDate = new Date(Date.now() + duration * 24 * 60 * 60 * 1000); // duração em dias
 
-    const notice = { title, message, expiration };
-    localStorage.setItem('globalNotice', JSON.stringify(notice));
-    alert('Aviso publicado com sucesso!');
-    setTitle('');
-    setMessage('');
-    setDuration(1);
+    const res = await fetch('/api/notice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+        title,
+        message,
+        expiration: expirationDate.toISOString(),
+        }),
+    });
+
+    if (res.ok) {
+        alert('Aviso publicado com sucesso!');
+        setTitle('');
+        setMessage('');
+        setDuration(1);
+    } else {
+        const data = await res.json();
+        alert('Erro ao publicar: ' + data.error);
+    }
   };
   
   
