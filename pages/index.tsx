@@ -6,7 +6,6 @@ import { useState, useEffect } from 'react';
 import { cn } from '../lib/utils';
 import Image from 'next/image';
 
-
 const ADMIN_EMAIL = 'milliance23@gmail.com';
 
 
@@ -275,69 +274,14 @@ export default function Home() {
             Fonte: Ditados Franceses
           </motion.div>
         </motion.div>
-      
-        {/* AdSense ad slot */}
-        {/*<div className="mb-4">
-          <ins
-            className="adsbygoogle"
-            style={{ display: "block" }}
-            data-ad-client="YOUR_AD_CLIENT_ID" // Substitua pelo seu ID do AdSense
-            data-ad-slot="YOUR_AD_SLOT_ID"     // Substitua pelo seu ID do slot de anúncio
-            data-ad-format="horizontal"      // Adapte o formato do anúncio
-          ></ins>
-          
-          {!document.getElementById('adsense-script') &&
-            <script
-              id='adsense-script'
-              async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"
-            ></script>
-          }
-        </div>*/}
+              
       </div>
-      
-      {/*<div className="absolute top-60 left-1/2 transform -translate-x-1/2 bg-white bg-opacity-10 rounded-md shadow-md p-3 flex flex-col items-center justify-center">
-        <span className='text-blue font-semibold italic'>Frequência de login</span>
-        <span className="font-semibold text-sm mb-1 text-gray-300 items-center">Acessos <span className='text-green'>({dayName})</span></span>
-        <div className="flex items-center mr-8">
-          
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-33 text-green mr-2" fill="none" viewBox="0 0 44 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.237l.051.02C7.414 2.469 7.5 2.716 7.5 3c0 .833-.333 1.5-1 1.5-.667 0-1.333-.667-1-1.5c0-.284.086-.531.262-.763l.051-.02a2 2 0 012.977-1.412c.414.12.85.346 1.15.671a2 2 0 01.668 1.488l.032.029" />
-          </svg>
-          <span className="font-semibold text-lg text-green mt-3">{dailyAccessCount}</span>
-        </div>
-      </div>*/}
+            
       <h1
         className="text-2xl font-bold mt-94 mb-8 text-center"
         dangerouslySetInnerHTML={{ __html: animatedTitle }}
       />
-      
-      {/*<button
-        onClick={handleSignInClick}
-        className="flex sm:mb-20 items-center gap-3 bg-transparent hover:border-green border border-blue text-gray-300 font-semibold px-15 py-3 rounded-lg shadow-md hover:shadow-xl transition duration-300 cursor-pointer"
-        disabled={isLoading}  
-      >
-        <svg className="w-6 h-6 mr-3" viewBox="0 0 533.5 544.3">
-          <path
-            d="M533.5 278.4c0-17.4-1.5-34.1-4.4-50.4H272v95.3h147.1c-6.4 34.7-25.4 64-54 83.6v69h87.2c51-47 81.2-116.2 81.2-197.5z"
-            fill="#4285f4"
-          />
-          <path
-            d="M272 544.3c73.4 0 135-24.3 180-66.2l-87.2-69c-24.2 16.3-55.3 26-92.8 26-71 0-131.2-47.9-152.8-112.4H31.6v70.7C75.6 482.6 167.4 544.3 272 544.3z"
-            fill="#34a853"
-          />
-          <path
-            d="M119.2 322.7c-10.4-30.7-10.4-63.7 0-94.4v-70.7H31.6c-35.5 70.8-35.5 154.7 0 225.5l87.6-70.4z"
-            fill="#fbbc04"
-          />
-          <path
-            d="M272 107.7c39.9-.6 78 13.8 107.5 39.4l80.3-80.3C407.2 24.3 345.6 0 272 0 167.4 0 75.6 61.7 31.6 162.3l87.6 70.7C140.8 155.6 201 107.7 272 107.7z"
-            fill="#ea4335"
-          />
-        </svg>
-        <span dangerouslySetInnerHTML={{ __html: animatedTitleGoogle }} />
-        {isLoading && <AnimatedLoadingDots />}
-      </button>*/}
-
+            
       <div className="mt-16 flex flex-col items-center space-y-4 sm:space-y-6">
         
         {providers?.google && (
