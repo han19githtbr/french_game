@@ -6,11 +6,12 @@ import { SessionProvider } from 'next-auth/react'
 import { GiftProvider } from '../contexts/GiftContext'
 
 export default function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
-  
-  /*useEffect(() => {
+   
+  useEffect(() => {
     fetch('/api/socket') // chama o endpoint uma vez para iniciar o Socket.io
-  }, [])*/
-  
+  }, [])
+
+
   return (
     <SessionProvider session={session}>
       <GiftProvider>

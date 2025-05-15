@@ -1,29 +1,15 @@
 import { signIn, useSession, getProviders } from 'next-auth/react'
 import { useRouter } from 'next/router'
-import { motion, Transition } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
-//import { cn } from "@/lib/utils";
 import { cn } from '../lib/utils';
-import Image from 'next/image';
+
 
 const ADMIN_EMAIL = 'milliance23@gmail.com';
-
-
-const DAILY_ACCESS_KEY = 'frenchLearningDailyAccess';
-const LAST_RESET_KEY = 'frenchLearningLastReset';
-const PROVERBS_KEY = 'frenchLearningProverbs';
-const LAST_PROVERB_DATE_KEY = 'frenchLearningLastProverbDate';
-
 
 interface Proverb {
   french: string;
   portuguese: string;
-}
-
-
-interface DotProps {
-  transitionOverride?: Transition;
-  style?: React.CSSProperties;
 }
 
 
@@ -42,31 +28,7 @@ const frenchProverbs: Proverb[] = [
   { french: "Telle mère, telle fille", portuguese: "Se trata de uma filha que herdou traços de personalidade da mãe" },
   { french: "Tel père, tel fils", portuguese: "Se trata de um filho que herdou traços de personalidade do pai" },
   { french: "À bon vin point d'enseigne", portuguese: "O que é valioso não precisa ser recomendado" },
-  
 ];
-
-const getDayName = (date: Date) => {
-  const days = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
-  return days[date.getDay()];
-};
-
-
-const Dot: React.FC<DotProps> = ({ transitionOverride, style }) => (
-  <motion.span
-    className="inline-block h-2 w-2 rounded-full bg-gray-300 ml-1"
-    animate={{ scale: [1, 1.4, 1], opacity: [1, 0.8, 1] }}
-    transition={transitionOverride || { duration: 0.6, repeat: Infinity, repeatType: 'loop' }}
-    style={style}
-  />
-);
-
-const AnimatedLoadingDots = () => (
-  <div className="inline-flex items-center ml-2">
-    <Dot />
-    <Dot transitionOverride={{ duration: 0.6, repeat: Infinity, repeatType: 'loop', delay: 0.2 }} style={{ marginLeft: '0.4rem' }} />
-    <Dot transitionOverride={{ duration: 0.6, repeat: Infinity, repeatType: 'loop', delay: 0.4 }} style={{ marginLeft: '0.4rem' }} />
-  </div>
-);
 
 
 export default function Home() {
@@ -79,11 +41,7 @@ export default function Home() {
   const [animatedTitleGoogle, setAnimatedTitleGoogle] = useState("");
   const [animatedTitleAdmin, setAnimatedTitleAdmin] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [dailyAccessCount, setDailyAccessCount] = useState(0);
-  const [dayName, setDayName] = useState('');
   const [proverb, setProverb] = useState<Proverb | null>(null);
-  const [loadingDots, setLoadingDots] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [providers, setProviders] = useState<Record<string, any> | null>(null);
 
 
@@ -94,27 +52,6 @@ export default function Home() {
     };
 
     fetchProviders();
-  }, []);
-
-
-  useEffect(() => {
-    const resetDailyAccessIfNeeded = () => {
-      const today = new Date();
-      const todayDateString = today.toDateString();
-      const lastReset = localStorage.getItem(LAST_RESET_KEY);
-
-      if (lastReset !== todayDateString) {
-        localStorage.removeItem(DAILY_ACCESS_KEY);
-        localStorage.setItem(LAST_RESET_KEY, todayDateString);
-        setDailyAccessCount(0);
-      } else {
-        const storedCount = localStorage.getItem(DAILY_ACCESS_KEY);
-        setDailyAccessCount(storedCount ? parseInt(storedCount, 10) : 0);
-      }
-      setDayName(getDayName(today));
-    };
-
-    resetDailyAccessIfNeeded();
   }, []);
 
 
@@ -175,35 +112,7 @@ export default function Home() {
     }
     
   }, [currentIndex, session, title, titleGoogle]);
-
-
-  useEffect(() => {
-    if (isLoading) {
-      const interval = setInterval(() => {
-        setLoadingDots((prevDots) => {
-          if (prevDots.length < 3) {
-            return prevDots + '.';
-          } else {
-            return '';
-          }
-        });
-      }, 1000);
-      return () => clearInterval(interval);
-    } else {
-      setLoadingDots('');
-    }
-  }, [isLoading]);
-
-
-  /*const handleSignInClick = async () => {
-    setIsLoading(true);
-    const newCount = dailyAccessCount + 1;
-    setDailyAccessCount(newCount);
-    localStorage.setItem(DAILY_ACCESS_KEY, newCount.toString());
-    await signIn('google');
-    setIsLoading(false);
-  };*/
-
+    
 
   const handleAdminSignInClick = async () => {
     const res = await fetch('/api/admin/login', {
@@ -222,7 +131,6 @@ export default function Home() {
     } else {
       alert(data.message || 'Falha ao verificar administrador.');
     }
-      
   };
 
 
@@ -305,7 +213,7 @@ export default function Home() {
               />
             </svg>
             <span dangerouslySetInnerHTML={{ __html: animatedTitleGoogle }} />
-            {isLoading && <AnimatedLoadingDots />}
+            
           </button>
         )}
 
@@ -327,7 +235,7 @@ export default function Home() {
             />
           </svg>
           <span dangerouslySetInnerHTML={{ __html: animatedTitleAdmin }} />
-          {isLoading && <AnimatedLoadingDots />}
+          
         </button>
       </div>
                   

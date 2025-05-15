@@ -2,6 +2,9 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import ChatManager from '../components/ChatManager';
+import AdminNoticeForm from '../components/AdminNoticeForm';
+
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -26,13 +29,20 @@ export default function Home() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-800 to-slate-900 text-white flex flex-col items-center p-4 relative mb-6">
         
+        {/* ChatManager fixado no canto inferior direito */}
+        {session?.user?.name && session?.user?.email && (
+          <ChatManager
+            currentUser={{
+              name: session.user.name,
+              email: session.user.email,
+              image: session.user.image || '',
+            }}
+          />
+        )}
+
         {/* Container para nome e foto no canto superior direito */}
-        <div className="absolute top-4 right-4 flex items-center z-10">
-          <div className="text-right mr-2">
-            <span className="block text-gray-200 font-semibold text-sm md:text-base">
-              {session?.user?.name || 'Administrador'}
-            </span>
-          </div>
+        <div className="absolute top-5 left-4 flex items-center z-10">
+          
           <button
             onClick={toggleDropdown}
             className="relative w-10 h-10 rounded-full overflow-hidden shadow-md transition duration-300 hover:scale-105 cursor-pointer"
@@ -47,6 +57,12 @@ export default function Home() {
             )}
           </button>
 
+          <div className="text-right ml-2">
+            <span className="block text-gray-200 font-semibold text-sm md:text-base">
+              {session?.user?.name || 'Administrador'}
+            </span>
+          </div>
+
           {/* Dropdown de Logout */}
           {dropdownOpen && (
             <div className="absolute top-12 right-0 bg-white shadow-lg rounded-md overflow-hidden w-26 z-50">
@@ -60,8 +76,13 @@ export default function Home() {
           )}
         </div>
 
-        <h1 className="absolute text-2xl font-thin text-gray-300 mb-6 mt-24 text-left z-30">Bem-vindo: <span className='text-green'>{session?.user?.name}</span></h1>
+        <h1 className="absolute text-2xl font-thin text-gray-300 mb-6 mt-35 text-left z-30">
+          Bem-vindo: <span className='text-green'>{session?.user?.name}</span>
+        </h1>
 
+              
+        <AdminNoticeForm />
+      
       </div>
     );
   }

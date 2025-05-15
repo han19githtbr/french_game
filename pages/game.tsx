@@ -20,7 +20,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { GiPresent } from 'react-icons/gi';
 import { useGift } from '../contexts/GiftContext'
 import { youtube_v3 } from '@googleapis/youtube';
-
+import ChatManager from '../components/ChatManager'
+import GlobalNotice from '../components/GlobalNotice'
 
 
 const FREESOUND_API_KEY = 'SbW3xMpvC1XDTCf9Pesz75rwFKteNYZ84YRcnZwI';
@@ -291,6 +292,7 @@ export default function Game({}: GameProps) {
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const [currentVideoInfo, setCurrentVideoInfo] = useState<Video | null>(null);
   const videoRef = useRef<HTMLIFrameElement>(null);
+  
 
 
   const parseDuration = (duration: string): number => {
@@ -1588,7 +1590,8 @@ export default function Game({}: GameProps) {
         </div>
       )}
 
-      
+      <GlobalNotice />
+
       <div className='relative'>
         {/* Notificação de jogadores online */}
         <div className="fixed top-4 left-4 z-50">
@@ -2755,6 +2758,17 @@ export default function Game({}: GameProps) {
         </motion.div>
       )}
 
+      {/* ChatManager fixado no canto inferior direito */}
+      {session?.user?.name && session?.user?.email && (
+        <ChatManager
+          currentUser={{
+            name: session.user.name,
+            email: session.user.email,
+            image: session.user.image || '',
+          }}
+        />
+      )}
+      
       {showPublishButton && (
         <motion.div
           className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50" // Posicionado na parte inferior

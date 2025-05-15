@@ -19,6 +19,8 @@ import { BsEyeFill, BsPlayFill } from 'react-icons/bs';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { youtube_v3 } from '@googleapis/youtube';
+import ChatManager from '../components/ChatManager'
+import GlobalNotice from '../components/GlobalNotice'
 
 
 const FREESOUND_API_KEY = 'SbW3xMpvC1XDTCf9Pesz75rwFKteNYZ84YRcnZwI';
@@ -1531,6 +1533,7 @@ export default function Frase({}: GameProps) {
         </div>
       )}
 
+      <GlobalNotice />
 
       <div className='relative'>
         {/* Notificação de jogadores online */}
@@ -2586,6 +2589,18 @@ export default function Frase({}: GameProps) {
         </motion.div>
       )}
 
+      
+      {/* ChatManager fixado no canto inferior direito */}
+      {session?.user?.name && session?.user?.email && (
+        <ChatManager
+          currentUser={{
+            name: session.user.name,
+            email: session.user.email,
+            image: session.user.image || '',
+          }}
+        />
+      )}
+      
       {showPublishButton && (
         <motion.div
           className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50" // Posicionado na parte inferior
