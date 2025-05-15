@@ -25,7 +25,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'GET') {
     const now = new Date();
-    const notices = await collection.find({ expiration: { $gt: now } }).toArray();
+    const notices = await collection
+      .find({ expiration: { $gt: now } })
+      .sort({ _id: -1 }) // ← do mais novo para o mais antigo
+      .toArray();
     return res.status(200).json(notices);
   }
 

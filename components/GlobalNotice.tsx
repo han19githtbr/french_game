@@ -16,9 +16,12 @@ export default function GlobalNotice() {
       try {
         const res = await fetch('/api/notice');
         if (!res.ok) return;
-        const data: Notice = await res.json();
-        const isExpired = new Date(data.expiration) < new Date();
-        if (!isExpired) setNotice(data);
+        const data: Notice[] = await res.json();
+
+        if (data.length > 0) {
+          // Exibe o primeiro aviso (mais recente ou mais antigo dependendo da ordem)
+          setNotice(data[0]);
+        }
       } catch (error) {
         console.error('Erro ao buscar aviso:', error);
       }

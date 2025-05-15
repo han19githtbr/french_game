@@ -1590,11 +1590,11 @@ export default function Game({}: GameProps) {
         </div>
       )}
 
-      <GlobalNotice />
+      {/*<GlobalNotice />*/}
 
       <div className='relative'>
         {/* Notificação de jogadores online */}
-        <div className="fixed top-14 left-2 z-50">
+        <div className="fixed top-4 left-2 z-50">
               <button
                   onClick={() => {
                     setShowPlayersOnline((prev) => !prev);
@@ -1614,7 +1614,7 @@ export default function Game({}: GameProps) {
         </div>
       
         {/* Botão para mostrar/ocultar sons relaxantes */}
-        <div className="fixed top-30 left-2 z-50">
+        <div className="fixed top-20 left-2 z-50">
           <button
             onClick={toggleRelaxSoundsVisibility}
             className="relative border-2 border-lightblue hover:bg-lightblue text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4"
@@ -1749,7 +1749,7 @@ export default function Game({}: GameProps) {
 
 
         {/* Botão para mostrar/ocultar vídeos no youtube */}
-        <div className="fixed top-62 left-2 z-40">
+        <div className="fixed top-52 left-2 z-40">
           <button
             onClick={toggleVideosVisibility}
             className="relative border-2 border-lightblue hover:bg-lightblue text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4"
@@ -1904,7 +1904,7 @@ export default function Game({}: GameProps) {
 
 
         {/* Botão para mostrar/ocultar as conquistas e o replay */}
-        <div className="fixed top-46 left-2 z-40">
+        <div className="fixed top-36 left-2 z-40">
           <button
             onClick={toggleShowWins}
             className="relative border-2 border-lightblue hover:bg-lightblue text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4 animate-pulse-slow"

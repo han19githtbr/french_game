@@ -24,15 +24,15 @@ export default function AdminNoticeForm() {
     });
 
     if (res.ok) {
-        //alert('Aviso publicado com sucesso!');
-        toast.success('Aviso publicado com sucesso!', { position: "top-right", autoClose: 3000, hideProgressBar: false, closeOnClick: true, pauseOnHover: true, draggable: true, progress: undefined, theme: "light" });
+        alert('Aviso publicado com sucesso!');
+        //toast.success('Aviso publicado com sucesso!', { position: "top-right", autoClose: 3000, hideProgressBar: false, closeOnClick: true, pauseOnHover: true, draggable: true, progress: undefined, theme: "light" });
         setTitle('');
         setMessage('');
         setDuration(1);
     } else {
         const data = await res.json();
-        //alert('Erro ao publicar: ' + data.error);
-        toast.success('Erro ao publicar: ' + data.error, { position: "top-right", autoClose: 3000, hideProgressBar: false, closeOnClick: true, pauseOnHover: true, draggable: true, progress: undefined, theme: "light" });
+        alert('Erro ao publicar: ' + data.error);
+        //toast.success('Erro ao publicar: ' + data.error, { position: "top-right", autoClose: 3000, hideProgressBar: false, closeOnClick: true, pauseOnHover: true, draggable: true, progress: undefined, theme: "light" });
     }
   };
   
