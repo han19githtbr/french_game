@@ -137,7 +137,7 @@ export default function ChatManager({ currentUser }: { currentUser: any }) {
         )}
 
         {/* Lista de usuários online - canto superior direito */}
-        <div className="absolute top-[80px] right-2 bg-white shadow-lg rounded-lg p-2 w-64 z-40">
+        <div className="absolute top-[120px] right-2 bg-white border border-gray-300 shadow-lg rounded-lg p-2 w-64 z-40">
             <p className="font-semibold text-gray-200 text-sm mb-1">Usuários online:</p>
             <ul className="space-y-1">
             {onlineUsers.map(user => (

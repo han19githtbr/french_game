@@ -2591,7 +2591,7 @@ export default function Frase({}: GameProps) {
 
       
       {/* ChatManager fixado no canto inferior direito */}
-      {/*{session?.user?.name && session?.user?.email && (
+      {session?.user?.name && session?.user?.email && (
         <ChatManager
           currentUser={{
             name: session.user.name,
@@ -2599,7 +2599,7 @@ export default function Frase({}: GameProps) {
             image: session.user.image || '',
           }}
         />
-      )}*/}
+      )}
       
       {showPublishButton && (
         <motion.div
