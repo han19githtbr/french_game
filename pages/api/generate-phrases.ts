@@ -18,6 +18,8 @@ const allImages = {
     { url: '/frases/familia/praia.png', title: 'La famille se réjouit à la plage' },
     { url: '/frases/familia/teatro.png', title: 'Une famille à la salle de Théâtre' },
     { url: '/frases/familia/tv.png', title: 'La famille se réunit pour regarder la télévision' },
+    { url: '/frases/familia/familia_golfinho.png', title: 'Il y a un dauphin tout près de nous' },
+    { url: '/frases/familia/familia_praia.png', title: 'La famille marche sur le sable de la plage' },
   ],
   'natureza': [
     { url: '/frases/natureza/árvore.png', title: 'Il y a quelqu\'un sous l\'arbre' },
@@ -84,8 +86,8 @@ const allImages = {
     { url: '/frases/animais/gafanhoto.png', title: 'Le cri des sauterelles me tranquilise' },
     { url: '/frases/animais/baleia.png', title: 'les baleines sont de grande taille' },
     { url: '/frases/animais/cabrito.png', title: 'Ce cabrit est celui de mon voisin.' },
-    { url: '/frases/animais/golfinho.png', title: 'Les dauphins sont parfois dangereux' },
-    { url: '/frases/animais/porco.png', title: 'Ce porc est celui de mon oncle' },
+    { url: '/frases/animais/aguia.png', title: 'L\'aigle est un oiseau fantastique' },
+    { url: '/frases/animais/pintinho.png', title: 'Ce poussin, c\'est le mien' },
   ],
   'tecnologia': [
     { url: '/frases/tecnologia/satelite.png', title: 'Les satellites sont de grandes inventions' },
@@ -102,6 +104,8 @@ const allImages = {
     { url: '/frases/tecnologia/redes_sociais.png', title: 'L\'usage excessif des réseaux sociaux n\'est pas recommandé' },
     { url: '/frases/tecnologia/computador.png', title: 'C\'est l\'ordinateur de ma mère'},
     { url: '/frases/tecnologia/radio.png', title: 'J\'aime écouter la radio' },
+    { url: '/frases/tecnologia/laboratorio.png', title: 'Je suis au laboratoire maintenant'},
+    { url: '/frases/tecnologia/telescopio.png', title: 'Le soir, j\'aime observer le ciel avec mon télescope' },
   ],
   'gastronomia': [
     { url: '/frases/gastronomia/bolo.png', title: 'C\'est l\'heure de couper le gâteau!' },

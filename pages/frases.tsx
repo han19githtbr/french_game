@@ -59,6 +59,8 @@ const animalSounds: Record<string, string> = {
   'Les trois frères sont heureux': '/sounds/laughing.mp3',
   'Une famille à la salle de Théâtre': '/sounds/laughing.mp3',
   'La famille est réunie à la salle de cinéma': '/sounds/laughing.mp3',
+  'L\'aigle est un oiseau fantastique': '/sounds/eagle.mp3',
+  'Ce poussin, c\'est le mien': '/sounds/chick.mp3',
 }
 
 
@@ -2051,7 +2053,7 @@ export default function Frase({}: GameProps) {
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }} 
         transition={{ duration: 0.6 }}
-        className="text-3xl text-gray-300 font-bold mb-8 mt-104 text-center drop-shadow-md"
+        className="text-3xl text-gray-300 font-thin mb-8 mt-104 text-center drop-shadow-md"
       >
         Construa frases em Francês
       </motion.h1>

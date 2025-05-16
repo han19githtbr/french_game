@@ -55,6 +55,8 @@ const animalSounds: Record<string, string> = {
   'Un cabrit': '/sounds/goat.mp3',
   'Un dauphin': '/sounds/dolphin.mp3',
   'Un porc': '/sounds/pig.mp3',
+  'Un aigle': '/sounds/eagle.mp3',
+  'Un poussin': '/sounds/chick.mp3',
 }
 
 
@@ -2108,7 +2110,7 @@ export default function Game({}: GameProps) {
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }} 
         transition={{ duration: 0.6 }}
-        className="text-3xl text-gray-300 font-bold mb-8 mt-72 text-center drop-shadow-md"
+        className="text-3xl text-gray-300 font-thin mb-8 mt-72 text-center drop-shadow-md"
       >
         Jogo para treinar o Francês
       </motion.h1>

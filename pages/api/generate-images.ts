@@ -18,6 +18,8 @@ const allImages = {
     { url: '/ghibli/familia/praia.png', title: 'Une famille heureuse' },
     { url: '/ghibli/familia/teatro.png', title: 'À la salle de Théâtre' },
     { url: '/ghibli/familia/tv.png', title: 'Regarder la télévision' },
+    { url: '/ghibli/familia/familia_golfinho.png', title: 'Un dauphin' },
+    { url: '/ghibli/familia/familia_praia.png', title: 'Une plage' },
   ],
   'natureza': [
     { url: '/ghibli/natureza/árvore.png', title: 'Un Arbre' },
@@ -83,6 +85,8 @@ const allImages = {
     { url: '/ghibli/animais/cabrito.png', title: 'Un cabrit' },
     { url: '/ghibli/animais/golfinho.png', title: 'Un dauphin' },
     { url: '/ghibli/animais/porco.png', title: 'Un porc' },
+    { url: '/ghibli/animais/aguia.png', title: 'Un aigle' },
+    { url: '/ghibli/animais/pintinho.png', title: 'Un poussin' },
   ],
   'tecnologia': [
     { url: '/ghibli/tecnologia/satelite.png', title: 'Une Satellite' },
@@ -99,6 +103,8 @@ const allImages = {
     { url: '/ghibli/tecnologia/trem.png', title: 'Le train' },
     { url: '/ghibli/tecnologia/computador.png', title: 'Un ordinateur' },
     { url: '/ghibli/tecnologia/radio.png', title: 'La radio' },
+    { url: '/ghibli/tecnologia/laboratorio.png', title: 'Le laboratoire' },
+    { url: '/ghibli/tecnologia/telescopio.png', title: 'Le télescope' },
   ],
   'gastronomia': [
     { url: '/ghibli/gastronomia/bolo.png', title: 'Un Gâteau' },
