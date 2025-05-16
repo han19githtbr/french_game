@@ -212,19 +212,19 @@ export default function Home() {
               
       </div>
             
-      <div className="absolute top-60 left-1/2 transform -translate-x-1/2 bg-white bg-opacity-10 rounded-md shadow-md p-6 flex flex-col items-center justify-center">
+      <div className="absolute top-60 left-1/2 transform -translate-x-1/2 bg-white bg-opacity-10 rounded-md shadow-md p-4 sm:p-6 flex flex-col items-center justify-center w-auto sm:w-auto"> {/* Ajustes de padding e largura */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="text-white font-semibold italic mb-2"
+          className="text-white font-semibold italic mb-2 whitespace-nowrap" // Adicionando whitespace-nowrap
         >
           Frequência de Login
         </motion.div>
         <div className="flex items-center">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-8 w-8 text-green mr-2 animate-pulse" // Adicionando animação pulse
+            className="h-8 w-8 text-green mr-2 animate-pulse"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -249,7 +249,7 @@ export default function Home() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.4 }}
-          className="text-sm mt-1 text-gray-300"
+          className="text-sm mt-1 text-gray-300 whitespace-nowrap" // Adicionando whitespace-nowrap
         >
           Acessos de: <span className="font-medium text-green">{dayName}</span>
         </motion.span>
