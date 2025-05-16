@@ -45,6 +45,15 @@ export default function Home() {
   const [providers, setProviders] = useState<Record<string, any> | null>(null);
 
 
+  const trackLogin = async (userId: string, email: string) => {
+    await fetch('/api/track-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, email, loginTime: new Date().toISOString() }),
+    });
+  };
+
+
   useEffect(() => {
     const fetchProviders = async () => {
       const fetchedProviders = await getProviders();
@@ -126,6 +135,7 @@ export default function Home() {
     const data = await res.json();
 
     if (data.success) {
+      await trackLogin('admin', ADMIN_EMAIL); // Track admin login
       // Se a API retornar sucesso, chame signIn no frontend com o provider 'credentials'
       signIn('credentials', { email: ADMIN_EMAIL, redirect: true, callbackUrl: '/home' });
     } else {
