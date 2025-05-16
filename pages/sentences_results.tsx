@@ -265,17 +265,19 @@ export default function ResultsPage() {
       {superPlayerRecords.length > 0 && (
         <div className="mt-12">
           <h2 className="text-2xl font-bold text-center text-gray-300 mb-4">Super Jogadores Recentes</h2>
-          <ul className="max-w-md mx-auto space-y-2">
-            {superPlayerRecords.map((record, index) => (
-              <li
-                key={index}
-                className="bg-zinc-800 rounded-md p-3 flex items-center justify-between shadow-md"
-              >
-                <span className="font-semibold text-yellow">{record.username}</span>
-                <span className="text-sm text-gray-400">{record.totalPlays} jogadas</span>
-              </li>
-            ))}
-          </ul>
+          <div className="max-h-32 overflow-y-auto"> {/* Adicionamos esta div com altura máxima e overflow */}
+            <ul className="max-w-md mx-auto space-y-2">
+              {superPlayerRecords.map((record, index) => (
+                <li
+                  key={index}
+                  className="bg-zinc-800 rounded-md p-3 flex items-center justify-between shadow-md"
+                >
+                  <span className="font-semibold text-yellow">{record.username}</span>
+                  <span className="text-sm text-gray-400">{record.totalPlays} jogadas</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       )}
     
