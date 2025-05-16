@@ -121,8 +121,8 @@ export default function Home() {
     
       for (let i = 0; i < titleGoogle.length; i++) {
         animatedTitleGoogle += (i === currentIndex) ?
-          `<span style="color: lightblue; text-shadow: 0 0 14px lightblue;">${titleGoogle[i]}</span>` :
-          `<span style="color: gray;">${titleGoogle[i]}</span>`;
+          `<span style="color: blue; text-shadow: 0 0 14px blue;">${titleGoogle[i]}</span>` :
+          `<span style="color: lightblue;">${titleGoogle[i]}</span>`;
       }
       setAnimatedTitleGoogle(animatedTitleGoogle);
     
@@ -240,7 +240,7 @@ export default function Home() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.2 }}
-            className="font-semibold text-2xl text-green"
+            className="font-semibold text-2xl text-green animate-pulse"
           >
             {dailyAccessCount}
           </motion.span>
@@ -262,7 +262,7 @@ export default function Home() {
             
       <button
         onClick={handleSignInClick}
-        className="flex sm:mb-20 items-center gap-3 bg-transparent hover:border-blue border border-green text-gray-100 font-semibold px-6 py-3 rounded-lg shadow-md hover:shadow-xl transition duration-300 cursor-pointer"
+        className="flex sm:mb-20 items-center gap-3 bg-transparent hover:border-blue border border-blue text-gray-100 font-semibold px-6 py-3 rounded-lg shadow-md hover:shadow-xl transition duration-300 cursor-pointer"
       >
         <svg className="w-12 h-6" viewBox="0 0 533.5 544.3">
           <path
