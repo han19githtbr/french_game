@@ -414,11 +414,7 @@ export default function Game({}: GameProps) {
   }, [hasClickedNotification]);
   
 
-  const handleOpenGiftModal = () => {
-    setShowGiftModal(true);
-  };
-
-
+  
   const [showNotification, setShowNotification] = useState<{
     name: string;
     type: "join" | "leave";
@@ -1034,7 +1030,7 @@ export default function Game({}: GameProps) {
   
     
   useEffect(() => {
-    if (correctAnswersCount == 4) {
+    if (correctAnswersCount >= 4) {
       if (!isFrasesUnlocked) {
         setIsFrasesUnlocking(true);
         playUnlockSound();

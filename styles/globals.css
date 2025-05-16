@@ -146,9 +146,25 @@ select option:hover {
 }
 
 
+.animate-pulse-slow-custom {
+  animation: pulse-slow-customize 2s ease-in-out infinite;
+  background-color: none;
+}
+
 .animate-pulse-slow {
   animation: pulse-slow 2s ease-in-out infinite;
 }
+
+
+@keyframes pulse-slow-customize {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(0, 255, 255, 0.8);
+  }
+}
+
 
 @keyframes pulse-slow {
   0%, 100% {
@@ -194,5 +210,23 @@ select option:checked {
   select option:hover,
   select option:checked {
     background-color: var(--neon-blue) !important;
+  }
+}
+
+
+@layer utilities {
+  .animate-progress-flash {
+    @keyframes progress-flash {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    animation: progress-flash 1.5s ease-in-out infinite;
+  }
+  .animate-fade-in {
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    animation: fade-in 0.5s ease-out forwards;
   }
 }
