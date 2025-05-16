@@ -7,9 +7,6 @@ import { useSession, signOut } from 'next-auth/react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 //import { signOut, useSession } from 'next-auth/react'
 import { FaMedal, FaCrown } from 'react-icons/fa';
-import { FaChartBar } from 'react-icons/fa';
-import connectDB from '../lib/mongodb'
-import { timeStamp } from 'console'
 
 
 interface Progress {

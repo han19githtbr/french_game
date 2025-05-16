@@ -9,14 +9,19 @@ import { motion , AnimatePresence} from 'framer-motion'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { Check, X } from 'lucide-react'
 //import { signOut, useSession } from 'next-auth/react'
-import { FaChartBar, FaMedal } from 'react-icons/fa';
-import { DotLoader } from 'react-spinners';
-import { Realtime, Message } from 'ably'
+import { FaChartBar, FaMedal, FaCrown } from 'react-icons/fa';
 
 
 interface Progress {
   round: number;
   correct_answer: number;
+}
+
+
+interface SuperPlayerRecord {
+  username: string;
+  totalPlays: number;
+  timestamp: Date;
 }
 
 
@@ -31,10 +36,13 @@ export default function ResultsPage() {
 
   const [isLogoutVisible, setIsLogoutVisible] = useState(false);
   const [logoutTimeoutId, setLogoutTimeoutId] = useState<NodeJS.Timeout | null>(null);
-
   
-  const [notification, setNotification] = useState<{ message: string; type: 'info' | 'success' | 'error' } | null>(null);
+  const [isSuperPlayer, setIsSuperPlayer] = useState<boolean>(false);
+  const [totalPlays, setTotalPlays] = useState<number>(0);
+  
+  const [superPlayerRecords, setSuperPlayerRecords] = useState<SuperPlayerRecord[]>([]); 
 
+  const [notification, setNotification] = useState<{ message: string; type: 'info' | 'success' | 'error' } | null>(null);
   
   const showToast = (message: string, type: 'info' | 'success' | 'error') => {
     setNotification({ message, type });
@@ -57,23 +65,35 @@ export default function ResultsPage() {
       if (parsed.length > 0) {
         setCurrentProgress(parsed[parsed.length - 1].correct_answer);
         setIsFlashing(parsed[parsed.length - 1].correct_answer === 4);
+        setIsSuperPlayer(parsed.length * 4 >= 12);
       } else {
         setCurrentProgress(0);
         setIsFlashing(false);
+        setIsSuperPlayer(false);
+        setTotalPlays(0);
       }
     }
   }, []);
 
+  
   useEffect(() => {
     if (progress_answers.length > 0) {
       const lastProgress = progress_answers[progress_answers.length - 1].correct_answer;
       setCurrentProgress(lastProgress);
       setIsFlashing(lastProgress === 4);
+      setTotalPlays(progress_answers.length * 4); // Atualiza o total de jogadas
+      setIsSuperPlayer(progress_answers.length * 4 >= 12); // Verifica a cada atualização
+      if (progress_answers.length * 4 >= 12 && session?.user?.name) {
+        saveSuperPlayerRecord(session.user.name, progress_answers.length * 4);
+      }
     } else {
       setCurrentProgress(0);
       setIsFlashing(false);
+      setIsSuperPlayer(false);
+      setTotalPlays(0);
     }
-  }, [progress_answers]);
+    fetchSuperPlayerRecords(); 
+  }, [progress_answers, session?.user?.name]);
 
   
   const clearProgress = () => {
@@ -81,11 +101,47 @@ export default function ResultsPage() {
     setProgressAnswers([]);
     setCurrentProgress(0);
     setIsFlashing(false);
+    setIsSuperPlayer(false);
+    setTotalPlays(0);
   };
 
   const bestRound = progress_answers.reduce((prev, curr) => (curr.correct_answer > prev.correct_answer ? curr : prev), { round: 0, correct_answer: 0 })
 
   const progressPercentage = (currentProgress / 4) * 100;
+
+
+  // Função para salvar a conquista no MongoDB
+  const saveSuperPlayerRecord = async (username: string, totalPlays: number) => {
+    try {
+      await fetch('/api/super-players', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, totalPlays }),
+      });
+      fetchSuperPlayerRecords(); // Recarrega os registros
+    } catch (error) {
+      console.error("Erro ao salvar a conquista:", error);
+    }
+  };
+
+
+  // Função para buscar as conquistas do MongoDB
+  const fetchSuperPlayerRecords = async () => {
+    try {
+      const response = await fetch('/api/super-players');
+      const data = await response.json();
+      if (data.success) {
+        setSuperPlayerRecords(data.data as SuperPlayerRecord[]);
+      } else {
+        console.error("Erro ao buscar as conquistas:", data.error);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar as conquistas:", error);
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-slate-900 text-white p-6">
@@ -102,6 +158,17 @@ export default function ResultsPage() {
 
       <h1 className="text-3xl font-bold text-gray-300 mt-40 mb-4 text-center">Seu Progresso</h1>
       
+
+      {isSuperPlayer && session?.user?.name && (
+        <div className="relative flex justify-center items-center mb-16 mt-8">
+          <FaCrown className="text-yellow text-4xl animate-pulse" />
+          <span className="absolute top-full mt-1 text-sm text-yellow-400 font-semibold animate-fade-in">
+            <span className='text-green'>{session.user.name}:</span> Super Jogador com <span className='text-green'>{totalPlays}</span> jogadas!
+          </span>
+        </div>
+      )}
+
+
       {/* Barra de Progresso */}
       <div className="mb-6 max-w-md mx-auto">
         <div className="bg-gray-800 rounded-full h-4 relative overflow-hidden animate-pulse-slow">
@@ -191,8 +258,27 @@ export default function ResultsPage() {
             🏆 Melhor desempenho: <strong className="text-green dark:text-blue">{bestRound.correct_answer}</strong> acertos na jogada <strong className='text-green'>{bestRound.round}</strong>
           </div>
         </>
-
       )}
+    
+    
+      {/* Exibição das Conquistas de Super Jogador */}
+      {superPlayerRecords.length > 0 && (
+        <div className="mt-12">
+          <h2 className="text-2xl font-bold text-center text-gray-300 mb-4">Super Jogadores Recentes</h2>
+          <ul className="max-w-md mx-auto space-y-2">
+            {superPlayerRecords.map((record, index) => (
+              <li
+                key={index}
+                className="bg-zinc-800 rounded-md p-3 flex items-center justify-between shadow-md"
+              >
+                <span className="font-semibold text-yellow">{record.username}</span>
+                <span className="text-sm text-gray-400">{record.totalPlays} jogadas</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    
     </div>
   )
 }
