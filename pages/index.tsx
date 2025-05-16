@@ -6,6 +6,9 @@ import { cn } from '../lib/utils';
 
 
 const ADMIN_EMAIL = 'milliance23@gmail.com';
+const DAILY_ACCESS_KEY = 'frenchLearningDailyAccess';
+const LAST_RESET_KEY = 'frenchLearningLastReset';
+
 
 interface Proverb {
   french: string;
@@ -31,6 +34,12 @@ const frenchProverbs: Proverb[] = [
 ];
 
 
+const getDayName = (date: Date) => {
+  const days = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+  return days[date.getDay()];
+};
+
+
 export default function Home() {
   const { data: session } = useSession()
   const router = useRouter()
@@ -41,29 +50,39 @@ export default function Home() {
   const [animatedTitleGoogle, setAnimatedTitleGoogle] = useState("");
   const [animatedTitleAdmin, setAnimatedTitleAdmin] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [dailyAccessCount, setDailyAccessCount] = useState(0);
+  const [dayName, setDayName] = useState('');
   const [proverb, setProverb] = useState<Proverb | null>(null);
-  const [providers, setProviders] = useState<Record<string, any> | null>(null);
-
-
-  const trackLogin = async (userId: string, email: string) => {
-    await fetch('/api/track-login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, email, loginTime: new Date().toISOString() }),
-    });
-  };
+  //const [providers, setProviders] = useState<Record<string, any> | null>(null);
 
 
   useEffect(() => {
-    const fetchProviders = async () => {
-      const fetchedProviders = await getProviders();
-      setProviders(fetchedProviders);
+    const fetchDailyAccessCount = async () => {
+      try {
+        const response = await fetch('/api/getAccessCount'); // Crie esta rota no próximo passo
+        if (response.ok) {
+          const data = await response.json();
+          setDailyAccessCount(data.count || 0);
+        } else {
+          console.error('Erro ao buscar a contagem de acessos');
+        }
+      } catch (error) {
+        console.error('Erro ao buscar a contagem de acessos:', error);
+      }
     };
 
-    fetchProviders();
+    const updateDayName = () => {
+      setDayName(getDayName(new Date()));
+    };
+
+    fetchDailyAccessCount();
+    updateDayName();
+    const intervalId = setInterval(updateDayName, 60 * 60 * 1000); // Atualiza o nome do dia a cada hora
+
+    return () => clearInterval(intervalId);
   }, []);
 
-
+  
   useEffect(() => {
     if (!session) {
       const intervalId = setInterval(() => {
@@ -123,34 +142,32 @@ export default function Home() {
   }, [currentIndex, session, title, titleGoogle]);
     
 
-  const handleAdminSignInClick = async () => {
-    const res = await fetch('/api/admin/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email: ADMIN_EMAIL }),
-    });
+  /*const handleSignInClick = () => {
+    const newCount = dailyAccessCount + 1;
+    setDailyAccessCount(newCount);
+    localStorage.setItem(DAILY_ACCESS_KEY, newCount.toString());
+    signIn('google');
+  };*/
 
-    const data = await res.json();
 
-    if (data.success) {
-      await trackLogin('admin', ADMIN_EMAIL); // Track admin login
-      // Se a API retornar sucesso, chame signIn no frontend com o provider 'credentials'
-      signIn('credentials', { email: ADMIN_EMAIL, redirect: true, callbackUrl: '/home' });
-    } else {
-      alert(data.message || 'Falha ao verificar administrador.');
+  const handleSignInClick = async () => {
+    // Envia uma requisição POST para a API para incrementar a contagem
+    try {
+      await fetch('/api/incrementAccess', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      signIn('google');
+    } catch (error) {
+      console.error('Erro ao incrementar o acesso:', error);
+      // Lide com o erro conforme necessário
+      signIn('google'); // Ainda tenta o login mesmo se falhar o incremento
     }
   };
 
-
-  const buttonStyle =
-    'flex items-center gap-3 bg-transparent hover:bg-gray-900 font-semibold px-8 py-3 rounded-lg shadow-md hover:shadow-xl transition duration-300 cursor-pointer w-full sm:w-auto'; // Adicionamos w-full e sm:w-auto
-
-  const googleButtonStyle = `border border-blue text-blue hover:text-white ${buttonStyle}`;
-  const adminButtonStyle = `border border-green text-green hover:text-white ${buttonStyle}`;
-
-
+    
   if (session) {
     router.push('/game')
     return null
@@ -195,44 +212,19 @@ export default function Home() {
               
       </div>
             
-      <h1
-        className="text-2xl font-bold mt-94 mb-8 text-center"
-        dangerouslySetInnerHTML={{ __html: animatedTitle }}
-      />
-            
-      <div className="mt-6 mb-16 flex flex-col items-center space-y-4 sm:space-y-6">
-        
-        {providers?.google && (
-          <button
-            onClick={() => signIn('google')}
-            className={googleButtonStyle}
-          >
-            <svg
-              className="w-8 h-8 mr-2"
-              aria-hidden="true"
-              focusable="false"
-              data-prefix="fab"
-              data-icon="google"
-              role="img"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 488 512"
-            >
-              <path
-                fill="currentColor"
-                d="M488 148.3V98.7c0-27-22-48.3-48.8-48.3H48.8C21.8 49.7 0 71 0 98.8v414.4c0 27.8 21.8 49.7 48.8 49.7h390.4c26.8 0 48.8-22 48.8-49.7V170.3H246.4l-20.4 30.9h174v154.4h-72.4l-20.4 30.9H488zM121.6 313.1c0-13.8 11.2-25 25-25h180.8c13.8 0 25 11.2 25 25v64.3c0 13.8-11.2 25-25 25H146.6c-13.8 0-25-11.2-25-25V313.1zM244 248.9c-20.4 0-36.8-16.4-36.8-36.8s16.4-36.8 36.8-36.8c20.4 0 36.8 16.4 36.8 36.8s-16.4 36.8-36.8 36.8z"
-              />
-            </svg>
-            <span dangerouslySetInnerHTML={{ __html: animatedTitleGoogle }} />
-            
-          </button>
-        )}
-
-        <button
-          onClick={handleAdminSignInClick} 
-          className={adminButtonStyle}>
+      <div className="absolute top-60 left-1/2 transform -translate-x-1/2 bg-white bg-opacity-10 rounded-md shadow-md p-6 flex flex-col items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="text-white font-semibold italic mb-2"
+        >
+          Frequência de Login
+        </motion.div>
+        <div className="flex items-center">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
+            className="h-8 w-8 text-green mr-2 animate-pulse" // Adicionando animação pulse
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -241,13 +233,60 @@ export default function Home() {
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={2}
-              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+              d="M12 4.354l-2 2m0 0l-2-2m2 2v14.7m-2-2l-2-2m2 2l2 2m7-2l-2-2m0 0l-2 2m2-2v14.7m-2-2l-2-2m2 2l2 2"
             />
           </svg>
-          <span dangerouslySetInnerHTML={{ __html: animatedTitleAdmin }} />
-          
-        </button>
+          <motion.span
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+            className="font-semibold text-2xl text-green"
+          >
+            {dailyAccessCount}
+          </motion.span>
+        </div>
+        <motion.span
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.4 }}
+          className="text-sm mt-1 text-gray-300"
+        >
+          Acessos de: <span className="font-medium text-green">{dayName}</span>
+        </motion.span>
       </div>
+      
+      <h1
+        className="text-2xl font-semibold mt-94 mb-8 text-center"
+        dangerouslySetInnerHTML={{ __html: animatedTitle }}
+      />
+            
+      <button
+        onClick={handleSignInClick}
+        className="flex sm:mb-20 items-center gap-3 bg-transparent hover:border-blue border border-green text-gray-100 font-semibold px-6 py-3 rounded-lg shadow-md hover:shadow-xl transition duration-300 cursor-pointer"
+      >
+        <svg className="w-12 h-6" viewBox="0 0 533.5 544.3">
+          <path
+            d="M533.5 278.4c0-17.4-1.5-34.1-4.4-50.4H272v95.3h147.1c-6.4 34.7-25.4 64-54 83.6v69h87.2c51-47 81.2-116.2 81.2-197.5z"
+            fill="#4285f4"
+          />
+          <path
+            d="M272 544.3c73.4 0 135-24.3 180-66.2l-87.2-69c-24.2 16.3-55.3 26-92.8 26-71 0-131.2-47.9-152.8-112.4H31.6v70.7C75.6 482.6 167.4 544.3 272 544.3z"
+            fill="#34a853"
+          />
+          <path
+            d="M119.2 322.7c-10.4-30.7-10.4-63.7 0-94.4v-70.7H31.6c-35.5 70.8-35.5 154.7 0 225.5l87.6-70.4z"
+            fill="#fbbc04"
+          />
+          <path
+            d="M272 107.7c39.9-.6 78 13.8 107.5 39.4l80.3-80.3C407.2 24.3 345.6 0 272 0 167.4 0 75.6 61.7 31.6 162.3l87.6 70.7C140.8 155.6 201 107.7 272 107.7z"
+            fill="#ea4335"
+          />
+        </svg>
+        <span
+          dangerouslySetInnerHTML={{ __html: animatedTitleGoogle }}
+        />
+        
+      </button>
                   
     </div>
   )
