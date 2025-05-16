@@ -65,7 +65,7 @@ export default function ResultsPage() {
       if (parsed.length > 0) {
         setCurrentProgress(parsed[parsed.length - 1].correct_answer);
         setIsFlashing(parsed[parsed.length - 1].correct_answer === 4);
-        setIsSuperPlayer(parsed.length * 4 >= 12);
+        setIsSuperPlayer(parsed.length >= 12);
       } else {
         setCurrentProgress(0);
         setIsFlashing(false);
@@ -81,10 +81,10 @@ export default function ResultsPage() {
       const lastProgress = progress_answers[progress_answers.length - 1].correct_answer;
       setCurrentProgress(lastProgress);
       setIsFlashing(lastProgress === 4);
-      setTotalPlays(progress_answers.length * 4); // Atualiza o total de jogadas
-      setIsSuperPlayer(progress_answers.length * 4 >= 12); // Verifica a cada atualização
-      if (progress_answers.length * 4 >= 12 && session?.user?.name) {
-        saveSuperPlayerRecord(session.user.name, progress_answers.length * 4);
+      setTotalPlays(progress_answers.length); // Atualiza o total de jogadas
+      setIsSuperPlayer(progress_answers.length >= 12); // Verifica a cada atualização
+      if (progress_answers.length >= 12 && session?.user?.name) {
+        saveSuperPlayerRecord(session.user.name, progress_answers.length);
       }
     } else {
       setCurrentProgress(0);
@@ -163,7 +163,7 @@ export default function ResultsPage() {
         <div className="relative flex justify-center items-center mb-16 mt-8">
           <FaCrown className="text-yellow text-4xl animate-pulse" />
           <span className="absolute top-full mt-1 text-sm text-yellow-400 font-semibold animate-fade-in">
-            <span className='text-green'>{session.user.name}:</span> Super Jogador com <span className='text-green'>{totalPlays}</span> jogadas!
+            <span className='text-green'>{session.user.name}:</span> Super Jogador com <span className='text-green'>{totalPlays}</span> acertos!
           </span>
         </div>
       )}
@@ -273,7 +273,7 @@ export default function ResultsPage() {
                   className="bg-zinc-800 rounded-md p-3 flex items-center justify-between shadow-md"
                 >
                   <span className="font-semibold text-yellow">{record.username}</span>
-                  <span className="text-sm text-gray-400">{record.totalPlays} jogadas</span>
+                  <span className="text-sm text-gray-400">{record.totalPlays} acertos</span>
                 </li>
               ))}
             </ul>
