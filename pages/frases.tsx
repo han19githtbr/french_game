@@ -2611,7 +2611,7 @@ export default function Frase({}: GameProps) {
         >
           <motion.button
             onClick={handlePublishConquest}
-            className="bg-gradient-to-r from-lighblue to-blue hover:from-pink hover:to-yellow text-white font-bold py-3 px-6 rounded-xl shadow-lg animate-pulse focus:outline-none focus:ring-2 focus:ring-purple cursor-pointer"
+            className="bg-gradient-to-r from-lightblue to-blue hover:from-pink hover:to-yellow text-white font-bold py-3 px-6 rounded-xl shadow-lg animate-pulse focus:outline-none focus:ring-2 focus:ring-purple cursor-pointer"
           >
             Compartilhar conquista
           </motion.button>
