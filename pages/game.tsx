@@ -2015,14 +2015,16 @@ export default function Game({}: GameProps) {
                       <div className="flex justify-center gap-3 mt-4 mb-6">
                         <button
                           onClick={closeConquestCarousel}
-                          className="bg-red hover:bg-gray-700 text-white font-bold py-1 px-3 rounded focus:outline-none focus:shadow-outline cursor-pointer text-sm"
+                          className="flex items-center bg-transparent border-2 border-e-red hover:bg-gray-500 text-white font-bold py-1 px-3 rounded focus:outline-none focus:shadow-outline cursor-pointer text-sm"
                         >
+                          <X className='text-red mr-2' size={20} />
                           Fechar
                         </button>
                         <button
                           onClick={() => startAutomaticReplay(currentConquest.plays)}
-                          className="bg-lightblue hover:bg-blue text-white font-bold py-1 px-3 rounded focus:outline-none focus:shadow-outline cursor-pointer text-sm"
+                          className="flex items-center bg-transparent border-2 border-e-lightblue hover:bg-gray-500 text-white font-bold py-1 px-3 rounded focus:outline-none focus:shadow-outline cursor-pointer text-sm"
                         >
+                          <Play className='text-blue mr-2' size={20} />
                           Assistir Novamente
                         </button>
                       </div>
