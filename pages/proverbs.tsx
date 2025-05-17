@@ -2140,7 +2140,7 @@ export default function Game({}: GameProps) {
           <div className="text-center text-lg text-gray-300 animate-pulse">🔍 Procurando imagens...</div>
         ) : (
           <>
-            <div className="flex flex-wrap justify-center gap-6 w-full max-w-6xl mt-6 cursor-pointer">
+            <div className="flex flex-wrap justify-center gap-6 flex-grow max-w-2xl mt-6 cursor-pointer">
               {images.map((img, index) => (
                 <motion.div
                   key={index}
@@ -2150,7 +2150,7 @@ export default function Game({}: GameProps) {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3, delay: index * 0.1 }}
-                  className="bg-transparent text-black p-4 rounded-2xl flex-grow shadow-2xl max-w-[250px] transition transform hover:scale-105 flex flex-col items-center "
+                  className="bg-transparent text-black p-4 rounded-2xl flex-grow shadow-2xl max-w-[1050px] transition transform hover:scale-105 flex flex-col items-center "
                 >
                   <img
                     src={img.url}
