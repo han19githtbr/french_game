@@ -268,10 +268,11 @@ export default function ResultsPage() {
                   key={index}
                   className="bg-zinc-800 rounded-md p-3 flex items-center justify-between shadow-md"
                 >
-                  <span className="font-semibold text-yellow">{record.username}</span>
+                  <span className="font-semibold text-yellow">{record.username.length > 20 ? record.username.substring(0, 17) + '...': record.username}</span>
                   <span className="text-sm text-gray-400">{record.totalPlays} acertos</span>
                 </li>
               ))}
+                                      
             </ul>
           </div>
         </div>
