@@ -156,14 +156,14 @@ export default function ResultsPage() {
       </div>      
       
 
-      <h1 className="text-3xl font-bold text-gray-300 mt-40 mb-4 text-center">Seu Progresso</h1>
+      <h1 className="text-3xl font-semibold text-gray-300 mt-40 mb-4 text-center">Seu Progresso</h1>
       
 
       {isSuperPlayer && session?.user?.name && (
         <div className="relative flex justify-center items-center mb-16 mt-8">
           <FaCrown className="text-yellow text-4xl animate-pulse" />
           <span className="absolute top-full mt-1 text-sm text-yellow-400 font-semibold animate-fade-in">
-            <span className='text-green'>{session.user.name}:</span> Super Jogador com <span className='text-green'>{totalPlays}</span> acertos!
+            <span className='text-green'>{session.user.name}:</span> Maior pontuação com <span className='text-green'>{totalPlays}</span> acertos!
           </span>
         </div>
       )}
@@ -214,7 +214,7 @@ export default function ResultsPage() {
               </button>
           </div>
 
-          <h2 className="text-2xl font-bold text-center text-gray-300 flex items-center justify-center gap-2 mb-6">
+          <h2 className="text-2xl font-semibold text-center text-gray-300 flex items-center justify-center gap-2 mb-6">
             Estatísticas de Acertos
           </h2>
           
@@ -264,7 +264,7 @@ export default function ResultsPage() {
       {/* Exibição das Conquistas de Super Jogador */}
       {superPlayerRecords.length > 0 && (
         <div className="mt-12">
-          <h2 className="text-2xl font-bold text-center text-gray-300 mb-4">Super Jogadores Recentes</h2>
+          <h2 className="text-2xl font-semibold text-center text-gray-300 mb-4">Maiores pontuações acumuladas</h2>
           <div className="max-h-32 overflow-y-auto"> {/* Adicionamos esta div com altura máxima e overflow */}
             <ul className="max-w-md mx-auto space-y-2">
               {superPlayerRecords.map((record, index) => (
