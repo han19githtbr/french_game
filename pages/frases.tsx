@@ -2224,7 +2224,7 @@ export default function Frase({}: GameProps) {
           <div className="text-center text-lg text-gray-300 animate-pulse">🔍 Procurando imagens...</div>
         ) : (
           <>
-            <div className="flex flex-wrap justify-center gap-6 flex-grow max-w-2xl mt-6 cursor-pointer">
+            <div className="flex flex-wrap justify-center gap-6 w-full max-w-6xl mt-6 cursor-pointer">
               {images.map((img, index) => (
                 <motion.div
                   key={index}
@@ -2234,7 +2234,7 @@ export default function Frase({}: GameProps) {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3, delay: index * 0.1 }}
-                  className="bg-transparent text-black p-4 rounded-2xl flex-grow shadow-2xl max-w-[1050px] transition transform hover:scale-105 flex flex-col items-center "
+                  className="bg-transparent text-black p-4 rounded-2xl flex-grow shadow-2xl max-w-[250px] transition transform hover:scale-105 flex flex-col items-center "
                 >
                   <img
                     src={img.url}
@@ -2247,13 +2247,13 @@ export default function Frase({}: GameProps) {
                     <select
                       className={`
                         w-full p-4 rounded-xl border-2 border-neon-blue
-                        bg-gradient-to-br from-dark-purple to-neon-blue
+                        bg-gradient-to-br from-gray-900 to-neon-blue
                         text-white font-bold text-lg tracking-wide
                         appearance-none cursor-pointer
                         shadow-[0_0_15px_rgba(0,255,255,0.6)] hover:shadow-[0_0_25px_rgba(0,255,255,0.8)]
                         active:scale-95
                         transition-all duration-300 ease-in-out
-                        focus:outline-none focus:ring-2 focus:ring-neon-pink focus:ring-offset-2 focus:ring-offset-dark-purple
+                        focus:outline-none focus:ring-2 focus:ring-neon-pink focus:ring-offset-2 focus:ring-offset-gray-900
                         animate-pulse-slow
                         sm:p-3 sm:text-base
                         touch-manipulation
@@ -2261,10 +2261,10 @@ export default function Frase({}: GameProps) {
                       onChange={e => checkAnswer(index, e.target.value)}
                       disabled={!!results[index]}
                     >
-                      <option value="" className="bg-gray-900 text-white font-semibold">✅ Selecione</option>
+                      <option value="" className="bg-gray-900 text-white font-semibold cursor-pointer">✅ Selecione</option>
                       {img.options.map((opt: string, i: number) => (
                         <option
-                          className="bg-gray-900 text-white font-semibold hover:bg-neon-blue active:bg-neon-pink transition-colors duration-200"
+                          className="bg-gray-900 text-white font-semibold hover:bg-neon-blue active:bg-neon-pink transition-colors duration-200 "
                           key={i}
                           value={opt}
                         >
@@ -2284,11 +2284,16 @@ export default function Frase({}: GameProps) {
                           repeat: Infinity,
                           ease: "easeInOut",
                         }}
-                        className="text-white flex justify-center items-center"
+                        className={`text-white flex justify-center items-center ${results[index] ? 'hidden' : ''}`} // Adiciona 'hidden' se a resposta já foi selecionada
                       >
                         <ChevronDown size={28} strokeWidth={2.5} />
                       </motion.div>
                     </div>
+                    {results[index] && (
+                      <div className="w-full text-center font-bold text-lg tracking-wide text-white p-4">
+                        {Object.values(results[index])[0]} {/* Exibe o valor da opção selecionada */}
+                      </div>
+                    )}
                   </div>
 
                   <button
@@ -2611,7 +2616,7 @@ export default function Frase({}: GameProps) {
         >
           <motion.button
             onClick={handlePublishConquest}
-            className="bg-gradient-to-r from-lightblue to-blue hover:from-pink hover:to-yellow text-white font-bold py-3 px-6 rounded-xl shadow-lg animate-pulse focus:outline-none focus:ring-2 focus:ring-purple cursor-pointer"
+            className="bg-transparent border-2 border-green from-lightblue to-blue hover:from-pink hover:to-yellow text-white font-bold py-3 px-6 rounded-xl shadow-lg animate-pulse focus:outline-none focus:ring-2 focus:ring-purple cursor-pointer"
           >
             Compartilhar conquista
           </motion.button>

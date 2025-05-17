@@ -292,7 +292,6 @@ export default function Game({}: GameProps) {
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const [currentVideoInfo, setCurrentVideoInfo] = useState<Video | null>(null);
   const videoRef = useRef<HTMLIFrameElement>(null);
-  
 
 
   const parseDuration = (duration: string): number => {
@@ -2389,7 +2388,7 @@ export default function Game({}: GameProps) {
           <div className="text-center text-lg text-gray-300 animate-pulse">🔍 Procurando imagens...</div>
         ) : (
           <>
-            <div className="flex flex-wrap justify-center gap-6 flex-grow max-w-2xl mt-6 cursor-pointer">
+            <div className="flex flex-wrap justify-center gap-6 w-full max-w-6xl mt-6 cursor-pointer">
               {images.map((img, index) => (
                 <motion.div
                   key={index}
@@ -2399,7 +2398,7 @@ export default function Game({}: GameProps) {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3, delay: index * 0.1 }}
-                  className="bg-transparent text-black p-4 rounded-2xl flex-grow shadow-2xl max-w-[1050px] transition transform hover:scale-105 flex flex-col items-center"
+                  className="bg-transparent text-black p-4 rounded-2xl flex-grow shadow-2xl max-w-[250px] transition transform hover:scale-105 flex flex-col items-center"
                 >
                   <img
                     src={img.url}
@@ -2449,11 +2448,16 @@ export default function Game({}: GameProps) {
                           repeat: Infinity,
                           ease: "easeInOut",
                         }}
-                        className="text-white flex justify-center items-center"
+                        className={`text-white flex justify-center items-center ${results[index] ? 'hidden' : ''}`} // Adiciona 'hidden' se a resposta já foi selecionada
                       >
                         <ChevronDown size={28} strokeWidth={2.5} />
                       </motion.div>
                     </div>
+                    {results[index] && (
+                      <div className="w-full text-center font-bold text-lg tracking-wide text-white p-4">
+                        {Object.values(results[index])[0]} {/* Exibe o valor da opção selecionada */}
+                      </div>
+                    )}
                   </div>
 
                   
@@ -2775,7 +2779,7 @@ export default function Game({}: GameProps) {
         >
           <motion.button
             onClick={handlePublishConquest}
-            className="bg-gradient-to-r from-lightblue to-blue hover:from-pink hover:to-yellow text-white font-bold py-3 px-6 rounded-xl shadow-lg animate-pulse focus:outline-none focus:ring-2 focus:ring-purple cursor-pointer"
+            className="bg-transparent border-2 border-green from-lightblue to-blue hover:from-pink hover:to-yellow text-white font-bold py-3 px-6 rounded-xl shadow-lg animate-pulse focus:outline-none focus:ring-2 focus:ring-purple cursor-pointer"
           >
             Compartilhar conquista
           </motion.button>
