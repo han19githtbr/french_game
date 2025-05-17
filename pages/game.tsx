@@ -3,7 +3,7 @@ import { createAblyClient } from '../lib/ably'
 import type * as Ably from 'ably'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/router'
-import { Check, X, Minus, Lock, ChevronDown, ChevronRight } from 'lucide-react'
+import { Check, X, Minus, Lock, ChevronDown, ChevronRight, Pause, Play } from 'lucide-react'
 import { motion , AnimatePresence, useMotionValue, useTransform, animate, MotionValue} from 'framer-motion'
 import { saveProgress } from './results'
 import { LockClosedIcon, LockOpenIcon, MusicalNoteIcon, GlobeAmericasIcon, CloudIcon, BeakerIcon, VideoCameraIcon, FilmIcon, LanguageIcon, DeviceTabletIcon } from '@heroicons/react/24/solid';
@@ -2711,14 +2711,20 @@ export default function Game({}: GameProps) {
                         <p className="text-2xl font-semibold text-lightblue text-shadow-glow">{reviewHistory[currentReviewIndex]?.title}</p>
                       </div>
                     </div>
-                    <div className="mt-4 flex justify-between items-center">
-                      <button 
-                        onClick={handlePauseResumeReview} 
-                        className="bg-lightblue border border-gray-100 text-white rounded-full p-2 hover:bg-transparent transition cursor-pointer"
+                    <div className="flex justify-between items-center w-full mt-2 px-2">
+                      <button
+                        onClick={handlePauseResumeReview}
+                        className="flex items-center gap-2 bg-transparent border-2 border-e-lightblue hover:bg-lightblue/80 text-white px-4 py-2 rounded-xl transition cursor-pointer"
                       >
+                        {isReviewPaused ? <Play size={20} /> : <Pause size={20} />}
                         {isReviewPaused ? 'Continuar' : 'Pausar'}
                       </button>
-                      <button onClick={handleCloseReview} className="bg-red text-white border border-gray-100 rounded-full p-2 hover:bg-transparent transition cursor-pointer">
+
+                      <button
+                        onClick={handleCloseReview}
+                        className="flex items-center gap-2 bg-transparent hover:bg-red border-2 border-e-red text-white px-4 py-2 rounded-xl transition cursor-pointer"
+                      >
+                        <X size={20} />
                         Sair
                       </button>
                     </div>
