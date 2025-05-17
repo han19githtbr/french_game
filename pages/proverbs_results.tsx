@@ -174,7 +174,7 @@ export default function ResultsPage() {
         <p className="text-center text-gray-400">Você ainda não fez nenhuma jogada.</p>
       ) : (
         <>
-          <div className="max-w-md mx-auto space-y-4 mb-8">
+          <div className="max-w-md max-h-48 overflow-y-auto mx-auto space-y-4 mb-8">
             {progress_answers.map((p, i) => (
               <div
               key={i}
