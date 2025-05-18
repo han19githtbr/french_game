@@ -1978,7 +1978,7 @@ export default function Game({}: GameProps) {
       <div className="flex flex-col items-center space-y-6">
         <button
             onClick={() => router.push('/proverbs_results')}
-            className="w-68 border-2 border-lightblue bg-gradient-to-br text-blue from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 text-lg cursor-pointer flex items-center justify-center space-x-3"
+            className="w-68 border-2 border-e-lightblue bg-gradient-to-br text-blue from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 text-lg cursor-pointer flex items-center justify-center space-x-3"
         >
           <div className="flex items-center">
             <svg
@@ -2009,7 +2009,7 @@ export default function Game({}: GameProps) {
           {/* Botão de abertura */}
           <button
             onClick={() => setOpen(!open)}
-            className="w-full flex items-center justify-between py-3 px-6 rounded-md border-2 border-lightblue bg-gradient-to-br from-purple-700 to-indigo-800 text-blue shadow-lg shadow-purple-500/40 hover:shadow-xl hover:shadow-pink-500/50 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-2 text-lg tracking-wide font-semibold text-center cursor-pointer transition-all duration-300 ease-out"
+            className="w-full flex items-center justify-between py-3 px-6 rounded-md border-2 border-e-lightblue bg-gradient-to-br from-purple-700 to-indigo-800 text-blue shadow-lg shadow-purple-500/40 hover:shadow-xl hover:shadow-pink-500/50 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-2 text-lg tracking-wide font-semibold text-center cursor-pointer transition-all duration-300 ease-out"
           >
             {theme ? (
               `🎯 ${theme}`
@@ -2054,7 +2054,7 @@ export default function Game({}: GameProps) {
                 
           {/* Lista de opções */}
           {open && (
-            <ul className="absolute mt-2 w-full rounded-xl bg-gray-900 shadow-lg border-2 border-lightblue max-h-72 overflow-y-auto custom-scrollbar z-10">
+            <ul className="absolute mt-2 w-full rounded-xl bg-gray-900 shadow-lg border-2 border-e-lightblue max-h-72 overflow-y-auto custom-scrollbar z-10">
                               
               {/* Opção padrão */}
               <li
@@ -2122,7 +2122,7 @@ export default function Game({}: GameProps) {
               setRound(r => r + 1)
               setShowRestart(false)
             }}
-            className="mt-6 border border-red text-red bg-transparent hover:bg-lightblue hover:text-white px-4 py-2 rounded shadow transition cursor-pointer"
+            className="mt-6 border border-e-red text-red bg-transparent hover:bg-lightblue hover:text-white px-4 py-2 rounded shadow transition cursor-pointer"
           >
             ❌ Jogue de novo
           </button>
@@ -2542,7 +2542,7 @@ export default function Game({}: GameProps) {
               >
                 <motion.button
                   onClick={handlePublishConquest}
-                  className="bg-transparent border-2 border-green from-lightblue to-blue hover:from-pink hover:to-yellow text-white font-bold py-3 px-6 rounded-xl shadow-lg animate-pulse focus:outline-none focus:ring-2 focus:ring-purple cursor-pointer"
+                  className="bg-transparent border-2 border-e-green from-lightblue to-blue hover:from-pink hover:to-yellow text-white font-semibold py-2 px-7 rounded-xl shadow-lg animate-pulse focus:outline-none focus:ring-2 focus:ring-purple cursor-pointer"
                 >
                   Compartilhar conquista
                 </motion.button>
