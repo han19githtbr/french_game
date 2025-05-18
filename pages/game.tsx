@@ -2267,7 +2267,7 @@ export default function Game({}: GameProps) {
                         focus:ring-neon-pink focus:ring-offset-2 focus:ring-offset-gray-900
                         animate-pulse-slow ${
               isFrasesUnlocked
-                ? 'bg-transparent border-2 border-e-green hover:bg-blue cursor-pointer text-white shadow-md '
+                ? 'bg-gray-900 border-2 border-e-green hover:bg-blue cursor-pointer text-white shadow-md '
                 : 'bg-gray-900 text-gray-400 cursor-not-allowed shadow-sm'
             }`}
             onClick={handleFrasesClick}
@@ -2321,7 +2321,7 @@ export default function Game({}: GameProps) {
           <motion.button
             className={`flex items-center justify-center py-3 px-6 rounded-md mt-4 font-semibold transition duration-300 ease-in-out focus:outline-none animate-pulse-slow ${
               isProverbsUnlocked
-                ? 'bg-transparent border-2 border-e-green hover:bg-blue cursor-pointer text-white shadow-md'
+                ? 'bg-gray-900 border-2 border-e-green hover:bg-blue cursor-pointer text-white shadow-md'
                 : 'bg-gray-700 text-gray-400 cursor-not-allowed shadow-sm'
             }`}
             onClick={handleProverbsClick}
