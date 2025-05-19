@@ -42,7 +42,7 @@ const allImages = {
     { url: '/frases/natureza/guarda-chuva.jpg', title: 'Elle sort son parapluie pour se protéger de la pluie' },
     { url: '/frases/natureza/guitarra.jpg', title: 'Paul aime jouer à la guitarre' },
     { url: '/frases/natureza/mergulho.jpg', title: 'Qu\'est-ce qu\'il fait sous l\'eau?' },
-    { url: '/frases/natureza/noite.jpg', title: 'Cette nuit est très étoilée!' },
+    { url: '/frases/natureza/noite.jpg', title: 'Paul profite de la nuit très étoilée!' },
     { url: '/frases/natureza/nuvens.jpg', title: 'Le ciel est rempli de nuages' },
     { url: '/frases/natureza/praia.jpg', title: 'Le couple regarde le coucher du soleil à la plage' },
     { url: '/frases/natureza/lua.png', title: 'C\'est la pleine lune, le moment idéal pour une promenade!' },
