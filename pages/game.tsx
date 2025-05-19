@@ -18,7 +18,6 @@ import { BsEyeFill, BsPlayFill } from 'react-icons/bs';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { GiPresent } from 'react-icons/gi';
-import { useGift } from '../contexts/GiftContext'
 import { youtube_v3 } from '@googleapis/youtube';
 
 
@@ -281,7 +280,6 @@ export default function Game({}: GameProps) {
   const [showConquestCarousel, setShowConquestCarousel] = useState(false);
   const [selectedConquestIndex, setSelectedConquestIndex] = useState(0);
   const [newConquestCount, setNewConquestCount] = useState(0); // Contador de novas conquistas
-  const { hasNewGift, setShowGiftModal, setPopularSaying } = useGift();
   const [hasClickedNotification, setHasClickedNotification] = useState(false);
 
 
@@ -352,52 +350,6 @@ export default function Game({}: GameProps) {
       setCurrentVideoInfo(video);
       setIsPlaying(true);
     }
-  };
-
-
-  const togglePlayVideo = () => {
-    setIsPlaying((prev) => !prev);
-    const iframe = document.querySelector('iframe');
-    if (iframe) {
-      const message = JSON.stringify({
-        event: 'command',
-        func: isPlaying ? 'pauseVideo' : 'playVideo',
-      });
-      iframe.contentWindow?.postMessage(message, '*');
-    }
-  };
-
-  const toggleMuteVideo = () => {
-    setIsMuted((prev) => !prev);
-    const iframe = videoRef.current;
-    if (iframe) {
-      const message = JSON.stringify({
-        event: 'command',
-        func: isMuted ? 'unMute' : 'mute',
-      });
-      iframe.contentWindow?.postMessage(message, '*');
-    }
-  };
-
-
-  const handleVolumeVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newVolume = parseFloat(e.target.value);
-    setVolume(newVolume);
-    const iframe = videoRef.current;
-    if (iframe) {
-      const message = JSON.stringify({
-        event: 'command',
-        func: 'setVolume',
-        args: [newVolume * 100], // YouTube API usa escala de 0 a 100
-      });
-      iframe.contentWindow?.postMessage(message, '*');
-    }
-  };
-
-  const handleVideoEnded = () => {
-    setIsPlaying(false);
-    setCurrentVideoUrl(null);
-    setCurrentVideoInfo(null);
   };
 
   const toggleVideosVisibility = () => {
@@ -569,6 +521,7 @@ export default function Game({}: GameProps) {
 
   const hasEnteredRef = useRef(false);
   
+
   useEffect(() => {
     if (!ablyClient || !clientId || !playerName  || hasEnteredRef.current) return;
   
@@ -596,7 +549,7 @@ export default function Game({}: GameProps) {
 
     const handleLeave = (member: any) => {
       if (member.clientId !== clientId) {
-        setPlayersOnline((prev) => prev.filter(p => p.clientId !== member.clientId));
+        setPlayersOnline((prev) => prev.filter((p) => p.clientId !== member.clientId));
         setShowNotification({ name: member.data?.name ?? "Desconhecido", type: 'leave' });
         setNotificationCount((prev) => prev + 1);
       }
@@ -607,22 +560,20 @@ export default function Game({}: GameProps) {
     presenceChannel.presence.subscribe("leave", handleLeave);
 
     // ✅ Aguarda a conexão com Ably antes de entrar no canal
-    ablyClient.connection.once('connected', () => {
-      presenceChannel.presence.enter({ name: playerName, avatarUrl }).then(() => {
+    ablyClient.connection.once('connected', async () => {
+        await presenceChannel.presence.enter({ name: playerName, avatarUrl });
         hasEnteredRef.current = true;
 
-        presenceChannel.presence.get().then((members: any) => {
-          //const alreadyPresent = members.some(m => m.clientId === clientId);
-          const players: Player[] = members
-            .filter((m: any) => m.clientId !== clientId)
-            .map((m: any) => ({
-              clientId: m.clientId,
-              name: m.data?.name ?? "Desconhecido",
-              avatarUrl: m.data?.avatarUrl ?? "",
-            }));
-          setPlayersOnline(players);
-        });
-      });
+        const members = await presenceChannel.presence.get();
+        const players: Player[] = members
+          .filter((m: any) => m.clientId !== clientId)
+          .map((m: any) => ({
+            clientId: m.clientId,
+            name: m.data?.name ?? "Desconhecido",
+            avatarUrl: m.data?.avatarUrl ?? "",
+          }));
+        setPlayersOnline(players);
+      
     });
         
     return () => {
@@ -739,7 +690,7 @@ export default function Game({}: GameProps) {
   // Enviar chat request
   const sendChatRequest = (toPlayer: Player) => {
     // Checagem de integridade mínima
-    if (!ablyClient || !clientId || !toPlayer?.clientId) return;
+    if (!ablyClient || !clientId) return;
     
     const request: ChatRequest = {
       fromClientId: clientId!,
@@ -757,40 +708,40 @@ export default function Game({}: GameProps) {
 
     const channel = ablyClient?.channels.get("presence-chat");
   
-    const handleRequest = (msg: any) => {
+    const handleRequest = async (msg: any) => {
       const req: ChatRequest = msg.data;
-      if (req.toClientId === clientId) {
-        // Verificar se o solicitante ainda está online
-        channel.presence.get().then((members: any) => {
-          const requesterOnline = members.some((m: any) => m.clientId === req.fromClientId);
-          if (requesterOnline) {
-            setIncomingRequest(req);
-            playRequestSound();
-          } else {
-            setShowNotification({ name: req.fromName, type: "leave" });
-          }
-        });
+      if (req.toClientId !== clientId) return;
+      
+      const members = await channel.presence.get();
+      const isOnline = members.some(m => m.clientId === req.fromClientId);
+
+      if (isOnline) {
+        setIncomingRequest(req);
       }
+
     };
+
 
     const handleRequestAccepted = (msg: any) => {
       const { fromClientId, toClientId } = msg.data;
       if (toClientId === clientId) {
         const channelName = getPrivateChannelName(fromClientId, clientId);
-        const channel = ablyClient.channels.get(channelName);
-        const partner = playersOnline.find((p) => p.clientId === fromClientId);
+        const partner = playersOnline.find(p => p.clientId === fromClientId);
+        const privateCh = ablyClient.channels.get(channelName);
+        
         if (partner) {
           setChatPartner(partner);
-          setPrivateChannel(channel);
+          setPrivateChannel(privateCh);
         }
       }
     };
   
-    channel?.subscribe("chat-request", handleRequest);
+    channel.subscribe("chat-request", handleRequest);
     channel.subscribe("chat-accepted", handleRequestAccepted);
   
     return () => {
-      channel?.unsubscribe("chat-request", handleRequest);
+      channel.unsubscribe("chat-request", handleRequest);
+      channel.unsubscribe("chat-accepted", handleRequestAccepted);
     };
   }, [ablyClient, clientId, playersOnline]);
 
@@ -805,12 +756,13 @@ export default function Game({}: GameProps) {
   
     if (!channel) return; // impede erro
   
+    setPrivateChannel(channel);
     setChatPartner({
       clientId: req.fromClientId,
       name: req.fromName,
       avatarUrl: req.fromAvatar,
     });
-    setPrivateChannel(channel);
+    
     setIncomingRequest(null);
 
     // Notificar o solicitante que a solicitação foi aceita

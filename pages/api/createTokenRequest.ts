@@ -4,13 +4,17 @@ import Ably from 'ably'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from './auth/[...nextauth]' // ajuste para o seu path real
 
-const ablyRest = new Ably.Rest(process.env.NEXT_PUBLIC_ABLY_API_KEY!)
+const ablyRest = new Ably.Rest(process.env.ABLY_API_KEY!)
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions)
 
+  if (!session) {
+    return res.status(401).json({ error: 'Unauthorized' })
+  }
+
   // Usa o nome do usuário logado como clientId, ou fallback para 'anonymous'
-  const clientId = session?.user?.name || 'anonymous'
+  const clientId = session.user?.email || session.user?.name || 'anonymous'
 
   const tokenRequestData = await ablyRest.auth.createTokenRequest({ clientId })
 

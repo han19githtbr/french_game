@@ -339,52 +339,7 @@ export default function Frase({}: GameProps) {
       setIsPlaying(true);
     }
   };
-
-
-  const togglePlayVideo = () => {
-    setIsPlaying((prev) => !prev);
-    const iframe = document.querySelector('iframe');
-    if (iframe) {
-      const message = JSON.stringify({
-        event: 'command',
-        func: isPlaying ? 'pauseVideo' : 'playVideo',
-      });
-      iframe.contentWindow?.postMessage(message, '*');
-    }
-  };
-
-  const toggleMuteVideo = () => {
-    setIsMuted((prev) => !prev);
-    const iframe = videoRef.current;
-    if (iframe) {
-      const message = JSON.stringify({
-        event: 'command',
-        func: isMuted ? 'unMute' : 'mute',
-      });
-      iframe.contentWindow?.postMessage(message, '*');
-    }
-  };
-
-
-  const handleVolumeVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newVolume = parseFloat(e.target.value);
-    setVolume(newVolume);
-    const iframe = videoRef.current;
-    if (iframe) {
-      const message = JSON.stringify({
-        event: 'command',
-        func: 'setVolume',
-        args: [newVolume * 100], // YouTube API usa escala de 0 a 100
-      });
-      iframe.contentWindow?.postMessage(message, '*');
-    }
-  };
-
-  const handleVideoEnded = () => {
-    setIsPlaying(false);
-    setCurrentVideoUrl(null);
-    setCurrentVideoInfo(null);
-  };
+  
 
   const toggleVideosVisibility = () => {
     setShowYouTubeVideos(!showYouTubeVideos);
@@ -677,13 +632,6 @@ export default function Frase({}: GameProps) {
     }, 4000); // Mantém a animação por 4 segundos
   };
 
-  
-  const showToast = (message: string, type: 'info' | 'success' | 'error') => {
-    setNotification({ message, type });
-    setTimeout(() => {
-      setNotification(null);
-    }, 3000); // Exibir por 3 segundos
-  };
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
