@@ -131,3 +131,8 @@ docker push 19handocker/french-learning-app:latest
 ## Adicione o arquivo vercel.yml ao Git:
 
 git add .github/workflows/vercel.yml
+
+
+## popular o banco de dados(MongoDB)
+
+npx tsx scripts/seed-images.ts

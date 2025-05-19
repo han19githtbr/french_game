@@ -2,7 +2,6 @@
 import 'dotenv/config';
 import connectDB from '../lib/mongodb'
 
-
 const images = {
   'família': [
     { url: '/ghibli/familia/família.png', title: 'Une grande famille' },
@@ -31,7 +30,6 @@ const images = {
     { url: '/ghibli/natureza/pescar.png', title: 'Pêcher' },
     { url: '/ghibli/natureza/rio.png', title: 'La Rivière' },
     { url: '/ghibli/natureza/chuva.png', title: 'La pluie' },
-    { url: '/ghibli/natureza/estrelas.png', title: 'Les étoiles' },
     { url: '/ghibli/natureza/mangas.png', title: 'Un manguier' },
     { url: '/ghibli/natureza/ceu.jpg', title: 'Le ciel est bleu' },
     { url: '/ghibli/natureza/flores.jpg', title: 'Des fleurs' },
@@ -44,6 +42,8 @@ const images = {
     { url: '/ghibli/natureza/lua.png', title: 'La lune' },
     { url: '/ghibli/natureza/furacao.png', title: 'Un cyclone' },
     { url: '/ghibli/natureza/vulcao.png', title: 'Le volcan' },
+    { url: '/ghibli/natureza/arco-iris.png', title: 'Un arc-en-ciel' },
+    { url: '/ghibli/natureza/neve.png', title: 'La neige' },
         
   ],
   'turismo': [
@@ -105,6 +105,7 @@ const images = {
     { url: '/ghibli/tecnologia/radio.png', title: 'La radio' },
     { url: '/ghibli/tecnologia/laboratorio.png', title: 'Le laboratoire' },
     { url: '/ghibli/tecnologia/telescopio.png', title: 'Le télescope' },
+    { url: '/ghibli/tecnologia/camera.png', title: 'Un appareil photo' },
   ],
   'gastronomia': [
     { url: '/ghibli/gastronomia/bolo.png', title: 'Un Gâteau' },
