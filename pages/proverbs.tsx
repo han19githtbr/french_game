@@ -2100,12 +2100,13 @@ export default function Game({}: GameProps) {
 
 
         {/* Corações de Tentativas */}
-        <div className="flex justify-center mt-4 space-x-4">
+        <div className="flex justify-center mt-5 space-x-4">
+            <span className='text-yellow font-semibold'>Vidas:</span>
             {[...Array(4)].map((_, i) => (
               <svg
                 key={i}
                 className={`w-6 h-6 transition-colors duration-300 ${
-                  i < remainingAttempts ? 'text-red animate-heartbeat' : 'text-gray-700'
+                  i < remainingAttempts ? 'text-green animate-pulse' : 'text-gray-700'
                 }`}
                 fill="currentColor"
                 viewBox="0 0 20 20"
