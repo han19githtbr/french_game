@@ -1213,9 +1213,14 @@ export default function Game({}: GameProps) {
         setRemainingAttempts(prev => {
           const newAttempts = prev - 1;
 
+          // NOVO: Calcular quantas imagens já foram respondidas nesta rodada
+          const currentAnsweredCount = Object.values(newResults).filter(r => r !== undefined).length; // Conta resultados não-nulos/undefined
+
           // Lógica para exibir o aviso da última tentativa (agora um modal)
-          if (newAttempts === 1) { // Se restou apenas 1 tentativa
+          if (newAttempts === 1  && currentAnsweredCount < images.length) { // Se restou apenas 1 tentativa
             setShowLastAttemptWarningModal(true); // Apenas abre o modal, sem timer para fechar
+          } else if (newAttempts === 1 && currentAnsweredCount === images.length) {
+            console.log("Tentativa final, mas todas as imagens já foram respondidas. Não mostrando aviso de última tentativa.");
           }
 
           // Se as tentativas se esgotarem, bloqueia tudo
@@ -2447,7 +2452,7 @@ export default function Game({}: GameProps) {
               <svg
                 key={i}
                 className={`w-6 h-6 transition-colors duration-300 ${
-                  i < remainingAttempts ? 'text-red animate-heartbeat' : 'text-gray-700'
+                  i < remainingAttempts ? 'text-green animate-pulse' : 'text-gray-700'
                 }`}
                 fill="currentColor"
                 viewBox="0 0 20 20"

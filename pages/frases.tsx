@@ -268,7 +268,6 @@ export default function Frase({}: GameProps) {
   const [showConquestCarousel, setShowConquestCarousel] = useState(false);
   const [selectedConquestIndex, setSelectedConquestIndex] = useState(0);
   const [newConquestCount, setNewConquestCount] = useState(0); // Contador de novas conquistas
-
   const [hasClickedNotification, setHasClickedNotification] = useState(false);
 
   
@@ -278,7 +277,25 @@ export default function Frase({}: GameProps) {
   const [searchResultsVideo, setSearchResultsVideo] = useState<Video[]>([]);
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const [currentVideoInfo, setCurrentVideoInfo] = useState<Video | null>(null);
+  
+  const [remainingAttempts, setRemainingAttempts] = useState(4); // Começa com 4 tentativas
+  const [showLastAttemptWarning, setShowLastAttemptWarning] = useState(false);
+  const [showUnlockDurationWarning, setShowUnlockDurationWarning] = useState(false); // Novo estado
+  
+  // NOVOS ESTADOS PARA CONTROLE DOS MODAIS
+  const [showUnlockWarningModal, setShowUnlockWarningModal] = useState(false); // Para o aviso de duração do desbloqueio
+  const [showLastAttemptWarningModal, setShowLastAttemptWarningModal] = useState(false); // Para o aviso de última tentativa
+  const [hasShownUnlockLevelWarning, setHasShownUnlockLevelWarning] = useState(false);
+
+  
   const videoRef = useRef<HTMLIFrameElement>(null);
+  
+
+  // NOVAS FUNÇÕES PARA ABRIR/FECHAR MODAIS
+  
+  const handleCloseLastAttemptWarningModal = () => {
+    setShowLastAttemptWarningModal(false);
+  };
   
   
   const parseDuration = (duration: string): number => {
@@ -1082,16 +1099,50 @@ export default function Frase({}: GameProps) {
   }
 
   const checkAnswer = (index: number, userAnswer: string) => {
-    playAnimalSound(images[index].title)
-    playFamilySound(images[index].title)
-    playTecnologySound(images[index].title)
+    //playAnimalSound(images[index].title)
+    //playFamilySound(images[index].title)
+    //playTecnologySound(images[index].title)
       
     const correct_answer = images[index].title.toLowerCase() === userAnswer.toLowerCase()
     const alreadyCorrect = results[index]?.correct_answer
       
     if (correct_answer && !alreadyCorrect && correctSound) correctSound.play()
-    if (!correct_answer && wrongSound) wrongSound.play()
-      
+    //if (!correct_answer && wrongSound) wrongSound.play()
+    
+    if (correct_answer && !alreadyCorrect) { // AQUI É ONDE A CONDIÇÃO COMEÇA
+      // Play correct sound (assuming correctSound is defined)
+      if (correctSound) correctSound.play();
+
+      // Move as funções de som específicas para dentro deste bloco
+      playAnimalSound(images[index].title);
+      playFamilySound(images[index].title);
+      playTecnologySound(images[index].title);
+    }
+
+
+    if (!correct_answer && wrongSound) {
+      wrongSound.play();
+      // Decrementa as tentativas restantes apenas se for um novo erro para esta imagem
+      if (!results[index]?.correct_answer) {
+        setRemainingAttempts(prev => {
+          const newAttempts = prev - 1;
+
+          // NOVO: Calcular quantas imagens já foram respondidas nesta rodada
+          const currentAnsweredCount = Object.values(newResults).filter(r => r !== undefined).length; // Conta resultados não-nulos/undefined
+
+          // Lógica para exibir o aviso da última tentativa (agora um modal)
+          if (newAttempts === 1  && currentAnsweredCount < images.length) { // Se restou apenas 1 tentativa
+            setShowLastAttemptWarningModal(true); // Apenas abre o modal, sem timer para fechar
+          } else if (newAttempts === 1 && currentAnsweredCount === images.length) {
+            console.log("Tentativa final, mas todas as imagens já foram respondidas. Não mostrando aviso de última tentativa.");
+          }
+          
+          return newAttempts;
+        })
+      }
+        
+    }
+
     const newResults = [...results]; // agora é um array!
     newResults[index] = { correct_answer, selected: userAnswer };  
   
@@ -2151,11 +2202,50 @@ export default function Frase({}: GameProps) {
           )}
         </div>
 
+        {/* Corações de Tentativas */}
+        <div className="flex justify-center mt-4 space-x-4">
+            {[...Array(4)].map((_, i) => (
+              <svg
+                key={i}
+                className={`w-6 h-6 transition-colors duration-300 ${
+                  i < remainingAttempts ? 'text-green animate-pulse' : 'text-gray-700'
+                }`}
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            ))}
+        </div>
+
+
+        {/* --- Modal de Aviso de Última Tentativa --- */}
+        {showLastAttemptWarningModal && (
+            <div className="modal-overlay">
+              <div className="modal-content last-attempt-warning">
+                <button className="modal-close-button" onClick={handleCloseLastAttemptWarningModal}>
+                  &times;
+                </button>
+                <div className="typing-last-attempt">
+                  Você tem mais uma tentativa, acerte ou jogue de novo!
+                </div>
+              </div>
+            </div>
+        )}
+
+        
         {showRestart && (
           <button
             onClick={() => {
               setRound(r => r + 1)
-              setShowRestart(false)
+              setShowRestart(false);
+              setRemainingAttempts(4);
+              setResults([]);
             }}
             className="mt-6 border border-e-red text-red bg-transparent hover:bg-lightblue hover:text-white px-4 py-2 rounded shadow transition cursor-pointer"
           >
