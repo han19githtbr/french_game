@@ -22,10 +22,14 @@ FROM node:22-alpine AS runner
 # Defina o diretório de trabalho
 WORKDIR /app
 
+# Define variáveis de ambiente para produção do Next.js
+ENV NODE_ENV=production
+
 # Copie apenas os arquivos necessários do stage de builder
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/next.config.mjs ./next.config.mjs
 
 # Instale apenas as dependências necessárias para produção
 RUN npm install --omit=dev

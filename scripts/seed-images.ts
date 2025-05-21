@@ -18,7 +18,9 @@ const images = {
     { url: '/ghibli/familia/teatro.png', title: 'À la salle de Théâtre' },
     { url: '/ghibli/familia/tv.png', title: 'Regarder la télévision' },
     { url: '/ghibli/familia/familia_golfinho.png', title: 'Un dauphin' },
-    { url: '/ghibli/familia/familia_praia.png', title: 'Une plage' },
+    { url: '/ghibli/familia/familia_praia.png', title: 'Le père, la mère et les enfants à la plage' },
+    { url: '/ghibli/familia/bolas_neve.png', title: 'Des boules de neige' },
+    { url: '/ghibli/familia/paraquedas.png', title: 'Des parachutes' },
   ],
   'natureza': [
     { url: '/ghibli/natureza/árvore.png', title: 'Un Arbre' },
@@ -44,6 +46,7 @@ const images = {
     { url: '/ghibli/natureza/vulcao.png', title: 'Le volcan' },
     { url: '/ghibli/natureza/arco-iris.png', title: 'Un arc-en-ciel' },
     { url: '/ghibli/natureza/neve.png', title: 'La neige' },
+    { url: '/ghibli/natureza/selva.png', title: 'Les animaux de la jungle' },
         
   ],
   'turismo': [
@@ -121,6 +124,11 @@ const images = {
     { url: '/ghibli/gastronomia/lasanha.png', title: 'Du Lasagne' },
     { url: '/ghibli/gastronomia/peixe_frito.png', title: 'Du poisson frit' },
     { url: '/ghibli/gastronomia/salsichas.png', title: 'Des saucisses' },
+    { url: '/ghibli/gastronomia/salada_russa.jpg', title: 'Une salade russe' },
+    { url: '/ghibli/gastronomia/sopa_abobora.png', title: 'De la soupe au giraumon'},
+    { url: '/ghibli/gastronomia/batatas_doces.png', title: 'Des patates douces' },
+    { url: '/ghibli/gastronomia/batatas.png', title: 'Des pommes de terre' },
+    { url: '/ghibli/gastronomia/abobora.png', title: 'Un giraumon'},
   ]
 };
 

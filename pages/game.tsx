@@ -177,17 +177,12 @@ export default function Game({}: GameProps) {
   const [playersOnline, setPlayersOnline] = useState<Player[]>([])
   const [showPlayersOnline, setShowPlayersOnline] = useState(false);
       
-  //const [showNotification, setShowNotification] = useState<ShowNotification | null>(null)
-
-  const [notification, setNotification] = useState<{ message: string; type: 'info' | 'success' | 'error' } | null>(null);
-    
   const [incomingRequest, setIncomingRequest] = useState<ChatRequest | null>(null);
   const [privateChannel, setPrivateChannel] = useState<RealtimeChannel | null>(null);
   const [chatPartner, setChatPartner] = useState<Player | null>(null);
   
   const [showPicker, setShowPicker] = useState(false);
   
-
   const playerName = session?.user?.name || 'Anônimo';
   const [notificationCount, setNotificationCount] = useState(0);
     
@@ -228,7 +223,8 @@ export default function Game({}: GameProps) {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
   const [availableReviews, setAvailableReviews] = useState(0);
-  const reviewIntervalRef: RefObject<ReturnType<typeof setInterval> | null> = useRef(null);
+  //const reviewIntervalRef: RefObject<ReturnType<typeof setInterval> | null> = useRef(null);
+  const reviewIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const [isReviewUnlocking, setIsReviewUnlocking] = useState(false);
   const [isReviewUnlocked, setIsReviewUnlocked] = useState(false);
@@ -1210,8 +1206,8 @@ export default function Game({}: GameProps) {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Conquista publicada com sucesso:', data);
-        toast.success('Conquista publicada com sucesso!', { position: "top-right", autoClose: 3000, hideProgressBar: false, closeOnClick: true, pauseOnHover: true, draggable: true, progress: undefined, theme: "light" });
+        //console.log('Conquista publicada com sucesso:', data);
+        toast.success('Conquista compartilhada com sucesso!', { position: "top-right", autoClose: 3000, hideProgressBar: false, closeOnClick: true, pauseOnHover: true, draggable: true, progress: undefined, theme: "light" });
         setShowPublishButton(false);
         setCurrentRoundPlays([]);
         // Não precisamos mais adicionar ao estado local imediatamente,

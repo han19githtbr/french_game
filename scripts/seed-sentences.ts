@@ -18,6 +18,8 @@ const images = {
     { url: '/frases/familia/tv.png', title: 'La famille se réunit pour regarder la télévision' },
     { url: '/frases/familia/familia_golfinho.png', title: 'Il y a un dauphin tout près de nous' },
     { url: '/frases/familia/familia_praia.png', title: 'La famille marche sur le sable de la plage' },
+    { url: '/frases/familia/bolas_neve.png', title: 'La famille joue avec des boules de neige' },
+    { url: '/frases/familia/paraquedas.png', title: 'La famille saute en parachutes' },
   ],
   'natureza': [
     { url: '/frases/natureza/árvore.png', title: 'Il y a quelqu\'un sous l\'arbre' },
@@ -48,6 +50,7 @@ const images = {
     { url: '/frases/natureza/furacao.png', title: 'Le cyclone est une catastrophe naturelle' },
     { url: '/frases/natureza/arco-iris.png', title: 'Regardez! Quel beau arc-en-ciel! ' },
     { url: '/frases/natureza/neve.png', title: 'Par ici, il neige durant toute l\'année' },
+    { url: '/frases/natureza/selva.png', title: 'Dans la jungle, il y a des animaux sauvages' },
   ],
   'turismo': [
     { url: '/frases/turismo/aeroporto.png', title: 'Je suis déjà à l\'Aéroport' },
@@ -122,6 +125,11 @@ const images = {
     { url: '/frases/gastronomia/peixe_frito.png', title: 'Le poisson frit, c\'est mon plat préféré!' },
     { url: '/frases/gastronomia/salsichas.png', title: 'Marie n\'aime pas les saucisses.' },
     { url: '/frases/gastronomia/lasanha.png', title: 'Les lasagnes me donnent l\'eau à la bouche!' },
+    { url: '/frases/gastronomia/salada_russa.jpg', title: 'La salade russe est mon plat préféré.' },
+    { url: '/frases/gastronomia/sopa_abobora.png', title: 'La soupe au giraumon est une tradition en Haïti' },
+    { url: '/frases/gastronomia/abobora.png', title: 'Le giraumon est très délicieux.' },
+    { url: '/frases/gastronomia/batatas_doces.png', title: 'J\'aime beaucoup les patates douces.' },
+    { url: '/frases/gastronomia/batatas.png', title: 'Mon frère n\'aime pas les pommes de terre.' },
   ]
 };
 

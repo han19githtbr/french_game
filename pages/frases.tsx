@@ -215,8 +215,9 @@ export default function Frase({}: GameProps) {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
   const [availableReviews, setAvailableReviews] = useState(0);
-  const reviewIntervalRef: RefObject<ReturnType<typeof setInterval> | null> = useRef(null);
-  
+  //const reviewIntervalRef: RefObject<ReturnType<typeof setInterval> | null> = useRef(null);
+  const reviewIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
   const [isReviewUnlocking, setIsReviewUnlocking] = useState(false);
   const [isReviewUnlocked, setIsReviewUnlocked] = useState(false);
   const [showUnlockReviewAnimation, setShowUnlockReviewAnimation] = useState(false);
@@ -1178,8 +1179,8 @@ export default function Frase({}: GameProps) {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Conquista publicada com sucesso:', data);
-        toast.success('Conquista publicada com sucesso!', { position: "top-right", autoClose: 3000, hideProgressBar: false, closeOnClick: true, pauseOnHover: true, draggable: true, progress: undefined, theme: "light" });
+        //console.log('Conquista publicada com sucesso:', data);
+        toast.success('Conquista compartilhada com sucesso!', { position: "top-right", autoClose: 3000, hideProgressBar: false, closeOnClick: true, pauseOnHover: true, draggable: true, progress: undefined, theme: "light" });
         setShowPublishButton(false);
         setCurrentRoundPlays([]);
         // Não precisamos mais adicionar ao estado local imediatamente,
