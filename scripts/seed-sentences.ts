@@ -130,6 +130,7 @@ const images = {
     { url: '/frases/gastronomia/abobora.png', title: 'Le giraumon est très délicieux.' },
     { url: '/frases/gastronomia/batatas_doces.png', title: 'J\'aime beaucoup les patates douces.' },
     { url: '/frases/gastronomia/batatas.png', title: 'Mon frère n\'aime pas les pommes de terre.' },
+    { url: '/frases/gastronomia/purê.png', title: 'Cette purée de pomme de terre est très bonne.' },
   ]
 };
 

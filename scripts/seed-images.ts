@@ -129,6 +129,8 @@ const images = {
     { url: '/ghibli/gastronomia/batatas_doces.png', title: 'Des patates douces' },
     { url: '/ghibli/gastronomia/batatas.png', title: 'Des pommes de terre' },
     { url: '/ghibli/gastronomia/abobora.png', title: 'Un giraumon'},
+    { url: '/ghibli/gastronomia/purê.png', title: 'Une purée de pomme de terre' },
+    
   ]
 };
 
