@@ -1190,14 +1190,22 @@ export default function Game({}: GameProps) {
 
 
   const checkAnswer = (index: number, userAnswer: string) => {
-    playAnimalSound(images[index].title);
-    playFamilySound(images[index].title);
-    playTecnologySound(images[index].title);
-
+    //playAnimalSound(images[index].title);
+    //playFamilySound(images[index].title);
+    //playTecnologySound(images[index].title);
     const correct_word = images[index].title.toLowerCase() === userAnswer.toLowerCase();
     const alreadyCorrect = results[index]?.correct_word;
 
-    if (correct_word && !alreadyCorrect && correctSound) correctSound.play();
+    if (correct_word && !alreadyCorrect) { // AQUI É ONDE A CONDIÇÃO COMEÇA
+      // Play correct sound (assuming correctSound is defined)
+      if (correctSound) correctSound.play();
+
+      // Move as funções de som específicas para dentro deste bloco
+      playAnimalSound(images[index].title);
+      playFamilySound(images[index].title);
+      playTecnologySound(images[index].title);
+    }
+    
     if (!correct_word && wrongSound) {
       wrongSound.play();
       // Decrementa as tentativas restantes apenas se for um novo erro para esta imagem
