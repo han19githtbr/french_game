@@ -339,7 +339,7 @@ select option:checked {
   }
   .modal-close-button {
     font-size: 1.8em; /* Ajusta o botão de fechar */
-    top: 5px;
+    top: -5px;
     right: 10px;
   }
 }
