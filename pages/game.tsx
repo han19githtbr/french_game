@@ -285,7 +285,26 @@ export default function Game({}: GameProps) {
   const [searchResultsVideo, setSearchResultsVideo] = useState<Video[]>([]);
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const [currentVideoInfo, setCurrentVideoInfo] = useState<Video | null>(null);
+  const [remainingAttempts, setRemainingAttempts] = useState(4); // Começa com 4 tentativas
+  const [showLastAttemptWarning, setShowLastAttemptWarning] = useState(false);
+  const [showUnlockDurationWarning, setShowUnlockDurationWarning] = useState(false); // Novo estado
+  
+  // NOVOS ESTADOS PARA CONTROLE DOS MODAIS
+  const [showUnlockWarningModal, setShowUnlockWarningModal] = useState(false); // Para o aviso de duração do desbloqueio
+  const [showLastAttemptWarningModal, setShowLastAttemptWarningModal] = useState(false); // Para o aviso de última tentativa
+  const [hasShownUnlockLevelWarning, setHasShownUnlockLevelWarning] = useState(false);
+
   const videoRef = useRef<HTMLIFrameElement>(null);
+
+
+  // NOVAS FUNÇÕES PARA ABRIR/FECHAR MODAIS
+  const handleCloseUnlockWarningModal = () => {
+    setShowUnlockWarningModal(false);
+  };
+
+  const handleCloseLastAttemptWarningModal = () => {
+    setShowLastAttemptWarningModal(false);
+  };
 
 
   const parseDuration = (duration: string): number => {
@@ -976,7 +995,7 @@ export default function Game({}: GameProps) {
   }, [showCongrats, images]);
   
     
-  useEffect(() => {
+  /*useEffect(() => {
     if (correctAnswersCount >= 4) {
       if (!isFrasesUnlocked) {
         setIsFrasesUnlocking(true);
@@ -1001,18 +1020,97 @@ export default function Game({}: GameProps) {
       }
     
     }
-  }, [correctAnswersCount, isFrasesUnlocked, isProverbsUnlocked, unlockSound]);
+  }, [correctAnswersCount, isFrasesUnlocked, isProverbsUnlocked, unlockSound]);*/
 
- 
+
   useEffect(() => {
-    if (correctAnswersCount >= 4) { // Defina a condição para desbloquear a revisão (ex: 3 acertos)
-      if (!isReviewUnlocked) {
+    const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
+    const now = Date.now();
+
+    // --- Lógica de Carregamento/Persistência (Frases) ---
+    const storedFrasesUnlockTime = localStorage.getItem('frasesUnlockTime');
+    if (storedFrasesUnlockTime && (now - parseInt(storedFrasesUnlockTime, 10) < ONE_DAY_IN_MS)) {
+      if (!isFrasesUnlocked) {
+        setIsFrasesUnlocked(true);
+        setRemainingAttempts(4); // Resetar tentativas ao desbloquear via persistência
+      }
+    } else {
+      if (isFrasesUnlocked) {
+        setIsFrasesUnlocked(false);
+        localStorage.removeItem('frasesUnlockTime');
+      }
+    }
+
+    // --- Lógica de Carregamento/Persistência (Provérbios) ---
+    const storedProverbsUnlockTime = localStorage.getItem('proverbsUnlockTime');
+    if (storedProverbsUnlockTime && (now - parseInt(storedProverbsUnlockTime, 10) < ONE_DAY_IN_MS)) {
+      if (!isProverbsUnlocked) {
+        setIsProverbsUnlocked(true);
+        setRemainingAttempts(4); // Resetar tentativas ao desbloquear via persistência
+        // REMOVIDO AQUI: Chamada para setShowUnlockWarningModal e setHasShownUnlockLevelWarning
+        // AVISO: Se você deseja que o modal apareça SOMENTE pelo correctAnswersCount === 2,
+        // então a remoção da lógica de exibição aqui é essencial.
+      }
+    } else {
+      if (isProverbsUnlocked) {
+        setIsProverbsUnlocked(false);
+        localStorage.removeItem('proverbsUnlockTime');
+      }
+    }
+
+    // --- Lógica de Desbloqueio POR PONTUAÇÃO (Frases) ---
+    if (correctAnswersCount >= 4) {
+      if (!isFrasesUnlocked && !isFrasesUnlocking) {
+        setIsFrasesUnlocking(true);
+        playUnlockSound();
+        setShowUnlockFrasesAnimation(true);
+        // REMOVIDO: setShowUnlockWarningModal(true); AQUI para o desbloqueio de Frases
+        console.log("Desbloqueando Frases por pontuação. hasShownUnlockLevelWarning:", hasShownUnlockLevelWarning); // Debug
+        
+        setTimeout(() => {
+          setIsFrasesUnlocked(true);
+          setIsFrasesUnlocking(false);
+          handleUnlockAnimationEnd(setShowUnlockFrasesAnimation);
+          localStorage.setItem('frasesUnlockTime', Date.now().toString());
+          setRemainingAttempts(4);
+        }, 1000);
+      }
+    }
+    // --- Lógica de Desbloqueio POR PONTUAÇÃO (Provérbios) ---
+    else if (correctAnswersCount === 2) {
+      if (!isProverbsUnlocked && !isProverbsUnlocking) {
+        setIsProverbsUnlocking(true);
+        playUnlockSound();
+        setShowUnlockProverbsAnimation(true);
+        
+        // AQUI: A condição para mostrar o modal de aviso APENAS se ainda não foi mostrado
+        // (isto é, a primeira vez que o usuário atinge 2 acertos NESSA SESSÃO de jogo).
+        if (!hasShownUnlockLevelWarning) { 
+          setShowUnlockWarningModal(true); // Abre o modal de aviso de duração
+          setHasShownUnlockLevelWarning(true); // Marca que o aviso já foi mostrado
+          console.log("Desbloqueando Provérbios por pontuação. Aviso de desbloqueio ativado!"); // Debug
+        } else {
+            console.log("Desbloqueando Provérbios, mas aviso de desbloqueio já foi mostrado nesta sessão (provavelmente pelo localStorage)."); // Debug
+        }
+
+        setTimeout(() => {
+          setIsProverbsUnlocked(true);
+          setIsProverbsUnlocking(false);
+          handleUnlockAnimationEnd(setShowUnlockProverbsAnimation);
+          localStorage.setItem('proverbsUnlockTime', Date.now().toString());
+          setRemainingAttempts(4);
+        }, 1000);
+      }
+    }
+
+    // --- Lógica de Desbloqueio da Revisão (mantenha aqui) ---
+    if (correctAnswersCount >= 4) { // Condição para desbloquear a revisão (ex: 3 acertos, ajuste se necessário)
+      if (!isReviewUnlocked && !isReviewUnlocking) {
         setIsReviewUnlocking(true);
         setShowUnlockReviewAnimation(true);
-        animate(lockRotation, 45, { duration: 0.4, ease: "easeInOut" }); // Rotação para destravar
-        animate(lockY, -5 as MotionValue<number>["current"], { duration: 0.2, repeat: 3, repeatType: 'mirror', ease: "easeInOut" }); // Pequena trepidação vertical
+        // animate(lockRotation, 45, { duration: 0.4, ease: "easeInOut" });
+        // animate(lockY, -5 as MotionValue<number>["current"], { duration: 0.2, repeat: 3, repeatType: 'mirror', ease: "easeInOut" });
         
-        // Reproduzir o som de desbloqueio
         playUnlockSound();
         
         setTimeout(() => {
@@ -1022,7 +1120,21 @@ export default function Game({}: GameProps) {
         }, 1000);
       }
     }
-  }, [correctAnswersCount, isReviewUnlocked, lockRotation, lockY, playUnlockSound]);
+
+  // Dependências do useEffect
+    }, [
+      correctAnswersCount,
+      isFrasesUnlocked,
+      isProverbsUnlocked,
+      isReviewUnlocked,
+      playUnlockSound,
+      isFrasesUnlocking,
+      isProverbsUnlocking,
+      isReviewUnlocking,
+      handleUnlockAnimationEnd,
+      hasShownUnlockLevelWarning, // ESSA DEPENDÊNCIA É CRÍTICA PARA A LÓGICA
+    // animate, lockRotation, lockY // Se usados como dependências
+  ]);
 
   
   const handleMouseEnter = () => {
@@ -1086,8 +1198,34 @@ export default function Game({}: GameProps) {
     const alreadyCorrect = results[index]?.correct_word;
 
     if (correct_word && !alreadyCorrect && correctSound) correctSound.play();
-    if (!correct_word && wrongSound) wrongSound.play();
+    if (!correct_word && wrongSound) {
+      wrongSound.play();
+      // Decrementa as tentativas restantes apenas se for um novo erro para esta imagem
+      if (!results[index]?.correct_word) {
+        setRemainingAttempts(prev => {
+          const newAttempts = prev - 1;
 
+          // Lógica para exibir o aviso da última tentativa (agora um modal)
+          if (newAttempts === 1) { // Se restou apenas 1 tentativa
+            setShowLastAttemptWarningModal(true); // Apenas abre o modal, sem timer para fechar
+          }
+
+          // Se as tentativas se esgotarem, bloqueia tudo
+          if (newAttempts <= 0) {
+            setIsFrasesUnlocked(false);
+            setIsProverbsUnlocked(false);
+            // Limpa o localStorage para que fiquem bloqueados permanentemente até um novo desbloqueio
+            localStorage.removeItem('frasesUnlockTime');
+            localStorage.removeItem('proverbsUnlockTime');
+            // Você pode querer mostrar uma mensagem de "Game Over" ou similar aqui
+            console.log("Tentativas esgotadas! Frases e Provérbios bloqueados.");
+          }
+          return newAttempts;
+        })
+      }
+        
+    }
+    
     const newResults = [...results]; // agora é um array!
     newResults[index] = { correct_word, selected: userAnswer };
 
@@ -1150,6 +1288,8 @@ export default function Game({}: GameProps) {
         setRound(r => r + 1);
         setShowCongrats(false);
         setShowPublishButton(false); // Esconder o botão após a transição
+        setRemainingAttempts(4); // Resetar tentativas ao completar uma rodada com sucesso
+        setResults([]);
       }, 20000);
 
       if (successSound) {
@@ -2097,7 +2237,15 @@ export default function Game({}: GameProps) {
           
           <button
             onClick={() => setOpen(!open)}
-            className="w-full flex items-center justify-between py-3 px-6 rounded-md border-2 border-e-lightblue bg-gradient-to-br from-purple-700 to-indigo-800 text-blue shadow-lg shadow-purple-500/40 hover:shadow-xl hover:shadow-pink-500/50 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-2 text-lg tracking-wide font-semibold text-center cursor-pointer transition-all duration-300 ease-out"
+            disabled={showRestart}
+            className={`
+              w-full flex items-center justify-between py-3 px-6 rounded-md border-2 border-e-lightblue shadow-lg 
+              ${showRestart 
+                ? 'bg-gray-600 text-gray-400 cursor-not-allowed border-gray-500 shadow-none' // Estilos quando desabilitado
+                : 'bg-gradient-to-br text-blue shadow-purple-500/40 hover:shadow-xl hover:shadow-pink-500/50 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-2 cursor-pointer' // Estilos normais
+              }
+              text-lg tracking-wide font-semibold text-center transition-all duration-300 ease-out
+            `}
           >
             {theme ? (
               `🎯 ${theme}`
@@ -2124,20 +2272,23 @@ export default function Game({}: GameProps) {
                 <span>Escolha uma opção</span>
               </span>
             )}
-            <motion.div
-              animate={{
-                y: [0, 5, 0], // sobe e desce
-                opacity: [0.8, 1, 0.8], // animação de leve brilho
-              }}
-              transition={{
-                duration: 0.4,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-              className="text-green flex justify-center items-center"
-            >
-              <ChevronDown size={32} strokeWidth={2.5} />
-            </motion.div>
+            {/* AQUI ESTÁ O AJUSTE: Renderização condicional para o ChevronDown */}
+            {!showRestart && ( // A seta só aparece se showRestart for false
+              <motion.div
+                animate={{
+                  y: [0, 5, 0], // sobe e desce
+                  opacity: [0.8, 1, 0.8], // animação de leve brilho
+                }}
+                transition={{
+                  duration: 0.4,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                className="text-green flex justify-center items-center"
+              >
+                <ChevronDown size={32} strokeWidth={2.5} />
+              </motion.div>
+            )}
           </button>
 
           {/* Lista de opções */}
@@ -2203,11 +2354,11 @@ export default function Game({}: GameProps) {
           )}
         </div>
 
-
+        
         {/* Botão "Frases em Francês" */}
         <div className="w-64 flex flex-col items-center">
           {!isFrasesUnlocked && (
-            <p className="text-sm text-gray-400 mb-1 text-center">Selecione uma opção e complete 4 acertos para desbloquear este nível.</p>
+            <p className="text-sm text-gray-400 mb-1 text-center">Selecione uma opção e complete 6 acertos para desbloquear este nível.</p>
           )}
           <motion.button
             className={`flex items-center justify-center py-3 px-7 rounded-md mt-2 font-semibold transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75 shadow-[0_0_15px_rgba(0,255,255,0.6)] hover:shadow-[0_0_25px_rgba(0,255,255,0.8)]
@@ -2281,6 +2432,57 @@ export default function Game({}: GameProps) {
             Ditados em Francês
           </motion.button>
 
+
+          {/* Corações de Tentativas */}
+          <div className="flex justify-center mt-4 space-x-4">
+            {[...Array(4)].map((_, i) => (
+              <svg
+                key={i}
+                className={`w-6 h-6 transition-colors duration-300 ${
+                  i < remainingAttempts ? 'text-red animate-heartbeat' : 'text-gray-700'
+                }`}
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            ))}
+          </div>
+
+          
+          {/* --- Modal de Aviso de Duração do Desbloqueio --- */}
+          {showUnlockWarningModal && (
+            <div className="modal-overlay z-40">
+              <div className="modal-content unlock-warning">
+                <button className="modal-close-button" onClick={handleCloseUnlockWarningModal}>
+                  &times;
+                </button>
+                <div className="typing">
+                  🎉Parabéns! Você desbloqueiou um nível, cada desbloqueio dura um dia, então aproveite!.
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* --- Modal de Aviso de Última Tentativa --- */}
+          {showLastAttemptWarningModal && (
+            <div className="modal-overlay">
+              <div className="modal-content last-attempt-warning">
+                <button className="modal-close-button" onClick={handleCloseLastAttemptWarningModal}>
+                  &times;
+                </button>
+                <div className="typing-last-attempt">
+                  Você tem mais uma tentativa, acerte ou jogue de novo!
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Mensagem de bloqueio */}
           <AnimatePresence>
             {showLockMessage && !isProverbsUnlocked && (
@@ -2316,7 +2518,9 @@ export default function Game({}: GameProps) {
           <button
             onClick={() => {
               setRound(r => r + 1)
-              setShowRestart(false)
+              setShowRestart(false);
+              setRemainingAttempts(4);
+              setResults([]);
             }}
             className="mt-6 border border-e-red text-red bg-transparent hover:bg-lightblue hover:text-white px-4 py-2 rounded shadow transition cursor-pointer"
           >
@@ -2608,26 +2812,7 @@ export default function Game({}: GameProps) {
               )}
             </AnimatePresence>
 
-            <AnimatePresence>
-              {showCongrats && (
-                <motion.div
-                  className="fixed top-0 left-0 w-full h-full bg-gradient-to-br from-green-800 to-lime-700 bg-opacity-80 z-50 flex items-center justify-center"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
-                  <motion.div
-                    className="bg-white rounded-xl shadow-lg p-8 text-center"
-                    initial={{ scale: 0.8 }}
-                    animate={{ scale: 1 }}
-                    exit={{ scale: 0.8 }}
-                  >
-                    <h2 className="text-2xl font-bold text-green-600 mb-4">Parabéns! Você acertou tudo! 🎉</h2>
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
+            
             <AnimatePresence>
               {showReviewModal && reviewHistory.length > 0 && (
                 <motion.div
