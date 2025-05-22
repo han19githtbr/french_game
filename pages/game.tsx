@@ -2371,7 +2371,7 @@ export default function Game({}: GameProps) {
         {/* Botão "Frases em Francês" */}
         <div className="w-64 flex flex-col items-center">
           {!isFrasesUnlocked && (
-            <p className="text-sm text-gray-400 mb-1 text-center">Selecione uma opção e complete 6 acertos para desbloquear este nível.</p>
+            <p className="text-sm text-gray-400 mb-1 text-center">Selecione uma opção e complete 4 acertos para desbloquear este nível.</p>
           )}
           <motion.button
             className={`flex items-center justify-center py-3 px-7 rounded-md mt-2 font-semibold transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75 shadow-[0_0_15px_rgba(0,255,255,0.6)] hover:shadow-[0_0_25px_rgba(0,255,255,0.8)]
