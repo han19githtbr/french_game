@@ -2380,7 +2380,7 @@ export default function Game({}: GameProps) {
                         animate-pulse-slow ${
               isFrasesUnlocked
                 ? 'bg-gray-900 border-2 border-e-green hover:bg-lightblue cursor-pointer text-white shadow-md '
-                : 'bg-gray-900 text-gray-400 cursor-not-allowed shadow-sm'
+                : 'bg-gray-900 text-gray-400 border border-gray-400 cursor-not-allowed shadow-sm'
             }`}
             onClick={handleFrasesClick}
             disabled={!isFrasesUnlocked || isFrasesUnlocking}
@@ -2434,7 +2434,7 @@ export default function Game({}: GameProps) {
             className={`flex items-center justify-center py-3 px-6 rounded-md mt-4 font-semibold transition duration-300 ease-in-out focus:outline-none animate-pulse-slow ${
               isProverbsUnlocked
                 ? 'bg-gray-900 border-2 border-e-green hover:bg-lightblue cursor-pointer text-white shadow-md'
-                : 'bg-gray-700 text-gray-400 cursor-not-allowed shadow-sm'
+                : 'bg-gray-900 text-gray-400 border border-gray-400 cursor-not-allowed shadow-sm'
             }`}
             onClick={handleProverbsClick}
             disabled={!isProverbsUnlocked || isProverbsUnlocking}
