@@ -1690,7 +1690,7 @@ export default function Game({}: GameProps) {
       
       <div className='relative'>
         {/* Notificação de jogadores online */}
-        <div className="fixed top-4 left-2 z-40">
+        <div className="fixed top-4 left-2 z-50">
               <button
                   onClick={() => {
                     setShowPlayersOnline((prev) => !prev);
@@ -1710,7 +1710,7 @@ export default function Game({}: GameProps) {
         </div>
       
         {/* Botão para mostrar/ocultar sons relaxantes */}
-        <div className="fixed top-20 left-2 z-40">
+        <div className="fixed top-20 left-2 z-50">
           <button
             onClick={toggleRelaxSoundsVisibility}
             className="relative border-2 border-lightblue hover:bg-lightblue text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4"
@@ -1722,7 +1722,7 @@ export default function Game({}: GameProps) {
         
         {showRelaxSounds && (
           <div 
-            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900 bg-opacity-90 rounded-xl shadow-lg p-6 z-40 border-2 border-gray-300 max-h-96 overflow-y-auto w-full sm:w-96"
+            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900 bg-opacity-90 rounded-xl shadow-lg p-6 z-50 border-2 border-gray-300 max-h-96 overflow-y-auto w-full sm:w-96"
             style={{
               scrollbarWidth: 'thin', /* Para Firefox */
               scrollbarColor: '#lightblue #374151', /* Para Firefox (thumb track) */
@@ -1858,7 +1858,7 @@ export default function Game({}: GameProps) {
         <>
           {showYouTubeVideos && (
             <div
-              className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900 bg-opacity-90 rounded-xl shadow-lg p-6 z-40 border-2 border-gray-300 max-h-96 overflow-y-auto w-full sm:w-96"
+              className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900 bg-opacity-90 rounded-xl shadow-lg p-6 z-50 border-2 border-gray-300 max-h-96 overflow-y-auto w-full sm:w-96"
               style={{
                 scrollbarWidth: 'thin',
                 scrollbarColor: '#lightblue #374151',
@@ -2077,7 +2077,7 @@ export default function Game({}: GameProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 flex items-center justify-center z-40 bg-black bg-opacity-70 backdrop-blur-md"
+              className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-70 backdrop-blur-md"
               onClick={(e) => {
                 if (e.target === e.currentTarget) {
                   closeConquestCarousel();
@@ -2217,7 +2217,7 @@ export default function Game({}: GameProps) {
       <div className="flex flex-col items-center space-y-6">
         <button
             onClick={() => router.push('/results')}
-            className="z-50 w-68 border-2 border-e-lightblue bg-gradient-to-br text-blue from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 text-lg cursor-pointer flex items-center justify-center space-x-3"
+            className="w-68 border-2 border-e-lightblue bg-gradient-to-br text-blue from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 text-lg cursor-pointer flex items-center justify-center space-x-3"
         >
           <div className="flex items-center">
             <svg
