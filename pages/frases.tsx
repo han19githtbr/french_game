@@ -2485,7 +2485,7 @@ export default function Frase({}: GameProps) {
                         <FaLinkedin size={28} className="text-blue" />
                     </motion.a>
                     <motion.a
-                        href="https://www.instagram.com/handyclaudemarie?igsh=aGNieHVpOXIzdjBy"
+                        href="https://www.instagram.com/frances_com_tres_nativos/"
                         target="_blank"
                         rel="noopener noreferrer"
                         whileHover={{ scale: 1.1, y: -2 }}

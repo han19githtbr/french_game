@@ -2783,7 +2783,7 @@ export default function Game({}: GameProps) {
                         <FaInstagram size={28} className="text-pink" />
                     </motion.a>
                     <motion.a
-                        href="https://www.facebook.com/handyclaudemarie.milliance"
+                        href="https://www.instagram.com/frances_com_tres_nativos/"
                         target="_blank"
                         rel="noopener noreferrer"
                         whileHover={{ scale: 1.1, y: -2 }}
