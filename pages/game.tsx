@@ -290,6 +290,7 @@ export default function Game({}: GameProps) {
     }
 
     if (status === 'authenticated' && !socket) {
+      console.log('Sessão do usuário autenticado:', session);
       // Conecta ao servidor Socket.IO
       const newSocket = io({
         path: '/api/socket', // Deve corresponder ao caminho no seu servidor
@@ -309,17 +310,20 @@ export default function Game({}: GameProps) {
 
       newSocket.on('usersOnlineUpdate', (updatedUsers: User[]) => {
         console.log('Lista de usuários online atualizada:', updatedUsers.map(u => u.name));
-        const currentOnlineUserIds = usersOnline.map(u => u.id);
-        const updatedOnlineUserIds = updatedUsers.map(u => u.id);
+        // Use a função de callback para setUsersOnline para acessar o estado anterior
+        // sem ter usersOnline na dependência do useEffect
+        setUsersOnline(prevUsersOnline => { // <--- MUDANÇA AQUI
+          const currentOnlineUserIds = prevUsersOnline.map(u => u.id); // <--- Use prevUsersOnline
 
-        // Detectar novos usuários online
-        const newUsers = updatedUsers.filter(user => !currentOnlineUserIds.includes(user.id));
-        if (newUsers.length > 0 && usersOnline.length > 0) { // Evita notificar na primeira carga
-          setLastOnlineUser(newUsers[0].name); // Pega o primeiro novo usuário para a notificação
-          setShowNewUserOnlineNotification(true);
-          setTimeout(() => setShowNewUserOnlineNotification(false), 5000); // Esconde a notificação após 5 segundos
-        }
-        setUsersOnline(updatedUsers);
+          // Detectar novos usuários online
+          const newUsers = updatedUsers.filter(user => !currentOnlineUserIds.includes(user.id));
+          if (newUsers.length > 0 && prevUsersOnline.length > 0) { // <--- Use prevUsersOnline
+            setLastOnlineUser(newUsers[0].name);
+            setShowNewUserOnlineNotification(true);
+            setTimeout(() => setShowNewUserOnlineNotification(false), 5000);
+          }
+          return updatedUsers; // Retorna o novo estado
+        });
       });
 
       newSocket.on('receiveMessage', (data: Message) => {
@@ -1622,7 +1626,7 @@ export default function Game({}: GameProps) {
             onClick={toggleRelaxSoundsVisibility}
             className="relative border-2 border-lightblue hover:bg-lightblue text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4"
           >
-            <MusicalNoteIcon className="h-6 w-6 text-green" />
+            <MusicalNoteIcon className="h-6 w-6 text-blue" />
           </button>
         </div>
       
@@ -1757,7 +1761,7 @@ export default function Game({}: GameProps) {
             onClick={toggleVideosVisibility}
             className="relative border-2 border-lightblue hover:bg-lightblue text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4"
           >
-            <VideoCameraIcon className="h-6 w-6 text-green" />
+            <VideoCameraIcon className="h-6 w-6 text-blue" />
           </button>
         </div>
 

@@ -29,6 +29,8 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponse & { socket: any
     console.log('Novo usuário conectado:', socket.id);
 
     socket.on('userConnected', (userData: { id: string; name: string; image?: { url: string } }) => {
+      console.log('Dados do usuário recebidos em userConnected:', userData);
+      
       const existingUserIndex = usersOnline.findIndex(user => user.id === userData.id);
       if (existingUserIndex === -1) {
         const newUser: User = { ...userData, socketId: socket.id };
@@ -37,6 +39,7 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponse & { socket: any
         io.emit('usersOnlineUpdate', usersOnline); // Avisa a todos sobre a atualização
       } else {
         // Atualiza o socketId se o usuário já estiver na lista (ex: reconexão)
+        const oldSocketId = usersOnline[existingUserIndex].socketId;
         usersOnline[existingUserIndex].socketId = socket.id;
         io.emit('usersOnlineUpdate', usersOnline);
       }
@@ -64,10 +67,12 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponse & { socket: any
       const index = usersOnline.findIndex(user => user.socketId === socket.id);
       if (index !== -1) {
         const disconnectedUser = usersOnline.splice(index, 1)[0];
-        console.log(`Usuário ${disconnectedUser.name} desconectado. Online:`, usersOnline.map(u => u.name));
+        console.log(`Usuário ${disconnectedUser.name} (ID: ${disconnectedUser.id}) DESCONECTADO (Socket ${socket.id}). Lista online atual:`, usersOnline.map(u => u.name));
         io.emit('usersOnlineUpdate', usersOnline); // Avisa a todos sobre a atualização
+      } else {
+        console.log(`Socket ${socket.id} desconectado, mas não encontrado na lista de usuários online.`);
       }
-      console.log('Usuário desconectado:', socket.id);
+      
     });
   });
 
