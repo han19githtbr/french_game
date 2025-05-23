@@ -1,8 +1,8 @@
 /*'use client'*/
 
 import { useEffect, useRef, useState, RefObject, useCallback } from 'react'
-import { createAblyClient } from '../lib/ably'
-import type * as Ably from 'ably'
+//import { createAblyClient } from '../lib/ably'
+//import type * as Ably from 'ably'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/router'
 //import { Check, X, Minus, ChevronLeft, Lock } from 'lucide-react'
@@ -10,15 +10,15 @@ import { Check, X, ChevronLeft, Minus, Lock, ChevronDown, ChevronRight, Pause, P
 import { motion , AnimatePresence, useMotionValue, animate, MotionValue} from 'framer-motion'
 import { saveProgress } from './proverbs_results'
 import { LockClosedIcon, LockOpenIcon, MusicalNoteIcon, GlobeAmericasIcon, CloudIcon, BeakerIcon, VideoCameraIcon, FilmIcon, LanguageIcon, DeviceTabletIcon } from '@heroicons/react/24/solid';
-import { io } from 'socket.io-client'
-import { DotLoader } from 'react-spinners';
-import { Realtime, Message } from 'ably'
+//import { io } from 'socket.io-client'
+//import { DotLoader } from 'react-spinners';
+//import { Realtime, Message } from 'ably'
 import { useSound } from 'use-sound';
-import type { RealtimeChannel } from 'ably';
+//import type { RealtimeChannel } from 'ably';
 import dynamic from "next/dynamic";
 import { BiPlay, BiPause, BiVolumeFull, BiVolumeMute } from 'react-icons/bi';
 import { FaSpinner, FaTrophy } from 'react-icons/fa';
-import Notification from '../Notification'
+//import Notification from '../Notification'
 import { FaLinkedin, FaInstagram, FaFacebook, FaGithub } from 'react-icons/fa';
 import { BsEyeFill, BsPlayFill } from 'react-icons/bs';
 import { toast, ToastContainer } from 'react-toastify';
@@ -39,26 +39,6 @@ type Result = {
   correct_proverb: boolean
   selected: string
 }
-
-type Player = {
-  clientId: string
-  name: string
-  avatarUrl?: string;
-}
-
-interface ChatRequest {
-  fromClientId: string;
-  fromName: string;
-  fromAvatar: string;
-  toClientId: string;
-}
-
-type ChatBoxProps = {
-  clientId: string;
-  chatPartner: Player;
-  //channel: RealtimeChannel;
-  channel: any;
-};
 
 
 type SetterFunction = (value: boolean) => void;
@@ -127,22 +107,8 @@ export default function Game({}: GameProps) {
   
   const { data: session, status } = useSession()
   const router = useRouter()
-
-  const [playersOnline, setPlayersOnline] = useState<Player[]>([])
-  const [showPlayersOnline, setShowPlayersOnline] = useState(false);
-      
-  //const [showNotification, setShowNotification] = useState<ShowNotification | null>(null)
-
-  const [notification, setNotification] = useState<{ message: string; type: 'info' | 'success' | 'error' } | null>(null);
-    
-  const [incomingRequest, setIncomingRequest] = useState<ChatRequest | null>(null);
-  const [privateChannel, setPrivateChannel] = useState<RealtimeChannel | null>(null);
-  const [chatPartner, setChatPartner] = useState<Player | null>(null);
+   
   
-  const [showPicker, setShowPicker] = useState(false);
-  
-
-  const playerName = session?.user?.name || 'Anônimo';
   const [notificationCount, setNotificationCount] = useState(0);
 
   const [showLockMessage, setShowLockMessage] = useState(false);
@@ -173,13 +139,11 @@ export default function Game({}: GameProps) {
   const [position, setPosition] = useState({ x: 20, y: 20 }) // canto superior esquerdo
   const [dragging, setDragging] = useState(false);
   const [offset, setOffset] = useState({ x: 130, y: 130 });
-  const [visibleModals, setVisibleModals] = useState<Record<string, boolean>>({});
-  
+    
   const [reviewHistory, setReviewHistory] = useState<ReviewItem[]>([]);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
   const [availableReviews, setAvailableReviews] = useState(0);
-  //const reviewIntervalRef: RefObject<ReturnType<typeof setInterval> | null> = useRef(null);
   const reviewIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const [isReviewUnlocking, setIsReviewUnlocking] = useState(false);
@@ -192,9 +156,7 @@ export default function Game({}: GameProps) {
   const [isReviewPaused, setIsReviewPaused] = useState(false);
 
   const [open, setOpen] = useState(false);
-  const [ablyClient, setAblyClient] = useState<Ably.Realtime | null>(null)
-  const [clientId, setClientId] = useState<string | null>(null);
-
+  
   const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
   const [currentSoundUrl, setCurrentSoundUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -217,21 +179,16 @@ export default function Game({}: GameProps) {
   const [currentRoundPlays, setCurrentRoundPlays] = useState<any[]>([]); // Armazenar as jogadas da rodada atual
   // Estado para armazenar as conquistas publicadas (simulação de persistência)
   const [publishedConquests, setPublishedConquests] = useState<any[]>([]);
-  const [isReplaying, setIsReplaying] = useState(false);
-  const [currentReplayIndex, setCurrentReplayIndex] = useState(0);
   const [replayPlays, setReplayPlays] = useState<any[]>([]);
-  const [showReplayOnTrophyClick, setShowReplayOnTrophyClick] = useState(false);
   const [replayIndex, setReplayIndex] = useState(0);
   const [replayIntervalId, setReplayIntervalId] = useState<NodeJS.Timeout | null>(null);
-  const [hasNewConquest, setHasNewConquest] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
   const [currentConquest, setCurrentConquest] = useState<Conquest | null>(null); // A conquista a ser exibida no modal
   const [showConquestCarousel, setShowConquestCarousel] = useState(false);
   const [selectedConquestIndex, setSelectedConquestIndex] = useState(0);
   const [newConquestCount, setNewConquestCount] = useState(0); // Contador de novas conquistas
   const [hasClickedNotification, setHasClickedNotification] = useState(false);
-    
-
+  
   const [showYouTubeVideos, setShowYouTubeVideos] = useState(false);
   const [selectedThemeVideo, setSelectedThemeVideo] = useState<string | null>(null);
   const [searchStatusVideo, setSearchStatusVideo] = useState<'idle' | 'searching' | 'results' | 'error'>('idle');
@@ -240,16 +197,11 @@ export default function Game({}: GameProps) {
   const [currentVideoInfo, setCurrentVideoInfo] = useState<Video | null>(null);
   
   const [remainingAttempts, setRemainingAttempts] = useState(4); // Começa com 4 tentativas
-  const [showLastAttemptWarning, setShowLastAttemptWarning] = useState(false);
-  const [showUnlockDurationWarning, setShowUnlockDurationWarning] = useState(false); // Novo estado
-  
+    
   // NOVOS ESTADOS PARA CONTROLE DOS MODAIS
-  const [showUnlockWarningModal, setShowUnlockWarningModal] = useState(false); // Para o aviso de duração do desbloqueio
   const [showLastAttemptWarningModal, setShowLastAttemptWarningModal] = useState(false); // Para o aviso de última tentativa
-  const [hasShownUnlockLevelWarning, setHasShownUnlockLevelWarning] = useState(false);
-  
+    
   const videoRef = useRef<HTMLIFrameElement>(null);
-
 
   const handleCloseLastAttemptWarningModal = () => {
     setShowLastAttemptWarningModal(false);
@@ -472,99 +424,7 @@ export default function Game({}: GameProps) {
     }
   };
 
-  // Cria o Ably client assim que clientId estiver disponível
-  useEffect(() => {
-    if (!clientId) return;
-
-    const client = createAblyClient(clientId);
-    setAblyClient(client);
-
-    return () => client.close();
-  }, [clientId]);
   
-  
-  const hasEnteredRef = useRef(false);
-  
-  
-   useEffect(() => {
-    if (!ablyClient || !clientId || !playerName  || hasEnteredRef.current) return;
-  
-    const presenceChannel = ablyClient.channels.get("presence-chat");
-            
-    const avatarUrl = session?.user?.image ?? "";
-
-    const handleEnter = (member: any) => {
-      if (member.clientId !== clientId) {
-        setPlayersOnline((prev) => {
-          const alreadyExists = prev.some(p => p.clientId === member.clientId);
-          if (alreadyExists) return prev;
-          return [...prev, {
-            clientId: member.clientId,
-            name: member.data?.name ?? "Desconhecido",
-            avatarUrl: member.data?.avatarUrl ?? "",
-          }];
-        });
-        
-        setShowNotification({ name: member.data?.name ?? "Desconhecido", type: 'join' });
-        setNotificationCount((prev) => prev + 1);
-        playEnterSound();
-      }
-    };
-
-    const handleLeave = (member: any) => {
-      if (member.clientId !== clientId) {
-        setPlayersOnline((prev) => prev.filter((p) => p.clientId !== member.clientId));
-        setShowNotification({ name: member.data?.name ?? "Desconhecido", type: 'leave' });
-        setNotificationCount((prev) => prev + 1);
-      }
-    };
-
-    // Primeiro inscreve-se nos eventos
-    presenceChannel.presence.subscribe("enter", handleEnter);
-    presenceChannel.presence.subscribe("leave", handleLeave);
-
-    // ✅ Aguarda a conexão com Ably antes de entrar no canal
-    ablyClient.connection.once('connected', async () => {
-        await presenceChannel.presence.enter({ name: playerName, avatarUrl });
-        hasEnteredRef.current = true;
-
-        const members = await presenceChannel.presence.get();
-        const players: Player[] = members
-          .filter((m: any) => m.clientId !== clientId)
-          .map((m: any) => ({
-            clientId: m.clientId,
-            name: m.data?.name ?? "Desconhecido",
-            avatarUrl: m.data?.avatarUrl ?? "",
-          }));
-        setPlayersOnline(players);
-      
-    });
-        
-    return () => {
-      presenceChannel.presence.leave();
-      presenceChannel.presence.unsubscribe("enter", handleEnter);
-      presenceChannel.presence.unsubscribe("leave", handleLeave);
-      hasEnteredRef.current = false;
-    };
-  }, [ablyClient, clientId, playerName, session]);
-  
-    
-  const playEnterSound = () => {
-      const audio = new Audio('/sounds/login.mp3');
-      audio.play().catch((err) => {
-        console.warn('Failed to play sound:', err);
-      });
-  };
-   
-  
-  const playRequestSound = () => {
-      const audio = new Audio('/sounds/received_sound.mp3');
-      audio.play().catch((err) => {
-        console.warn('Failed to play request sound:', err);
-      });
-  };
-  
-
   const fetchDailyConquests = async () => {
     try {
       const response = await fetch('/api/conquests/today');
@@ -616,267 +476,7 @@ export default function Game({}: GameProps) {
       setSuccessSound(new Audio('/sounds/success.mp3'));
     }
   }, [])
-
-  
-    useEffect(() => {
-      if (!ablyClient || !showPlayersOnline) return;
-      const channel = ablyClient.channels.get("presence-chat");
     
-      const fetchOnlinePlayers = async () => {
-        const members = await channel.presence.get();
-        const players: Player[] = members.map((m) => ({
-          clientId: m.clientId,
-          name: m.data?.name ?? "Desconhecido",
-          avatarUrl: m.data?.avatarUrl ?? "",
-        }));
-        setPlayersOnline(players);
-      };
-    
-      fetchOnlinePlayers();
-    }, [ablyClient, showPlayersOnline]);
-  
-  
-      
-    // Enviar chat request
-    const sendChatRequest = (toPlayer: Player) => {
-      // Checagem de integridade mínima
-      if (!ablyClient || !clientId) return;
-      
-      const request: ChatRequest = {
-        fromClientId: clientId!,
-        fromName: playerName,
-        fromAvatar: session?.user?.image || "",
-        toClientId: toPlayer.clientId,
-      };
-    
-      ablyClient?.channels.get("presence-chat").publish("chat-request", request);
-    };
-  
-  
-    useEffect(() => {
-      if (!ablyClient || !clientId) return;
-
-      const channel = ablyClient?.channels.get("presence-chat");
-    
-      const handleRequest = async (msg: any) => {
-        const req: ChatRequest = msg.data;
-        if (req.toClientId !== clientId) return;
-        
-        const members = await channel.presence.get();
-        const isOnline = members.some(m => m.clientId === req.fromClientId);
-
-        if (isOnline) {
-          setIncomingRequest(req);
-        }
-
-      };
-  
-
-      const handleRequestAccepted = (msg: any) => {
-        const { fromClientId, toClientId } = msg.data;
-        if (toClientId === clientId) {
-          const channelName = getPrivateChannelName(fromClientId, clientId);
-          const partner = playersOnline.find(p => p.clientId === fromClientId);
-          const privateCh = ablyClient.channels.get(channelName);
-          
-          if (partner) {
-            setChatPartner(partner);
-            setPrivateChannel(privateCh);
-          }
-        }
-      };
-    
-      channel.subscribe("chat-request", handleRequest);
-      channel.subscribe("chat-accepted", handleRequestAccepted);
-    
-      return () => {
-        channel.unsubscribe("chat-request", handleRequest);
-        channel.unsubscribe("chat-accepted", handleRequestAccepted);
-      };
-    }, [ablyClient, clientId, playersOnline]);
-  
-
-  
-    const getPrivateChannelName = (id1: string, id2: string) =>
-      `private-chat:${[id1, id2].sort().join("-")}`;
-    
-  
-    const acceptRequest = (req: ChatRequest) => {
-      const channelName = getPrivateChannelName(req.fromClientId, clientId!);
-      const channel = ablyClient?.channels.get(channelName);
-    
-      if (!channel) return; // impede erro
-    
-      setPrivateChannel(channel);
-      setChatPartner({
-        clientId: req.fromClientId,
-        name: req.fromName,
-        avatarUrl: req.fromAvatar,
-      });
-      
-      setIncomingRequest(null);
-
-      // Notificar o solicitante que a solicitação foi aceita
-      if (!ablyClient) return; // Impede erro se ablyClient for null
-      ablyClient.channels.get("presence-chat").publish("chat-accepted", {
-        fromClientId: clientId,
-        toClientId: req.fromClientId,
-      });
-    };
-  
-  
-    const ChatBox = ({ clientId, chatPartner, channel }: ChatBoxProps) => {
-      const [messages, setMessages] = useState<{ from: string; text: string }[]>([]);
-      const [input, setInput] = useState("");
-      const [isPartnerTyping, setIsPartnerTyping] = useState(false);
-      const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-    
-      useEffect(() => {
-        if (!channel || !clientId) return;
-  
-        channel.history({ limit: 100 }).then((messagePage: any) => {
-          const history = messagePage.items
-            .filter((msg: any) => msg.name === "message")
-            .map((msg: any) => msg.data);
-          setMessages(history.reverse());
-        });
-  
-        const handler = (msg: any) => {
-          setMessages((prev) => [...prev, msg.data]);
-          new Audio("/sounds/message.mp3").play();
-        };
-        channel.subscribe("message", handler);
-        return () => channel.unsubscribe("message", handler);
-      }, [channel, clientId]);
-    
-  
-      useEffect(() => {
-        if (!channel || !clientId) return;
-  
-        const handler = (msg: any) => {
-          if (msg.data.from !== clientId) {
-            setIsPartnerTyping(msg.data.isTyping);
-          }
-        };
-        // Redefinir indicador de digitação se o parceiro sair
-        channel.presence.subscribe("leave", (member: any) => {
-          if (member.clientId !== clientId) {
-            setIsPartnerTyping(false);
-          }
-        });
-  
-        return () => {
-          channel.unsubscribe("typing", handler);
-          channel.presence.unsubscribe("leave");
-        };
-      }, [channel, clientId]);
-    
-          
-      useEffect(() => {
-        if (!channel || !clientId || !input) return;
-      
-        channel?.publish("typing", { from: clientId, isTyping: true });
-      
-        if (typingTimeout.current) {
-          clearTimeout(typingTimeout.current);
-        }
-      
-        typingTimeout.current = setTimeout(() => {
-          channel.publish("typing", { from: clientId, isTyping: false });
-        }, 1000);
-      
-        return () => {
-          if (typingTimeout.current) {
-            clearTimeout(typingTimeout.current);
-          }
-        };
-      }, [input, channel, clientId]);
-    
-  
-      const sendMessage = () => {
-        if (!input.trim()) return;
-        const message = { from: clientId, text: input.trim() };
-        channel.publish("message", message);
-        setMessages((prev) => [...prev, message]);
-        setInput("");
-      };
-
-
-    return (
-      <>
-        {/* Caixa de bate-papo privado */}
-        <div className="fixed bottom-4 right-4 bg-gray-900 rounded-xl border border-blue-500 shadow-xl w-80 z-50">
-          <div className="bg-blue-800 text-white p-2 rounded-t-xl flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <img src={chatPartner.avatarUrl} className="w-8 h-8 rounded-full" />
-              <span>{chatPartner.name}</span>
-            </div>
-          </div>
-  
-          <div className="p-2 max-h-64 overflow-y-auto space-y-1 text-white text-sm">
-            {messages.map((msg, i) => (
-              <div
-                key={i}
-                className={`p-2 rounded-md ${
-                  msg.from === clientId ? "bg-blue-600 ml-auto text-right" : "bg-gray-700"
-                }`}
-              >
-                {msg.text}
-              </div>
-            ))}
-          </div>
-  
-          <div className="p-2 flex gap-2">
-            {/* Botão de emojis */}
-            <button
-              onClick={() => setShowPicker(!showPicker)}
-              type="button"
-              className="text-white text-lg px-2 hover:scale-110"
-            >
-              😊
-            </button>
-  
-            {/* Campo de entrada */}
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              className="flex-1 bg-gray-800 rounded px-2 py-1 text-white"
-              placeholder="Digite..."
-            />
-  
-            {/* Botão de enviar */}
-            <button
-              onClick={sendMessage}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-3 rounded"
-            >
-              Enviar
-            </button>
-  
-            {/* Picker de emojis */}
-            {showPicker && (
-              <div className="absolute bottom-14 right-2 z-50">
-                <Picker
-                  theme="dark"
-                  onSelect={(emoji: any) => {
-                    setInput((prev) => prev + emoji.native);
-                    setShowPicker(false);
-                  }}
-                />
-              </div>
-            )}
-          </div>
-        </div>
-  
-        {/* Indicador de digitação */}
-        {isPartnerTyping && (
-          <div className="text-xs text-gray-300 px-3 py-1 animate-pulse">
-            {chatPartner.name} está digitando...
-          </div>
-        )}
-      </>
-    )
-  }
-
 
   // Adicionar voz ao review
   useEffect(() => {
@@ -1241,9 +841,7 @@ export default function Game({}: GameProps) {
         toast.success('Conquista compartilhada com sucesso!', { position: "top-right", autoClose: 3000, hideProgressBar: false, closeOnClick: true, pauseOnHover: true, draggable: true, progress: undefined, theme: "light" });
         setShowPublishButton(false);
         setCurrentRoundPlays([]);
-        // Não precisamos mais adicionar ao estado local imediatamente,
-        // pois as conquistas do dia serão carregadas do servidor.
-        // setPublishedConquests(prev => [...prev, videoData]);
+        
         setNewConquestCount(prev => prev + 1);
         // Call the useEffect hook to re-run the effect
         fetchDailyConquests();
@@ -1434,28 +1032,9 @@ export default function Game({}: GameProps) {
       {/*<GlobalNotice />*/}
 
       <div className='relative'>
-        {/* Notificação de jogadores online */}
-        <div className="fixed top-4 left-2 z-50">
-              <button
-                  onClick={() => {
-                    setShowPlayersOnline((prev) => !prev);
-                    setNotificationCount(0); // Zera as notificações
-                  }}
-                  className="relative border-2 border-lightblue hover:bg-lightblue text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer mt-4"
-              >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1h9v-1a6 6 0 01-12 0v-1c0-2.485-2.099-4.5-4-4s-4 2.015-4 4v1z" />
-                  </svg>
-                  {notificationCount > 0 && (
-                    <span className="absolute top-0 right-0 transform translate-x-1/4 -translate-y-1/4 bg-green text-green text-xs rounded-full px-2 py-0.5">
-                        {notificationCount}
-                    </span>
-                  )}
-              </button>
-        </div>
-      
+              
         {/* Botão para mostrar/ocultar sons relaxantes */}
-        <div className="fixed top-20 left-2 z-50">
+        <div className="fixed top-4 left-2 z-50">
           <button
             onClick={toggleRelaxSoundsVisibility}
             className="relative border-2 border-lightblue hover:bg-lightblue text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4"
@@ -1590,7 +1169,7 @@ export default function Game({}: GameProps) {
 
 
         {/* Botão para mostrar/ocultar vídeos no youtube */}
-        <div className="fixed top-52 left-2 z-40">
+        <div className="fixed top-36 left-2 z-40">
           <button
             onClick={toggleVideosVisibility}
             className="relative border-2 border-lightblue hover:bg-lightblue text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4"
@@ -1700,29 +1279,7 @@ export default function Game({}: GameProps) {
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                   />
-                  {/*<div className='flex -ml-1'>
-                    <button
-                      onClick={togglePlayVideo}
-                      className="p-2 rounded-full bg-lightblue mt-2 hover:bg-transparent text-green focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                    >
-                      {isPlaying ? <BiPause className="h-6 w-6 text-green" /> : <BiPlay className="h-6 w-6 text-green" />}
-                    </button>
-                    
-                    <div className="flex items-center space-x-2">
-                      <button onClick={toggleMuteVideo} className="text-white mt-2 ml-4 focus:outline-none">
-                        {isMuted ? <BiVolumeMute className="h-5 w-5" /> : <BiVolumeFull className="h-5 w-5" />}
-                      </button>
-                      <input
-                        type="range"
-                        min="0"
-                        max="1"
-                        step="0.01"
-                        value={volume}
-                        onChange={handleVolumeVideoChange}
-                        className="rounded-md bg-gray-700 text-lightblue cursor-pointer mt-2"
-                      />
-                    </div>
-                  </div>*/}
+                  
                 </div>
               )}
         
@@ -1745,7 +1302,7 @@ export default function Game({}: GameProps) {
 
 
         {/* Botão para mostrar/ocultar as conquistas e o replay */}
-        <div className="fixed top-36 left-2 z-40">
+        <div className="fixed top-20 left-2 z-40">
           <button
             onClick={toggleShowWins}
             className="relative border-2 border-lightblue hover:bg-lightblue text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4 animate-pulse-slow"
@@ -1886,69 +1443,7 @@ export default function Game({}: GameProps) {
 
       </div>
       
-
-      {/* Exibição dos jogadores online */}
-      {showPlayersOnline && (
-            <div className="absolute top-26 left-4 bg-gray-900 rounded-xl shadow-lg p-4 w-72 z-50 border border-blue-400">
-                <h3 className="text-white font-semibold mb-2">Jogadores online</h3>
-                <ul className="space-y-2 max-h-64 overflow-y-auto">
-                {playersOnline
-                    .filter((p) => p.clientId !== clientId)
-                    .map((player) => (
-                    <li
-                        key={player.clientId}
-                        className="flex items-center justify-between bg-gray-800 px-3 py-2 rounded-lg hover:bg-gray-700 transition"
-                    >
-                        <div className="flex items-center space-x-2">
-                          <img src={player.avatarUrl} alt="avatar" className="w-8 h-8 rounded-full" />
-                          <span className="text-white">{player.name}</span>
-                        </div>
-                        <button
-                          onClick={() => sendChatRequest(player)}
-                          className="text-sm bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-full"
-                        >
-                          Bate-papo
-                        </button>
-                    </li>
-                    ))}
-                </ul>
-            </div>
-      )}
-
-
-      {/* Notificação de solicitação de chat */}
-      {incomingRequest && (
-            <div className="fixed bottom-4 right-4 bg-gray-800 border border-blue-500 rounded-xl p-4 shadow-xl z-50 animate-bounce-in">
-                <div className="flex items-center gap-3 mb-3">
-                  <img src={incomingRequest.fromAvatar} className="w-10 h-10 rounded-full" />
-                  <span className="text-white font-semibold">
-                      {incomingRequest.fromName} quer bater papo!
-                  </span>
-                </div>
-                <div className="flex justify-end gap-2">
-                  <button
-                      className="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600"
-                      onClick={() => acceptRequest(incomingRequest)}
-                  >
-                      Aceitar
-                  </button>
-                  <button
-                      className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600"
-                      onClick={() => setIncomingRequest(null)}
-                  >
-                      Recusar
-                  </button>
-                </div>
-            </div>
-      )}
       
-
-      {/* Caixa de bate-papo privado */}
-      {chatPartner && privateChannel && (
-        <ChatBox clientId={clientId!} chatPartner={chatPartner} channel={privateChannel} />
-      )}
-
-
       <motion.h1 
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }} 
@@ -2542,18 +2037,7 @@ export default function Game({}: GameProps) {
                   
         </motion.div>
       )}
-
- 
-      {/* ChatManager fixado no canto inferior direito */}
-      {/*{session?.user?.name && session?.user?.email && (
-        <ChatManager
-          currentUser={{
-            name: session.user.name,
-            email: session.user.email,
-            image: session.user.image || '',
-          }}
-        />
-      )}*/}
+     
  
       {showPublishButton && (
               <motion.div
@@ -2571,16 +2055,7 @@ export default function Game({}: GameProps) {
                 </motion.button>
               </motion.div>
       )}     
-
-      {/* Notificação flutuante no topo */}
-      {showNotification && (
-        <Notification
-          show={!!showNotification}
-          name={showNotification.name}
-          type={showNotification.type}
-        />
-      )}
-
+      
     </div>
   )
 }
