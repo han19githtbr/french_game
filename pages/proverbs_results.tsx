@@ -2,8 +2,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/router'
 import { ChevronLeft, Trash } from 'lucide-react'
-import { createAblyClient } from '../lib/ably'
-import type * as Ably from 'ably'
 import { useSession, signOut } from 'next-auth/react'
 import { motion , AnimatePresence} from 'framer-motion'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
