@@ -991,7 +991,7 @@ export default function Game({}: GameProps) {
     
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-800 to-slate-900 text-white flex flex-col items-center p-4 relative mb-6">
-      <div className="absolute top-76 left-4 z-30">
+      <div className="absolute top-66 left-4 z-30">
         <button
           onClick={() => router.push('/game')}
           className="flex border border-blue text-gray-300 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75 cursor-pointer"
