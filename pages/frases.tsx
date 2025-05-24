@@ -275,6 +275,7 @@ export default function Frase({}: GameProps) {
   const [remainingAttempts, setRemainingAttempts] = useState(4); // Começa com 4 tentativas
   
   const soundListBoxRef = useRef<HTMLDivElement>(null);
+  const videoListBoxRef = useRef<HTMLDivElement>(null);
   const [currentTime, setCurrentTime] = useState(0);
   
   // NOVOS ESTADOS PARA CONTROLE DOS MODAIS
@@ -309,6 +310,26 @@ export default function Frase({}: GameProps) {
     // Garante que os segundos tenham sempre 2 dígitos (ex: 05 em vez de 5)
     return `${minutes}:${String(remainingSeconds).padStart(2, '0')}`;
   };
+
+
+  function formatDuration(duration: string): string {
+    const iso8601DurationRegex = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/;
+    const match = duration.match(iso8601DurationRegex);
+
+    if (match) {
+      const hours = parseInt(match[1]) || 0;
+      const minutes = parseInt(match[2]) || 0;
+      const seconds = parseInt(match[3]) || 0;
+
+      const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+      const formattedMinutes = Math.floor(totalSeconds / 60);
+      const formattedSeconds = totalSeconds % 60;
+
+      return `${formattedMinutes}:${String(formattedSeconds).padStart(2, '0')}`;
+    }
+    return 'Duração desconhecida';
+  }
+
 
   // Efeito para lidar com a autenticação e conexão do socket
   useEffect(() => {
@@ -527,6 +548,15 @@ export default function Frase({}: GameProps) {
       setCurrentVideoUrl(`https://www.youtube.com/watch?v=${videoId}`);
       setCurrentVideoInfo(video);
       setIsPlaying(true);
+
+      // SCROLL AUTOMÁTICO PARA O PLAYER APÓS SELECIONAR UM SOM
+      // *** MUDANÇA AQUI: Adicionar setTimeout ***
+      setTimeout(() => {
+        if (videoListBoxRef.current) {
+          // console.log('Tentando rolar para a visualização...'); // Para debug
+          videoListBoxRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+      }, 0); // Timeout de 0ms para agendar a rolagem após a próxima renderização
     }
   };
   
@@ -1619,7 +1649,7 @@ export default function Frase({}: GameProps) {
                         </span>
                         <button
                           onClick={() => loadAndPlaySound(sound.id)}
-                          className="p-1 rounded-full bg-transparent border-2 border-b-lightblue hover:bg-lightblue text-white focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer"
+                          className="p-1 ml-2 rounded-full bg-transparent border-2 border-b-lightblue hover:bg-lightblue text-white focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer"
                         >
                           <BiPlay className="h-4 w-4 text-green" />
                         </button>
@@ -1768,10 +1798,18 @@ export default function Frase({}: GameProps) {
                     <ul>
                       {searchResultsVideo.map((video) => (
                         <li key={video.id} className="flex items-center justify-between py-2 border-b border-gray-700">
-                          <span className="text-blue text-sm font-thin">{video.name}</span>
+                          <span className="text-blue text-sm font-thin">
+                            {video.name}
+                            {/* Exibe a duração se existir */}
+                            {video.duration && (
+                              <span className="ml-2 text-green text-xs">
+                                ({formatDuration(video.duration)})
+                              </span>
+                            )}
+                          </span>
                           <button
                             onClick={() => loadAndPlayVideo(video.id)}
-                            className="p-1 rounded-full bg-transparent border-2 border-lightblue hover:bg-blue-500 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                            className="p-1 ml-2 rounded-full bg-transparent border-2 border-lightblue hover:bg-blue-500 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                           >
                             <BiPlay className="h-4 w-4 text-green" />
                           </button>
@@ -1801,7 +1839,7 @@ export default function Frase({}: GameProps) {
               )}
 
               {currentVideoUrl && (
-                <div className="inline-block items-center space-x-4">
+                <div ref={videoListBoxRef} className="inline-block items-center space-x-4">
                   {/* Using iframe for YouTube video playback */}
                   <iframe
                     ref={videoRef}
