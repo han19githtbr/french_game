@@ -274,6 +274,7 @@ export default function Game({}: GameProps) {
   const [currentVideoInfo, setCurrentVideoInfo] = useState<Video | null>(null);
   const [remainingAttempts, setRemainingAttempts] = useState(4); // Começa com 4 tentativas
     
+  const soundListBoxRef = useRef<HTMLDivElement>(null);
   const [currentTime, setCurrentTime] = useState(0);
 
   // NOVOS ESTADOS PARA CONTROLE DOS MODAIS
@@ -573,6 +574,7 @@ export default function Game({}: GameProps) {
       setCurrentSoundUrl(null);
       setSearchResults([]);
       setCurrentSoundInfo(null);
+      setIsPlaying(false);
 
       const query = selectedTheme;
 
@@ -619,6 +621,24 @@ export default function Game({}: GameProps) {
     }
   }, [volume, isMuted]);
 
+
+  // NOVO useEffect para controlar a reprodução/pausa automática
+  useEffect(() => {
+    if (audioRef.current) {
+      if (isPlaying && currentSoundUrl) {
+        audioRef.current.play().catch(error => {
+          console.error("Erro ao tentar tocar o áudio automaticamente:", error);
+          // O navegador pode bloquear o autoplay sem interação explícita.
+          // Aqui você pode mostrar uma mensagem ao usuário para clicar no play.
+          setIsPlaying(false); // Se a reprodução falhar, reseta o estado.
+        });
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [isPlaying, currentSoundUrl]); // Reage quando isPlaying ou currentSoundUrl mudam
+
+
   const handleThemeSelect = (theme: string) => {
     setSelectedTheme(theme);
   };
@@ -635,9 +655,14 @@ export default function Game({}: GameProps) {
         setCurrentSoundUrl(soundDetails.previews['preview-hq-mp3']);
         setCurrentSoundInfo(soundDetails);
         setIsPlaying(true);
-        if (audioRef.current) {
-          audioRef.current.play().catch(error => console.error("Erro ao tocar o áudio:", error));
-        }
+        // SCROLL AUTOMÁTICO PARA O PLAYER APÓS SELECIONAR UM SOM
+        // *** MUDANÇA AQUI: Adicionar setTimeout ***
+        setTimeout(() => {
+          if (soundListBoxRef.current) {
+            // console.log('Tentando rolar para a visualização...'); // Para debug
+            soundListBoxRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+          }
+        }, 0); // Timeout de 0ms para agendar a rolagem após a próxima renderização
       })
       .catch(error => {
         console.error("Erro ao obter detalhes do som:", error);
@@ -648,11 +673,6 @@ export default function Game({}: GameProps) {
 
   const togglePlay = () => {
     if (currentSoundUrl) {
-      if (isPlaying) {
-        audioRef.current?.pause();
-      } else {
-        audioRef.current?.play().catch(error => console.error("Erro ao tocar o áudio:", error));
-      }
       setIsPlaying(!isPlaying);
     }
   };
@@ -666,11 +686,8 @@ export default function Game({}: GameProps) {
   };
 
   const handleSoundEnded = () => {
-    if (currentSoundUrl && audioRef.current) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(error => console.error("Erro ao tocar o áudio:", error));
-      setIsPlaying(true);
-    }
+    setIsPlaying(false);
+    setCurrentTime(0); // Reseta o tempo atual ao fim do som
   };
 
   const toggleRelaxSoundsVisibility = () => {
@@ -1660,6 +1677,7 @@ export default function Game({}: GameProps) {
         
         {showRelaxSounds && (
           <div 
+            
             className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900 bg-opacity-90 rounded-xl shadow-lg p-6 z-50 border-2 border-gray-300 max-h-96 overflow-y-auto w-full sm:w-96"
             style={{
               scrollbarWidth: 'thin', /* Para Firefox */
@@ -1754,7 +1772,7 @@ export default function Game({}: GameProps) {
             )}
 
             {currentSoundUrl && (
-              <div className="flex items-center space-x-4">
+              <div ref={soundListBoxRef} className="flex items-center space-x-4">
                 <audio 
                   ref={audioRef} 
                   src={currentSoundUrl} 
