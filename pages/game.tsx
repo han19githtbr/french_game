@@ -17,8 +17,6 @@ import { youtube_v3 } from '@googleapis/youtube';
 import { io, Socket } from 'socket.io-client';
 
 
-const FREESOUND_API_KEY = 'SbW3xMpvC1XDTCf9Pesz75rwFKteNYZ84YRcnZwI';
-
 const Picker = dynamic(() => import("@emoji-mart/react"), { ssr: false });
 
 const themes = ['família', 'natureza', 'turismo', 'animais', 'tecnologia', 'gastronomia']
@@ -597,8 +595,64 @@ export default function Game({}: GameProps) {
     }
   }, [showNotification]);
 
-  
+
+  // SEU useEffect ORIGINAL PARA BUSCA POR TEMA - AGORA COM A MUDANÇA PARA CHAMAR O BACKEND
+
   useEffect(() => {
+    if (selectedTheme) {
+      setSearchStatus('searching');
+      setErrorMessage(null);
+      setCurrentSoundUrl(null);
+      setSearchResults([]);
+      setCurrentSoundInfo(null);
+      setIsPlaying(false);
+
+      const query = selectedTheme;
+
+      // *** MUDANÇA AQUI: Chamar o endpoint do seu backend ***
+      fetch('/api/freesound', { // Altere para o caminho da sua API Route/Endpoint
+        method: 'POST', // Usamos POST para enviar a query no corpo
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query }), // Enviando o tema como 'query' para o backend
+      })
+        .then(response => {
+          if (!response.ok) {
+            // Lidar com erros retornados pelo seu backend
+            throw new Error(`Erro na busca via backend: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          setSearchResults(data.results);
+          if (data.results.length > 0) {
+            setSearchStatus('results');
+          } else {
+            setSearchStatus('results');
+            setErrorMessage(`Nenhum som encontrado para "${query}".`);
+          }
+        })
+        .catch(error => {
+          console.error("Erro ao buscar sons (via backend):", error);
+          setErrorMessage("Erro ao buscar sons.");
+          setSearchStatus('error');
+        })
+        .finally(() => {
+          setIsSearching(false);
+        });
+    } else {
+      setCurrentSoundUrl(null);
+      setIsPlaying(false);
+      setSearchStatus('idle');
+      setSearchResults([]);
+      setErrorMessage(null);
+      setCurrentSoundInfo(null);
+    }
+  }, [selectedTheme]);
+
+  
+  /*useEffect(() => {
     if (selectedTheme) {
       setSearchStatus('searching');
       setErrorMessage(null);
@@ -642,7 +696,7 @@ export default function Game({}: GameProps) {
       setErrorMessage(null);
       setCurrentSoundInfo(null);
     }
-  }, [selectedTheme]);
+  }, [selectedTheme]);*/
 
 
   useEffect(() => {
@@ -674,7 +728,7 @@ export default function Game({}: GameProps) {
     setSelectedTheme(theme);
   };
 
-  const loadAndPlaySound = (soundId: number) => {
+  /*const loadAndPlaySound = (soundId: number) => {
     fetch(`https://freesound.org/apiv2/sounds/${soundId}/?token=${FREESOUND_API_KEY}`)
       .then(response => {
         if (!response.ok) {
@@ -700,7 +754,46 @@ export default function Game({}: GameProps) {
         setErrorMessage("Erro ao obter detalhes do som.");
         setSearchStatus('error');
       });
+  };*/
+
+
+  const loadAndPlaySound = (soundId: number) => {
+    // A requisição agora vai para o seu endpoint de backend '/api/freesound'
+    // e envia o 'soundId' no corpo da requisição.
+    fetch('/api/freesound', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ soundId }), // Enviando o soundId para o backend
+    })
+      .then(response => {
+        if (!response.ok) {
+          // Lidar com erros retornados pelo seu backend
+          throw new Error(`Erro ao obter detalhes do som via backend: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(soundDetails => {
+        // 'soundDetails' é a resposta que vem do seu backend (que por sua vez veio do Freesound ou do cache)
+        setCurrentSoundUrl(soundDetails.previews['preview-hq-mp3']);
+        setCurrentSoundInfo(soundDetails);
+        setIsPlaying(true);
+
+        // SCROLL AUTOMÁTICO PARA O PLAYER APÓS SELECIONAR UM SOM
+        setTimeout(() => {
+          if (soundListBoxRef.current) {
+            soundListBoxRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+          }
+        }, 0); // Timeout de 0ms para agendar a rolagem após a próxima renderização
+      })
+      .catch(error => {
+        console.error("Erro ao obter detalhes do som (via backend):", error);
+        setErrorMessage("Erro ao obter detalhes do som.");
+        setSearchStatus('error');
+      });
   };
+
 
   const togglePlay = () => {
     if (currentSoundUrl) {
