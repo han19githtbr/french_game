@@ -241,6 +241,7 @@ export default function Game({}: GameProps) {
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const [currentVideoInfo, setCurrentVideoInfo] = useState<Video | null>(null);
   
+  const soundListBoxRef = useRef<HTMLDivElement>(null);
   const [currentTime, setCurrentTime] = useState(0);
 
   const [remainingAttempts, setRemainingAttempts] = useState(4); // Começa com 4 tentativas
@@ -249,6 +250,7 @@ export default function Game({}: GameProps) {
   const [showLastAttemptWarningModal, setShowLastAttemptWarningModal] = useState(false); // Para o aviso de última tentativa
     
   const videoRef = useRef<HTMLIFrameElement>(null);
+
 
   const handleTimeUpdate = () => {
     if (audioRef.current) {
@@ -531,6 +533,7 @@ export default function Game({}: GameProps) {
         setCurrentSoundUrl(null);
         setSearchResults([]);
         setCurrentSoundInfo(null);
+        setIsPlaying(false);
   
         const query = selectedTheme;
   
@@ -569,6 +572,7 @@ export default function Game({}: GameProps) {
       }
   }, [selectedTheme]);
   
+
   useEffect(() => {
       if (audioRef.current) {
         audioRef.current.volume = volume;
@@ -576,10 +580,29 @@ export default function Game({}: GameProps) {
       }
   }, [volume, isMuted]);
   
+
+  // NOVO useEffect para controlar a reprodução/pausa automática
+  useEffect(() => {
+    if (audioRef.current) {
+      if (isPlaying && currentSoundUrl) {
+        audioRef.current.play().catch(error => {
+          console.error("Erro ao tentar tocar o áudio automaticamente:", error);
+          // O navegador pode bloquear o autoplay sem interação explícita.
+          // Aqui você pode mostrar uma mensagem ao usuário para clicar no play.
+          setIsPlaying(false); // Se a reprodução falhar, reseta o estado.
+        });
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [isPlaying, currentSoundUrl]); // Reage quando isPlaying ou currentSoundUrl mudam
+
+
   const handleThemeSelect = (theme: string) => {
       setSelectedTheme(theme);
   };
   
+
   const loadAndPlaySound = (soundId: number) => {
       fetch(`https://freesound.org/apiv2/sounds/${soundId}/?token=${FREESOUND_API_KEY}`)
         .then(response => {
@@ -592,9 +615,14 @@ export default function Game({}: GameProps) {
           setCurrentSoundUrl(soundDetails.previews['preview-hq-mp3']);
           setCurrentSoundInfo(soundDetails);
           setIsPlaying(true);
-          if (audioRef.current) {
-            audioRef.current.play().catch(error => console.error("Erro ao tocar o áudio:", error));
-          }
+          // SCROLL AUTOMÁTICO PARA O PLAYER APÓS SELECIONAR UM SOM
+          // *** MUDANÇA AQUI: Adicionar setTimeout ***
+          setTimeout(() => {
+            if (soundListBoxRef.current) {
+              // console.log('Tentando rolar para a visualização...'); // Para debug
+              soundListBoxRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }
+          }, 0); // Timeout de 0ms para agendar a rolagem após a próxima renderização
         })
         .catch(error => {
           console.error("Erro ao obter detalhes do som:", error);
@@ -603,31 +631,26 @@ export default function Game({}: GameProps) {
         });
   };
   
+
   const togglePlay = () => {
-      if (currentSoundUrl) {
-        if (isPlaying) {
-          audioRef.current?.pause();
-        } else {
-          audioRef.current?.play().catch(error => console.error("Erro ao tocar o áudio:", error));
-        }
-        setIsPlaying(!isPlaying);
-      }
+    if (currentSoundUrl) {
+      setIsPlaying(!isPlaying);
+    }
   };
   
+
   const handleVolumeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-      setVolume(parseFloat(event.target.value));
+    setVolume(parseFloat(event.target.value));
   };
   
+
   const toggleMute = () => {
-      setIsMuted(!isMuted);
+    setIsMuted(!isMuted);
   };
   
   const handleSoundEnded = () => {
-      if (currentSoundUrl && audioRef.current) {
-        audioRef.current.currentTime = 0;
-        audioRef.current.play().catch(error => console.error("Erro ao tocar o áudio:", error));
-        setIsPlaying(true);
-      }
+    setIsPlaying(false);
+    setCurrentTime(0); // Reseta o tempo atual ao fim do som
   };
   
   const toggleRelaxSoundsVisibility = () => {
@@ -1503,12 +1526,15 @@ export default function Game({}: GameProps) {
                   <ul>
                     {searchResults.map((sound) => (
                       <li key={sound.id} className="flex items-center justify-between py-2 border-b border-gray-700">
-                        {/* Adicione a duração aqui */}
-                        {sound.duration && (
-                          <span className="ml-2 text-green text-xs">
-                            ({Math.floor(sound.duration / 60)}:{('0' + Math.floor(sound.duration % 60)).slice(-2)})
-                          </span>
-                        )}
+                        <span className="text-blue text-sm font-thin">
+                          {sound.name}
+                          {/* Adicione a duração aqui */}
+                          {sound.duration && (
+                            <span className="ml-2 text-green text-xs">
+                              ({Math.floor(sound.duration / 60)}:{('0' + Math.floor(sound.duration % 60)).slice(-2)})
+                            </span>
+                          )}
+                        </span>
                         <button
                           onClick={() => loadAndPlaySound(sound.id)}
                           className="p-1 rounded-full bg-transparent border-2 border-b-lightblue hover:bg-lightblue text-white focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer"
@@ -1545,7 +1571,7 @@ export default function Game({}: GameProps) {
             )}
 
             {currentSoundUrl && (
-              <div className="flex items-center space-x-4">
+              <div ref={soundListBoxRef} className="flex items-center space-x-4">
                 <audio 
                   ref={audioRef} 
                   src={currentSoundUrl} 
