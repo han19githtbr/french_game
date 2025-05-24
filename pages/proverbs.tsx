@@ -241,6 +241,8 @@ export default function Game({}: GameProps) {
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const [currentVideoInfo, setCurrentVideoInfo] = useState<Video | null>(null);
   
+  const [currentTime, setCurrentTime] = useState(0);
+
   const [remainingAttempts, setRemainingAttempts] = useState(4); // Começa com 4 tentativas
     
   // NOVOS ESTADOS PARA CONTROLE DOS MODAIS
@@ -248,6 +250,26 @@ export default function Game({}: GameProps) {
     
   const videoRef = useRef<HTMLIFrameElement>(null);
 
+  const handleTimeUpdate = () => {
+    if (audioRef.current) {
+      setCurrentTime(audioRef.current.currentTime);
+    }
+  };
+
+
+  // Ela já garante que currentTime seja resetado ao carregar um novo som.
+  const handleLoadedMetadata = () => {
+    if (audioRef.current) {
+      setCurrentTime(0); // Reseta o tempo atual ao carregar um novo som
+    }
+  };
+
+  const formatTime = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    // Garante que os segundos tenham sempre 2 dígitos (ex: 05 em vez de 5)
+    return `${minutes}:${String(remainingSeconds).padStart(2, '0')}`;
+  };
 
   // Efeito para lidar com a autenticação e conexão do socket
   useEffect(() => {
@@ -1513,12 +1535,25 @@ export default function Game({}: GameProps) {
                 {currentSoundInfo?.url && (
                   <a href={currentSoundInfo.url} target="_blank" rel="noopener noreferrer" className="text-blue hover:underline">Ver no Freesound</a>
                 )}
+
+                {currentSoundInfo.duration !== undefined && ( // Garante que a duração está disponível
+                  <p className="mt-2 text-white">
+                    Tempo restante: <span className="font-semibold">{formatTime(Math.max(0, currentSoundInfo.duration - currentTime))}</span>
+                  </p>
+                )}
               </div>
             )}
 
             {currentSoundUrl && (
               <div className="flex items-center space-x-4">
-                <audio ref={audioRef} src={currentSoundUrl} loop onEnded={handleSoundEnded} />
+                <audio 
+                  ref={audioRef} 
+                  src={currentSoundUrl} 
+                  loop 
+                  onEnded={handleSoundEnded} 
+                  onTimeUpdate={handleTimeUpdate}
+                  onLoadedMetadata={handleLoadedMetadata} 
+                />
                 <button
                   onClick={togglePlay}
                   className="p-2 rounded-full bg-lightblue hover:bg-lightblue text-white focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer"
