@@ -291,6 +291,7 @@ export default function Game({}: GameProps) {
 
     if (status === 'authenticated' && !socket) {
       console.log('Sessão do usuário autenticado:', session);
+      console.log('Tentando conectar ao Socket.IO...');
       // Conecta ao servidor Socket.IO
       const newSocket = io({
         path: '/api/socket', // Deve corresponder ao caminho no seu servidor
@@ -300,6 +301,7 @@ export default function Game({}: GameProps) {
         console.log('Conectado ao servidor Socket.IO');
         // Emitir evento para o servidor que o usuário está online
         if (session?.user?.id && session?.user?.name) {
+          console.log('Emitindo userConnected para:', session.user.name, 'com ID:', session.user.id);
           newSocket.emit('userConnected', {
             id: session.user.id,
             name: session.user.name,
@@ -550,7 +552,8 @@ export default function Game({}: GameProps) {
 
       const query = selectedTheme;
 
-      fetch(`https://freesound.org/apiv2/search/text/?query=${query}&token=${FREESOUND_API_KEY}`)
+      //fetch(`https://freesound.org/apiv2/search/text/?query=${query}&token=${FREESOUND_API_KEY}`)
+      fetch(`https://freesound.org/apiv2/search/text/?query=${query}&fields=id,name,duration,previews,user,url&token=${FREESOUND_API_KEY}`)
         .then(response => {
           if (!response.ok) {
             throw new Error(`Erro na busca: ${response.status}`);
@@ -1682,7 +1685,15 @@ export default function Game({}: GameProps) {
                   <ul>
                     {searchResults.map((sound) => (
                       <li key={sound.id} className="flex items-center justify-between py-2 border-b border-gray-700">
-                        <span className="text-blue text-sm font-thin">{sound.name}</span>
+                        <span className="text-blue text-sm font-thin">
+                          {sound.name}
+                          {/* Adicione a duração aqui */}
+                          {sound.duration && (
+                            <span className="ml-2 text-green text-xs">
+                              ({Math.floor(sound.duration / 60)}:{('0' + Math.floor(sound.duration % 60)).slice(-2)})
+                            </span>
+                          )}
+                        </span>
                         <button
                           onClick={() => loadAndPlaySound(sound.id)}
                           className="p-1 rounded-full bg-transparent border-2 border-b-lightblue hover:bg-lightblue text-white focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer"
