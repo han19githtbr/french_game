@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, RefObject, useCallback } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/router'
-import { Check, X, Minus, Lock, ChevronDown, ChevronRight, Pause, Play, FlagIcon } from 'lucide-react'
+import { Check, X, Minus, Lock, ChevronDown, ChevronLeft, ChevronRight, Pause, Play, FlagIcon } from 'lucide-react'
 import { motion , AnimatePresence, useMotionValue, useTransform, animate, MotionValue} from 'framer-motion'
 import { saveProgress } from './results'
 import { LockClosedIcon, LockOpenIcon, MusicalNoteIcon, ChevronLeftIcon, ChevronRightIcon, GlobeAmericasIcon, CloudIcon, BeakerIcon, VideoCameraIcon, FilmIcon, LanguageIcon, DeviceTabletIcon, ChatBubbleBottomCenterTextIcon, MapPinIcon, ShoppingCartIcon, TvIcon, MoonIcon } from '@heroicons/react/24/solid';
@@ -1870,7 +1870,21 @@ export default function Game({}: GameProps) {
                   onClick={() => handleArrowSoundClick('left')}
                   className="p-2 text-gray-300 hover:text-green transition cursor-pointer"
                 >
-                  <ChevronLeftIcon className="w-6 h-6" />
+                  {/* Setinha animada */}
+                  <motion.div
+                    animate={{
+                      x: [0, 5, 0], // esquerda e direita
+                      opacity: [0.8, 1, 0.8], // animação de leve brilho
+                    }}
+                    transition={{
+                      duration: 0.8,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                    className="text-gray-300 flex justify-center items-center"
+                  >
+                    <ChevronLeft size={32} strokeWidth={1.5} />
+                  </motion.div>
                 </button>
 
                 <div className="flex-1 text-center">
@@ -1890,7 +1904,21 @@ export default function Game({}: GameProps) {
                   onClick={() => handleArrowSoundClick('right')}
                   className="p-2 text-gray-300 hover:text-green transition cursor-pointer"
                 >
-                  <ChevronRightIcon className="w-6 h-6" />
+                  {/* Setinha animada */}
+                  <motion.div
+                    animate={{
+                      x: [0, 6, 0], // esquerda e direita
+                      opacity: [0.8, 1, 0.8], // animação de leve brilho
+                    }}
+                    transition={{
+                      duration: 0.8,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                    className="text-gray-300 flex justify-center items-center"
+                  >
+                    <ChevronRight size={32} strokeWidth={1.5} />
+                  </motion.div>
                 </button>
             </div>
 
@@ -2040,7 +2068,21 @@ export default function Game({}: GameProps) {
                   onClick={() => handleArrowClick('left')}
                   className="p-2 text-gray-300 hover:text-green transition cursor-pointer"
                 >
-                  <ChevronLeftIcon className="w-6 h-6" />
+                  {/* Setinha animada */}
+                  <motion.div
+                    animate={{
+                      x: [0, 5, 0], // esquerda e direita
+                      opacity: [0.8, 1, 0.8], // animação de leve brilho
+                    }}
+                    transition={{
+                      duration: 0.8,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                    className="text-gray-300 flex justify-center items-center"
+                  >
+                    <ChevronLeft size={32} strokeWidth={1.5} />
+                  </motion.div>
                 </button>
 
                 <div className="flex-1 text-center">
@@ -2060,7 +2102,21 @@ export default function Game({}: GameProps) {
                   onClick={() => handleArrowClick('right')}
                   className="p-2 text-gray-300 hover:text-green transition cursor-pointer"
                 >
-                  <ChevronRightIcon className="w-6 h-6" />
+                  {/* Setinha animada */}
+                  <motion.div
+                    animate={{
+                      x: [0, 6, 0], // esquerda e direita
+                      opacity: [0.8, 1, 0.8], // animação de leve brilho
+                    }}
+                    transition={{
+                      duration: 0.8,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                    className="text-gray-300 flex justify-center items-center"
+                  >
+                    <ChevronRight size={32} strokeWidth={1.5} />
+                  </motion.div>
                 </button>
               </div>
 
