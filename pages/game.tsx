@@ -2010,8 +2010,9 @@ export default function Game({}: GameProps) {
                 animate={{ opacity: 1, y: 0 }}
                 className="text-white bg-yellow-900/40 border border-green text-sm px-4 py-2 rounded-lg mb-4 shadow"
               >
-                Você pode assistir até <span className="font-bold text-green">{DAILY_LIMIT}</span> <span className='text-green font-bold'>vídeos por dia</span> para evitar exceder o limite disponível.
+                Assista até <span className="font-bold text-green">{DAILY_LIMIT}</span> <span className='text-green font-bold'>vídeos por dia</span> para evitar exceder o limite de visualizações disponíveis.
               </motion.div>
+                
 
               <div className="flex items-center justify-between bg-gray-800 rounded-md px-2 py-1 mb-4 w-full overflow-hidden">
                 <button

@@ -9,7 +9,7 @@ import { useRouter } from 'next/router'
 import { Check, X, ChevronLeft, Minus, Lock, ChevronDown, ChevronRight, Pause, Play } from 'lucide-react'
 import { motion , AnimatePresence, useMotionValue, animate, MotionValue} from 'framer-motion'
 import { saveProgress } from './proverbs_results'
-import { LockClosedIcon, LockOpenIcon, MusicalNoteIcon, GlobeAmericasIcon, CloudIcon, BeakerIcon, VideoCameraIcon, FilmIcon, LanguageIcon, DeviceTabletIcon, ChatBubbleBottomCenterTextIcon } from '@heroicons/react/24/solid';
+import { LockClosedIcon, LockOpenIcon, MusicalNoteIcon, ChevronLeftIcon, ChevronRightIcon, GlobeAmericasIcon, CloudIcon, BeakerIcon, VideoCameraIcon, FilmIcon, LanguageIcon, DeviceTabletIcon, ChatBubbleBottomCenterTextIcon, MapPinIcon, ShoppingCartIcon, TvIcon } from '@heroicons/react/24/solid';
 //import { io } from 'socket.io-client'
 //import { DotLoader } from 'react-spinners';
 //import { Realtime, Message } from 'ably'
@@ -123,6 +123,16 @@ const getFormattedDate = () => {
 }
 
 
+const themesCarrossel = [
+  { id: 'tecnology', label: 'Learn', icon: <DeviceTabletIcon className="h-5 w-5 inline-block mr-1" /> },
+  { id: 'language', label: 'Language', icon: <LanguageIcon className="h-5 w-5 inline-block mr-1" /> },
+  { id: 'nature', label: 'Nature', icon: <GlobeAmericasIcon className="h-5 w-5 inline-block mr-1" /> },
+  { id: 'music', label: 'Music', icon: <MusicalNoteIcon className="h-5 w-5 inline-block mr-1" /> },
+  { id: 'food', label: 'Food', icon: <ShoppingCartIcon className="h-5 w-5 inline-block mr-1" /> },
+  { id: 'tourism', label: 'Tourism', icon: <MapPinIcon className="h-5 w-5 inline-block mr-1" /> },
+];
+
+
 export default function Game({}: GameProps) {
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const imageRefs = useRef<(HTMLDivElement | null)[]>([])
@@ -142,6 +152,9 @@ export default function Game({}: GameProps) {
   const [showCongrats, setShowCongrats] = useState(false)
   
   const [theme, setTheme] = useState('')
+  
+  const [themeCarrosselIndex, setThemeCarrosselIndex] = useState(0);
+  
   const [images, setImages] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
     
@@ -504,6 +517,17 @@ export default function Game({}: GameProps) {
       setSearchStatusVideo('error');
       setErrorMessage(error instanceof Error ? error.message : 'An unexpected error occurred');
     }
+  };
+
+
+  const handleArrowClick = (direction: 'left' | 'right') => {
+    const nextIndex =
+      direction === 'left'
+        ? (themeCarrosselIndex - 1 + themesCarrossel.length) % themesCarrossel.length
+        : (themeCarrosselIndex + 1) % themesCarrossel.length;
+
+    setThemeCarrosselIndex(nextIndex);
+    handleThemeVideoSelect(themesCarrossel[nextIndex].id);
   };
 
 
@@ -1764,32 +1788,35 @@ export default function Game({}: GameProps) {
                 Videos em Francês no: <span className="text-green">Youtube</span>
               </h2>
         
-              <div className="flex space-x-1 mb-4">
+              <div className="flex items-center justify-between bg-gray-800 rounded-md px-2 py-1 mb-4 w-full overflow-hidden">
                 <button
-                  onClick={() => handleThemeVideoSelect('tecnology')}
-                  className={`rounded-md px-1 py-1 text-white bg-gray-800 border border-blue font-semibold transition duration-300 ease-in-out ${
-                    selectedThemeVideo === 'tecnology' ? 'bg-lightblue hover:bg-blue' : 'bg-gray-700 hover:bg-gray-600'
-                  } focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer`}
+                  onClick={() => handleArrowClick('left')}
+                  className="p-2 text-gray-300 hover:text-green transition cursor-pointer"
                 >
-                  <DeviceTabletIcon className="h-5 w-5 mr-2 inline-block text-white" /> Learn
+                  <ChevronLeftIcon className="w-6 h-6" />
                 </button>
+
+                <div className="flex-1 text-center">
+                  <button
+                    className={`py-1 px-4 rounded-md border font-semibold transition duration-300 ease-in-out ${
+                      selectedThemeVideo === themesCarrossel[themeCarrosselIndex].id
+                        ? 'bg-transparent text-white'
+                        : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                    }`}
+                  >
+                    {themesCarrossel[themeCarrosselIndex].icon}
+                    {themesCarrossel[themeCarrosselIndex].label}
+                  </button>
+                </div>
+
                 <button
-                  onClick={() => handleThemeVideoSelect('language')}
-                  className={`rounded-md px-1 py-1 text-white bg-gray-800 border border-blue font-semibold transition duration-300 ease-in-out ${
-                    selectedThemeVideo === 'language' ? 'bg-lightblue hover:bg-blue' : 'bg-gray-700 hover:bg-gray-600'
-                  } focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer`}
+                  onClick={() => handleArrowClick('right')}
+                  className="p-2 text-gray-300 hover:text-green transition cursor-pointer"
                 >
-                  <LanguageIcon className="h-5 w-5 mr-2 inline-block text-white" /> Language
-                </button>
-                <button
-                  onClick={() => handleThemeVideoSelect('nature')}
-                  className={`rounded-md px-1 py-1 text-white bg-gray-800 border border-blue font-semibold transition duration-300 ease-in-out ${
-                    selectedThemeVideo === 'nature' ? 'bg-lightblue hover:bg-blue' : 'bg-gray-700 hover:bg-gray-600'
-                  } focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer`}
-                >
-                  <GlobeAmericasIcon className="h-5 w-5 mr-2 inline-block text-white" /> Nature
+                  <ChevronRightIcon className="w-6 h-6" />
                 </button>
               </div>
+
         
               <div className="mb-4 text-white">
                 {selectedThemeVideo && searchStatusVideo === 'searching' && (
