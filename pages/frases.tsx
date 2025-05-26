@@ -749,7 +749,7 @@ export default function Frase({}: GameProps) {
       setSelectedTheme(theme);
   };
   
-  
+
   const handleArrowSoundClick = (direction: 'left' | 'right') => {
     const nextIndex =
       direction === 'left'
@@ -1731,7 +1731,7 @@ export default function Frase({}: GameProps) {
           >
             <h2 className="text-xl text-gray-300 font-semibold mb-4">Sons Relaxantes <span className='text-green'>(Freesound)</span></h2>
 
-            <div className="flex items-center justify-between bg-gray-800 rounded-md px-2 py-1 mb-4 w-full overflow-hidden">
+            <div className="flex items-center justify-between bg-gray-700 rounded-md px-2 py-1 mb-4 w-full overflow-hidden">
                 <button
                   onClick={() => handleArrowSoundClick('left')}
                   className="p-2 text-gray-300 hover:text-green transition cursor-pointer"
@@ -1743,8 +1743,8 @@ export default function Frase({}: GameProps) {
                   <button
                     className={`py-1 px-4 rounded-md border font-semibold transition duration-300 ease-in-out ${
                       selectedTheme === themesSoundCarrossel[themeCarrosselIndex].id
-                        ? 'bg-transparent text-gray-200'
-                        : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                        ? 'bg-gray-900 text-gray-200'
+                        : 'bg-gray-900 text-gray-200 hover:bg-gray-600'
                     }`}
                   >
                     {themesSoundCarrossel[themeCarrosselIndex].icon}
