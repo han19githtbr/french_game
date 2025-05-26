@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, RefObject, useCallback } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/router'
-import { Check, X, Minus, Lock, ChevronDown, ChevronRight, Pause, Play } from 'lucide-react'
+import { Check, X, Minus, Lock, ChevronDown, ChevronRight, Pause, Play, FlagIcon } from 'lucide-react'
 import { motion , AnimatePresence, useMotionValue, useTransform, animate, MotionValue} from 'framer-motion'
 import { saveProgress } from './results'
-import { LockClosedIcon, LockOpenIcon, MusicalNoteIcon, ChevronLeftIcon, ChevronRightIcon, GlobeAmericasIcon, CloudIcon, BeakerIcon, VideoCameraIcon, FilmIcon, LanguageIcon, DeviceTabletIcon, ChatBubbleBottomCenterTextIcon, MapPinIcon, ShoppingCartIcon } from '@heroicons/react/24/solid';
+import { LockClosedIcon, LockOpenIcon, MusicalNoteIcon, ChevronLeftIcon, ChevronRightIcon, GlobeAmericasIcon, CloudIcon, BeakerIcon, VideoCameraIcon, FilmIcon, LanguageIcon, DeviceTabletIcon, ChatBubbleBottomCenterTextIcon, MapPinIcon, ShoppingCartIcon, TvIcon } from '@heroicons/react/24/solid';
 import { useSound } from 'use-sound';
 import dynamic from "next/dynamic";
 import { BiPlay, BiPause, BiVolumeFull, BiVolumeMute } from 'react-icons/bi';
@@ -16,6 +16,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { youtube_v3 } from '@googleapis/youtube';
 import { io, Socket } from 'socket.io-client';
 
+
+const DAILY_LIMIT = 5; // Limite diário de vídeos
 
 const Picker = dynamic(() => import("@emoji-mart/react"), { ssr: false });
 
@@ -566,8 +568,8 @@ export default function Game({}: GameProps) {
   const handleArrowClick = (direction: 'left' | 'right') => {
     const nextIndex =
       direction === 'left'
-        ? (themeCarrosselIndex - 1 + themes.length) % themes.length
-        : (themeCarrosselIndex + 1) % themes.length;
+        ? (themeCarrosselIndex - 1 + themesCarrossel.length) % themesCarrossel.length
+        : (themeCarrosselIndex + 1) % themesCarrossel.length;
 
     setThemeCarrosselIndex(nextIndex);
     handleThemeVideoSelect(themesCarrossel[nextIndex].id);
@@ -758,7 +760,9 @@ export default function Game({}: GameProps) {
       }, 0); // Timeout de 0ms para agendar a rolagem após a próxima renderização
 
   };
+ 
 
+  
   /*const loadAndPlaySound = (soundId: number) => {
     fetch(`https://freesound.org/apiv2/sounds/${soundId}/?token=${FREESOUND_API_KEY}`)
       .then(response => {
@@ -2000,6 +2004,15 @@ export default function Game({}: GameProps) {
                 Videos em Francês no: <span className="text-green">Youtube</span>
               </h2>
 
+              {/* AVISO DE LIMITE */}
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-white bg-yellow-900/40 border border-green text-sm px-4 py-2 rounded-lg mb-4 shadow"
+              >
+                Você pode assistir até <span className="font-bold text-green">{DAILY_LIMIT}</span> <span className='text-green font-bold'>vídeos por dia</span> para evitar exceder o limite disponível.
+              </motion.div>
+
               <div className="flex items-center justify-between bg-gray-800 rounded-md px-2 py-1 mb-4 w-full overflow-hidden">
                 <button
                   onClick={() => handleArrowClick('left')}
@@ -2044,7 +2057,7 @@ export default function Game({}: GameProps) {
                   <div className="mb-4">
                     <h3 className="text-lg text-gray-300 font-semibold mb-2">Resultados da Busca:</h3>
                     <ul>
-                      {searchResultsVideo.map((video) => (
+                      {searchResultsVideo.slice(0, DAILY_LIMIT).map((video) => (
                         <li key={video.id} className="flex items-center justify-between py-2 border-b border-gray-700">
                           
                           <span className="text-blue text-sm font-thin">

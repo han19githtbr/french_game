@@ -3,7 +3,7 @@ import { google } from 'googleapis';
 
 const youtube = google.youtube({
   version: 'v3',
-  auth: process.env.YOUTUBE_API_KEY,
+  auth: process.env.YOUTUBE_API_NEW_KEY,
 });
 
 interface Video {
@@ -55,7 +55,7 @@ export async function searchYouTubeVideos(theme: string): Promise<Video[]> {
         return {
           id: videoId,
           name: item.snippet?.title || 'Untitled',
-          url: `https://www.youtube.com/watch?v=$${videoId}`,
+          url: `https://www.youtube.com/watch?v=${videoId}`,
           user: { username: item.snippet?.channelTitle || 'Unknown' },
           duration, // Inclua a duração no objeto do vídeo
         };
