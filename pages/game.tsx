@@ -4,7 +4,7 @@ import { useRouter } from 'next/router'
 import { Check, X, Minus, Lock, ChevronDown, ChevronRight, Pause, Play } from 'lucide-react'
 import { motion , AnimatePresence, useMotionValue, useTransform, animate, MotionValue} from 'framer-motion'
 import { saveProgress } from './results'
-import { LockClosedIcon, LockOpenIcon, MusicalNoteIcon, GlobeAmericasIcon, CloudIcon, BeakerIcon, VideoCameraIcon, FilmIcon, LanguageIcon, DeviceTabletIcon, ChatBubbleBottomCenterTextIcon } from '@heroicons/react/24/solid';
+import { LockClosedIcon, LockOpenIcon, MusicalNoteIcon, ChevronLeftIcon, ChevronRightIcon, GlobeAmericasIcon, CloudIcon, BeakerIcon, VideoCameraIcon, FilmIcon, LanguageIcon, DeviceTabletIcon, ChatBubbleBottomCenterTextIcon, MapPinIcon, ShoppingCartIcon } from '@heroicons/react/24/solid';
 import { useSound } from 'use-sound';
 import dynamic from "next/dynamic";
 import { BiPlay, BiPause, BiVolumeFull, BiVolumeMute } from 'react-icons/bi';
@@ -60,6 +60,16 @@ const familySounds: Record<string, string> = {
 const tecnologySounds: Record<string, string> = {
   'Une Salle de cinéma': '/sounds/laughing.mp3',
 }
+
+
+const themesCarrossel = [
+  { id: 'tecnology', label: 'Learn', icon: <DeviceTabletIcon className="h-5 w-5 inline-block mr-1" /> },
+  { id: 'language', label: 'Language', icon: <LanguageIcon className="h-5 w-5 inline-block mr-1" /> },
+  { id: 'nature', label: 'Nature', icon: <GlobeAmericasIcon className="h-5 w-5 inline-block mr-1" /> },
+  { id: 'music', label: 'Music', icon: <MusicalNoteIcon className="h-5 w-5 inline-block mr-1" /> },
+  { id: 'food', label: 'Food', icon: <ShoppingCartIcon className="h-5 w-5 inline-block mr-1" /> },
+  { id: 'tourism', label: 'Tourism', icon: <MapPinIcon className="h-5 w-5 inline-block mr-1" /> },
+];
 
 
 type Result = {
@@ -168,6 +178,8 @@ export default function Game({}: GameProps) {
   
   const [theme, setTheme] = useState('')
   
+  const [themeCarrosselIndex, setThemeCarrosselIndex] = useState(0);
+  
   const [images, setImages] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
     
@@ -275,6 +287,7 @@ export default function Game({}: GameProps) {
   const soundListBoxRef = useRef<HTMLDivElement>(null);
   const videoListBoxRef = useRef<HTMLDivElement>(null);
   const [currentTime, setCurrentTime] = useState(0);
+  const dropDownPageRef = useRef<HTMLDivElement>(null);
 
   // NOVOS ESTADOS PARA CONTROLE DOS MODAIS
   const [showUnlockWarningModal, setShowUnlockWarningModal] = useState(false); // Para o aviso de duração do desbloqueio
@@ -550,6 +563,17 @@ export default function Game({}: GameProps) {
   };
 
 
+  const handleArrowClick = (direction: 'left' | 'right') => {
+    const nextIndex =
+      direction === 'left'
+        ? (themeCarrosselIndex - 1 + themes.length) % themes.length
+        : (themeCarrosselIndex + 1) % themes.length;
+
+    setThemeCarrosselIndex(nextIndex);
+    handleThemeVideoSelect(themesCarrossel[nextIndex].id);
+  };
+
+
   const loadAndPlayVideo = (videoId: string) => {
     const video = searchResultsVideo.find((v) => v.id === videoId);
     if (video) {
@@ -726,6 +750,13 @@ export default function Game({}: GameProps) {
 
   const handleThemeSelect = (theme: string) => {
     setSelectedTheme(theme);
+    setTimeout(() => {
+        if (dropDownPageRef.current) {
+          // console.log('Tentando rolar para a visualização...'); // Para debug
+          dropDownPageRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+      }, 0); // Timeout de 0ms para agendar a rolagem após a próxima renderização
+
   };
 
   /*const loadAndPlaySound = (soundId: number) => {
@@ -1969,32 +2000,35 @@ export default function Game({}: GameProps) {
                 Videos em Francês no: <span className="text-green">Youtube</span>
               </h2>
 
-              <div className="flex space-x-1 mb-4">
+              <div className="flex items-center justify-between bg-gray-800 rounded-md px-2 py-1 mb-4 w-full overflow-hidden">
                 <button
-                  onClick={() => handleThemeVideoSelect('tecnology')}
-                  className={`rounded-md px-1 py-1 text-white bg-gray-800 border border-blue font-semibold transition duration-300 ease-in-out ${
-                    selectedThemeVideo === 'tecnology' ? 'bg-lightblue hover:bg-blue' : 'bg-gray-700 hover:bg-gray-600'
-                  } focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer`}
+                  onClick={() => handleArrowClick('left')}
+                  className="p-2 text-gray-300 hover:text-green transition cursor-pointer"
                 >
-                  <DeviceTabletIcon className="h-5 w-5 mr-2 inline-block text-white" /> Learn
+                  <ChevronLeftIcon className="w-6 h-6" />
                 </button>
+
+                <div className="flex-1 text-center">
+                  <button
+                    className={`py-1 px-4 rounded-md border font-semibold transition duration-300 ease-in-out ${
+                      selectedThemeVideo === themesCarrossel[themeCarrosselIndex].id
+                        ? 'bg-transparent text-white'
+                        : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                    }`}
+                  >
+                    {themesCarrossel[themeCarrosselIndex].icon}
+                    {themesCarrossel[themeCarrosselIndex].label}
+                  </button>
+                </div>
+
                 <button
-                  onClick={() => handleThemeVideoSelect('language')}
-                  className={`rounded-md px-1 py-1 text-white bg-gray-800 border border-blue font-semibold transition duration-300 ease-in-out ${
-                    selectedThemeVideo === 'language' ? 'bg-lightblue hover:bg-blue' : 'bg-gray-700 hover:bg-gray-600'
-                  } focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer`}
+                  onClick={() => handleArrowClick('right')}
+                  className="p-2 text-gray-300 hover:text-green transition cursor-pointer"
                 >
-                  <LanguageIcon className="h-5 w-5 mr-2 inline-block text-white" /> Language
-                </button>
-                <button
-                  onClick={() => handleThemeVideoSelect('nature')}
-                  className={`rounded-md px-1 py-1 text-white bg-gray-800 border border-blue font-semibold transition duration-300 ease-in-out ${
-                    selectedThemeVideo === 'nature' ? 'bg-lightblue hover:bg-blue' : 'bg-gray-700 hover:bg-gray-600'
-                  } focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer`}
-                >
-                  <GlobeAmericasIcon className="h-5 w-5 mr-2 inline-block text-white" /> Nature
+                  <ChevronRightIcon className="w-6 h-6" />
                 </button>
               </div>
+
 
               <div className="mb-4 text-white">
                 {selectedThemeVideo && searchStatusVideo === 'searching' && (
@@ -2005,6 +2039,7 @@ export default function Game({}: GameProps) {
                     </span>
                   </div>
                 )}
+                
                 {selectedThemeVideo && searchStatusVideo === 'results' && searchResultsVideo.length > 0 && (
                   <div className="mb-4">
                     <h3 className="text-lg text-gray-300 font-semibold mb-2">Resultados da Busca:</h3>
@@ -2580,7 +2615,7 @@ export default function Game({}: GameProps) {
         </div>
 
         {loading ? (
-          <div className="text-center text-lg text-gray-300 animate-pulse">🔍 Procurando imagens...</div>
+          <div ref={dropDownPageRef} className="text-center text-lg text-gray-300 animate-pulse">🔍 Procurando imagens...</div>
         ) : (
           <>
             <div className="flex flex-wrap justify-center gap-6 w-full max-w-6xl mt-6 cursor-pointer">
@@ -2596,6 +2631,7 @@ export default function Game({}: GameProps) {
                   className="bg-transparent text-black p-4 rounded-2xl flex-grow shadow-2xl max-w-[250px] transition transform hover:scale-105 flex flex-col items-center"
                 >
                   <img
+                    
                     src={img.url}
                     alt="imagem"
                     className="w-full h-48 object-cover rounded-xl cursor-zoom-in"
