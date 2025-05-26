@@ -27,6 +27,8 @@ import { youtube_v3 } from '@googleapis/youtube';
 import { io, Socket } from 'socket.io-client';
 
 
+const DAILY_LIMIT = 5;
+
 const Picker = dynamic(() => import("@emoji-mart/react"), { ssr: false });
 
 
@@ -1787,7 +1789,17 @@ export default function Game({}: GameProps) {
               <h2 className="text-xl text-gray-300 font-semibold mb-4">
                 Videos em Francês no: <span className="text-green">Youtube</span>
               </h2>
+
+              {/* AVISO DE LIMITE */}
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-white bg-yellow-900/40 border border-green text-sm px-4 py-2 rounded-lg mb-4 shadow"
+              >
+                Assista até <span className="font-bold text-green">{DAILY_LIMIT}</span> <span className='text-green font-bold'>vídeos por dia</span> para evitar exceder o limite de visualizações disponíveis.
+              </motion.div>
         
+
               <div className="flex items-center justify-between bg-gray-800 rounded-md px-2 py-1 mb-4 w-full overflow-hidden">
                 <button
                   onClick={() => handleArrowClick('left')}
@@ -1831,7 +1843,7 @@ export default function Game({}: GameProps) {
                   <div className="mb-4">
                     <h3 className="text-lg text-gray-300 font-semibold mb-2">Resultados da Busca:</h3>
                     <ul>
-                      {searchResultsVideo.map((video) => (
+                      {searchResultsVideo.slice(0, DAILY_LIMIT).map((video) => (
                         <li key={video.id} className="flex items-center justify-between py-2 border-b border-gray-700">
                           <span className="text-blue text-sm font-thin">
                             {video.name}
