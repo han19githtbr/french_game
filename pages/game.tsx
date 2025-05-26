@@ -4,7 +4,7 @@ import { useRouter } from 'next/router'
 import { Check, X, Minus, Lock, ChevronDown, ChevronRight, Pause, Play, FlagIcon } from 'lucide-react'
 import { motion , AnimatePresence, useMotionValue, useTransform, animate, MotionValue} from 'framer-motion'
 import { saveProgress } from './results'
-import { LockClosedIcon, LockOpenIcon, MusicalNoteIcon, ChevronLeftIcon, ChevronRightIcon, GlobeAmericasIcon, CloudIcon, BeakerIcon, VideoCameraIcon, FilmIcon, LanguageIcon, DeviceTabletIcon, ChatBubbleBottomCenterTextIcon, MapPinIcon, ShoppingCartIcon, TvIcon } from '@heroicons/react/24/solid';
+import { LockClosedIcon, LockOpenIcon, MusicalNoteIcon, ChevronLeftIcon, ChevronRightIcon, GlobeAmericasIcon, CloudIcon, BeakerIcon, VideoCameraIcon, FilmIcon, LanguageIcon, DeviceTabletIcon, ChatBubbleBottomCenterTextIcon, MapPinIcon, ShoppingCartIcon, TvIcon, MoonIcon } from '@heroicons/react/24/solid';
 import { useSound } from 'use-sound';
 import dynamic from "next/dynamic";
 import { BiPlay, BiPause, BiVolumeFull, BiVolumeMute } from 'react-icons/bi';
@@ -71,6 +71,16 @@ const themesCarrossel = [
   { id: 'music', label: 'Music', icon: <MusicalNoteIcon className="h-5 w-5 inline-block mr-1" /> },
   { id: 'food', label: 'Food', icon: <ShoppingCartIcon className="h-5 w-5 inline-block mr-1" /> },
   { id: 'tourism', label: 'Tourism', icon: <MapPinIcon className="h-5 w-5 inline-block mr-1" /> },
+];
+
+
+const themesSoundCarrossel = [
+  { id: 'trees', label: 'Trees', icon: <GlobeAmericasIcon className="h-5 w-5 inline-block mr-1" /> },
+  { id: 'rain', label: 'Rain', icon: <CloudIcon className="h-5 w-5 inline-block mr-1" /> },
+  { id: 'birds', label: 'Birds', icon: <BeakerIcon className="h-5 w-5 inline-block mr-1" /> },
+  { id: 'nature', label: 'Nature', icon: <GlobeAmericasIcon className="h-5 w-5 inline-block mr-1" /> },
+  { id: 'plane', label: 'Plane', icon: <MapPinIcon className="h-5 w-5 inline-block mr-1" /> },
+  { id: 'night', label: 'Night', icon: <MoonIcon className="h-5 w-5 inline-block mr-1" /> },
 ];
 
 
@@ -761,6 +771,16 @@ export default function Game({}: GameProps) {
 
   };
  
+
+  const handleArrowSoundClick = (direction: 'left' | 'right') => {
+    const nextIndex =
+      direction === 'left'
+        ? (themeCarrosselIndex - 1 + themesSoundCarrossel.length) % themesSoundCarrossel.length
+        : (themeCarrosselIndex + 1) % themesSoundCarrossel.length;
+
+    setThemeCarrosselIndex(nextIndex);
+    handleThemeSelect(themesSoundCarrossel[nextIndex].id);
+  };
 
   
   /*const loadAndPlaySound = (soundId: number) => {
@@ -1845,32 +1865,33 @@ export default function Game({}: GameProps) {
           >
             <h2 className="text-xl text-gray-300 font-semibold mb-4">Sons Relaxantes <span className='text-green'>(Freesound)</span></h2>
 
-            <div className="flex space-x-4 mb-4">
-              <button
-                onClick={() => handleThemeSelect('trees')}
-                className={`rounded-md px-2 py-1 text-white bg-gray-800 border border-green font-semibold transition duration-300 ease-in-out ${
-                  selectedTheme === 'trees' ? 'bg-lightblue hover:bg-lightblue' : 'bg-gray-700 hover:bg-gray-600'
-                } focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer`}
-              >
-                <GlobeAmericasIcon className="h-5 w-5 mr-2 inline-block text-green" /> Trees
-              </button>
-              <button
-                onClick={() => handleThemeSelect('rain')}
-                className={`rounded-md px-2 py-1 text-white bg-gray-800 border border-green font-semibold transition duration-300 ease-in-out ${
-                  selectedTheme === 'rain' ? 'bg-lightblue hover:bg-lightblue' : 'bg-gray-700 hover:bg-gray-600'
-                } focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer`}
-              >
-                <CloudIcon className="h-5 w-5 mr-2 inline-block text-green" /> Rain
-              </button>
-              <button
-                onClick={() => handleThemeSelect('birds')}
-                className={`rounded-md px-2 py-1 text-white bg-gray-800 border border-green font-semibold transition duration-300 ease-in-out ${
-                  selectedTheme === 'birds' ? 'bg-lightblue hover:bg-lightblue' : 'bg-gray-700 hover:bg-gray-600'
-                } focus:outline-none focus:ring-2 focus:ring-blue cursor-pointer`}
-              >
-                <BeakerIcon className="h-5 w-5 mr-2 inline-block text-green" /> Birds
-              </button>
-              {/* Adicione mais temas aqui */}
+            <div className="flex items-center justify-between bg-gray-800 rounded-md px-2 py-1 mb-4 w-full overflow-hidden">
+                <button
+                  onClick={() => handleArrowSoundClick('left')}
+                  className="p-2 text-gray-300 hover:text-green transition cursor-pointer"
+                >
+                  <ChevronLeftIcon className="w-6 h-6" />
+                </button>
+
+                <div className="flex-1 text-center">
+                  <button
+                    className={`py-1 px-4 rounded-md border font-semibold transition duration-300 ease-in-out ${
+                      selectedTheme === themesSoundCarrossel[themeCarrosselIndex].id
+                        ? 'bg-transparent text-gray-200'
+                        : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                    }`}
+                  >
+                    {themesSoundCarrossel[themeCarrosselIndex].icon}
+                    {themesSoundCarrossel[themeCarrosselIndex].label}
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => handleArrowSoundClick('right')}
+                  className="p-2 text-gray-300 hover:text-green transition cursor-pointer"
+                >
+                  <ChevronRightIcon className="w-6 h-6" />
+                </button>
             </div>
 
             <div className="mb-4 text-white">
