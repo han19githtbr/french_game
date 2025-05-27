@@ -6,8 +6,9 @@ import { Collection } from 'mongodb'; // Importe Collection do 'mongodb'
 const FREESOUND_API_KEY = process.env.FREESOUND_API_KEY;
 
 // Tempo de vida do cache em segundos (MongoDB TTL index usa segundos)
-const CACHE_DURATION_SECONDS = 7 * 24 * 60 * 60; // 7 dias
-//const CACHE_DURATION_SECONDS = 365 * 24 * 60 * 60; // 1 ano
+//const CACHE_DURATION_SECONDS = 7 * 24 * 60 * 60; // 7 dias
+
+const CACHE_DURATION_SECONDS = 365 * 24 * 60 * 60; // 1 ano
 const CACHE_COLLECTION_NAME = 'freesoundCache';
 
 // 1. Defina a Interface para o Documento de Cache

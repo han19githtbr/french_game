@@ -3,6 +3,8 @@ import { useRouter } from 'next/router'
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { cn } from '../lib/utils';
+import { ShieldCheck } from 'lucide-react';
+
 
 
 const ADMIN_EMAIL = 'milliance23@gmail.com';
@@ -167,6 +169,22 @@ export default function Home() {
     }
   };
 
+
+  const handleAdminLogin = async () => {
+    try {
+      await fetch('/api/incrementAccess', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      signIn('google', { callbackUrl: '/admin' });
+    } catch (error) {
+      console.error('Erro ao incrementar o acesso:', error);
+      signIn('google', { callbackUrl: '/admin' });
+    }
+  };
+
     
   if (session) {
     router.push('/game')
@@ -262,7 +280,7 @@ export default function Home() {
             
       <button
         onClick={handleSignInClick}
-        className="flex sm:mb-20 items-center gap-3 bg-transparent hover:border-blue border border-blue text-gray-100 font-semibold px-6 py-3 rounded-lg shadow-md hover:shadow-xl transition duration-300 cursor-pointer"
+        className="flex sm:mb-20 items-center gap-3 bg-transparent hover:border-green border border-blue text-gray-100 font-semibold px-6 py-3 rounded-lg shadow-md hover:shadow-xl transition duration-300 cursor-pointer"
       >
         <svg className="w-12 h-6" viewBox="0 0 533.5 544.3">
           <path
@@ -286,6 +304,15 @@ export default function Home() {
           dangerouslySetInnerHTML={{ __html: animatedTitleGoogle }}
         />
         
+      </button>
+
+
+      <button
+        onClick={handleAdminLogin}
+        className="mt-6 xl:-mt-10 flex items-center justify-center gap-2 bg-transparent border border-e-yellow hover:border-green text-white font-bold py-3 px-7 rounded-lg shadow transition-all duration-300 cursor-pointer"
+      >
+        <ShieldCheck className="w-5 h-5" />
+        <span>Entrar como Administrador</span>
       </button>
                   
     </div>
