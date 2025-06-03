@@ -1,5 +1,14 @@
 import 'dotenv/config';
-import connectDB from '../lib/mongodb';
+import { ObjectId } from 'mongodb';
+import { getDb } from '../lib/mongodb';
+
+interface ImageData {
+  _id?: ObjectId;
+  url: string;
+  title: string;
+  theme: string;
+  createdAt?: Date;
+}
 
 const images = {
   'família': [
@@ -135,9 +144,11 @@ const images = {
 };
 
 async function seedImageSentences() {
-  const client = await connectDB();
-  const db = client.db('app_french');
-  const collection = db.collection('images_sentences');
+  // 1. Conecte ao MongoDB
+  const db = await getDb(); // Recebe o MongoClient
+      
+  // 2. Acesse a coleção
+  const collection = db.collection<ImageData>('images_sentences');
   
   await collection.deleteMany({});
 

@@ -1,6 +1,17 @@
 // scripts/seed-images.ts
 import 'dotenv/config';
-import connectDB from '../lib/mongodb'
+//import connectDB from '../lib/mongodb'
+import { getDb } from '../lib/mongodb';
+import { ObjectId } from 'mongodb';
+
+
+interface ImageData {
+  _id?: ObjectId;
+  url: string;
+  title: string;
+  theme: string;
+  createdAt?: Date;
+}
 
 const images = {
   'família': [
@@ -134,27 +145,40 @@ const images = {
   ]
 };
 
+
 async function seedImages() {
-  const client = await connectDB();
-  const db = client.db('app_french');
-  const collection = db.collection('images');
+  
+  try {
+    // 1. Conecte ao MongoDB
+    const db = await getDb(); // Recebe o MongoClient
+    
+    // 2. Acesse a coleção
+    const collection = db.collection<ImageData>('images');
 
-  // Remove dados antigos (opcional)
-  await collection.deleteMany({});
+    // 3. Limpe a coleção (opcional)
+    console.log('🔄 Limpando coleção existente...');
+    await collection.deleteMany({});
 
-  // Inserir dados
-  const data = Object.entries(images).flatMap(([theme, items]) =>
-    items.map(item => ({
-      url: item.url,
-      title: item.title,
-      theme: theme.toLowerCase()
-    }))
-  );
+    // Inserir dados
+    const data = Object.entries(images).flatMap(([theme, items]) =>
+      items.map(item => ({
+        url: item.url,
+        title: item.title,
+        theme: theme.toLowerCase()
+      }))
+    );
 
-  await collection.insertMany(data);
-  console.log('✅ Banco populado com sucesso!');
-  process.exit();
+    await collection.insertMany(data);
+    console.log('✅ Banco populado com sucesso!');
+    
+    } catch (error) {
+      console.error('❌ Erro ao popular imagens:', error);
+      process.exit(1);
+    } finally {
+      process.exit(0);
+    }
 }
+
 
 seedImages().catch(error => {
   console.error('Erro ao popular imagens:', error);

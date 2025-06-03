@@ -1,12 +1,13 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import connectDB from '../../lib/mongodb';
+//import connectDB from '../../lib/mongodb';
+import { getDb } from '../../lib/mongodb';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     try {
-      const client = await connectDB();
-      const db = client.db(); // Acessa o banco de dados
-      const collection = db.collection('accessCounts');
+      const db = await getDb();
+    
+      const collection = db.collection('accessCounts');
 
       // Vamos tentar encontrar um documento para o dia atual
       const today = new Date().toDateString();

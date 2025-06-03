@@ -3,13 +3,20 @@ import { useSession, signOut } from 'next-auth/react';
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { ChevronDown, LogOut } from 'lucide-react';
+import PostForm from '../components/Post/PostForm';
+import PostList from '../components/Post/PostList';
+import NotificationBadge from '../components/NotificationBadge';
+import { useSocket } from '../lib/socket';
 
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('create');
+  const [notificationCount, setNotificationCount] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const socket = useSocket();
 
 
   useEffect(() => {
@@ -30,15 +37,51 @@ export default function AdminPage() {
   }, []);
 
 
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on('newPostNotification', () => {
+      setNotificationCount(prev => prev + 1);
+    });
+
+    return () => {
+      socket.off('newPostNotification');
+    };
+  }, [socket]);
+
+
   if (status === 'loading' || session?.user?.email !== 'milliance23@gmail.com') {
     return <p className="text-white text-center mt-10">Verificando permissões...</p>;
   }
 
+  const handlePostCreated = () => {
+    setActiveTab('view');
+    if (socket) {
+      socket.emit('newPost');
+    }
+  };
+
   return (
     <div className="relative min-h-screen bg-gray-900 text-white">
       {/* Top bar */}
-      <div className="w-full flex justify-end items-center px-6 py-4 bg-gray-800 shadow-md">
+      <div className="w-full flex justify-between items-center px-6 py-8 bg-gray-800 shadow-md">
+        <div className="flex items-center space-x-4 ">
+          <button 
+            onClick={() => setActiveTab('create')} 
+            className={`px-4 py-2 rounded-lg ${activeTab === 'create' ? 'border border-e-lightblue cursor-pointer' : 'border border-e-lightblue cursor-pointer hover:bg-gray-600'}`}
+          >
+            Criar Publicação
+          </button>
+          <button 
+            onClick={() => setActiveTab('view')} 
+            className={`px-4 py-2 rounded-lg ${activeTab === 'view' ? 'border border-e-green cursor-pointer ' : 'border border-e-green hover:bg-gray-600 cursor-pointer'}`}
+          >
+            Ver Publicações
+          </button>
+        </div>
+        
         <div className="relative flex items-center gap-2" ref={dropdownRef}>
+          <NotificationBadge count={notificationCount} />
           <p className="text-sm font-medium hidden sm:block">{session.user?.name}</p>
           <button
             onClick={() => setDropdownOpen((prev) => !prev)}
@@ -64,10 +107,14 @@ export default function AdminPage() {
           )}
         </div>
       </div>
-
+      
       {/* Main content */}
-      <div className="flex items-center justify-center h-[calc(100vh-72px)]">
-        <h1 className="text-3xl font-bold">Painel do Administrador</h1>
+      <div className="container mx-auto px-4 py-8 mt-20">
+        {activeTab === 'create' ? (
+          <PostForm onPostCreated={handlePostCreated} />
+        ) : (
+          <PostList />
+        )}
       </div>
     </div>
   );

@@ -2,7 +2,8 @@ import { NextApiRequest, NextApiResponse } from 'next';
 //import { searchYouTubeVideos } from '../../lib/youtube';
 import { searchYouTubeVideos } from '../../lib/youtube';
 import { Collection } from 'mongodb';
-import connectDB from '../../lib/mongodb';
+//import connectDB from '../../lib/mongodb';
+import { getDb } from '../../lib/mongodb';
 
 
 const CACHE_DURATION_MS = 365 * 24 * 60 * 60; 
@@ -39,8 +40,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
 
   try {
-    const client = await connectDB();
-    const db = client.db('app_french');
+    const db = await getDb();
+    
     const collection: Collection = db.collection('cachedVideos');
 
     const cached = await collection.findOne({ theme });

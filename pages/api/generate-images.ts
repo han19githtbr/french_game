@@ -1,6 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 //import connectDB from '@/lib/mongodb' // ajuste o caminho se necessário
-import connectDB from '../../lib/mongodb';
+//import connectDB from '../../lib/mongodb';
+import { getDb } from '../../lib/mongodb';
+
 
 const shuffle = <T>(array: T[]): T[] => [...array].sort(() => Math.random() - 0.5);
 
@@ -20,10 +22,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!theme) {
     return res.status(400).json({ error: 'Tema não fornecido.' });
   }
+  
 
   try {
-    const client = await connectDB();
-    const db = client.db('app_french');
+    const db = await getDb();
+    
     const collection = db.collection('images');
 
     const themeImages = await collection.find({ theme: theme.toLowerCase() }).toArray();

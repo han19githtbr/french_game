@@ -14,7 +14,7 @@ import { BsEyeFill, BsPlayFill } from 'react-icons/bs';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { youtube_v3 } from '@googleapis/youtube';
-import { io, Socket } from 'socket.io-client';
+//import { io, Socket } from 'socket.io-client';
 
 
 const DAILY_LIMIT = 5; // Limite diário de vídeos
@@ -85,32 +85,6 @@ const themesSoundCarrossel = [
   { id: 'plane', label: 'Plane', icon: <MapPinIcon className="h-5 w-5 inline-block mr-1" /> },
   { id: 'night', label: 'Night', icon: <MoonIcon className="h-5 w-5 inline-block mr-1" /> },
 ];
-
-
-interface User {
-  id: string;
-  name: string;
-  image?: { url: string };
-  socketId: string;
-}
-
-
-interface Message {
-  senderId: string;
-  senderName: string;
-  message: string;
-}
-
-
-interface ChatHistory {
-  [userId: string]: Message[];
-}
-
-interface OpenChatWindow {
-  userId: string;
-  userName: string;
-  userImage?: { url: string };
-}
 
 
 type Result = {
@@ -273,25 +247,7 @@ export default function Frase({}: GameProps) {
   const [searchResultsVideo, setSearchResultsVideo] = useState<Video[]>([]);
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const [currentVideoInfo, setCurrentVideoInfo] = useState<Video | null>(null);
-  
-
-  const [socket, setSocket] = useState<Socket | null>(null);
-  
-  const [usersOnline, setUsersOnline] = useState<any[]>([]);
-  const [showOnlineUsers, setShowOnlineUsers] = useState(false);
-  const [showUsersCarousel, setShowUsersCarousel] = useState(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null); // A conquista a ser exibida no modal
-  const [selectedUserIndex, setSelectedUserIndex] = useState(0);
-  const [showNewUserOnlineNotification, setShowNewUserOnlineNotification] = useState(false);
-  const [lastOnlineUser, setLastOnlineUser] = useState<string | null>(null);
-
-  // Estados para o chat flutuante
-  const [openChatWindows, setOpenChatWindows] = useState<OpenChatWindow[]>([]);
-  const [chatHistory, setChatHistory] = useState<ChatHistory>({});
-  const [currentMessage, setCurrentMessage] = useState<string>('');
-  const [activeChatId, setActiveChatId] = useState<string | null>(null); // Para saber qual chat está ativo para digitar
-  const chatInputRefs = useRef<{ [key: string]: HTMLInputElement }>({}); // Para focar no input
-
+    
   const [remainingAttempts, setRemainingAttempts] = useState(4); // Começa com 4 tentativas
   
   const soundListBoxRef = useRef<HTMLDivElement>(null);
@@ -349,167 +305,7 @@ export default function Frase({}: GameProps) {
     }
     return 'Duração desconhecida';
   }
-
-
-  // Efeito para lidar com a autenticação e conexão do socket
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/');
-      return;
-    }
-  
-    if (status === 'authenticated' && !socket) {
-      // Conecta ao servidor Socket.IO
-      const newSocket = io({
-        path: '/api/socket', // Deve corresponder ao caminho no seu servidor
-      });
-  
-      newSocket.on('connect', () => {
-        console.log('Conectado ao servidor Socket.IO');
-        // Emitir evento para o servidor que o usuário está online
-        if (session?.user?.id && session?.user?.name) {
-          newSocket.emit('userConnected', {
-            id: session.user.id,
-            name: session.user.name,
-            image: session.user.image ? { url: session.user.image } : undefined, // Ajuste se a estrutura do seu user.image for diferente
-          });
-        }
-      });
-  
-      newSocket.on('usersOnlineUpdate', (updatedUsers: User[]) => {
-        console.log('Lista de usuários online atualizada:', updatedUsers.map(u => u.name));
-        // Use a função de callback para setUsersOnline para acessar o estado anterior
-        // sem ter usersOnline na dependência do useEffect
-        setUsersOnline(prevUsersOnline => { // <--- MUDANÇA AQUI
-          const currentOnlineUserIds = prevUsersOnline.map(u => u.id); // <--- Use prevUsersOnline
-
-          // Detectar novos usuários online
-          const newUsers = updatedUsers.filter(user => !currentOnlineUserIds.includes(user.id));
-          if (newUsers.length > 0 && prevUsersOnline.length > 0) { // <--- Use prevUsersOnline
-            setLastOnlineUser(newUsers[0].name);
-            setShowNewUserOnlineNotification(true);
-            setTimeout(() => setShowNewUserOnlineNotification(false), 5000);
-          }
-          return updatedUsers; // Retorna o novo estado
-        });
-      });
-  
-      newSocket.on('receiveMessage', (data: Message) => {
-        console.log(`Mensagem recebida de ${data.senderName}: ${data.message}`);
-        setChatHistory(prev => ({
-          ...prev,
-          [data.senderId]: [...(prev[data.senderId] || []), data],
-        }));
-        // Se a janela de chat com o remetente não estiver aberta, abre-a
-        if (!openChatWindows.some(chat => chat.userId === data.senderId)) {
-          const senderUser = usersOnline.find(user => user.id === data.senderId);
-          if (senderUser) {
-            openChatWindow(senderUser);
-          }
-        }
-      });
-  
-      newSocket.on('messageSentConfirmation', (data: { receiverId: string; message: string }) => {
-        // Adiciona a mensagem enviada ao histórico do remetente
-        if (session?.user?.id && session?.user?.name) {
-          setChatHistory(prev => ({
-            ...prev,
-            [data.receiverId]: [...(prev[data.receiverId] || []), {
-              senderId: session.user.id as string,
-              senderName: session.user.name as string,
-              message: data.message,
-            }],
-          }));
-        }
-      });
-  
-      newSocket.on('disconnect', () => {
-        console.log('Desconectado do servidor Socket.IO');
-        setUsersOnline([]); // Limpa a lista de usuários online
-      });
-  
-      setSocket(newSocket);
-  
-      return () => {
-        newSocket.disconnect();
-      };
-    }
-  }, [status, router, session, socket, usersOnline]); // Adicionado usersOnline para o efeito do newUsersOnline
-  
-  
-  const toggleShowOnlineUsers = () => {
-    setShowUsersCarousel(!showUsersCarousel);
-  };
-    
-    
-  const handleSelectUser = (index: number) => {
-    setSelectedUserIndex(index);
-    const userToChat = usersOnline[index];
-    if (userToChat) {
-      openChatWindow(userToChat);
-    }
-    setShowUsersCarousel(false); // Fecha o carrossel após selecionar um usuário
-  };
-  
-  
-  const closeUsersCarousel = () => {
-    setShowUsersCarousel(false);
-  };
-  
-  
-  const openChatWindow = (user: User) => {
-    if (!openChatWindows.some(chat => chat.userId === user.id)) {
-      setOpenChatWindows(prev => [
-        ...prev,
-        { userId: user.id, userName: user.name, userImage: user.image },
-      ]);
-      // Inicializa o histórico de chat se não existir
-      setChatHistory(prev => ({
-        ...prev,
-        [user.id]: prev[user.id] || [],
-      }));
-      setActiveChatId(user.id); // Ativa o chat aberto
-    } else {
-      setActiveChatId(user.id); // Apenas ativa se já estiver aberto
-    }
-  };
-  
-  
-  const closeChatWindow = (userId: string) => {
-    setOpenChatWindows(prev => prev.filter(chat => chat.userId !== userId));
-    if (activeChatId === userId) {
-      setActiveChatId(null);
-    }
-  };
-  
-  
-  const handleSendMessage = (receiverId: string) => {
-    if (socket && session?.user?.id && session?.user?.name && currentMessage.trim()) {
-      socket.emit('sendMessage', {
-        senderId: session.user.id,
-        receiverId: receiverId,
-        message: currentMessage.trim(),
-        senderName: session.user.name,
-      });
-      setCurrentMessage('');
-      // Foca no input do chat correspondente após enviar a mensagem
-      if (chatInputRefs.current[receiverId]) {
-        chatInputRefs.current[receiverId].focus();
-      }
-    }
-  };
-  
-  
-  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>, receiverId: string) => {
-    if (event.key === 'Enter') {
-      handleSendMessage(receiverId);
-    }
-  };
-  
-  const handleInputFocus = (userId: string) => {
-    setActiveChatId(userId);
-  };
-  
+ 
   
   const parseDuration = (duration: string): number => {
     const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
@@ -1529,189 +1325,8 @@ export default function Frase({}: GameProps) {
       
       <div className='relative'>
 
-        
-        {/* Botão para mostrar/ocultar usuários online */}
-        <div className="fixed top-4 left-2 z-50">
-          <button
-            onClick={toggleShowOnlineUsers}
-            className="relative border-2 border-lightblue hover:bg-lightblue text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4"
-          >
-            <ChatBubbleBottomCenterTextIcon className="h-6 w-6 text-yellow" />
-            {usersOnline.length > 0 && (
-              <span className="absolute top-0 right-0 block h-3 w-3 rounded-full bg-red-500 ring-2 ring-white animate-pulse"></span>
-            )}
-          </button>
-        </div>
-        
-        
-        {/* Notificação de novo usuário online */}
-        <AnimatePresence>
-          {showNewUserOnlineNotification && lastOnlineUser && (
-            <motion.div
-              initial={{ opacity: 0, y: -50 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -50 }}
-              className="fixed top-4 right-4 z-50 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center space-x-2"
-            >
-              <ChatBubbleBottomCenterTextIcon className="h-5 w-5" />
-              <span>{lastOnlineUser} ficou online!</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        
-                
-        {/* Carrossel de Miniaturas de Usuários online */}
-        <AnimatePresence>
-          {showUsersCarousel && usersOnline.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 flex items-center justify-center z-40 bg-black bg-opacity-70 backdrop-blur-md"
-            >
-              <motion.div
-                initial={{ scale: 0.8 }}
-                animate={{ scale: 1 }}
-                exit={{ scale: 0.8 }}
-                transition={{ type: 'spring', damping: 15, stiffness: 100 }}
-                className="bg-white rounded-2xl p-8 shadow-2xl text-center w-full max-w-md"
-              >
-                <h3 className="text-xl font-bold mb-4 text-gray-800">Usuários Online</h3>
-                <div
-                  className="overflow-x-auto whitespace-nowrap scroll-smooth flex justify-start items-center p-2"
-                  ref={carouselRef}
-                  style={{ gap: '10px' }}
-                >
-                  {usersOnline.map((user, index) => (
-                    <motion.div
-                      key={user.id} // Usar user.id como key é melhor
-                      onClick={() => handleSelectUser(index)}
-                      className={`w-32 h-32 md:w-40 md:h-32 rounded-lg shadow-md cursor-pointer overflow-hidden relative transform transition-transform duration-300 ease-in-out
-                        ${index === selectedUserIndex ? 'border-4 border-blue-500 scale-105' : 'hover:scale-105'}
-                      `}
-                      style={{ background: '#eee', flexShrink: 0 }}
-                    >
-                      {user.image?.url ? (
-                        <img
-                          src={user.image.url}
-                          alt={`Miniatura de ${user.name}`}
-                          className="object-cover w-full h-full"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                          <ChatBubbleBottomCenterTextIcon className="h-16 w-16 text-gray-400" />
-                        </div>
-                      )}
-                      <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 text-white p-1 text-xs text-center">
-                        <span className="text-green-400 text-sm font-semibold">
-                          {user.name.length > 15 ? user.name.substring(0, 12) + '...' : user.name}
-                        </span>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-                <button
-                  onClick={closeUsersCarousel}
-                  className="mt-6 bg-gray-800 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-full focus:outline-none focus:shadow-outline transition-colors duration-300"
-                >
-                  Fechar
-                </button>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        
-        
-        {/* Janelas de Chat Flutuantes */}
-        <div className="fixed bottom-0 right-4 flex space-x-4 z-50">
-          <AnimatePresence>
-            {openChatWindows.map((chatWindow) => (
-              <motion.div
-                key={chatWindow.userId}
-                initial={{ opacity: 0, y: 100 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 100 }}
-                transition={{ type: 'spring', damping: 20, stiffness: 150 }}
-                className="bg-white rounded-t-lg shadow-xl flex flex-col h-96 w-72 border border-gray-200"
-              >
-                {/* Cabeçalho do Chat */}
-                <div className="bg-blue-600 text-white p-3 rounded-t-lg flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    {chatWindow.userImage?.url ? (
-                      <img
-                        src={chatWindow.userImage.url}
-                        alt={chatWindow.userName}
-                        className="w-8 h-8 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-blue-800 font-bold">
-                        {chatWindow.userName.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <span className="font-semibold">{chatWindow.userName}</span>
-                  </div>
-                  <button
-                    onClick={() => closeChatWindow(chatWindow.userId)}
-                    className="text-white hover:text-gray-200 text-lg font-bold"
-                  >
-                    &times;
-                  </button>
-                </div>
-        
-                {/* Corpo do Chat - Mensagens */}
-                <div className="flex-1 p-3 overflow-y-auto bg-gray-50 chat-messages-container">
-                  {chatHistory[chatWindow.userId]?.map((msg, idx) => (
-                    <div
-                      key={idx}
-                      className={`mb-2 ${msg.senderId === session?.user?.id ? 'text-right' : 'text-left'}`}
-                    >
-                      <div
-                        className={`inline-block p-2 rounded-lg max-w-[70%] ${
-                          msg.senderId === session?.user?.id
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-gray-200 text-gray-800'
-                        }`}
-                      >
-                        <span className="block text-xs font-semibold text-gray-500 mb-1">
-                          {msg.senderId === session?.user?.id ? 'Você' : msg.senderName}
-                        </span>
-                        {msg.message}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-        
-                {/* Input de Mensagem */}
-                <div className="p-3 border-t border-gray-200">
-                  <input
-                    type="text"
-                    placeholder="Digite sua mensagem..."
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800"
-                    value={activeChatId === chatWindow.userId ? currentMessage : ''}
-                    onChange={(e) => {
-                      if (activeChatId === chatWindow.userId) {
-                        setCurrentMessage(e.target.value);
-                      }
-                    }}
-                    onKeyPress={(e) => handleKeyPress(e, chatWindow.userId)}
-                    onFocus={() => handleInputFocus(chatWindow.userId)}
-                    ref={el => { if (el) chatInputRefs.current[chatWindow.userId] = el; }} // Atribui a ref ao input
-                  />
-                  <button
-                    onClick={() => handleSendMessage(chatWindow.userId)}
-                    className="mt-2 w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline"
-                  >
-                    Enviar
-                  </button>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
-
-
         {/* Botão para mostrar/ocultar sons relaxantes */}
-        <div className="fixed top-20 left-2 z-50">
+        <div className="fixed top-4 left-2 z-50">
           <button
             onClick={toggleRelaxSoundsVisibility}
             className="relative border-2 border-lightblue hover:bg-lightblue text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4"
@@ -1896,7 +1511,7 @@ export default function Frase({}: GameProps) {
 
 
         {/* Botão para mostrar/ocultar vídeos no youtube */}
-        <div className="fixed top-52 left-2 z-40">
+        <div className="fixed top-36 left-2 z-40">
           <button
             onClick={toggleVideosVisibility}
             className="relative border-2 border-lightblue hover:bg-lightblue text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4"
@@ -2077,7 +1692,7 @@ export default function Frase({}: GameProps) {
 
 
         {/* Botão para mostrar/ocultar as conquistas e o replay */}
-        <div className="fixed top-36 left-2 z-40">
+        <div className="fixed top-20 left-2 z-40">
           <button
             onClick={toggleShowWins}
             className="relative border-2 border-lightblue hover:bg-lightblue text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4 animate-pulse-slow"

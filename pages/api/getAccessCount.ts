@@ -1,11 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import connectDB from '../../lib/mongodb';
+//import connectDB from '../../lib/mongodb';
+import { getDb } from '../../lib/mongodb';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
     try {
-      const client = await connectDB();
-      const db = client.db(); // Acessa o banco de dados
+      const db = await getDb();
+      //const db = client.db(); // Acessa o banco de dados
       const collection = db.collection('accessCounts');
       const today = new Date().toDateString();
       const accessData = await collection.findOne({ date: today });

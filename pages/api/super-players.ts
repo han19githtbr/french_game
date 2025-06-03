@@ -1,26 +1,28 @@
 // pages/api/super-players.ts
 import { NextApiRequest, NextApiResponse } from 'next';
-import connectDB from '../../lib/mongodb';
-import { MongoClient } from 'mongodb';
+//import connectDB from '../../lib/mongodb';
+//import { MongoClient } from 'mongodb';
+import { getDb } from '../../lib/mongodb';
 
 
-let cachedClient: MongoClient | null = null; // Variável para armazenar o cliente conectado
+let cachedDb: any = null; // Variável para armazenar o cliente conectado
 
 
-async function getClient(): Promise<MongoClient> {
-  if (cachedClient) {
-    return cachedClient;
+async function getDbInstance() {
+  if (cachedDb) {
+    return cachedDb;
   }
-  const client = await connectDB();
-  cachedClient = client;
-  return client;
+  //const client = await connectDB();
+  const db = await getDb();
+  cachedDb = db;
+  return db;
 }
 
 
 async function saveRecord(username: string, totalPlays: number) {
   try {
-    const client = await getClient();
-    const db = client.db();
+    const db = await getDbInstance();
+    
     const collection = db.collection('super_players');
     await collection.insertOne({ username, totalPlays, timestamp: new Date() });
     return { success: true };
@@ -33,8 +35,8 @@ async function saveRecord(username: string, totalPlays: number) {
 
 async function getRecords() {
   try {
-    const client = await getClient();
-    const db = client.db();
+    const db = await getDbInstance();
+    
     const collection = db.collection('super_players');
     const records = await collection.find({}).sort({ totalPlays: -1, timestamp: -1 }).limit(5).toArray();
     return { success: true, data: records };

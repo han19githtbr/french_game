@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import connectDB from '../../lib/mongodb';
+//import connectDB from '../../lib/mongodb';
+import { getDb } from '../../lib/mongodb';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -8,8 +9,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const { userId, email, loginTime } = req.body;
-    const client = await connectDB();
-    const db = client.db('platform');
+    const db = await getDb();
+    //const db = client.db('platform');
     await db.collection('user_activity').insertOne({
       userId,
       email,

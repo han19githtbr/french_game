@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import connectDB from '../../lib/mongodb';
+//import connectDB from '../../lib/mongodb';
+import { getDb } from '../../lib/mongodb';
 import { Collection } from 'mongodb'; // Importe Collection do 'mongodb'
 
 // Sua chave API do Freesound DEVE vir de variáveis de ambiente.
@@ -31,9 +32,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const client = await connectDB();
-    const db = client.db('app_french'); // SUBSTITUA PELO NOME DO SEU BANCO DE DADOS
-
+    const db = await getDb();
+    
     // 2. Tipe a coleção com a interface criada
     const cacheCollection: Collection<CacheDocument> = db.collection<CacheDocument>(CACHE_COLLECTION_NAME);
 
