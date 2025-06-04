@@ -101,7 +101,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.log('DEBUG - Query executada:', JSON.stringify(query, null, 2));
 
     const posts = await db
-      .collection<Post>('posts')
+      .collection('posts')
       .find(query)
       .sort({ createdAt: -1 })
       .toArray();

@@ -65,16 +65,16 @@ export default function AdminPage() {
     <div className="relative min-h-screen bg-gray-900 text-white">
       {/* Top bar */}
       <div className="w-full flex justify-between items-center px-6 py-8 bg-gray-800 shadow-md">
-        <div className="flex items-center space-x-4 ">
+        <div className="flex items-center space-x-2 ">
           <button 
             onClick={() => setActiveTab('create')} 
-            className={`px-4 py-2 rounded-lg ${activeTab === 'create' ? 'border border-e-lightblue cursor-pointer' : 'border border-e-lightblue cursor-pointer hover:bg-gray-600'}`}
+            className={`px-3 py-1 rounded-lg text-sm ${activeTab === 'create' ? 'border border-e-lightblue cursor-pointer' : 'border border-e-lightblue cursor-pointer hover:bg-gray-600'}`}
           >
             Criar Publicação
           </button>
           <button 
             onClick={() => setActiveTab('view')} 
-            className={`px-4 py-2 rounded-lg ${activeTab === 'view' ? 'border border-e-green cursor-pointer ' : 'border border-e-green hover:bg-gray-600 cursor-pointer'}`}
+            className={`px-3 py-1 rounded-lg text-sm ${activeTab === 'view' ? 'border border-e-green cursor-pointer ' : 'border border-e-green hover:bg-gray-600 cursor-pointer'}`}
           >
             Ver Publicações
           </button>
@@ -82,10 +82,10 @@ export default function AdminPage() {
         
         <div className="relative flex items-center gap-2" ref={dropdownRef}>
           <NotificationBadge count={notificationCount} />
-          <p className="text-sm font-medium hidden sm:block">{session.user?.name}</p>
+          <p className="text-sm font-sm hidden sm:block">{session.user?.name}</p>
           <button
             onClick={() => setDropdownOpen((prev) => !prev)}
-            className="rounded-full overflow-hidden w-10 h-10 ring-2 ring-white focus:outline-none hover:ring-blue-400 transition-all"
+            className="rounded-full overflow-hidden w-8 h-8 ring-2 ring-white focus:outline-none hover:ring-blue-400 transition-all -mr-2"
           >
             <img
               src={session.user?.image ?? '/default-avatar.png'}

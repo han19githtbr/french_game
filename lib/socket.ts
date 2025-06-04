@@ -8,7 +8,7 @@ export function useSocket() {
 
   useEffect(() => {
     if (!socket) {
-      socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3000', {
+      socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001', {
         path: '/api/socket',
       });
 
