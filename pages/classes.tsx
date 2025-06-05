@@ -276,10 +276,10 @@ export default function Classes() {
                 />
                 <div className="p-6">
                   <div className="flex justify-between items-center mb-4">
-                    <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm">
+                    <span className="bg-lightblue text-white px-3 py-1 rounded-xl text-sm font-bold">
                       {currentPost.theme}
                     </span>
-                    <div className="flex items-center text-gray-400">
+                    <div className="flex items-center text-gray-400 ">
                       <span className="mr-1">👁️</span>
                       <span>{currentPost.views}</span>
                     </div>
@@ -306,13 +306,13 @@ export default function Classes() {
                         handleLike(postId);
                       }}
                       disabled={!currentPost._id || likedPosts.includes(currentPost._id.toString()) || !session}
-                      className={`flex items-center px-6 py-2 rounded-full ${
+                      className={`flex items-center px-6 py-2 rounded-xl ${
                         currentPost._id && likedPosts.includes(currentPost._id.toString()) 
                           ? 'bg-red' 
                           : 'bg-gray-700 hover:bg-gray-600'
                       } transition-colors`}
                     >
-                      <span className="mr-2 cursor-pointer">❤️</span>
+                      <span className="mr-4 cursor-pointer">❤️</span>
                       <span>{currentPost.likes}</span>
                     </button>
 

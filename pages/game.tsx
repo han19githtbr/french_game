@@ -2158,7 +2158,7 @@ export default function Game({}: GameProps) {
         <div className="relative">
           <button 
             onClick={() => router.push('/classes')} 
-            className="bg-transparent border border-yellow hover:border-green text-yellow px-7 py-1 rounded-lg text-lg font-medium transition-colors relative cursor-pointer"
+            className="w-64 bg-transparent border border-green hover:border-gray-100 text-green animate-pulse-slow px-7 py-1 rounded-lg text-lg font-medium transition-colors relative cursor-pointer"
           >
             <span>Você sabia?</span>
             {notificationCount > 0 && (
