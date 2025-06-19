@@ -6,7 +6,7 @@ interface TypingEffectProps {
   className?: string;
 }
 
-export default function TypingEffect({ text, speed = 50, className = '' }: TypingEffectProps) {
+export default function TypingEffect({ text, speed = 30, className = '' }: TypingEffectProps) {
   const [displayedText, setDisplayedText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
 

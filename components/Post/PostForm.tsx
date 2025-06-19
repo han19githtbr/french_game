@@ -105,8 +105,8 @@ export default function PostForm({ onPostCreated }: { onPostCreated: () => void 
           />
         </div>
 
-        <div className="mb-4">
-          <label className="block text-gray-300 mb-2 " htmlFor="image">
+        <div className="mb-4 ">
+          <label className="block text-gray-300 mb-2" htmlFor="image">
             Imagem
           </label>
           <input
@@ -115,7 +115,7 @@ export default function PostForm({ onPostCreated }: { onPostCreated: () => void 
             ref={fileInputRef}
             accept="image/*"
             onChange={handleImageChange}
-            className="block w-full text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:text-sm file:font-semibold file:border border-e-lightblue file:text-white hover:file:border-lightblue"
+            className="block w-full text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:text-sm file:font-semibold file:border border-e-lightblue file:text-white hover:file:border-lightblue cursor-pointer"
             required
           />
         </div>

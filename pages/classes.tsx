@@ -9,14 +9,6 @@ import ThemeSelector from '../components/ThemeSelector';
 import CommentList from '../components/Comment/CommentList';
 import CommentForm from '../components/Comment/CommentForm';
 import { useSocket } from '../lib/socket';
-//import Script from 'next/script';
-import { ObjectId } from 'mongodb'
-
-
-interface PostPublic {
-  _id: string | ObjectId; // Adicione esta linha
-  // ... outras propriedades
-}
 
 
 export default function Classes() {
@@ -39,32 +31,6 @@ export default function Classes() {
   const [likedPosts, setLikedPosts] = useState<string[]>([]);
   const viewCounted = useRef(false);
 
-
-  /*useEffect(() => {
-    const fetchPosts = async () => {
-      setLoading(true);
-      try {
-        const themeParam = selectedTheme || router.query.theme || '';
-        const response = await fetch(`/api/posts/get?theme=${themeParam}`);
-        if (!response.ok) throw new Error('Erro ao carregar publicações');
-        const data = await response.json();
-        setPosts(data);
-        setCurrentIndex(0);
-        setLoading(false);
-      } catch (err) {
-        if (err instanceof Error) {
-            setError(err.message);
-        } else {
-            setError('Ocorreu um erro desconhecido');
-        }
-        setLoading(false);
-      }
-    };
-
-    fetchPosts();
-  }, [selectedTheme, router.query.theme]);*/
-
-
   // Buscar posts quando o tema muda
   useEffect(() => {
     const fetchPosts = async () => {
@@ -86,7 +52,6 @@ export default function Classes() {
   }, [selectedTheme, router.query.theme]); // Adicionei selectedTheme como dependência
 
 
-
   useEffect(() => {
     if (posts.length > 0 && currentIndex < posts.length) {
       setCurrentPost(posts[currentIndex]);
@@ -98,7 +63,6 @@ export default function Classes() {
       setCurrentPost(null);
     }
   }, [posts, currentIndex]);
-
 
 
   useEffect(() => {
@@ -113,7 +77,6 @@ export default function Classes() {
     };
   }, [socket]);
 
-
   const incrementViews = async (postId: string) => {
     try {
       await fetch(`/api/posts/view?id=${postId}`, {
@@ -123,7 +86,6 @@ export default function Classes() {
       console.error('Erro ao incrementar visualizações:', err);
     }
   };
-
 
   const handleLike = async (postId: string) => {
     if (!session) return;
@@ -154,7 +116,6 @@ export default function Classes() {
     }
   };
 
-
   const handleNext = () => {
     if (currentIndex < posts.length - 1) {
       setCurrentIndex(currentIndex + 1);
@@ -166,7 +127,6 @@ export default function Classes() {
   const handleThemeSelect = (theme: string) => {
     setSelectedTheme(theme);
   };
-
   
   const handleCommentAdded = (updatedPost: Post) => {
     setCurrentPost(updatedPost);
@@ -174,7 +134,6 @@ export default function Classes() {
       socket.emit('commentAdded', updatedPost);
     }
   };
-
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -203,7 +162,6 @@ export default function Classes() {
     // Se o mouse entrar no botão de logout, cancela o timeout de desaparecimento
     clearTimeout(logoutTimeoutId as NodeJS.Timeout);
   };
-
  
 
   return (
@@ -245,13 +203,7 @@ export default function Classes() {
           <div className="absolute top-0 left-0 w-full h-full pointer-events-none group-hover:block"></div>
         </div>
       )}
-
-      {/* Google AdSense */}
-      {/*<Script
-        strategy="afterInteractive"
-        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-YOUR_ADSENSE_ID"
-        crossOrigin="anonymous"
-      />*/}
+    
 
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
@@ -261,7 +213,7 @@ export default function Classes() {
         {currentPost && currentPost._id ? (
           <div className="flex flex-col lg:flex-row gap-8" key={currentPost._id.toString()}>
             <div className="lg:w-2/3">
-              <div className="bg-gray-800 rounded-lg overflow-hidden shadow-xl">
+              <div className="bg-gray-900 rounded-lg overflow-hidden shadow-xl">
                 <img
                   src={currentPost.imageUrl}
                   alt={currentPost.caption}
@@ -327,24 +279,12 @@ export default function Classes() {
                   </div>
                 </div>
               </div>
-
-              {/* AdSense Banner */}
-              {/*<div className="mt-8">
-                <ins className="adsbygoogle"
-                  style={{ display: 'block' }}
-                  data-ad-client="ca-pub-YOUR_ADSENSE_ID"
-                  data-ad-slot="YOUR_AD_SLOT"
-                  data-ad-format="auto"
-                  data-full-width-responsive="true"></ins>
-                <Script strategy="afterInteractive">
-                  (adsbygoogle = window.adsbygoogle || []).push({});
-                </Script>
-              </div>*/}
+              
             </div>
 
             <div className="lg:w-1/3">
               <div className="bg-gray-800 rounded-lg p-6 shadow-xl sticky top-4">
-                <h3 className="text-xl font-bold mb-4">Comentários ({currentPost.comments.length})</h3>
+                <h3 className="text-xl font-semibold mb-4">Comentários ({currentPost.comments.length})</h3>
                 {session ? (
                   <>
                     {currentPost._id && (
@@ -368,7 +308,6 @@ export default function Classes() {
           </div>
         )}
       </div>
-
     </div>
   )
 }
