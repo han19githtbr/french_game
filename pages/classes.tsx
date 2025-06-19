@@ -91,7 +91,11 @@ export default function Classes() {
     if (!session) return;
 
     try {
-      const response = await fetch(`/api/posts/like?id=${postId}`, {
+
+      // Verifica se o post já foi curtido
+      const isLiked = likedPosts.includes(postId);
+
+      const response = await fetch(`/api/posts/like?id=${postId}&action=${isLiked ? 'unlike' : 'like'}`, {
         method: 'PUT',
       });
       
@@ -100,7 +104,11 @@ export default function Classes() {
       const updatedPost = await response.json();
       
       // Atualiza o estado de likes
-      setLikedPosts([...likedPosts, postId]);
+      setLikedPosts(prev => 
+      isLiked 
+        ? prev.filter(id => id !== postId) // Remove o like
+        : [...prev, postId] // Adiciona o like
+      );
       
       // Atualizações de estado com verificação segura
       setCurrentPost(prev => 
@@ -212,26 +220,28 @@ export default function Classes() {
 
         {currentPost && currentPost._id ? (
           <div className="flex flex-col lg:flex-row gap-8" key={currentPost._id.toString()}>
-            <div className="lg:w-2/3">
+            <div className="lg:w-1/3">
               <div className="bg-gray-900 rounded-lg overflow-hidden shadow-xl">
-                <img
-                  src={currentPost.imageUrl}
-                  alt={currentPost.caption}
-                  className="w-full h-auto max-h-[70vh] object-contain"
-                  onLoad={() => {
-                    // Atualiza visualizações quando a imagem carrega
-                    if (!viewCounted.current && currentPost._id) {
-                      incrementViews(currentPost._id.toString());
-                      viewCounted.current = true;
-                    }
-                  }}
-                />
+                <div className="w-full overflow-hidden">
+                  <img
+                    src={currentPost.imageUrl}
+                    alt={currentPost.caption}
+                    className="w-full h-auto max-h-[70vh] object-cover"  // Mudei de object-contain para object-cover
+                    onLoad={() => {
+                      if (!viewCounted.current && currentPost._id) {
+                        incrementViews(currentPost._id.toString());
+                        viewCounted.current = true;
+                      }
+                    }}
+                  />
+                </div>
+                
                 <div className="p-6">
                   <div className="flex justify-between items-center mb-4">
-                    <span className="bg-lightblue text-white px-3 py-1 rounded-xl text-sm font-bold">
+                    <span className="bg-lightblue text-white px-6 py-1 rounded-xl text-sm font-semibold">
                       {currentPost.theme}
                     </span>
-                    <div className="flex items-center text-gray-400 ">
+                    <div className="flex items-center border-2 border-b-lightblue pr-3 pl-3 rounded-xl text-gray-400 ">
                       <span className="mr-1">👁️</span>
                       <span>{currentPost.views}</span>
                     </div>
@@ -257,8 +267,8 @@ export default function Classes() {
                         
                         handleLike(postId);
                       }}
-                      disabled={!currentPost._id || likedPosts.includes(currentPost._id.toString()) || !session}
-                      className={`flex items-center px-6 py-2 rounded-xl ${
+                      //disabled={!currentPost._id || likedPosts.includes(currentPost._id.toString()) || !session}
+                      className={`flex items-center px-6 py-1 rounded-xl ${
                         currentPost._id && likedPosts.includes(currentPost._id.toString()) 
                           ? 'bg-red' 
                           : 'bg-gray-700 hover:bg-gray-600'

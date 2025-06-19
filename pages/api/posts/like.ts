@@ -9,11 +9,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const db = await getDb();
-    const { id } = req.query;
+    const { id, action } = req.query;
+
+    // Verifica se o ID é válido
+    if (!id || typeof id !== 'string') {
+      return res.status(400).json({ message: 'ID inválido' });
+    }
+
+    // Determina se vamos incrementar ou decrementar
+    const incrementValue = action === 'unlike' ? -1 : 1;
 
     const result = await db.collection('posts').updateOne(
-      { _id: new ObjectId(id as string) },
-      { $inc: { likes: 1 } }
+      { _id: new ObjectId(id) },
+      { $inc: { likes: incrementValue } }
     );
 
     if (result.modifiedCount === 0) {
@@ -26,15 +34,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } catch (error) {
     
     if (error instanceof Error) {
-        res.status(500).json({ 
-            message: 'Erro ao curtir publicação', 
-            error: error.message 
-        });
-        } else {
-        res.status(500).json({ 
-            message: 'Erro ao curtir publicação', 
-            error: String(error) 
-        });
+      res.status(500).json({ 
+        message: 'Erro ao curtir publicação', 
+        error: error.message 
+      });
+    } else {
+      res.status(500).json({ 
+        message: 'Erro ao curtir publicação', 
+        error: String(error) 
+      });
     }
   }
 }
