@@ -308,10 +308,10 @@ export default function Home() {
 
       <button
         onClick={handleAdminLogin}
-        className="mt-6 mb-10 xl:-mt-10 flex items-center justify-center gap-2 bg-transparent border border-e-yellow hover:border-green text-white font-bold py-3 px-7 rounded-lg shadow transition-all duration-300 cursor-pointer"
+        className="mt-6 mb-10 xl:-mt-10 flex items-center justify-center gap-2 bg-transparent border border-b-yellow hover:border-green text-white font-bold py-3 px-7 rounded-lg shadow transition-all duration-300 cursor-pointer"
       >
         <ShieldCheck className="w-5 h-5" />
-        <span>Entrar como Administrador</span>
+        <span>Entrar como Administrador<span className='text-red'>(Restrito)</span></span>
       </button>
                   
     </div>
