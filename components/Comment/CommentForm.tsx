@@ -57,7 +57,7 @@ export default function CommentForm({ postId, onCommentAdded }: { postId: string
       </div>
       <button
         type="submit"
-        className="bg-blue-600 border border-e-green hover:bg-lightblue text-white px-4 py-1 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
+        className="bg-blue-600 border border-b-green hover:bg-lightblue text-white px-4 py-1 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
         disabled={isLoading}
       >
         {isLoading ? 'Enviando...' : 'Enviar Comentário'}
