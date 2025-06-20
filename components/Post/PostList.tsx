@@ -8,6 +8,7 @@ export default function PostList() {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTheme, setFilterTheme] = useState('');
+  const [postsToShow, setPostsToShow] = useState<number>(2);
 
   const themes = ['Gramática', 'Cultura', 'Gastronomia', 'Tecnologia', 'Ditados', 'Natureza', 'Turismo'];
 
@@ -75,19 +76,32 @@ export default function PostList() {
             </option>
           ))}
         </select>
+        <select
+          className="px-4 py-2 bg-gray-700 border border-e-lightblue hover:border-green text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+          value={postsToShow}
+          onChange={(e) => setPostsToShow(Number(e.target.value))}
+        >
+          <option value={2}>2 posts</option>
+          <option value={4}>4 posts</option>
+          <option value={6}>6 posts</option>
+          <option value={10}>10 posts</option>
+          <option value={0}>Todos os posts</option>
+        </select>
       </div>
 
       {posts.length === 0 ? (
         <div className="text-white text-center py-10">Nenhuma publicação encontrada</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {posts.map((post) => (
-            <PostCard
-              key={post._id?.toString()}
-              post={post}
-              onDelete={handleDelete}
-              isAdmin={true}
-            />
+          {posts
+            .slice(0, postsToShow === 0 ? posts.length : postsToShow)
+            .map((post) => (
+              <PostCard
+                key={post._id?.toString()}
+                post={post}
+                onDelete={handleDelete}
+                isAdmin={true}
+              />
           ))}
         </div>
       )}
