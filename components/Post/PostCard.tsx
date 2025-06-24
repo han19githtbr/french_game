@@ -50,7 +50,7 @@ export default function PostCard({ post, onDelete, isAdmin }: { post: Post; onDe
           className="w-full h-48 object-cover"
         />
         <div className="absolute top-2 right-2 bg-gray-900 bg-opacity-70 text-white px-2 py-1 rounded flex items-center">
-          <span className="mr-1"><EyeIcon /></span>
+          <span className="mr-1 text-green"><EyeIcon /></span>
           <span>{post.views}</span>
         </div>
         <div className="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 rounded text-sm">

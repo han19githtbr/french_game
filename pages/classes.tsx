@@ -242,7 +242,7 @@ export default function Classes() {
                       {currentPost.theme}
                     </span>
                     <div className="flex items-center border-2 border-b-lightblue pr-3 pl-3 rounded-xl text-gray-400 ">
-                      <span className="mr-1"><EyeIcon /></span>
+                      <span className="mr-1 text-green"><EyeIcon /></span>
                       <span>{currentPost.views}</span>
                     </div>
                   </div>
