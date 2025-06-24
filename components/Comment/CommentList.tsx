@@ -12,11 +12,7 @@ export default function CommentList({ comments }: { comments: any[] }) {
 
   // Mostra todos os comentários se expanded for true, ou apenas os visíveis se false
   const commentsToShow = expanded ? comments : comments.slice(0, visibleComments);
-
-  /*const toggleExpand = () => {
-    setExpanded(!expanded);
-  };*/
-
+  
   const showMore = () => {
     setVisibleComments(prev => Math.min(prev + 2, comments.length));
   };
@@ -71,13 +67,7 @@ export default function CommentList({ comments }: { comments: any[] }) {
               Mostrar menos
             </button>
           )}
-          
-          {/*<button
-            onClick={toggleExpand}
-            className="text-blue-400 hover:text-blue-300 text-sm font-medium cursor-pointer"
-          >
-          </button>*/}
-            {/*{expanded ? 'Recolher comentário' : 'Mostrar todos'}*/}
+                    
         </div>
       )}
     </div>

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, RefObject, useCallback } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/router'
-import { Check, X, Minus, Lock, ChevronDown, ChevronLeft, ChevronRight, Pause, Play, FlagIcon, Clock, Bell, BellOff, ChevronUp } from 'lucide-react'
+import { Check, X, Minus, Lock, ChevronDown, ChevronLeft, ChevronRight, Pause, Play, FlagIcon, Clock, Bell, BellOff, ChevronUp, EyeIcon } from 'lucide-react'
 import { motion , AnimatePresence, useMotionValue, useTransform, animate, MotionValue} from 'framer-motion'
 import { Post } from '../models/Post';
 import TypingEffect from '../components/TypingEffect';
@@ -242,7 +242,7 @@ export default function Classes() {
                       {currentPost.theme}
                     </span>
                     <div className="flex items-center border-2 border-b-lightblue pr-3 pl-3 rounded-xl text-gray-400 ">
-                      <span className="mr-1">👁️</span>
+                      <span className="mr-1"><EyeIcon /></span>
                       <span>{currentPost.views}</span>
                     </div>
                   </div>
