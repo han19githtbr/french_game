@@ -143,13 +143,6 @@ export default function Home() {
   }, [currentIndex, session, title, titleGoogle]);
     
 
-  /*const handleSignInClick = () => {
-    const newCount = dailyAccessCount + 1;
-    setDailyAccessCount(newCount);
-    localStorage.setItem(DAILY_ACCESS_KEY, newCount.toString());
-    signIn('google');
-  };*/
-
 
   const handleSignInClick = async () => {
     // Envia uma requisição POST para a API para incrementar a contagem

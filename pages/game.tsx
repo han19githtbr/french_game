@@ -2160,7 +2160,7 @@ export default function Game({}: GameProps) {
             onClick={() => router.push('/classes')} 
             className="w-64 bg-transparent border border-green hover:border-gray-100 text-green animate-pulse-slow px-7 py-1 rounded-lg text-lg font-medium transition-colors relative cursor-pointer"
           >
-            <span>Você sabia?</span>
+            <span>Curiosidades!</span>
             {notificationCount > 0 && (
               <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
                 {notificationCount}
