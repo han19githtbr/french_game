@@ -122,7 +122,6 @@ const unlockAnimationVariants = {
 
 interface GameProps {}
 
-
 interface Video {
   id: string;
   name: string;
@@ -130,7 +129,6 @@ interface Video {
   user?: { username: string };
   duration?: string;
 }
-
 
 interface Conquest {
   user: string;
@@ -502,53 +500,6 @@ export default function Game({}: GameProps) {
     }
   }, [selectedTheme]);
 
-  
-  /*useEffect(() => {
-    if (selectedTheme) {
-      setSearchStatus('searching');
-      setErrorMessage(null);
-      setCurrentSoundUrl(null);
-      setSearchResults([]);
-      setCurrentSoundInfo(null);
-      setIsPlaying(false);
-
-      const query = selectedTheme;
-
-      //fetch(`https://freesound.org/apiv2/search/text/?query=${query}&token=${FREESOUND_API_KEY}`)
-      fetch(`https://freesound.org/apiv2/search/text/?query=${query}&fields=id,name,duration,previews,user,url&token=${FREESOUND_API_KEY}`)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`Erro na busca: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then(data => {
-          setSearchResults(data.results);
-          if (data.results.length > 0) {
-            setSearchStatus('results');
-          } else {
-            setSearchStatus('results');
-            setErrorMessage(`Nenhum som encontrado para "${query}".`);
-          }
-        })
-        .catch(error => {
-          console.error("Erro ao buscar sons:", error);
-          setErrorMessage("Erro ao buscar sons.");
-          setSearchStatus('error');
-        })
-        .finally(() => {
-          setIsSearching(false);
-        });
-    } else {
-      setCurrentSoundUrl(null);
-      setIsPlaying(false);
-      setSearchStatus('idle');
-      setSearchResults([]);
-      setErrorMessage(null);
-      setCurrentSoundInfo(null);
-    }
-  }, [selectedTheme]);*/
-
 
   useEffect(() => {
     if (audioRef.current) {
@@ -598,35 +549,6 @@ export default function Game({}: GameProps) {
   };
 
   
-  /*const loadAndPlaySound = (soundId: number) => {
-    fetch(`https://freesound.org/apiv2/sounds/${soundId}/?token=${FREESOUND_API_KEY}`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`Erro ao obter detalhes do som: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(soundDetails => {
-        setCurrentSoundUrl(soundDetails.previews['preview-hq-mp3']);
-        setCurrentSoundInfo(soundDetails);
-        setIsPlaying(true);
-        // SCROLL AUTOMÁTICO PARA O PLAYER APÓS SELECIONAR UM SOM
-        // *** MUDANÇA AQUI: Adicionar setTimeout ***
-        setTimeout(() => {
-          if (soundListBoxRef.current) {
-            // console.log('Tentando rolar para a visualização...'); // Para debug
-            soundListBoxRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
-          }
-        }, 0); // Timeout de 0ms para agendar a rolagem após a próxima renderização
-      })
-      .catch(error => {
-        console.error("Erro ao obter detalhes do som:", error);
-        setErrorMessage("Erro ao obter detalhes do som.");
-        setSearchStatus('error');
-      });
-  };*/
-
-
   const loadAndPlaySound = (soundId: number) => {
     // A requisição agora vai para o seu endpoint de backend '/api/freesound'
     // e envia o 'soundId' no corpo da requisição.
