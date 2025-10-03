@@ -665,7 +665,7 @@ export default function Frase({}: GameProps) {
   };
    
 
-  const fetchDailyConquests = async () => {
+  const fetchRecentConquests = async () => {
     try {
       const response = await fetch('/api/conquests/today');
       if (response.ok) {
@@ -687,7 +687,7 @@ export default function Frase({}: GameProps) {
   useEffect(() => {
     if (status === 'authenticated') {
       
-      fetchDailyConquests();
+      fetchRecentConquests();
     } else if (status === 'unauthenticated') {
       router.push('/');
     }
@@ -695,11 +695,11 @@ export default function Frase({}: GameProps) {
 
 
   // Salvar as conquistas no localStorage sempre que publishedConquests mudar
-  useEffect(() => {
+  /*useEffect(() => {
     // Adicionar a data atual a cada conquista antes de salvar
     const conquestsWithDate = publishedConquests.map(conquest => ({ ...conquest, date: getFormattedDate() }));
     localStorage.setItem('conquests', JSON.stringify(conquestsWithDate));
-  }, [publishedConquests]);
+  }, [publishedConquests]);*/
 
 
   const handleUnlockAnimationEnd = (setter: SetterFunction) => {
@@ -1029,7 +1029,7 @@ export default function Frase({}: GameProps) {
         
         setNewConquestCount(prev => prev + 1);
         // Call the useEffect hook to re-run the effect
-        fetchDailyConquests();
+        fetchRecentConquests();
           
         
       } else {

@@ -19,7 +19,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === 'GET') {
     try {
       await connectDB();
-      const today = new Date();
+
+      // Buscar conquistas dos últimos 7 dias que ainda estão ativas
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      
+      const recentConquests = await ConquestModel.find({
+        createdAt: {
+          $gte: sevenDaysAgo,
+          $lte: new Date()
+        },
+        isActive: true
+      }).sort({ createdAt: -1 });
+
+      res.status(200).json(recentConquests);
+      /*const today = new Date();
       today.setHours(0, 0, 0, 0);
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
@@ -31,10 +45,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
       }).sort({ timestamp: -1 });
 
-      res.status(200).json(conquestsToday);
+      res.status(200).json(conquestsToday);*/
     } catch (error) {
-      console.error('Erro ao buscar as conquistas de hoje:', error);
-      res.status(500).json({ message: 'Erro ao buscar as conquistas de hoje.' });  
+      console.error('Erro ao buscar as conquistas recentes:', error);
+      res.status(500).json({ message: 'Erro ao buscar as conquistas recentes.' });  
     }
   
   } else {
