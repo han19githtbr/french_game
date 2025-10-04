@@ -24,7 +24,25 @@ async function saveRecord(username: string, totalPlays: number) {
     const db = await getDbInstance();
     
     const collection = db.collection('super_players');
-    await collection.insertOne({ username, totalPlays, timestamp: new Date() });
+    // Verifica se já existe um record para este usuário
+    const existingRecord = await collection.findOne({ username });
+    
+    if (existingRecord) {
+      // Atualiza se o novo record for maior
+      if (totalPlays > existingRecord.totalPlays) {
+        await collection.updateOne(
+          { username },
+          { $set: { totalPlays, timestamp: new Date() } }
+        );
+      }
+    } else {
+      // Cria novo record
+      await collection.insertOne({ 
+        username, 
+        totalPlays, 
+        timestamp: new Date() 
+      });
+    }
     return { success: true };
   } catch (error: any) {
     console.error("Erro ao salvar:", error);
@@ -38,11 +56,37 @@ async function getRecords() {
     const db = await getDbInstance();
     
     const collection = db.collection('super_players');
-    const records = await collection.find({}).sort({ totalPlays: -1, timestamp: -1 }).limit(5).toArray();
+    const records = await collection.find({})
+      .sort({ totalPlays: -1, timestamp: -1 })
+      .limit(5)
+      .toArray();
     return { success: true, data: records };
   } catch (error: any) {
     console.error("Erro ao buscar:", error);
     return { success: false, error: error.message || 'Ocorreu um erro ao buscar.' };
+  }
+}
+
+
+async function checkIfUserIsSuperPlayer(username: string) {
+  try {
+    const db = await getDbInstance();
+    const collection = db.collection('super_players');
+    
+    // Busca o recorde mais recente do usuário
+    const userRecord = await collection.findOne(
+      { username }, 
+      { sort: { timestamp: -1 } }
+    );
+    
+    return { 
+      success: true, 
+      isSuperPlayer: !!userRecord,
+      userRecord 
+    };
+  } catch (error: any) {
+    console.error("Erro ao verificar Super Player:", error);
+    return { success: false, error: error.message };
   }
 }
 
@@ -54,8 +98,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const result = await saveRecord(username, totalPlays);
       res.status(result.success ? 200 : 500).json(result);
     } else if (req.method === 'GET') {
-      const result = await getRecords();
-      res.status(result.success ? 200 : 500).json(result);
+      // Se tiver parâmetro de usuário, verifica se é Super Player
+      const { username } = req.query;
+
+      if (username && typeof username === 'string') {
+        const result = await checkIfUserIsSuperPlayer(username);
+        res.status(result.success ? 200 : 500).json(result);
+      } else {
+
+        const result = await getRecords();
+        res.status(result.success ? 200 : 500).json(result);
+      }
     } else {
       res.setHeader('Allow', ['GET', 'POST']);
       res.status(405).end(`Method ${req.method} Not Allowed`);
