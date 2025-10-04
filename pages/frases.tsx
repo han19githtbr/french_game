@@ -1722,7 +1722,7 @@ export default function Frase({}: GameProps) {
               transition={{ type: 'spring', damping: 15, stiffness: 100 }}
               className="bg-white rounded-2xl p-8 shadow-2xl text-center w-full max-w-md"
             >
-              <h3 className="text-xl font-bold mb-4">As Conquistas de Hoje</h3>
+              <h3 className="text-xl font-bold mb-4">As Conquistas mais recentes</h3>
               <div className="overflow-x-auto whitespace-nowrap scroll-smooth" ref={carouselRef} style={{ display: 'flex', gap: '10px' }}>
                 {publishedConquests.map((conquest, index) => (
                   <motion.div

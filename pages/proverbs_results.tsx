@@ -94,17 +94,62 @@ export default function ResultsPage() {
   const progressPercentage = (currentProgress / 4) * 100;
 
 
+  // Função para verificar se o usuário é Super Player
+  const checkUserSuperPlayerStatus = async (username: string) => {
+    try {
+      const response = await fetch(`/api/super-players?username=${encodeURIComponent(username)}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setIsSuperPlayer(data.isSuperPlayer);
+        // Opcional: você pode armazenar o record específico do usuário se quiser
+      if (data.userRecord) {
+        console.log("Record do usuário:", data.userRecord);
+      }
+    } else {
+      console.error("Erro ao verificar status:", data.error);
+      setIsSuperPlayer(false);
+    
+      }
+    } catch (error) {
+      console.error("Erro ao verificar status de Super Player:", error);
+      setIsSuperPlayer(false);
+    }
+  };
+
+
+  // UseEffect para verificar o status quando o usuário mudar
+  useEffect(() => {
+    if (session?.user?.name) {
+      checkUserSuperPlayerStatus(session.user.name);
+    } else {
+      setIsSuperPlayer(false);
+    }
+  }, [session?.user?.name]);
+
+
   // Função para salvar a conquista no MongoDB
   const saveSuperPlayerRecord = async (username: string, totalPlays: number) => {
     try {
-      await fetch('/api/super-players', {
+      const response = await fetch('/api/super-players', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ username, totalPlays }),
       });
-      fetchSuperPlayerRecords(); // Recarrega os registros
+
+      const result = await response.json();
+    
+      if (result.success) {
+        // Atualiza o estado localmente
+        setIsSuperPlayer(true);
+        // Recarrega os registros e verifica o status novamente para garantir sincronização
+        fetchSuperPlayerRecords();
+        checkUserSuperPlayerStatus(username);
+      } else {
+        console.error("Erro ao salvar conquista:", result.error);
+      }
     } catch (error) {
       console.error("Erro ao salvar a conquista:", error);
     }
