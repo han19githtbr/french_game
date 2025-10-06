@@ -10,8 +10,15 @@ export interface Post {
   likes: number;
   views: number;
   comments: Comment[];
+  likedBy?: LikedUser[]; // Lista de usuários que curtiram
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface LikedUser {
+  userId: string;
+  userName: string;
+  userImage?: string;
 }
 
 export interface Comment {

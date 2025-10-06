@@ -43,22 +43,29 @@ export default function Classes() {
         const data = await response.json();
         setPosts(data);
         setCurrentIndex(0); // Resetar para o primeiro post do novo tema
+
+        // Inicializa likedPosts baseado no usuário logado e no campo likedBy de cada post
+        if (session && session.user) {
+          const userId = session.user.id || session.user.email || '';
+          const liked = data
+            .filter((post: any) => Array.isArray(post.likedBy) && post.likedBy.some((u: any) => u.userId === userId))
+            .map((post: any) => post._id?.toString());
+          setLikedPosts(liked);
+        } else {
+          setLikedPosts([]);
+        }
       } catch (error) {
         console.error('Erro:', error);
       }
     };
 
     fetchPosts();
-  }, [selectedTheme, router.query.theme]); // Adicionei selectedTheme como dependência
+  }, [selectedTheme, router.query.theme, session]);
 
 
   useEffect(() => {
     if (posts.length > 0 && currentIndex < posts.length) {
       setCurrentPost(posts[currentIndex]);
-      // Incrementar visualizações
-      if (posts[currentIndex]?._id) {
-        incrementViews(posts[currentIndex]._id.toString());
-      }
     } else {
       setCurrentPost(null);
     }
@@ -91,31 +98,38 @@ export default function Classes() {
     if (!session) return;
 
     try {
-
       // Verifica se o post já foi curtido
       const isLiked = likedPosts.includes(postId);
 
       const response = await fetch(`/api/posts/like?id=${postId}&action=${isLiked ? 'unlike' : 'like'}`, {
         method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: session.user.id || session.user.email || '',
+          userName: session.user.name || '',
+          userImage: session.user.image || '',
+        }),
       });
-      
+
       if (!response.ok) throw new Error('Erro ao curtir publicação');
 
       const updatedPost = await response.json();
-      
+
       // Atualiza o estado de likes
-      setLikedPosts(prev => 
-      isLiked 
-        ? prev.filter(id => id !== postId) // Remove o like
-        : [...prev, postId] // Adiciona o like
+      setLikedPosts(prev =>
+        isLiked
+          ? prev.filter(id => id !== postId) // Remove o like
+          : [...prev, postId] // Adiciona o like
       );
-      
+
       // Atualizações de estado com verificação segura
-      setCurrentPost(prev => 
+      setCurrentPost(prev =>
         prev?._id?.toString() === postId ? updatedPost : prev
       );
-      
-      setPosts(prev => prev.map(p => 
+
+      setPosts(prev => prev.map(p =>
         p._id?.toString() === postId ? updatedPost : p
       ));
 

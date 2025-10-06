@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Post } from '../../models/Post';
 import { formatDate } from '../../lib/utils';
 import Link from 'next/link';
@@ -11,6 +11,32 @@ export default function PostCard({ post, onDelete, isAdmin }: { post: Post; onDe
   const [editedCaption, setEditedCaption] = useState(post.caption);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Modal para mostrar quem curtiu
+  const [showLikesModal, setShowLikesModal] = useState(false);
+  const likesTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const handleShowLikes = () => {
+    setShowLikesModal(true);
+  };
+  const handleCloseLikes = () => {
+    likesTimeoutRef.current = setTimeout(() => setShowLikesModal(false), 200);
+  };
+  const handleLikesModalMouseEnter = () => {
+    if (likesTimeoutRef.current) clearTimeout(likesTimeoutRef.current);
+  };
+
+  // Modal para mostrar quem comentou
+  const [showCommentsModal, setShowCommentsModal] = useState(false);
+  const commentsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const handleShowComments = () => {
+    setShowCommentsModal(true);
+  };
+  const handleCloseComments = () => {
+    commentsTimeoutRef.current = setTimeout(() => setShowCommentsModal(false), 200);
+  };
+  const handleCommentsModalMouseEnter = () => {
+    if (commentsTimeoutRef.current) clearTimeout(commentsTimeoutRef.current);
+  };
 
   const handleEdit = async () => {
     setIsLoading(true);
@@ -80,12 +106,93 @@ export default function PostCard({ post, onDelete, isAdmin }: { post: Post; onDe
         </div>
 
         <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <span className="text-yellow-400 mr-1">❤️</span>
-            <span className="text-white">{post.likes}</span>
-            <span className="text-white mx-2">|</span>
-            <span className="text-blue-400">{post.comments.length} comentários</span>
+          <div className="flex items-center gap-2">
+            <span className="text-yellow mr-1">❤️</span>
+            <button
+              type="button"
+              title="Ver quem curtiu"
+              onClick={handleShowLikes}
+              className="px-2 py-1 rounded bg-gray-700 hover:bg-gray-800 text-green font-semibold text-xs focus:outline-none focus:ring-2 focus:ring-green-400 transition cursor-pointer"
+            >
+              {post.likes} curtidas
+            </button>
+            <span className="text-white">|</span>
+            <button
+              type="button"
+              title="Ver comentários"
+              onClick={handleShowComments}
+              className="px-2 py-1 rounded bg-gray-700 hover:bg-gray-800 text-blue font-semibold text-xs focus:outline-none focus:ring-2 focus:ring-blue-400 transition cursor-pointer"
+            >
+              {post.comments.length} comentários
+            </button>
           </div>
+        {/* Modal de curtidas */}
+        {showLikesModal && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-60"
+            onClick={handleCloseLikes}
+            onMouseEnter={handleLikesModalMouseEnter}
+            onMouseLeave={handleCloseLikes}
+          >
+            <div
+              className="bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md relative"
+              onClick={e => e.stopPropagation()}
+              onMouseEnter={handleLikesModalMouseEnter}
+              onMouseLeave={handleCloseLikes}
+            >
+              <button onClick={() => { setShowLikesModal(false); }} className="absolute top-2 right-2 text-gray-200 hover:text-red text-xl font-bol cursor-pointer">✕</button>
+              <h2 className="text-lg font-bold mb-4 text-center text-gray-200">Quem curtiu</h2>
+              <ul className="space-y-2 max-h-80 overflow-y-auto">
+                {post.likedBy && post.likedBy.length > 0 ? (
+                  post.likedBy.map((user, idx) => (
+                    <li key={user.userId+idx} className="flex items-center space-x-2">
+                      {user.userImage && <img src={user.userImage} alt={user.userName} className="w-8 h-8 rounded-full" />}
+                      <span className="text-gray-300 font-medium">{user.userName}</span>
+                    </li>
+                  ))
+                ) : (
+                  <li className="text-gray-200 text-center">Ninguém curtiu ainda.</li>
+                )}
+              </ul>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de comentários */}
+        {showCommentsModal && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-60"
+            onClick={handleCloseComments}
+            onMouseEnter={handleCommentsModalMouseEnter}
+            onMouseLeave={handleCloseComments}
+          >
+            <div
+              className="bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md relative"
+              onClick={e => e.stopPropagation()}
+              onMouseEnter={handleCommentsModalMouseEnter}
+              onMouseLeave={handleCloseComments}
+            >
+              <button onClick={() => { setShowCommentsModal(false); }} className="absolute top-2 right-2 text-gray-200 hover:text-red text-xl font-bold cursor-pointer">✕</button>
+              <h2 className="text-lg font-bold mb-4 text-center text-gray-200">Comentários</h2>
+              <ul className="space-y-4 max-h-80 overflow-y-auto">
+                {post.comments && post.comments.length > 0 ? (
+                  post.comments.map((comment, idx) => (
+                    <li key={comment._id?.toString() || idx} className="flex items-start space-x-3 border-b pb-2">
+                      {comment.userImage && <img src={comment.userImage} alt={comment.userName} className="w-8 h-8 rounded-full mt-1" />}
+                      <div>
+                        <span className="text-gray-100 font-semibold">{comment.userName}</span>
+                        <p className="text-gray-300 text-sm mt-1">{comment.text}</p>
+                        <span className="text-gray-300 text-xs">{new Date(comment.createdAt).toLocaleString()}</span>
+                      </div>
+                    </li>
+                  ))
+                ) : (
+                  <li className="text-gray-200 text-center">Nenhum comentário ainda.</li>
+                )}
+              </ul>
+            </div>
+          </div>
+        )}
 
           {isAdmin && (
             <div className="flex space-x-2">
