@@ -114,7 +114,7 @@ export default function PostCard({ post, onDelete, isAdmin }: { post: Post; onDe
               onClick={handleShowLikes}
               className="px-2 py-1 rounded bg-gray-700 hover:bg-gray-800 text-green font-semibold text-xs focus:outline-none focus:ring-2 focus:ring-green-400 transition cursor-pointer"
             >
-              {post.likes} curtidas
+              {post.likes}
             </button>
             <span className="text-white">|</span>
             <button
