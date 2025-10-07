@@ -11,6 +11,7 @@ export interface Post {
   views: number;
   comments: Comment[];
   likedBy?: LikedUser[]; // Lista de usuários que curtiram
+  viewedBy?: string[]; // Lista de userIds que visualizaram
   createdAt: Date;
   updatedAt: Date;
 }

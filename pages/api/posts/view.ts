@@ -5,6 +5,7 @@ import { ObjectId } from 'mongodb';
 
 const viewCache = new Map<string, number>();
 
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'PUT') {
     return res.status(405).json({ message: 'Método não permitido' });
@@ -12,26 +13,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const db = await getDb();
-    const { id } = req.query;
+    const { id, userId } = req.query;
     const postId = id as string;
+    const user = (userId as string) || '';
 
-    // Verificar se já houve uma visualização recente deste post
-    const now = Date.now();
-    const lastViewTime = viewCache.get(postId) || 0;
-
-    // Se a última visualização foi há menos de 5 segundos, ignorar
-    if (now - lastViewTime < 5000) {
-      const currentPost = await db.collection('posts').findOne({ _id: new ObjectId(postId) });
-      return res.status(200).json(currentPost);
+    if (!user) {
+      return res.status(400).json({ message: 'Usuário não informado' });
     }
 
-    // Atualizar o cache com o tempo atual
-    viewCache.set(postId, now);
+    // Busca o post
+    const post = await db.collection('posts').findOne({ _id: new ObjectId(postId) });
+    if (!post) {
+      return res.status(404).json({ message: 'Publicação não encontrada' });
+    }
 
+    // Se o usuário já visualizou, não incrementa
+    if (Array.isArray(post.viewedBy) && post.viewedBy.includes(user)) {
+      return res.status(200).json(post);
+    }
+
+    // Incrementa views e adiciona userId ao viewedBy
     const result = await db.collection('posts').findOneAndUpdate(
       { _id: new ObjectId(postId) },
-      { $inc: { views: 1 } },
-      { returnDocument: 'after' } // Retorna o documento atualizado
+      { $inc: { views: 1 }, $addToSet: { viewedBy: user } },
+      { returnDocument: 'after' }
     );
 
     if (!result || !result.value) {

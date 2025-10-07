@@ -85,8 +85,10 @@ export default function Classes() {
   }, [socket]);
 
   const incrementViews = async (postId: string) => {
+    if (!session || !session.user) return;
+    const userId = session.user.id || session.user.email || '';
     try {
-      await fetch(`/api/posts/view?id=${postId}`, {
+      await fetch(`/api/posts/view?id=${postId}&userId=${userId}`, {
         method: 'PUT',
       });
     } catch (err) {

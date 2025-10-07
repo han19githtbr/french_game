@@ -129,7 +129,7 @@ export default function PostCard({ post, onDelete, isAdmin }: { post: Post; onDe
         {/* Modal de curtidas */}
         {showLikesModal && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-60"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-60 "
             onClick={handleCloseLikes}
             onMouseEnter={handleLikesModalMouseEnter}
             onMouseLeave={handleCloseLikes}
