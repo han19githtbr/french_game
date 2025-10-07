@@ -25,7 +25,7 @@ export default function Classes() {
   const [liked, setLiked] = useState(false);
   const socket = useSocket();
 
-  const themes = ['Gramática', 'Cultura', 'Gastronomia', 'Tecnologia', 'Ditados', 'Natureza', 'Turismo', 'Pensamentos'];
+  const themes = ['Cultura', 'Gastronomia', 'Tecnologia', 'Ditados', 'Natureza', 'Turismo', 'Pensamentos'];
 
   // Adicione no início do seu componente (com os outros hooks)
   const [likedPosts, setLikedPosts] = useState<string[]>([]);

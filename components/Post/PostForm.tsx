@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import { uploadImage } from '../../lib/utils';
 import { Post } from '../../models/Post';
 
-const themes = ['Gramática', 'Cultura', 'Gastronomia', 'Tecnologia', 'Ditados', 'Natureza', 'Turismo', 'Pensamentos'];
+const themes = ['Cultura', 'Gastronomia', 'Tecnologia', 'Ditados', 'Natureza', 'Turismo', 'Pensamentos'];
 
 export default function PostForm({ onPostCreated }: { onPostCreated: () => void }) {
   const { data: session } = useSession();

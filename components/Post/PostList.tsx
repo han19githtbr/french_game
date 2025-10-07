@@ -10,7 +10,7 @@ export default function PostList() {
   const [filterTheme, setFilterTheme] = useState('');
   const [postsToShow, setPostsToShow] = useState<number>(2);
 
-  const themes = ['Gramática', 'Cultura', 'Gastronomia', 'Tecnologia', 'Ditados', 'Natureza', 'Turismo', 'Pensamentos'];
+  const themes = ['Cultura', 'Gastronomia', 'Tecnologia', 'Ditados', 'Natureza', 'Turismo', 'Pensamentos'];
 
   useEffect(() => {
     const fetchPosts = async () => {
