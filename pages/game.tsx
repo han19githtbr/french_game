@@ -1023,7 +1023,7 @@ export default function Game({}: GameProps) {
         setShowPublishButton(false); // Esconder o botão após a transição
         setRemainingAttempts(4); // Resetar tentativas ao completar uma rodada com sucesso
         setResults([]);
-      }, 20000);
+      }, 10000);
 
       if (successSound) {
         successSound.play();
@@ -2618,13 +2618,13 @@ export default function Game({}: GameProps) {
           initial={{ opacity: 0.5, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
-          className="fixed inset-0 flex items-center justify-center z-50 bg-transparent bg-opacity-90 backdrop-blur-md" // Adicionado backdrop-blur-md para o efeito de sobreamento
+          className="fixed inset-0 flex items-center justify-center z-100 bg-transparent bg-opacity-90 backdrop-blur-md" // Adicionado backdrop-blur-md para o efeito de sobreamento
         >
           <motion.div
             className="bg-white text-green rounded-2xl p-8 shadow-2xl text-center text-3xl font-bold animate-pulse"
             style={{
-              boxShadow: '0 0 20px rgba(255, 255, 0, 0.8)', // Adicionado brilho amarelo
-              textShadow: '0 0 10px rgba(255, 255, 0, 0.8)', // Adicionado brilho no texto
+              boxShadow: '0 0 40px rgba(255, 255, 0, 0.9)', // Adicionado brilho amarelo
+              textShadow: '0 0 10px rgba(255, 255, 0, 0.9)', // Adicionado brilho no texto
             }}
             initial={{ opacity: 0.5, scale: 0.7 }}
             animate={{ opacity: 1, scale: 1 }}

@@ -969,7 +969,7 @@ export default function Game({}: GameProps) {
         setRound(r => r + 1)
         setShowCongrats(false);
         setShowPublishButton(false); // Esconder o botão após a transição
-      }, 20000);
+      }, 10000);
   
       if (successSound) {
         successSound.play();
