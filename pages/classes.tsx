@@ -189,7 +189,7 @@ export default function Classes() {
  
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-800 to-slate-900 text-white flex flex-col items-center p-4 relative mb-6">
+    <div className="min-h-screen bg-gray-900 from-slate-800 to-slate-900 text-white flex flex-col items-center p-4 relative mb-6">
       <div className="absolute top-10 left-4 z-30">
         <button
             onClick={() => router.push('/game')}

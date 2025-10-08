@@ -173,7 +173,7 @@ export default function ResultsPage() {
 
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white p-6">
+    <div className="min-h-screen bg-gray-900 text-white p-6">
       {/* Header com perfil */}
       <div className="flex justify-between items-center mb-6 mt-5">
         <button 
