@@ -1375,8 +1375,8 @@ export default function Frase({}: GameProps) {
                   <button
                     className={`py-1 px-4 rounded-md border font-semibold transition duration-300 ease-in-out ${
                       selectedTheme === themesSoundCarrossel[themeCarrosselIndex].id
-                        ? 'bg-gray-900 text-gray-200'
-                        : 'bg-gray-900 text-gray-200 hover:bg-gray-600'
+                        ? 'bg-gray-900 text-gray-200 border-b-green'
+                        : 'bg-gray-900 text-gray-200 hover:bg-gray-600 border-b-green'
                     }`}
                   >
                     {themesSoundCarrossel[themeCarrosselIndex].icon}
@@ -1572,8 +1572,8 @@ export default function Frase({}: GameProps) {
                   <button
                     className={`py-1 px-4 rounded-md border font-semibold transition duration-300 ease-in-out ${
                       selectedThemeVideo === themesCarrossel[themeCarrosselIndex].id
-                        ? 'bg-transparent text-white'
-                        : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                        ? 'bg-transparent text-white border-b-green'
+                        : 'bg-gray-700 text-gray-200 hover:bg-gray-600 border-b-green'
                     }`}
                   >
                     {themesCarrossel[themeCarrosselIndex].icon}
