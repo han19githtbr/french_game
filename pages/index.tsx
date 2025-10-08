@@ -185,7 +185,7 @@ export default function Home() {
 
 
   return (
-    <div className="h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500 to-pink-500 text-white">
+    <div className="h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800 text-white">
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 text-center w-full px-4">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
