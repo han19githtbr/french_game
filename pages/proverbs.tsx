@@ -8,7 +8,7 @@ import { useRouter } from 'next/router'
 import { Check, X, ChevronLeft, Minus, Lock, ChevronDown, ChevronRight, Pause, Play } from 'lucide-react'
 import { motion , AnimatePresence, useMotionValue, animate, MotionValue} from 'framer-motion'
 import { saveProgress } from './proverbs_results'
-import { LockClosedIcon, LockOpenIcon, MusicalNoteIcon, ChevronLeftIcon, ChevronRightIcon, GlobeAmericasIcon, CloudIcon, BeakerIcon, VideoCameraIcon, FilmIcon, LanguageIcon, DeviceTabletIcon, ChatBubbleBottomCenterTextIcon, MapPinIcon, ShoppingCartIcon, TvIcon, MoonIcon } from '@heroicons/react/24/solid';
+import { LockClosedIcon, LockOpenIcon, FlagIcon, MusicalNoteIcon, ChevronLeftIcon, ChevronRightIcon, GlobeAmericasIcon, CloudIcon, BeakerIcon, VideoCameraIcon, FilmIcon, LanguageIcon, DeviceTabletIcon, ChatBubbleBottomCenterTextIcon, MapPinIcon, ShoppingCartIcon, TvIcon, MoonIcon, FaceSmileIcon } from '@heroicons/react/24/solid';
 import { useSound } from 'use-sound';
 
 import dynamic from "next/dynamic";
@@ -23,7 +23,7 @@ import { youtube_v3 } from '@googleapis/youtube';
 import { io, Socket } from 'socket.io-client';
 
 
-const DAILY_LIMIT = 5;
+const DAILY_LIMIT = 10;
 
 const Picker = dynamic(() => import("@emoji-mart/react"), { ssr: false });
 
@@ -103,6 +103,9 @@ const themesCarrossel = [
   { id: 'music', label: 'Music', icon: <MusicalNoteIcon className="h-5 w-5 inline-block mr-1" /> },
   { id: 'food', label: 'Food', icon: <ShoppingCartIcon className="h-5 w-5 inline-block mr-1" /> },
   { id: 'tourism', label: 'Tourism', icon: <MapPinIcon className="h-5 w-5 inline-block mr-1" /> },
+  { id: 'cartoons', label: 'Cartoons', icon: <FilmIcon className="h-5 w-5 inline-block mr-1" /> },
+  { id: 'english', label: 'English', icon: <FlagIcon className="h-5 w-5 inline-block mr-1" /> },
+  { id: 'meditation', label: 'Meditation', icon: <FaceSmileIcon className="h-5 w-5 inline-block mr-1" /> },
 ];
 
 
