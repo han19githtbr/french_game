@@ -1986,7 +1986,7 @@ export default function Frase({}: GameProps) {
         </div>
 
         {/* Corações de Tentativas */}
-        <div className="flex justify-center mt-5 space-x-4">
+        {/*<div className="flex justify-center mt-5 space-x-4">
             <span className='text-yellow font-semibold'>Vidas:</span>
             {[...Array(4)].map((_, i) => (
               <svg
@@ -2005,7 +2005,7 @@ export default function Frase({}: GameProps) {
                 />
               </svg>
             ))}
-        </div>
+        </div>*/}
 
 
         {/* --- Modal de Aviso de Última Tentativa --- */}
