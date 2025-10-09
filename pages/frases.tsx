@@ -1213,29 +1213,28 @@ export default function Frase({}: GameProps) {
       const frenchVoice = voices.find((voice) =>
         ['fr-FR', 'fr-CA', 'fr-BE', 'fr-CH', 'fr-LU'].includes(voice.lang)
       );
-
+      synth.cancel(); // sempre cancela antes
       const utterance = new SpeechSynthesisUtterance(text);
       if (frenchVoice) {
         utterance.voice = frenchVoice;
-      } else {
-        console.warn('Voz em francês não encontrada. Usando a voz padrão.');
       }
-
-      utterance.lang = 'fr-FR'; // força o idioma francês
+      utterance.lang = 'fr-FR';
       utterance.rate = speed;
       synth.speak(utterance);
     };
 
-    if (!voicesLoaded && synth.getVoices().length === 0) {
-      // Timeout para tentar falar mesmo que 'voiceschanged' demore
-      timeoutId.current = setTimeout(() => {
-        console.warn('Evento voiceschanged demorou muito. Tentando falar com a voz padrão.');
-        speak();
-      }, 5000); // Ajuste o tempo limite conforme necessário
-    } else {
+    if (synth.getVoices().length > 0) {
       speak();
+    } else {
+      // Chrome mobile: aguarda voiceschanged, mas faz fallback rápido
+      const trySpeak = () => speak();
+      synth.addEventListener('voiceschanged', trySpeak, { once: true });
+      setTimeout(() => {
+        synth.removeEventListener('voiceschanged', trySpeak);
+        speak();
+      }, 500); // fallback rápido (meio segundo)
     }
-  }, [synth, voicesLoaded]);
+  }, [synth]);
  
   
   const handleSpeedChange = (index: number, newSpeed: number) => {

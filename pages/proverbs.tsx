@@ -985,32 +985,34 @@ export default function Game({}: GameProps) {
       console.error('A API de Text-to-Speech não é suportada neste navegador.');
       return;
     }
-  
+
     const synth = window.speechSynthesis;
-  
+
     const speak = () => {
       const voices = synth.getVoices();
       const portugueseVoice = voices.find((voice) =>
-        ['pt-BR'].includes(voice.lang)
+        ['pt-BR', 'pt-PT'].includes(voice.lang)
       );
-  
+      synth.cancel(); // sempre cancela antes
       const utterance = new SpeechSynthesisUtterance(text);
       if (portugueseVoice) {
         utterance.voice = portugueseVoice;
-      } else {
-        console.warn('Voz em português não encontrada. Usando a voz padrão.');
       }
-  
-      utterance.lang = 'pt-BR'; // força o idioma português
+      utterance.lang = 'pt-BR';
       utterance.rate = speed;
       synth.speak(utterance);
     };
-  
-    if (synth.getVoices().length === 0) {
-      // Chrome mobile geralmente precisa desse evento
-      synth.addEventListener('voiceschanged', speak);
-    } else {
+
+    if (synth.getVoices().length > 0) {
       speak();
+    } else {
+      // Chrome mobile: aguarda voiceschanged, mas faz fallback rápido
+      const trySpeak = () => speak();
+      synth.addEventListener('voiceschanged', trySpeak, { once: true });
+      setTimeout(() => {
+        synth.removeEventListener('voiceschanged', trySpeak);
+        speak();
+      }, 500); // fallback rápido (meio segundo)
     }
   };
   
