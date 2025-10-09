@@ -2617,7 +2617,7 @@ export default function Game({}: GameProps) {
           initial={{ opacity: 0.3, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
-          className="fixed inset-0 flex items-center justify-center z-100 bg-transparent bg-opacity-90 backdrop-blur-md" // Adicionado backdrop-blur-md para o efeito de sobreamento
+          className="fixed inset-0 flex items-center justify-center z-50 bg-transparent bg-opacity-90 backdrop-blur-md" // Adicionado backdrop-blur-md para o efeito de sobreamento
         >
           <motion.div
             className="bg-white text-green rounded-2xl p-8 shadow-2xl text-center text-3xl font-bold animate-pulse"
@@ -2643,7 +2643,7 @@ export default function Game({}: GameProps) {
             
       {showPublishButton && (
         <motion.div
-          className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50" // Posicionado na parte inferior
+          className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-100" // Posicionado na parte inferior
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}

@@ -2339,7 +2339,7 @@ export default function Game({}: GameProps) {
  
       {showPublishButton && (
               <motion.div
-                className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50" // Posicionado na parte inferior
+                className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-100" // Posicionado na parte inferior
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
