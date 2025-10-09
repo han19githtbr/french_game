@@ -2615,7 +2615,7 @@ export default function Game({}: GameProps) {
 
       {showCongrats && (
         <motion.div
-          initial={{ opacity: 0.5, scale: 0.8 }}
+          initial={{ opacity: 0.3, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
           className="fixed inset-0 flex items-center justify-center z-100 bg-transparent bg-opacity-90 backdrop-blur-md" // Adicionado backdrop-blur-md para o efeito de sobreamento

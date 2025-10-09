@@ -2320,27 +2320,7 @@ export default function Frase({}: GameProps) {
                 </motion.div>
               )}
             </AnimatePresence>
-
-            <AnimatePresence>
-              {showCongrats && (
-                <motion.div
-                  className="fixed top-0 left-0 w-full h-full bg-gradient-to-br from-green-800 to-lime-700 bg-opacity-80 z-50 flex items-center justify-center"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
-                  <motion.div
-                    className="bg-white rounded-xl shadow-lg p-8 text-center"
-                    initial={{ scale: 0.8 }}
-                    animate={{ scale: 1 }}
-                    exit={{ scale: 0.8 }}
-                  >
-                    <h2 className="text-2xl font-bold text-green-600 mb-4">🎉 Parabéns! Você acertou tudo! 🎉</h2>
-                    
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+           
 
             <AnimatePresence>
               {showReviewModal && reviewHistory.length > 0 && (
