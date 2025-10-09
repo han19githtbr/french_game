@@ -266,7 +266,7 @@ export default function Classes() {
                   <div className="mb-6 min-h-20">
                     <TypingEffect 
                       text={currentPost.caption} 
-                      speed={30}
+                      speed={65} // Mais lento
                       key={currentPost._id.toString()} // Força recriação ao mudar de post
                     />
                   </div>
