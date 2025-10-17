@@ -363,3 +363,12 @@ select option:checked {
 .chat-messages-container::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+/* Countdown funnel styles */
+.countdown-funnel-modern svg { filter: drop-shadow(0 6px 12px rgba(0,0,0,0.6)); }
+.countdown-funnel-modern .time-bubble { background: linear-gradient(135deg,#0ea5e9,#8b5cf6); box-shadow: 0 8px 24px rgba(99,102,241,0.16); }
+
+/* Loss modal */
+.loss-modal .modal-content { background: linear-gradient(180deg, rgba(20,20,20,0.95), rgba(10,10,10,0.95)); border: 2px solid rgba(255,80,80,0.85); }
+.loss-modal .modal-content h2 { color: #ff7a7a; }
+.loss-modal .modal-actions button { margin: 0 8px; }

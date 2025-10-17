@@ -233,14 +233,29 @@ export default function ResultsPage() {
             {progress_answers.map((p, i) => (
               <div
               key={i}
-              className={`bg-white text-black p-4 rounded-xl shadow-md flex justify-between items-center ${p.correct_word === bestRound.correct_word ? 'border-2 border-green ' : ''}`}
+              className={`bg-white text-black p-4 rounded-xl shadow-md flex justify-between items-center ${
+                p.correct_word === bestRound.correct_word ? 'border-2 border-green ' : ''
+              }`}
             >
-              <span>Jogada {p.round}</span>
-              <span>
-                {p.correct_word} acertos
-                {p.correct_word === 4 && <FaMedal color="gold" className="inline-block ml-2 medalha-brilho-ouro" />}
-                {p.correct_word === 3 && <FaMedal color="silver" className="inline-block ml-2 medalha-brilho-prata" />}
-              </span>
+              {/* Foto do usuário */}
+              <img
+                src={session?.user?.image || '/default-avatar.png'} // fallback se não houver imagem
+                alt={session?.user?.name || 'Avatar'}
+                className="w-6 h-6 rounded-full border-2 border-green object-cover"
+              />
+              {/* Conteúdo da jogada */}
+              <div className="flex justify-between items-center w-full">
+                <span className="font-semibold ml-2">Jogada {p.round}</span>
+                <span>
+                  {p.correct_word} acertos
+                  {p.correct_word === 4 && (
+                    <FaMedal color="gold" className="inline-block ml-2 medalha-brilho-ouro" />
+                  )}
+                  {p.correct_word === 3 && (
+                    <FaMedal color="silver" className="inline-block ml-2 medalha-brilho-prata" />
+                  )}
+                </span>
+              </div>
             </div>
             ))}
           </div>
