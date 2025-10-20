@@ -948,8 +948,8 @@ export default function Game({}: GameProps) {
       setShowPublishButton(true); // Mostrar o botão de publicação
 
       // Salvar progresso no localStorage
-      const prevProgress = JSON.parse(localStorage.getItem('progress') || '[]')
-      localStorage.setItem('progress', JSON.stringify([...prevProgress, { round, correct: currentCorrectCount }]))
+      //const prevProgress = JSON.parse(localStorage.getItem('progress') || '[]')
+      //localStorage.setItem('progress', JSON.stringify([...prevProgress, { round, correct: currentCorrectCount }]))
           
       // Adiciona os acertos da rodada ao histórico de revisão
       const currentRoundCorrect = images.filter((_, i) => newResults[i]?.correct_proverb).map(img => ({
@@ -958,7 +958,8 @@ export default function Game({}: GameProps) {
       }));
       if (currentRoundCorrect.length > 0) {
         setReviewHistory(prev => [...prev, ...currentRoundCorrect]);
-        setAvailableReviews(prev => prev + currentRoundCorrect.length);
+        //setAvailableReviews(prev => prev + currentRoundCorrect.length);
+        setAvailableReviews(reviewHistory.length + currentRoundCorrect.length);
         setIsFlashing(true);
         setTimeout(() => setIsFlashing(false), 2000);
       }
@@ -967,6 +968,11 @@ export default function Game({}: GameProps) {
         const nextGroup = groups.filter(t => t !== theme)[Math.floor(Math.random() * (groups.length - 1))]
         setTheme(nextGroup)
         setRound(r => r + 1)
+        setRound(r => r + 1);
+
+        // Resetar o contador de acertos para zero na nova rodada
+        setCorrectAnswersCount(0);
+        
         setShowCongrats(false);
         setShowPublishButton(false); // Esconder o botão após a transição
       }, 10000);
