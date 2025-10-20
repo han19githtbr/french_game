@@ -272,7 +272,7 @@ export default function Classes() {
                 <ul className="text-gray-400 text-left space-y-2">
                   <li className="flex items-center">
                     <span className="w-2 h-2 bg-lightblue rounded-full mr-3"></span>
-                    Selecione um tema na barra acima
+                    Selecione um tema no menu acima
                   </li>
                   <li className="flex items-center">
                     <span className="w-2 h-2 bg-green rounded-full mr-3"></span>
@@ -280,7 +280,7 @@ export default function Classes() {
                   </li>
                   <li className="flex items-center">
                     <span className="w-2 h-2 bg-yellow rounded-full mr-3"></span>
-                    Interaja curtindo e comentando
+                    Curta e comenta!
                   </li>
                 </ul>
               </div>
