@@ -40,6 +40,7 @@ export default function TypingEffect({ text, speed = 80, className = '' }: Typin
       if (ptScore > frScore && ptScore > 1) lang = 'pt-BR';
 
       const speak = () => {
+        // Cancela qualquer fala anterior antes de iniciar nova
         window.speechSynthesis.cancel();
         const utter = new window.SpeechSynthesisUtterance(text);
         utter.lang = lang;
@@ -48,20 +49,50 @@ export default function TypingEffect({ text, speed = 80, className = '' }: Typin
         const voices = window.speechSynthesis.getVoices();
         const targetVoice = voices.find(v => v.lang === lang);
         if (targetVoice) utter.voice = targetVoice;
+        
         window.speechSynthesis.speak(utter);
       };
+
+      let voicesChangedHandler: (() => void) | null = null;
+      let fallbackTimeout: NodeJS.Timeout | null = null;
 
       if (window.speechSynthesis.getVoices().length > 0) {
         speak();
       } else {
-        const trySpeak = () => speak();
-        window.speechSynthesis.addEventListener('voiceschanged', trySpeak, { once: true });
-        setTimeout(() => {
-          window.speechSynthesis.removeEventListener('voiceschanged', trySpeak);
+        voicesChangedHandler = () => speak();
+        window.speechSynthesis.addEventListener('voiceschanged', voicesChangedHandler);
+         // Fallback timeout
+        fallbackTimeout = setTimeout(() => {
+          if (voicesChangedHandler) {
+            window.speechSynthesis.removeEventListener('voiceschanged', voicesChangedHandler);
+          }
           speak();
         }, 500);
       }
+    
+    
+      return () => {
+        // Cancela toda síntese de voz
+        window.speechSynthesis.cancel();
+        
+        // Remove event listeners
+        if (voicesChangedHandler) {
+          window.speechSynthesis.removeEventListener('voiceschanged', voicesChangedHandler);
+        }
+        
+        // Limpa timeouts
+        if (fallbackTimeout) {
+          clearTimeout(fallbackTimeout);
+        }
+      };
     }
+
+    // Cleanup adicional caso não entre no if acima
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.speechSynthesis.cancel();
+      }
+    };
   }, [text]);
 
   return <span className={className}>{displayedText}</span>;

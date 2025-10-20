@@ -8,7 +8,7 @@ export interface Post {
   startDate: Date;
   endDate: Date | null; // null significa publicação permanente
   likes: number;
-  views: number;
+  views: 0;
   comments: Comment[];
   likedBy?: LikedUser[]; // Lista de usuários que curtiram
   viewedBy?: string[]; // Lista de userIds que visualizaram

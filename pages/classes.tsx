@@ -29,7 +29,11 @@ export default function Classes() {
 
   // Adicione no início do seu componente (com os outros hooks)
   const [likedPosts, setLikedPosts] = useState<string[]>([]);
-  const viewCounted = useRef(false);
+  const viewCounted = useRef(new Map<string, boolean>());
+  // Adicione estas variáveis no início do seu componente, antes do return
+  const totalPosts = posts.length; // ou busque do seu banco de dados
+  const totalThemes = themes.length;
+  const totalViews = posts.reduce((sum, post) => sum + (post.views || 0), 0);
 
   // Buscar posts quando o tema muda
   useEffect(() => {
@@ -229,7 +233,7 @@ export default function Classes() {
       )}
     
 
-      <div className="container mx-auto px-4 py-8">
+      {/*<div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <ThemeSelector themes={themes} onSelectTheme={handleThemeSelect} selectedTheme={selectedTheme} />
         </div>
@@ -244,9 +248,10 @@ export default function Classes() {
                     alt={currentPost.caption}
                     className="w-full h-auto max-h-[70vh] object-cover"  // Mudei de object-contain para object-cover
                     onLoad={() => {
-                      if (!viewCounted.current && currentPost._id) {
-                        incrementViews(currentPost._id.toString());
-                        viewCounted.current = true;
+                      const postId = currentPost._id?.toString();
+                      if (postId && !viewCounted.current.get(postId)) {
+                        incrementViews(postId);
+                        viewCounted.current.set(postId, true);
                       }
                     }}
                   />
@@ -333,7 +338,176 @@ export default function Classes() {
             <p className="text-gray-400">Selecione outro tema ou tente novamente mais tarde</p>
           </div>
         )}
-      </div>
+      </div>*/}
+
+
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <ThemeSelector themes={themes} onSelectTheme={handleThemeSelect} selectedTheme={selectedTheme} />
+        </div>
+
+        {/* Estado inicial - Mostra estatísticas antes de selecionar um tema */}
+        {!selectedTheme ? (
+          <div className="text-center py-12">
+            <div className="bg-gray-900 rounded-2xl p-8 max-w-2xl mx-auto shadow-2xl border border-gray-700">
+              <div className="mb-6">
+                <h2 className="text-3xl font-bold text-white mb-2">📚 Biblioteca de Conteúdo</h2>
+                <p className="text-gray-400 text-lg">Explore nossas publicações organizadas por temas</p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                  <div className="text-4xl font-bold text-lightblue mb-2">{totalPosts}</div>
+                  <div className="text-gray-300 font-medium">Publicações</div>
+                  <div className="text-sm text-gray-500 mt-2">Conteúdos disponíveis</div>
+                </div>
+                
+                <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                  <div className="text-4xl font-bold text-green mb-2">{totalThemes}</div>
+                  <div className="text-gray-300 font-medium">Temas</div>
+                  <div className="text-sm text-gray-500 mt-2">Categorias diferentes</div>
+                </div>
+                
+                <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                  <div className="text-4xl font-bold text-yellow mb-2">{totalViews}</div>
+                  <div className="text-gray-300 font-medium">Visualizações</div>
+                  <div className="text-sm text-gray-500 mt-2">Total de acessos</div>
+                </div>
+              </div>
+              
+              <div className="bg-gray-800 rounded-xl p-6 border border-dashed border-gray-600">
+                <h3 className="text-xl font-semibold text-white mb-3">🎯 Como usar</h3>
+                <ul className="text-gray-400 text-left space-y-2">
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-lightblue rounded-full mr-3"></span>
+                    Selecione um tema na barra acima
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-green rounded-full mr-3"></span>
+                    Visualize as publicações do tema escolhido
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-yellow rounded-full mr-3"></span>
+                    Interaja curtindo e comentando
+                  </li>
+                </ul>
+              </div>
+              
+              <div className="mt-8 text-gray-500 text-sm">
+                💡 Clique em um tema para começar a explorar
+              </div>
+            </div>
+          </div>
+        ) : currentPost && currentPost._id ? (
+          // Estado quando um tema está selecionado - Mostra as postagens
+          <div className="flex flex-col lg:flex-row gap-8" key={currentPost._id.toString()}>
+            <div className="lg:w-1/3">
+              <div className="bg-gray-900 rounded-lg overflow-hidden shadow-xl">
+                <div className="w-full overflow-hidden">
+                  <img
+                    src={currentPost.imageUrl}
+                    alt={currentPost.caption}
+                    className="w-full h-auto max-h-[70vh] object-cover"
+                    onLoad={() => {
+                      const postId = currentPost._id?.toString();
+                      if (postId && !viewCounted.current.get(postId)) {
+                        incrementViews(postId);
+                        viewCounted.current.set(postId, true);
+                      }
+                    }}
+                  />
+                </div>
+                
+                <div className="p-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="bg-lightblue text-white px-6 py-1 rounded-xl text-sm font-semibold">
+                      {currentPost.theme}
+                    </span>
+                    <div className="flex items-center border-2 border-b-lightblue pr-3 pl-3 rounded-xl text-gray-400 ">
+                      <span className="mr-1 text-green"><EyeIcon /></span>
+                      <span>{currentPost.views}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="mb-6 min-h-20">
+                    <TypingEffect 
+                      text={currentPost.caption} 
+                      speed={65}
+                      key={currentPost._id.toString()}
+                    />
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <button
+                      onClick={() => {
+                        if (!currentPost?._id) return;
+                        
+                        const postId = typeof currentPost._id === 'string' 
+                          ? currentPost._id 
+                          : currentPost._id.toHexString();
+                        
+                        handleLike(postId);
+                      }}
+                      className={`flex items-center px-6 py-1 rounded-xl ${
+                        currentPost._id && likedPosts.includes(currentPost._id.toString()) 
+                          ? 'bg-red' 
+                          : 'bg-gray-700 hover:bg-gray-600'
+                      } transition-colors`}
+                    >
+                      <span className="mr-4 cursor-pointer">❤️</span>
+                      <span>{currentPost.likes}</span>
+                    </button>
+
+                    {posts.length > 1 && (
+                      <button
+                        onClick={handleNext}
+                        className="border border-e-yellow hover:bg-blue text-white px-6 py-2 rounded-xl transition-colors cursor-pointer"
+                      >
+                        Ver mais ({currentIndex + 1}/{posts.length})
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="lg:w-1/3">
+              <div className="bg-gray-800 rounded-lg p-6 shadow-xl sticky top-4">
+                <h3 className="text-xl font-semibold mb-4">Comentários ({currentPost.comments.length})</h3>
+                {session ? (
+                  <>
+                    {currentPost._id && (
+                      <CommentForm 
+                        postId={currentPost._id.toString()} 
+                        onCommentAdded={handleCommentAdded} 
+                      />
+                    )}
+                    <CommentList comments={currentPost.comments} />
+                  </>
+                ) : (
+                  <p className="text-gray-400">Faça login para comentar</p>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          // Estado quando um tema foi selecionado mas não há postagens
+          <div className="text-center py-20">
+            <div className="bg-gray-900 rounded-2xl p-8 max-w-md mx-auto">
+              <div className="text-6xl mb-4">📭</div>
+              <h2 className="text-2xl font-bold mb-4">Nenhuma publicação encontrada</h2>
+              <p className="text-gray-400 mb-6">Não há publicações para o tema "{selectedTheme}"</p>
+              <button
+                onClick={() => handleThemeSelect('')}
+                className="bg-lightblue hover:bg-blue text-white px-6 py-2 rounded-xl transition-colors"
+              >
+                Voltar para todos os temas
+              </button>
+            </div>
+          </div>
+        )}
+      </div>  
+
     </div>
   )
 }
