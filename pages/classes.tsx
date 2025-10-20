@@ -29,11 +29,11 @@ export default function Classes() {
 
   // Adicione no início do seu componente (com os outros hooks)
   const [likedPosts, setLikedPosts] = useState<string[]>([]);
-  const viewCounted = useRef(new Map<string, boolean>());
+  //const viewCounted = useRef(new Map<string, boolean>());
   // Adicione estas variáveis no início do seu componente, antes do return
   const totalPosts = posts.length; // ou busque do seu banco de dados
   const totalThemes = themes.length;
-  const totalViews = posts.reduce((sum, post) => sum + (post.views || 0), 0);
+  //const totalViews = posts.reduce((sum, post) => sum + (post.views || 0), 0);
 
   // Buscar posts quando o tema muda
   useEffect(() => {
@@ -88,7 +88,7 @@ export default function Classes() {
     };
   }, [socket]);
 
-  const incrementViews = async (postId: string) => {
+  /*const incrementViews = async (postId: string) => {
     if (!session || !session.user) return;
     const userId = session.user.id || session.user.email || '';
     try {
@@ -98,7 +98,7 @@ export default function Classes() {
     } catch (err) {
       console.error('Erro ao incrementar visualizações:', err);
     }
-  };
+  };*/
 
   const handleLike = async (postId: string) => {
     if (!session) return;
@@ -247,7 +247,7 @@ export default function Classes() {
                 <p className="text-gray-400 text-lg">Explore nossas publicações organizadas por temas</p>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
                   <div className="text-4xl font-bold text-lightblue mb-2">{totalPosts}</div>
                   <div className="text-gray-300 font-medium">Publicações</div>
@@ -260,11 +260,11 @@ export default function Classes() {
                   <div className="text-sm text-gray-500 mt-2">Categorias diferentes</div>
                 </div>
                 
-                <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                {/*<div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
                   <div className="text-4xl font-bold text-yellow mb-2">{totalViews}</div>
                   <div className="text-gray-300 font-medium">Visualizações</div>
                   <div className="text-sm text-gray-500 mt-2">Total de views</div>
-                </div>
+                </div>*/}
               </div>
               
               <div className="bg-gray-800 rounded-xl p-6 border border-dashed border-gray-600">
@@ -300,13 +300,13 @@ export default function Classes() {
                     src={currentPost.imageUrl}
                     alt={currentPost.caption}
                     className="w-full h-auto max-h-[70vh] object-cover"
-                    onLoad={() => {
+                    /*onLoad={() => {
                       const postId = currentPost._id?.toString();
                       if (postId && !viewCounted.current.get(postId)) {
                         incrementViews(postId);
                         viewCounted.current.set(postId, true);
                       }
-                    }}
+                    }}*/
                   />
                 </div>
                 
@@ -315,10 +315,10 @@ export default function Classes() {
                     <span className="bg-lightblue text-white px-6 py-1 rounded-xl text-sm font-semibold">
                       {currentPost.theme}
                     </span>
-                    <div className="flex items-center border-2 border-b-lightblue pr-3 pl-3 rounded-xl text-gray-400 ">
+                    {/*<div className="flex items-center border-2 border-b-lightblue pr-3 pl-3 rounded-xl text-gray-400 ">
                       <span className="mr-1 text-green"><EyeIcon /></span>
                       <span>{currentPost.views}</span>
-                    </div>
+                    </div>*/}
                   </div>
                   
                   <div className="mb-6 min-h-20">

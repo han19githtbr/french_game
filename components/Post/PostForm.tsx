@@ -47,7 +47,7 @@ export default function PostForm({ onPostCreated }: { onPostCreated: () => void 
         startDate: new Date(),
         endDate: isPermanent ? null : new Date(new Date().getTime() + parseInt(endDate) * 24 * 60 * 60 * 1000),
         likes: 0,
-        views: 0,
+        //views: 0,
         comments: [],
         createdAt: new Date(),
         updatedAt: new Date(),

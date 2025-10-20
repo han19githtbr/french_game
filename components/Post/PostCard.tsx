@@ -3,7 +3,7 @@ import { Post } from '../../models/Post';
 import { formatDate } from '../../lib/utils';
 import Link from 'next/link';
 import { ObjectId } from 'mongodb';
-import { EyeIcon } from 'lucide-react';
+//import { EyeIcon } from 'lucide-react';
 
 
 export default function PostCard({ post, onDelete, isAdmin }: { post: Post; onDelete?: (id: string) => void; isAdmin?: boolean }) {
@@ -75,10 +75,10 @@ export default function PostCard({ post, onDelete, isAdmin }: { post: Post; onDe
           alt={post.caption}
           className="w-full h-48 object-cover"
         />
-        <div className="absolute top-2 right-2 bg-gray-900 bg-opacity-70 text-white px-2 py-1 rounded flex items-center">
+        {/*<div className="absolute top-2 right-2 bg-gray-900 bg-opacity-70 text-white px-2 py-1 rounded flex items-center">
           <span className="mr-1 text-green"><EyeIcon /></span>
           <span>{post.views}</span>
-        </div>
+        </div>*/}
         <div className="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 rounded text-sm">
           {post.theme}
         </div>

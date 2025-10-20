@@ -55,7 +55,7 @@ export default function AdminPage() {
   }
 
   const handlePostCreated = () => {
-    setActiveTab('view');
+    //setActiveTab('view');
     if (socket) {
       socket.emit('newPost');
     }
