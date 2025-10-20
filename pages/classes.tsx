@@ -263,7 +263,7 @@ export default function Classes() {
                 <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
                   <div className="text-4xl font-bold text-yellow mb-2">{totalViews}</div>
                   <div className="text-gray-300 font-medium">Visualizações</div>
-                  <div className="text-sm text-gray-500 mt-2">Total de acessos</div>
+                  <div className="text-sm text-gray-500 mt-2">Total de views</div>
                 </div>
               </div>
               
