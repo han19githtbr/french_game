@@ -7,61 +7,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: 'Método não permitido' });
   }
 
-  /*try {
-    const db = await getDb();
-    const { search, theme } = req.query;
-
-    let query: any = {};
-    
-    // Filtro por tema
-    if (theme) {
-      query.theme = theme;
-    }
-
-    // Filtro por busca
-    if (search) {
-      query.$or = [
-        { caption: { $regex: search, $options: 'i' } },
-        { theme: { $regex: search, $options: 'i' } },
-      ];
-    }
-    
-
-    // Filtrar apenas posts ativos (não expirados ou permanentes)
-    query.$and = [
-      {
-        $or: [
-          { endDate: null }, // Publicações permanentes
-          { endDate: { $gte: new Date() } } // Publicações não expiradas
-        ]
-      }
-    ];
-
-    const posts = await db
-      .collection('posts')
-      .find(query)
-      .sort({ createdAt: -1 })
-      .toArray();
-
-    console.log("Posts encontrados:", JSON.stringify(posts, null, 2));
-
-    res.status(200).json(posts);
-  } catch (error) {
-    console.error('Erro detalhado:', error);
-    if (error instanceof Error) {
-        res.status(500).json({ 
-            message: 'Erro ao buscar publicações', 
-            error: error.message 
-        });
-        } else {
-        res.status(500).json({ 
-            message: 'Erro ao buscar publicações', 
-            error: String(error) 
-        });
-    }
-
-  }*/
-
+  
   try {
     const db = await getDb();
     const { search, theme } = req.query;
