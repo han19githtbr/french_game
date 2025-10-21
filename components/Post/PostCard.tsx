@@ -93,7 +93,7 @@ export default function PostCard({ post, onDelete, isAdmin }: { post: Post; onDe
             rows={3}
           />
         ) : (
-          <p className="text-white mb-2">{post.caption}</p>
+          <p className="text-white mb-2 text-justify">{post.caption}</p>
         )}
 
         <div className="flex justify-between items-center text-gray-400 text-sm mb-2">

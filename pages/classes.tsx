@@ -321,7 +321,7 @@ export default function Classes() {
                     </div>*/}
                   </div>
                   
-                  <div className="mb-6 min-h-20">
+                  <div className="mb-6 min-h-20 text-justify">
                     <TypingEffect 
                       text={currentPost.caption} 
                       speed={65}
