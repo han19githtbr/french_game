@@ -69,7 +69,7 @@ export default function ResultsPage() {
   }, []);
 
   
-  // Adicione esta função para buscar o recorde global
+  // Função para buscar o recorde global
   const fetchGlobalRecord = async () => {
     try {
       const response = await fetch('/api/super-players?global=true');
