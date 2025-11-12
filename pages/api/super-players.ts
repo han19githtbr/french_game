@@ -68,6 +68,28 @@ async function getRecords() {
 }
 
 
+async function getGlobalRecord() {
+  try {
+    const db = await getDbInstance();
+    const collection = db.collection('super_players');
+    
+    // Busca o maior recorde de todos os tempos
+    const globalRecord = await collection.find({})
+      .sort({ totalPlays: -1, timestamp: -1 })
+      .limit(1)
+      .toArray();
+    
+    return { 
+      success: true, 
+      data: globalRecord.length > 0 ? globalRecord[0] : null 
+    };
+  } catch (error: any) {
+    console.error("Erro ao buscar recorde global:", error);
+    return { success: false, error: error.message || 'Ocorreu um erro ao buscar o recorde global.' };
+  }
+}
+
+
 async function checkIfUserIsSuperPlayer(username: string) {
   try {
     const db = await getDbInstance();
@@ -99,13 +121,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.status(result.success ? 200 : 500).json(result);
     } else if (req.method === 'GET') {
       // Se tiver parâmetro de usuário, verifica se é Super Player
-      const { username } = req.query;
+      const { username, global } = req.query;
 
-      if (username && typeof username === 'string') {
+      // Nova rota para buscar o recorde global
+      if (global === 'true') {
+        const result = await getGlobalRecord();
+        res.status(result.success ? 200 : 500).json(result);
+      }
+      // Rota existente para verificar usuário específico
+      else if (username && typeof username === 'string') {
         const result = await checkIfUserIsSuperPlayer(username);
         res.status(result.success ? 200 : 500).json(result);
       } else {
-
+        // Rota existente para buscar todos os records (top 5)
         const result = await getRecords();
         res.status(result.success ? 200 : 500).json(result);
       }

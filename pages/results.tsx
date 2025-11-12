@@ -36,7 +36,7 @@ export default function ResultsPage() {
   const [logoutTimeoutId, setLogoutTimeoutId] = useState<NodeJS.Timeout | null>(null);
   const [superPlayerRecords, setSuperPlayerRecords] = useState<SuperPlayerRecord[]>([]);  
   const [notification, setNotification] = useState<{ message: string; type: 'info' | 'success' | 'error' } | null>(null);
-  
+  const [globalRecord, setGlobalRecord] = useState<SuperPlayerRecord | null>(null);
      
   const showToast = (message: string, type: 'info' | 'success' | 'error') => {
     setNotification({ message, type });
@@ -68,22 +68,46 @@ export default function ResultsPage() {
     }
   }, []);
 
+  
+  // Adicione esta função para buscar o recorde global
+  const fetchGlobalRecord = async () => {
+    try {
+      const response = await fetch('/api/super-players?global=true');
+      const data = await response.json();
+      if (data.success) {
+        setGlobalRecord(data.data);
+      } else {
+        console.error("Erro ao buscar recorde global:", data.error);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar recorde global:", error);
+    }
+  };
+  
+  
   useEffect(() => {
     if (progress_answers.length > 0) {
       const lastProgress = progress_answers[progress_answers.length - 1].correct_word;
       setCurrentProgress(lastProgress);
       setIsFlashing(lastProgress === 4);
       setTotalPlays(progress_answers.length); // Atualiza o total de jogadas
-      setIsSuperPlayer(progress_answers.length >= 12); // Verifica a cada atualização
-      if (progress_answers.length >= 12 && session?.user?.name) {
-        saveSuperPlayerRecord(session.user.name, progress_answers.length);
+      
+      // Verifica se o usuário atual é super player (agora baseado no banco)
+      if (session?.user?.name) {
+        checkUserSuperPlayerStatus(session.user.name);
+        
+        // Salva no banco se atingiu 12+ jogadas
+        if (progress_answers.length >= 12) {
+          saveSuperPlayerRecord(session.user.name, progress_answers.length);
+        }
       }
     } else {
       setCurrentProgress(0);
       setIsFlashing(false);
-      setIsSuperPlayer(false);
+      //setIsSuperPlayer(false);
       setTotalPlays(0);
     }
+    fetchGlobalRecord();
     fetchSuperPlayerRecords(); // Busca as conquistas ao carregar ou atualizar o progresso
   }, [progress_answers, session?.user?.name]);
 
@@ -200,11 +224,19 @@ export default function ResultsPage() {
       
       <h1 className="text-3xl font-semibold text-gray-300 mt-40 mb-4 text-center">Seu Progresso</h1>
       
-      {isSuperPlayer && session?.user?.name && (
+      {globalRecord && (
         <div className="relative flex justify-center items-center mb-16 mt-8">
           <FaCrown className="text-yellow text-4xl animate-pulse" />
           <span className="absolute top-full mt-1 text-sm text-yellow-400 font-semibold animate-fade-in">
-            <span className='text-green'>{session.user.name}:</span> Maior pontuação com <span className='text-green'>{totalPlays}</span> acertos!
+            <span className='text-green'>{globalRecord.username}:</span> Maior pontuação com <span className='text-yellow'>{globalRecord.totalPlays}</span> acertos!
+          </span>
+        </div>
+      )}
+
+      {isSuperPlayer && session?.user?.name && globalRecord && globalRecord.username !== session.user.name && (
+        <div className="text-center mb-4">
+          <span className="text-sm text-blue-400">
+            Seu recorde: <span className="font-semibold">{totalPlays}</span> acertos
           </span>
         </div>
       )}
