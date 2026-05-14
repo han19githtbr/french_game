@@ -77,6 +77,20 @@ npm install canvas-confetti
 
 vercel login
 
+## Geração automática de imagens e legendas via AI
+
+Este projeto agora suporta geração diária de conteúdo novo em `pages/api/generate-images.ts`, `pages/api/generate-phrases.ts` e `pages/api/generate-proverbs.ts`.
+
+Adicione a variável de ambiente `OPENAI_API_KEY` no seu `.env.local` para ativar a criação de legendas via OpenAI. Opcionalmente, defina `OPENAI_MODEL` e `AI_DAILY_GENERATION_LIMIT`:
+
+```env
+OPENAI_API_KEY=seu_token_aqui
+OPENAI_MODEL=gpt-3.5-turbo
+AI_DAILY_GENERATION_LIMIT=4
+```
+
+Se a AI não estiver configurada, o sistema continuará usando o conteúdo manual existente.
+
 ## O Ably é uma plataforma de comunicação em tempo real que você está usando no seu projeto para:
 
 ✅ Casos de uso no seu projeto:

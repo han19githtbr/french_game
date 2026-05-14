@@ -1,7 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from './auth/[...nextauth]'
 import { getDb } from '../../lib/mongodb';
+import { ensureDailyAIItems } from '../../lib/ai';
 
 
 // Embaralhar um array
@@ -30,9 +29,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const db = await getDb();
-                
-    const collection = db.collection('images_sentences');
     
+    const collection = db.collection('images_sentences');
+    try {
+      await ensureDailyAIItems('images_sentences', theme);
+    } catch (aiError) {
+      console.warn('Não foi possível gerar frases via AI:', aiError);
+    }
+
     const themeImages = await collection.find({ theme: theme.toLowerCase() }).toArray();
 
     if (!themeImages || themeImages.length < 4) {
