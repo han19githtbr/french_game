@@ -3,7 +3,7 @@ import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import { Check, X, ChevronLeft, Minus, Lock, ChevronDown, ChevronRight, Pause, Play } from 'lucide-react'
 import { motion, AnimatePresence, useMotionValue, animate, MotionValue } from 'framer-motion'
-import { saveProgress } from './sentences_results'
+import { saveProgress } from '../lib/progress'
 import { useSound } from 'use-sound';
 import { LockClosedIcon, LockOpenIcon, FlagIcon, MusicalNoteIcon, ChevronLeftIcon, ChevronRightIcon, GlobeAmericasIcon, CloudIcon, BeakerIcon, VideoCameraIcon, FilmIcon, LanguageIcon, DeviceTabletIcon, ChatBubbleBottomCenterTextIcon, MapPinIcon, ShoppingCartIcon, TvIcon, MoonIcon, FaceSmileIcon } from '@heroicons/react/24/solid';
 import dynamic from "next/dynamic";
@@ -12,7 +12,7 @@ import { FaSpinner, FaTrophy } from 'react-icons/fa';
 import { FaLinkedin, FaInstagram, FaFacebook, FaGithub } from 'react-icons/fa';
 import { BsEyeFill, BsPlayFill } from 'react-icons/bs';
 import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+//import 'react-toastify/dist/ReactToastify.css';
 import { youtube_v3 } from '@googleapis/youtube';
 //import { io, Socket } from 'socket.io-client';
 
@@ -963,7 +963,7 @@ export default function Frase({}: GameProps) {
     const totalCount = images.length
     const hasWrong = Object.values(newResults).some(r => r && !r.correct_answer)
         
-    saveProgress(currentCorrectCount);
+    saveProgress(currentCorrectCount, 'frases');
       
     // Se errou alguma imagem, mostra botão para recomeçar
     if (hasWrong) {

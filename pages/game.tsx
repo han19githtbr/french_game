@@ -3,7 +3,7 @@ import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import { Check, X, Minus, Lock, ChevronDown, ChevronLeft, ChevronRight, Pause, Play, FlagIcon } from 'lucide-react'
 import { motion , AnimatePresence, useMotionValue, useTransform, animate, MotionValue} from 'framer-motion'
-import { saveProgress } from './results'
+import { saveProgress } from '../lib/progress'
 import { LockClosedIcon, LockOpenIcon, MusicalNoteIcon, ChevronLeftIcon, ChevronRightIcon, GlobeAmericasIcon, CloudIcon, BeakerIcon, VideoCameraIcon, FilmIcon, LanguageIcon, DeviceTabletIcon, ChatBubbleBottomCenterTextIcon, MapPinIcon, ShoppingCartIcon, TvIcon, MoonIcon, FaceSmileIcon } from '@heroicons/react/24/solid';
 import { useSound } from 'use-sound';
 import dynamic from "next/dynamic";
@@ -12,7 +12,7 @@ import { FaSpinner, FaTrophy } from 'react-icons/fa';
 import { FaLinkedin, FaInstagram, FaFacebook, FaGithub } from 'react-icons/fa';
 import { BsEyeFill, BsPlayFill } from 'react-icons/bs';
 import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+//import 'react-toastify/dist/ReactToastify.css';
 import { youtube_v3 } from '@googleapis/youtube';
 //import { io, Socket } from 'socket.io-client';
 import { useSocket } from '../lib/socket';
@@ -986,10 +986,10 @@ export default function Game({}: GameProps) {
     const hasWrong = Object.values(newResults).some(r => r && !r.correct_word);
 
     // Salvar progresso no localStorage
-    saveProgress(currentCorrectCount);
+    saveProgress(currentCorrectCount, selectedTheme ?? 'imagem');
 
     // Registrar o progresso salvo
-    const savedProgress = localStorage.getItem('progress_answers');
+    const savedProgress = localStorage.getItem('learning_progress');
     const parsedProgress = savedProgress ? JSON.parse(savedProgress) : [];
     console.log('Progresso Salvo:', { round: parsedProgress.length + 1, correct_word: currentCorrectCount });
 

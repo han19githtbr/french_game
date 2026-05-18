@@ -2,30 +2,40 @@ import { getDb } from './mongodb';
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-3.5-turbo';
+const OPENAI_IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1';
 const DAILY_AI_GENERATION_LIMIT = Number(process.env.AI_DAILY_GENERATION_LIMIT || '4');
+
+// Hugging Face / Stable Horde (free/community) fallbacks
+const HF_API_KEY = process.env.HF_API_KEY;
+const HF_TEXT_MODEL = process.env.HF_TEXT_MODEL || 'gpt2';
+const HF_IMAGE_MODEL = process.env.HF_IMAGE_MODEL || 'runwayml/stable-diffusion-v1-5';
+const STABLE_HORDE_KEY = process.env.STABLE_HORDE_KEY;
 
 const normalizeTheme = (theme: string) => theme.toLowerCase();
 
-const buildPrompt = (collectionName: string, theme: string, count: number) => {
-  const normalizedTheme = normalizeTheme(theme);
-  const themeDescription = collectionName === 'images_proverbs'
+const themePromptLabel = (collectionName: string, normalizedTheme: string) =>
+  collectionName === 'images_proverbs'
     ? `provérbios franceses do grupo ${normalizedTheme.replace('grupo-', '')}`
     : `o tema ${normalizedTheme}`;
 
+const buildPrompt = (collectionName: string, theme: string, count: number) => {
+  const normalizedTheme = normalizeTheme(theme);
+  const themeDescription = themePromptLabel(collectionName, normalizedTheme);
+
   if (collectionName === 'images') {
-    return `Você é um assistente que gera apenas JSON. Crie ${count} legendas curtas em francês para imagens de vocabulário de ${themeDescription}. Responda somente com um array JSON no formato [{"title":"..."}, ...]. Cada título deve ser simples, correto e apropriado para um jogo de correspondência de imagem.`;
+    return `Você é um assistente que gera apenas JSON. Crie ${count} legendas curtas em francês para imagens de vocabulário de ${themeDescription}. Cada item deve vir no formato {"title":"...", "description":"..."}, onde title é o texto curto exibido como resposta e description é uma frase rápida que ajuda o aluno a conectar a imagem ao significado. Responda somente com um array JSON válido.`;
   }
 
   if (collectionName === 'images_sentences') {
-    return `Você é um assistente que gera apenas JSON. Crie ${count} frases simples em francês que descrevem cenas ou objetos relacionados a ${themeDescription}. Responda somente com um array JSON no formato [{"title":"..."}, ...]. Cada frase deve ser clara, curta e apropriada para um jogo de imagens.`;
+    return `Você é um assistente que gera apenas JSON. Crie ${count} frases simples em francês que descrevem cenas ou objetos relacionados a ${themeDescription}. Cada item deve vir no formato {"title":"...", "description":"..."}, onde title é a frase principal e description é uma dica de contexto em português. Responda somente com um array JSON válido.`;
   }
 
-  return `Você é um assistente que gera apenas JSON. Crie ${count} explicações ou legendas em português para provérbios ou expressões francesas relacionadas a ${themeDescription}. Responda somente com um array JSON no formato [{"title":"..."}, ...]. Cada item deve ser uma frase natural em português.`;
+  return `Você é um assistente que gera apenas JSON. Crie ${count} explicações ou legendas em português para provérbios ou expressões francesas relacionadas a ${themeDescription}. Cada item deve vir no formato {"title":"...", "description":"..."}. Responda somente com um array JSON válido.`;
 };
 
 const buildPlaceholderUrl = (theme: string, seed: number) => {
   const safeTheme = encodeURIComponent(theme.replace(/\s+/g, '-'));
-  return `https://loremflickr.com/640/480/${safeTheme}?lock=${seed}`;
+  return `https://picsum.photos/seed/${safeTheme}-${seed}/640/480`;
 };
 
 const parseJsonResponse = (text: string) => {
@@ -41,47 +51,188 @@ const parseJsonResponse = (text: string) => {
 };
 
 const generateAICaptions = async (collectionName: string, theme: string, count: number) => {
-  if (!OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY não configurada.');
-  }
-
   const prompt = buildPrompt(collectionName, theme, count);
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: OPENAI_MODEL,
-      messages: [
-        { role: 'system', content: 'Você responde apenas com JSON válido.' },
-        { role: 'user', content: prompt },
-      ],
-      temperature: 0.8,
-      max_tokens: 300,
-    }),
-  });
 
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Falha ao chamar OpenAI: ${response.status} ${body}`);
+  // 1) Hugging Face text-generation
+  if (HF_API_KEY) {
+    try {
+      const url = `https://api-inference.huggingface.co/models/${HF_TEXT_MODEL}`;
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${HF_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ inputs: prompt, options: { wait_for_model: true }, parameters: { max_new_tokens: 300 } }),
+      });
+      if (resp.ok) {
+        const contentType = resp.headers.get('content-type') || '';
+        let text: string;
+        if (contentType.includes('application/json')) {
+          const data = await resp.json();
+          // HF can return [{generated_text: '...'}] or {generated_text: '...'}
+          if (Array.isArray(data) && data[0]?.generated_text) text = data[0].generated_text;
+          else if (data.generated_text) text = data.generated_text;
+          else text = String(data);
+        } else {
+          text = await resp.text();
+        }
+
+        const parsed = parseJsonResponse(text);
+        if (!Array.isArray(parsed)) throw new Error('Resposta HF inválida');
+        return parsed
+          .map((item: any) => ({
+            title: String(item.title || item.text || item.caption || '').trim(),
+            description: String(item.description || item.hint || item.caption || item.text || '').trim(),
+          }))
+          .filter((item: any) => item.title);
+      }
+    } catch (err) {
+      console.warn('Hugging Face text fallback falhou, tentando próximo provedor:', err);
+    }
   }
 
-  const data = await response.json();
-  const text = data?.choices?.[0]?.message?.content;
-  if (!text) {
-    throw new Error('Resposta da AI vazia.');
+  // 2) OpenAI (legacy) if configured
+  if (OPENAI_API_KEY) {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: OPENAI_MODEL,
+        messages: [
+          { role: 'system', content: 'Você responde apenas com JSON válido.' },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.8,
+        max_tokens: 300,
+      }),
+    });
+
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(`Falha ao chamar OpenAI: ${response.status} ${body}`);
+    }
+
+    const data = await response.json();
+    const text = data?.choices?.[0]?.message?.content;
+    if (!text) {
+      throw new Error('Resposta da AI vazia.');
+    }
+
+    const parsed = parseJsonResponse(text);
+    if (!Array.isArray(parsed)) {
+      throw new Error('Formato de resposta AI inválido. Esperado array JSON.');
+    }
+
+    return parsed
+      .map((item: any) => ({
+        title: String(item.title || item.text || item.caption || '').trim(),
+        description: String(item.description || item.hint || item.caption || item.text || '').trim(),
+      }))
+      .filter((item: any) => item.title);
   }
 
-  const parsed = parseJsonResponse(text);
-  if (!Array.isArray(parsed)) {
-    throw new Error('Formato de resposta AI inválido. Esperado array JSON.');
+  throw new Error('Nenhum provedor AI configurado (HF_API_KEY ou OPENAI_API_KEY).');
+};
+
+const generateAIImageUrl = async (theme: string, seed: number) => {
+  const prompt = `Uma ilustração colorida e amigável para aprender francês sobre ${theme}. A imagem deve ser clara, educativa e adequada para um jogo de vocabulário.`;
+
+  // 1) Hugging Face image model (returns binary image)
+  if (HF_API_KEY) {
+    try {
+      const url = `https://api-inference.huggingface.co/models/${HF_IMAGE_MODEL}`;
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${HF_API_KEY}`,
+          'Content-Type': 'application/json',
+          Accept: 'application/octet-stream',
+        },
+        body: JSON.stringify({ inputs: prompt, options: { wait_for_model: true } }),
+      });
+
+      if (resp.ok) {
+        const buffer = await resp.arrayBuffer();
+        const b64 = Buffer.from(buffer).toString('base64');
+        // Return data URL so we can store it directly in DB as `url` if needed
+        return `data:image/png;base64,${b64}`;
+      }
+    } catch (err) {
+      console.warn('Hugging Face image generation falhou, tentando próximo provedor:', err);
+    }
   }
 
-  return parsed.map((item: any) => ({
-    title: String(item.title || item.text || item.caption || '').trim(),
-  })).filter((item: any) => item.title);
+  // 2) Stable Horde
+  if (STABLE_HORDE_KEY) {
+    try {
+      const resp = await fetch('https://stablehorde.net/api/v2/generate/async', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': STABLE_HORDE_KEY },
+        body: JSON.stringify({
+          prompt,
+          params: { steps: 20 },
+          nsfw: false,
+        }),
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        // Stable Horde async returns a job id; try sync endpoint instead
+      }
+
+      // try sync generate v2
+      const syncResp = await fetch('https://stablehorde.net/api/v2/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': STABLE_HORDE_KEY },
+        body: JSON.stringify({
+          prompt,
+          params: { steps: 20 },
+          nsfw: false,
+        }),
+      });
+      if (syncResp.ok) {
+        const data = await syncResp.json();
+        // data.images is an array of base64 strings
+        const first = data?.images?.[0];
+        if (first) return `data:image/png;base64,${first}`;
+      }
+    } catch (err) {
+      console.warn('Stable Horde image generation falhou:', err);
+    }
+  }
+
+  // 3) OpenAI (legacy) if configured
+  if (OPENAI_API_KEY) {
+    try {
+      const response = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: OPENAI_IMAGE_MODEL,
+          prompt,
+          size: '640x480',
+        }),
+      });
+
+      if (!response.ok) {
+        return buildPlaceholderUrl(theme, seed);
+      }
+
+      const data = await response.json();
+      return data?.data?.[0]?.url || buildPlaceholderUrl(theme, seed);
+    } catch (error) {
+      return buildPlaceholderUrl(theme, seed);
+    }
+  }
+
+  // Fallback placeholder
+  return buildPlaceholderUrl(theme, seed);
 };
 
 export async function ensureDailyAIItems(collectionName: string, theme: string) {
@@ -106,13 +257,16 @@ export async function ensureDailyAIItems(collectionName: string, theme: string) 
   }
 
   const generated = await generateAICaptions(collectionName, normalizedTheme, toGenerate);
-  const documents = generated.map((item, index) => ({
-    url: buildPlaceholderUrl(normalizedTheme, Date.now() + index),
-    title: item.title,
-    theme: normalizedTheme,
-    source: 'ai',
-    createdAt: new Date(),
-  }));
+  const documents = await Promise.all(
+    generated.map(async (item, index) => ({
+      url: await generateAIImageUrl(normalizedTheme, Date.now() + index),
+      title: item.title,
+      description: item.description,
+      theme: normalizedTheme,
+      source: 'ai',
+      createdAt: new Date(),
+    })),
+  );
 
   if (documents.length > 0) {
     await collection.insertMany(documents);

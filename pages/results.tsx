@@ -1,19 +1,12 @@
 // pages/results.tsx
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { ChevronLeft, Trash } from 'lucide-react'
 import { useSession, signOut } from 'next-auth/react'
 
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
-//import { signOut, useSession } from 'next-auth/react'
 import { FaMedal, FaCrown } from 'react-icons/fa';
-
-
-interface Progress {
-  round: number;
-  correct_word: number;
-}
-
+import { clearProgress as clearStoredProgress, getProgressSummary, loadProgress, LearningProgressEntry } from '../lib/progress'
 
 interface SuperPlayerRecord {
   username: string;
@@ -22,11 +15,10 @@ interface SuperPlayerRecord {
 }
 
 export default function ResultsPage() {
-  //const [progress_phrases, setProgressPhrases] = useState<{ round: number, correct_phrase: number }[]>([])
-  const [progress_answers, setProgressAnswers] = useState<Progress[]>([]);
+  const [progressEntries, setProgressEntries] = useState<LearningProgressEntry[]>([]);
   const [currentProgress, setCurrentProgress] = useState(0);
+  const [progressSummary, setProgressSummary] = useState(getProgressSummary([]));
   const [isFlashing, setIsFlashing] = useState(false);
-  //const { data: session } = useSession()
   const { data: session, status } = useSession()
   const router = useRouter()
 
@@ -51,21 +43,14 @@ export default function ResultsPage() {
 
       
   useEffect(() => {
-    const saved = localStorage.getItem('progress_answers')
-    if (saved) {
-      const parsed: Progress[] = JSON.parse(saved);
-      setProgressAnswers(parsed);
-      if (parsed.length > 0) {
-        setCurrentProgress(parsed[parsed.length - 1].correct_word);
-        setIsFlashing(parsed[parsed.length - 1].correct_word === 4);
-        setIsSuperPlayer(parsed.length >= 12); // Verifica o total de jogadas para super jogador
-      } else {
-        setCurrentProgress(0);
-        setIsFlashing(false);
-        setIsSuperPlayer(false);
-        setTotalPlays(0);
-      }
-    }
+    const entries = loadProgress();
+    setProgressEntries(entries);
+    const summary = getProgressSummary(entries);
+    setProgressSummary(summary);
+    setCurrentProgress(summary.recentScore);
+    setIsFlashing(summary.recentScore >= 4);
+    setIsSuperPlayer(entries.length >= 12);
+    setTotalPlays(entries.length);
   }, []);
 
   
@@ -86,30 +71,29 @@ export default function ResultsPage() {
   
   
   useEffect(() => {
-    if (progress_answers.length > 0) {
-      const lastProgress = progress_answers[progress_answers.length - 1].correct_word;
+    if (progressEntries.length > 0) {
+      const lastProgress = progressEntries[progressEntries.length - 1].score;
       setCurrentProgress(lastProgress);
       setIsFlashing(lastProgress === 4);
-      setTotalPlays(progress_answers.length); // Atualiza o total de jogadas
+      setTotalPlays(progressEntries.length); // Atualiza o total de jogadas
       
       // Verifica se o usuário atual é super player (agora baseado no banco)
       if (session?.user?.name) {
         checkUserSuperPlayerStatus(session.user.name);
         
         // Salva no banco se atingiu 12+ jogadas
-        if (progress_answers.length >= 12) {
-          saveSuperPlayerRecord(session.user.name, progress_answers.length);
+        if (progressEntries.length >= 12) {
+          saveSuperPlayerRecord(session.user.name, progressEntries.length);
         }
       }
     } else {
       setCurrentProgress(0);
       setIsFlashing(false);
-      //setIsSuperPlayer(false);
       setTotalPlays(0);
     }
     fetchGlobalRecord();
     fetchSuperPlayerRecords(); // Busca as conquistas ao carregar ou atualizar o progresso
-  }, [progress_answers, session?.user?.name]);
+  }, [progressEntries, session?.user?.name]);
 
                           
   const handleMouseEnter = () => {
@@ -118,16 +102,18 @@ export default function ResultsPage() {
   };
 
   
-  const clearProgress = () => {
-    localStorage.removeItem('progress_answers');
-    setProgressAnswers([]);
+  const handleClearProgress = () => {
+    clearStoredProgress();
+    setProgressEntries([]);
+    const summary = getProgressSummary([]);
+    setProgressSummary(summary);
     setCurrentProgress(0);
     setIsFlashing(false);
     setIsSuperPlayer(false);
     setTotalPlays(0);
   };
 
-  const bestRound = progress_answers.reduce((prev, curr) => (curr.correct_word > prev.correct_word ? curr : prev), { round: 0, correct_word: 0 })
+  const bestRound = progressEntries.reduce((prev, curr) => (curr.score > prev.score ? curr : prev), { round: 0, score: 0 })
 
   const progressPercentage = (currentProgress / 4) * 100;
 
@@ -257,16 +243,16 @@ export default function ResultsPage() {
         <p className="text-sm text-gray-400 mt-3 text-center">Progresso para a Medalha de Ouro</p>
       </div>
 
-      {progress_answers.length === 0 ? (
+      {progressEntries.length === 0 ? (
         <p className="text-center text-gray-400">Você ainda não fez nenhuma jogada.</p>
       ) : (
         <>
           <div className="max-w-md max-h-48 overflow-y-auto mx-auto space-y-4 mb-8">
-            {progress_answers.map((p, i) => (
+            {progressEntries.map((p, i) => (
               <div
               key={i}
               className={`bg-white text-black p-4 rounded-xl shadow-md flex justify-between items-center ${
-                p.correct_word === bestRound.correct_word ? 'border-2 border-green ' : ''
+                p.score === bestRound.score ? 'border-2 border-green ' : ''
               }`}
             >
               {/* Foto do usuário */}
@@ -279,11 +265,11 @@ export default function ResultsPage() {
               <div className="flex justify-between items-center w-full">
                 <span className="font-semibold ml-2">Jogada {p.round}</span>
                 <span>
-                  {p.correct_word} acertos
-                  {p.correct_word === 4 && (
+                  {p.score} acertos
+                  {p.score === 4 && (
                     <FaMedal color="gold" className="inline-block ml-2 medalha-brilho-ouro" />
                   )}
-                  {p.correct_word === 3 && (
+                  {p.score === 3 && (
                     <FaMedal color="silver" className="inline-block ml-2 medalha-brilho-prata" />
                   )}
                 </span>
@@ -294,7 +280,7 @@ export default function ResultsPage() {
 
           <div className="flex justify-center mb-8">
               <button
-                onClick={clearProgress}
+                onClick={handleClearProgress}
                 className="flex items-center border border-red bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75 cursor-pointer"
               >
                 <Trash className="mr-2" color="red" /> Limpar Jogadas
@@ -307,7 +293,7 @@ export default function ResultsPage() {
 
           <div className="h-80 w-full max-w-4xl mx-auto rounded-2xl bg-white shadow-xl p-4 dark:bg-zinc-900 dark:shadow-none">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={progress_answers}>
+              <BarChart data={progressEntries}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis 
                   dataKey="round" 
@@ -326,7 +312,7 @@ export default function ResultsPage() {
                   labelStyle={{ color: "#4b5563", fontWeight: "bold" }}
                 />
                 <Bar 
-                  dataKey="correct_word"
+                  dataKey="score"
                   fill="#6366f1"
                   radius={[6, 6, 0, 0]}
                   animationDuration={800}
@@ -342,7 +328,7 @@ export default function ResultsPage() {
           </div>
 
           <div className="text-center mt-10 text-lg text-zinc-700 dark:text-zinc-300">
-            🏆 Melhor desempenho: <strong className="text-green dark:text-blue">{bestRound.correct_word}</strong> acertos na jogada <strong className='text-green'>{bestRound.round}</strong>
+            🏆 Melhor desempenho: <strong className="text-green dark:text-blue">{bestRound.score}</strong> acertos na jogada <strong className='text-green'>{bestRound.round}</strong>
           </div>
         </>
       )}
@@ -371,15 +357,4 @@ export default function ResultsPage() {
     
     </div>
   )
-}
-
-
-// Função para salvar progresso após cada rodada
-export const saveProgress = (correct_word: number) => {
-    if (typeof window === 'undefined') return
-    const saved = localStorage.getItem('progress_answers')
-    const parsed = saved ? JSON.parse(saved) : []
-    const round = parsed.length + 1
-    parsed.push({ round, correct_word })
-    localStorage.setItem('progress_answers', JSON.stringify(parsed))
 }

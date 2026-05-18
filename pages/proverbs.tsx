@@ -7,7 +7,7 @@ import { useRouter } from 'next/router'
 
 import { Check, X, ChevronLeft, Minus, Lock, ChevronDown, ChevronRight, Pause, Play } from 'lucide-react'
 import { motion , AnimatePresence, useMotionValue, animate, MotionValue} from 'framer-motion'
-import { saveProgress } from './proverbs_results'
+import { saveProgress } from '../lib/progress'
 import { LockClosedIcon, LockOpenIcon, FlagIcon, MusicalNoteIcon, ChevronLeftIcon, ChevronRightIcon, GlobeAmericasIcon, CloudIcon, BeakerIcon, VideoCameraIcon, FilmIcon, LanguageIcon, DeviceTabletIcon, ChatBubbleBottomCenterTextIcon, MapPinIcon, ShoppingCartIcon, TvIcon, MoonIcon, FaceSmileIcon } from '@heroicons/react/24/solid';
 import { useSound } from 'use-sound';
 
@@ -18,7 +18,7 @@ import { FaSpinner, FaTrophy } from 'react-icons/fa';
 import { FaLinkedin, FaInstagram, FaFacebook, FaGithub } from 'react-icons/fa';
 import { BsEyeFill, BsPlayFill } from 'react-icons/bs';
 import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+//import 'react-toastify/dist/ReactToastify.css';
 import { youtube_v3 } from '@googleapis/youtube';
 import { io, Socket } from 'socket.io-client';
 
@@ -936,7 +936,7 @@ export default function Game({}: GameProps) {
   
     //saveProgress(correctCount);
   
-    saveProgress(currentCorrectCount);
+    saveProgress(currentCorrectCount, 'proverbios');
       
     // Se errou alguma imagem, mostra botão para recomeçar
     if (hasWrong) {

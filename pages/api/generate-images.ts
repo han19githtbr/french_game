@@ -44,13 +44,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const imagesWithOptions = selectedImages.map(img => ({
       url: img.url,
       title: img.title,
+      description: img.description || '',
+      aiGenerated: img.source === 'ai',
       options: randomOptions(img.title, allTitles),
     }));
 
-    res.status(200).json(imagesWithOptions);
+    res.status(200).json(imagesWithOptions);
 
-  } catch (error) {
-    console.error('Erro ao buscar imagens:', error);
-    res.status(500).json({ error: 'Erro interno ao buscar imagens.' });
-  }
+  } catch (error) {
+    console.error('Erro ao buscar imagens:', error);
+    res.status(500).json({ error: 'Erro interno ao buscar imagens.' });
+  }
 }

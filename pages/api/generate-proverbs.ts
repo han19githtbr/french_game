@@ -44,6 +44,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const imagesWithOptions = selectedImages.map(img => ({
       url: img.url,
       title: img.title,
+      description: img.description || '',
+      aiGenerated: img.source === 'ai',
       options: randomOptions(img.title, allTitles),
     }));
 
