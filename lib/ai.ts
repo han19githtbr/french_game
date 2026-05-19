@@ -55,9 +55,10 @@ const parseJsonResponse = (text: string) => {
     return JSON.parse(extractJsonArray(text));
   } catch (error) {
     const sanitized = extractJsonArray(text)
-      .replace(/\n/g, '')
-      .replace(/\s+\[/, '[')
-      .replace(/\]\s+$/, ']');
+      .replace(/\/\/[^\n]*/g, '')
+      .replace(/,\s*([}\]])/g, '$1')
+      .replace(/\n/g, ' ')
+      .trim();
     return JSON.parse(sanitized);
   }
 };
@@ -239,10 +240,17 @@ const generateAIImageUrl = async (theme: string, seed: number) => {
       }
 
       const data = await response.json();
-      return data?.data?.[0]?.url || buildPlaceholderUrl(theme, seed);
-    } catch (error) {
+      const url = data?.data?.[0]?.url;
+
+      // Valida se veio uma URL HTTP real antes de usar
+      if (url && url.startsWith('http')) {
+        return url;
+      }
+
       return buildPlaceholderUrl(theme, seed);
-    }
+      } catch (error) {
+        return buildPlaceholderUrl(theme, seed);
+      }
   }
 
   // Fallback placeholder
@@ -289,9 +297,7 @@ export async function ensureDailyAIItems(collectionName: string, theme: string) 
 
   if (documents.length > 0) {
     await collection.insertMany(documents, { ordered: false }).catch((error) => {
-      if (error?.code !== 11000) {
-        throw error;
-      }
+      console.warn('Erro ao inserir itens AI no MongoDB:', error?.message);
     });
   }
 }

@@ -2045,30 +2045,51 @@ export default function Game({}: GameProps) {
       </motion.h1>
 
       <div className="grid w-full max-w-6xl gap-4 mb-8 md:grid-cols-3">
-        <div className="rounded-3xl border border-blue-800 bg-slate-950 p-5 shadow-xl shadow-blue-900/20">
+        <div className="rounded-2xl border border-white/10 bg-[#111318] p-5 shadow-lg relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-500/60 to-transparent rounded-t-2xl" />
           <div className="flex items-center justify-between mb-3">
-            <span className="text-sm uppercase tracking-[0.2em] text-blue-300">Missão do dia</span>
-            <span className={`text-xs font-semibold ${dailyMission?.completed ? 'text-green-300' : 'text-yellow-300'}`}>
-              {dailyMission?.completed ? 'Concluída' : 'Em andamento'}
+            <span className="text-[10px] uppercase tracking-[0.25em] text-gray-400 font-medium">Missão do dia</span>
+            <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full
+              ${dailyMission?.completed
+                ? 'bg-green-900/40 text-green-300 border border-green-700/50'
+                : 'bg-yellow-900/40 text-yellow-300 border border-yellow-700/50'
+              }`}>
+              {dailyMission?.completed ? '✓ Concluída' : '● Em andamento'}
             </span>
           </div>
           <h2 className="text-xl font-bold text-white mb-2">{dailyMission?.title || 'Carregando missão...'}</h2>
           <p className="text-sm text-gray-400 mb-4">{dailyMission?.description || 'Complete atividades de francês para avançar.'}</p>
-          <div className="rounded-full bg-gray-800 h-3 overflow-hidden mb-3">
+          <div className="rounded-full bg-white/5 h-1.5 overflow-hidden mb-3">
             <div
-              className="h-full bg-gradient-to-r from-blue-500 to-green-400"
+              className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full shadow-[0_0_8px_rgba(96,165,250,0.5)]"
               style={{ width: `${dailyMission ? Math.min(100, Math.round((dailyMission.progress / Math.max(1, dailyMission.target)) * 100)) : 0}%` }}
             />
           </div>
           <p className="text-sm text-gray-300">
             Progresso: <strong className="text-white">{dailyMission?.progress ?? 0}</strong> / {dailyMission?.target ?? 1}
           </p>
+        
+        
+          // Adicionar após o progresso, antes de fechar o card
+          {dailyMission && !dailyMission.completed && (
+            <p className="mt-2 text-[11px] text-yellow-400/70 flex items-center gap-1">
+              <span>🎁</span> Recompensa: <strong className="text-yellow-300">+{dailyMission.rewardXp} XP</strong>
+            </p>
+          )}
+          {dailyMission?.completed && (
+            <p className="mt-2 text-[11px] text-green-400/70 flex items-center gap-1">
+              <span>✓</span> Bônus de <strong className="text-green-300">+{dailyMission.rewardXp} XP</strong> ganho!
+            </p>
+          )}
+        
         </div>
 
         <div className="rounded-3xl border border-fuchsia-800 bg-slate-950 p-5 shadow-xl shadow-fuchsia-900/20">
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm uppercase tracking-[0.2em] text-fuchsia-300">Nível atual</span>
-            <span className="text-xs text-gray-400">Próximo: {gameProgressSummary.nextLevelName}</span>
+            <span className="text-[11px] text-gray-400">
+              Próximo: <span className="text-fuchsia-300 font-semibold">{gameProgressSummary.nextLevelName}</span>
+            </span>
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">{gameProgressSummary.levelName}</h2>
           <p className="text-sm text-gray-400 mb-4">Nível {gameProgressSummary.currentLevel} • {gameProgressSummary.totalXp} XP</p>
@@ -2099,9 +2120,8 @@ export default function Game({}: GameProps) {
           <p className="text-sm text-gray-300 mb-4">Tentativas atuais: <strong className="text-white">{remainingAttempts}</strong> / {maxAttempts}</p>
           {!isPremium ? (
             <button
-              type="button"
               onClick={() => setPremiumModalOpen(true)}
-              className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 py-2 text-sm font-semibold text-slate-950 hover:opacity-90 transition"
+              className="w-full rounded-xl border border-emerald-700/60 bg-emerald-900/20 py-2 text-sm font-semibold text-emerald-200 hover:bg-emerald-900/40 transition"
             >
               Apoiar e desbloquear
             </button>
@@ -2163,18 +2183,26 @@ export default function Game({}: GameProps) {
         </div>
 
         <div className="mt-5 grid gap-3 md:grid-cols-3">
-          <div className="rounded-xl border border-cyan-800 bg-slate-900 p-4">
-            <div className="flex items-center justify-between">
+          <div className="rounded-xl border border-white/10 bg-[#0f1117] p-4 hover:border-cyan-700/50 transition-colors">
+            <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-semibold text-white">1. Vocabulario visual</span>
-              <span className="text-xs text-green-300">Aberto</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-900/40 text-green-300 border border-green-800/60">
+                Aberto
+              </span>
             </div>
-            <p className="mt-2 text-sm text-gray-400">Escolha um tema e associe imagem, som e palavra.</p>
-            <p className="mt-3 text-xs text-cyan-200">{gameProgressSummary.uniqueThemes} temas praticados</p>
+            <p className="text-xs text-gray-500 mb-3">Escolha um tema e associe imagem, som e palavra.</p>
+            <p className="text-xs text-cyan-400 font-medium">
+              {gameProgressSummary.uniqueThemes} temas praticados
+            </p>
           </div>
           <div className="rounded-xl border border-indigo-800 bg-slate-900 p-4">
             <div className="flex items-center justify-between">
               <span className="text-sm font-semibold text-white">2. Frases completas</span>
-              <span className={`text-xs ${isFrasesUnlocked ? 'text-green-300' : 'text-yellow-300'}`}>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full
+                ${isFrasesUnlocked
+                  ? 'bg-green-900/40 text-green-300 border border-green-800/60'
+                  : 'bg-yellow-900/40 text-yellow-300 border border-yellow-700/50'
+                }`}>
                 {isFrasesUnlocked ? 'Liberado' : 'Meta: 4 acertos'}
               </span>
             </div>

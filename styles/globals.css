@@ -20,6 +20,10 @@
   --color-purple: #541093;
   --color-pink: #ff00e5;
 
+  --card-bg: #111318;
+  --card-border: rgba(255,255,255,0.08);
+  --card-label-color: #6b7280; /* gray-500 */
+
   --color-danger: #f05d6c;
 
   --color-gray-100: #dae4f2;
