@@ -1,4 +1,4 @@
-/*import { getDb } from '../../../lib/mongodb';
+import { getDb } from '../../../lib/mongodb';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { ObjectId } from 'mongodb';
 
@@ -7,7 +7,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: 'Método não permitido' });
   }
 
-  // 🔥 TIMEOUT MANUAL - Previne o timeout do Vercel
+  // TIMEOUT MANUAL - Previne o timeout do Vercel
   const timeoutPromise = new Promise((_, reject) => {
     setTimeout(() => reject(new Error('Timeout após 8 segundos')), 8000);
   });
@@ -26,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ message: 'ID da publicação inválido' });
     }
 
-    // 🔥 OTIMIZAÇÃO: Busca o post com timeout
+    // Busca o post com timeout
     const post = await Promise.race([
       db.collection('posts').findOne({ _id: new ObjectId(postId) }),
       timeoutPromise
@@ -36,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ message: 'Publicação não encontrada' });
     }
 
-    // 🔹 Garante que o campo viewedBy existe no banco
+    // Garante que o campo viewedBy existe no banco
     if (!Array.isArray(post.viewedBy)) {
       await Promise.race([
         db.collection('posts').updateOne(
@@ -47,18 +47,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ]);
     }
 
-    // 🔹 Busca novamente (para garantir que viewedBy foi atualizado)
+    // Busca novamente (para garantir que viewedBy foi atualizado)
     const updatedPostBefore = await Promise.race([
       db.collection('posts').findOne({ _id: new ObjectId(postId) }),
       timeoutPromise
     ]) as any;
 
-    // 🔹 Se o usuário já visualizou, não incrementa
+    // Se o usuário já visualizou, não incrementa
     if (updatedPostBefore?.viewedBy?.includes(user)) {
       return res.status(200).json({ message: 'Usuário já visualizou', post: updatedPostBefore });
     }
 
-    // 🔥 OTIMIZAÇÃO: Incrementa views com timeout
+    // Incrementa views com timeout
     const result = await Promise.race([
       db.collection('posts').findOneAndUpdate(
         { _id: new ObjectId(postId) },
@@ -94,4 +94,4 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       error: error instanceof Error ? error.message : String(error)
     });
   }
-}*/
+}
