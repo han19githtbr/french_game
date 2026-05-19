@@ -16,7 +16,16 @@ export const authOptions: AuthOptions = {
       return true;
     },
     async redirect({ url, baseUrl }) {
-      return url.startsWith('/') ? `${baseUrl}${url}` : url;
+      if (url.startsWith('/')) return `${baseUrl}${url}`;
+
+      try {
+        const targetUrl = new URL(url);
+        if (targetUrl.origin === baseUrl) return url;
+      } catch {
+        return baseUrl;
+      }
+
+      return baseUrl;
     },
   },
   

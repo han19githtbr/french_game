@@ -1,12 +1,17 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import mongoose from 'mongoose';
 import * as publishModule from './publish';
+import { requireAdminSession } from '../../../lib/api-auth';
 
 const ConquestModel = publishModule.ConquestModel;
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://handydev:19handyrio@clusterfrenchgame.qczmr62.mongodb.net/app_french?retryWrites=true&w=majority&appName=clusterfrenchgame';
+const MONGODB_URI = process.env.MONGODB_URI;
 
 async function connectDB() {
+  if (!MONGODB_URI) {
+    throw new Error('MongoDB nao configurado.');
+  }
+
   if (mongoose.connection.readyState >= 1) {
     return;
   }
@@ -16,6 +21,9 @@ async function connectDB() {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     try {
+      const session = await requireAdminSession(req, res);
+      if (!session) return;
+
       await connectDB();
       
       // Marcar conquistas expiradas como inativas

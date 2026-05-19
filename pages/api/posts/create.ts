@@ -1,68 +1,72 @@
 import { getDb } from '../../../lib/mongodb';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { Post } from '../../../models/Post';
+import { requireAdminSession } from '../../../lib/api-auth';
+
+const ALLOWED_THEMES = ['Cultura', 'Gastronomia', 'Tecnologia', 'Ditados', 'Natureza', 'Turismo', 'Pensamentos'];
+const MAX_CAPTION_LENGTH = 500;
+
+const isValidImageUrl = (value: unknown) =>
+  typeof value === 'string' && /^https:\/\/res\.cloudinary\.com\/[\w-]+\/image\/upload\//.test(value);
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Método não permitido' });
+    return res.status(405).json({ message: 'Metodo nao permitido' });
   }
 
   try {
+    const session = await requireAdminSession(req, res);
+    if (!session) return;
+
     const db = await getDb();
     const rawData = req.body;
-    
-    // Processamento seguro das datas
+    const caption = String(rawData.caption || '').trim();
+
+    if (!caption || caption.length > MAX_CAPTION_LENGTH) {
+      return res.status(400).json({ message: 'Legenda invalida.' });
+    }
+
+    if (!ALLOWED_THEMES.includes(rawData.theme)) {
+      return res.status(400).json({ message: 'Tema invalido.' });
+    }
+
+    if (!isValidImageUrl(rawData.imageUrl)) {
+      return res.status(400).json({ message: 'URL de imagem invalida.' });
+    }
+
+    const endDate = rawData.endDate ? new Date(rawData.endDate) : null;
+    if (endDate && isNaN(endDate.getTime())) {
+      return res.status(400).json({ message: 'Formato de endDate invalido.' });
+    }
+
     const postData: Post = {
-      ...rawData,
-      // Garante que createdAt é uma Data válida
-      createdAt: rawData.createdAt ? new Date(rawData.createdAt) : new Date(),
-      // Converte explicitamente endDate para Date ou null
-      endDate: rawData.endDate ? new Date(rawData.endDate) : null,
-      // Garante que startDate é uma Data válida
-      startDate: rawData.startDate ? new Date(rawData.startDate) : new Date()
+      caption,
+      imageUrl: rawData.imageUrl,
+      theme: rawData.theme,
+      startDate: new Date(),
+      endDate,
+      likes: 0,
+      comments: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
 
-    // Validação adicional das datas
-    if (postData.endDate && isNaN(postData.endDate.getTime())) {
-      throw new Error('Formato de endDate inválido');
-    }
-
-    if (isNaN(postData.startDate.getTime())) {
-      throw new Error('Formato de startDate inválido');
-    }
-
-    // Insere no banco de dados
     const result = await db.collection('posts').insertOne(postData);
-    
-    // Recupera o post inserido com tratamento de null
     const insertedPost = await db.collection('posts').findOne({ _id: result.insertedId });
-    
+
     if (!insertedPost) {
-      throw new Error('Post não foi encontrado após criação');
+      throw new Error('Post nao foi encontrado apos criacao');
     }
 
-    // Resposta formatada com datas serializadas
     res.status(201).json({
       ...insertedPost,
       _id: insertedPost._id.toString(),
       createdAt: insertedPost.createdAt.toISOString(),
       startDate: insertedPost.startDate.toISOString(),
-      endDate: insertedPost.endDate?.toISOString() || null
+      endDate: insertedPost.endDate?.toISOString() || null,
     });
-
   } catch (error) {
-    console.error('Erro detalhado:', {
-      error: error instanceof Error ? error.stack : error,
-      inputData: req.body
-    });
-    
-    res.status(500).json({ 
-      message: 'Erro ao criar publicação',
-      error: error instanceof Error ? error.message : 'Erro desconhecido',
-      // Adiciona detalhes apenas em desenvolvimento
-      ...(process.env.NODE_ENV === 'development' && {
-        stack: error instanceof Error ? error.stack : undefined
-      })
-    });
+    console.error('Erro ao criar publicacao:', error);
+    res.status(500).json({ message: 'Erro ao criar publicacao' });
   }
 }

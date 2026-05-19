@@ -740,6 +740,29 @@ export default function Game({}: GameProps) {
   }, []);
 
   useEffect(() => {
+    const loadServerPremiumStatus = async () => {
+      if (status !== 'authenticated') return;
+
+      try {
+        const response = await fetch('/api/premium-status');
+        const data = await response.json();
+
+        if (response.ok && data.active) {
+          unlockPremiumAccess();
+          setIsPremium(true);
+          setMaxAttempts(6);
+          setRemainingAttempts(prev => Math.min(prev + 2, 6));
+          setGameProgressSummary(prev => ({ ...prev, isPremium: true }));
+        }
+      } catch (error) {
+        console.error('Erro ao carregar status Premium:', error);
+      }
+    };
+
+    loadServerPremiumStatus();
+  }, [status]);
+
+  useEffect(() => {
     const verifyStripeCheckout = async () => {
       const { stripe_success, stripe_cancelled, session_id } = router.query;
 

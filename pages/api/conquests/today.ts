@@ -4,9 +4,13 @@ import * as publishModule from './publish'; // Importe o arquivo publish.ts
 
 const ConquestModel = mongoose.models.Conquest || mongoose.model('Conquest', publishModule.conquestSchema);
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://handydev:19handyrio@clusterfrenchgame.qczmr62.mongodb.net/app_french?retryWrites=true&w=majority&appName=clusterfrenchgame';
+const MONGODB_URI = process.env.MONGODB_URI;
 
 async function connectDB() {
+  if (!MONGODB_URI) {
+    throw new Error('MongoDB nao configurado.');
+  }
+
   if (mongoose.connection.readyState >= 1) {
     return;
   }

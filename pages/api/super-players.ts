@@ -3,6 +3,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 //import connectDB from '../../lib/mongodb';
 //import { MongoClient } from 'mongodb';
 import { getDb } from '../../lib/mongodb';
+import { requireApiSession } from '../../lib/api-auth';
 
 
 let cachedDb: any = null; // Variável para armazenar o cliente conectado
@@ -116,7 +117,16 @@ async function checkIfUserIsSuperPlayer(username: string) {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     if (req.method === 'POST') {
-      const { username, totalPlays } = req.body;
+      const session = await requireApiSession(req, res);
+      if (!session) return;
+
+      const username = session.user?.name || session.user?.email || 'Aluno';
+      const totalPlays = Number(req.body?.totalPlays);
+
+      if (!Number.isInteger(totalPlays) || totalPlays < 0 || totalPlays > 10000) {
+        return res.status(400).json({ success: false, error: 'Pontuacao invalida.' });
+      }
+
       const result = await saveRecord(username, totalPlays);
       res.status(result.success ? 200 : 500).json(result);
     } else if (req.method === 'GET') {

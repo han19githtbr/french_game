@@ -8,6 +8,7 @@ import PostList from '../components/Post/PostList';
 import NotificationBadge from '../components/NotificationBadge';
 import { useSocket } from '../lib/socket';
 
+const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'milliance23@gmail.com';
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
@@ -21,7 +22,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (status === 'loading') return;
-    const isAdmin = session?.user?.email === 'milliance23@gmail.com';
+    const isAdmin = session?.user?.email === ADMIN_EMAIL;
     if (!isAdmin) router.push('/');
   }, [session, status, router]);
 
@@ -50,7 +51,7 @@ export default function AdminPage() {
   }, [socket]);
 
 
-  if (status === 'loading' || session?.user?.email !== 'milliance23@gmail.com') {
+  if (status === 'loading' || session?.user?.email !== ADMIN_EMAIL) {
     return <p className="text-white text-center mt-10">Verificando permissões...</p>;
   }
 

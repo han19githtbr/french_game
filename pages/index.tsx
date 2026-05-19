@@ -6,7 +6,7 @@ import { cn } from '../lib/utils';
 import { ShieldCheck } from 'lucide-react';
 
 
-const ADMIN_EMAIL = 'milliance23@gmail.com';
+const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'milliance23@gmail.com';
 const DAILY_ACCESS_KEY = 'frenchLearningDailyAccess';
 const LAST_RESET_KEY = 'frenchLearningLastReset';
 

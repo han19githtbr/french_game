@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { requireApiSession } from '../../lib/api-auth';
 
 const STRIPE_API_VERSION = '2025-04-30.basil';
 const DEFAULT_PRICE_AMOUNT = Number(process.env.STRIPE_PREMIUM_AMOUNT_CENTS || '1990');
@@ -26,6 +27,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
   const stripePriceId = process.env.STRIPE_PREMIUM_PRICE_ID;
+  const session = await requireApiSession(req, res);
+  if (!session) return;
 
   if (!stripeSecretKey) {
     if (process.env.NODE_ENV !== 'production') {
@@ -43,9 +46,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   params.append('allow_promotion_codes', 'true');
   params.append('metadata[feature]', 'premium_pack');
 
-  if (typeof req.body?.email === 'string') {
-    appendParam(params, 'customer_email', req.body.email);
-    appendParam(params, 'metadata[user_email]', req.body.email);
+  if (session.user?.email) {
+    appendParam(params, 'customer_email', session.user.email);
+    appendParam(params, 'metadata[user_email]', session.user.email);
   }
 
   if (stripePriceId) {
