@@ -6,7 +6,7 @@ import { useSession, signOut } from 'next-auth/react'
 
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { FaMedal, FaCrown } from 'react-icons/fa';
-import { clearProgress as clearStoredProgress, getProgressSummary, loadProgress, LearningProgressEntry } from '../lib/progress'
+import { clearProgress as clearStoredProgress, getProgressSummary, loadProgress, getDailyMission, loadPremiumAccess, LearningProgressEntry, DailyMission } from '../lib/progress'
 
 interface SuperPlayerRecord {
   username: string;
@@ -29,6 +29,8 @@ export default function ResultsPage() {
   const [superPlayerRecords, setSuperPlayerRecords] = useState<SuperPlayerRecord[]>([]);  
   const [notification, setNotification] = useState<{ message: string; type: 'info' | 'success' | 'error' } | null>(null);
   const [globalRecord, setGlobalRecord] = useState<SuperPlayerRecord | null>(null);
+  const [dailyMission, setDailyMission] = useState<DailyMission | null>(null);
+  const [isPremium, setIsPremium] = useState(false);
      
   const showToast = (message: string, type: 'info' | 'success' | 'error') => {
     setNotification({ message, type });
@@ -51,6 +53,8 @@ export default function ResultsPage() {
     setIsFlashing(summary.recentScore >= 4);
     setIsSuperPlayer(entries.length >= 12);
     setTotalPlays(entries.length);
+    setDailyMission(getDailyMission(entries));
+    setIsPremium(loadPremiumAccess());
   }, []);
 
   
@@ -76,6 +80,8 @@ export default function ResultsPage() {
       setCurrentProgress(lastProgress);
       setIsFlashing(lastProgress === 4);
       setTotalPlays(progressEntries.length); // Atualiza o total de jogadas
+      setDailyMission(getDailyMission(progressEntries));
+      setIsPremium(loadPremiumAccess());
       
       // Verifica se o usuário atual é super player (agora baseado no banco)
       if (session?.user?.name) {
@@ -115,7 +121,7 @@ export default function ResultsPage() {
 
   const bestRound = progressEntries.reduce((prev, curr) => (curr.score > prev.score ? curr : prev), { round: 0, score: 0 })
 
-  const progressPercentage = (currentProgress / 4) * 100;
+  const progressPercentage = progressSummary.levelProgress;
 
 
   // Função para verificar se o usuário é Super Player
@@ -209,7 +215,43 @@ export default function ResultsPage() {
            
       
       <h1 className="text-3xl font-semibold text-gray-300 mt-40 mb-4 text-center">Seu Progresso</h1>
-      
+
+      <div className="grid gap-4 max-w-5xl mx-auto mb-8 md:grid-cols-2">
+        <div className="rounded-3xl border border-gray-700 bg-zinc-950 p-6 shadow-xl">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs uppercase tracking-[0.2em] text-blue-300">Missão do dia</span>
+            <span className={`text-xs font-semibold ${dailyMission?.completed ? 'text-green-300' : 'text-yellow-300'}`}>
+              {dailyMission?.completed ? 'Concluída' : 'Em andamento'}
+            </span>
+          </div>
+          <h2 className="text-xl font-semibold text-white mb-2">{dailyMission?.title || 'Missão diária'}</h2>
+          <p className="text-sm text-gray-400 mb-4">{dailyMission?.description || 'Complete duas atividades diferentes hoje para avançar.'}</p>
+          <div className="rounded-full bg-gray-800 h-3 overflow-hidden mb-3">
+            <div
+              className="h-full bg-gradient-to-r from-blue-500 to-green-400"
+              style={{ width: `${dailyMission ? Math.min(100, Math.round((dailyMission.progress / Math.max(1, dailyMission.target)) * 100)) : 0}%` }}
+            />
+          </div>
+          <p className="text-sm text-gray-300">{dailyMission?.progress ?? 0} / {dailyMission?.target ?? 1} concluído</p>
+        </div>
+        <div className="rounded-3xl border border-gray-700 bg-zinc-950 p-6 shadow-xl">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs uppercase tracking-[0.2em] text-pink-300">Nível atual</span>
+            <span className="text-xs text-gray-400">Próximo: {progressSummary.nextLevelName}</span>
+          </div>
+          <h2 className="text-2xl font-semibold text-white mb-2">{progressSummary.levelName}</h2>
+          <p className="text-sm text-gray-400 mb-4">Nível {progressSummary.currentLevel} • {progressSummary.totalXp} XP</p>
+          <div className="rounded-full bg-gray-800 h-3 overflow-hidden mb-3">
+            <div
+              className="h-full bg-gradient-to-r from-green-400 to-cyan-500"
+              style={{ width: `${progressSummary.levelProgress}%` }}
+            />
+          </div>
+          <p className="text-sm text-gray-300">{progressSummary.xpToNext} XP para o próximo nível</p>
+          <p className="mt-3 text-xs text-gray-500">{progressSummary.isPremium ? 'Premium ativo: +2 tentativas, missões especiais e desbloqueios extras' : 'Apoie o app para liberar Premium Pack e avanços exclusivos.'}</p>
+        </div>
+      </div>
+
       {globalRecord && (
         <div className="relative flex justify-center items-center mb-16 mt-8">
           <FaCrown className="text-yellow text-4xl animate-pulse" />
@@ -237,10 +279,10 @@ export default function ResultsPage() {
             style={{ width: `${progressPercentage}%` }}
           ></div>
           <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-sm font-semibold">
-            {currentProgress} / 4
+            {progressSummary.totalXp} XP
           </span>
         </div>
-        <p className="text-sm text-gray-400 mt-3 text-center">Progresso para a Medalha de Ouro</p>
+        <p className="text-sm text-gray-400 mt-3 text-center">Progresso para o próximo nível</p>
       </div>
 
       {progressEntries.length === 0 ? (

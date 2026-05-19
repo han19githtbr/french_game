@@ -903,6 +903,9 @@ export default function Frase({}: GameProps) {
           
     const correct_answer = images[index].title.toLowerCase() === userAnswer.toLowerCase()
     const alreadyCorrect = results[index]?.correct_answer
+    const newResults = [...results];
+    newResults[index] = { correct_answer, selected: userAnswer };
+    const currentAnsweredCount = newResults.filter(Boolean).length;
       
     if (correct_answer && !alreadyCorrect && correctSound) correctSound.play()
     //if (!correct_answer && wrongSound) wrongSound.play()
@@ -926,8 +929,6 @@ export default function Frase({}: GameProps) {
           const newAttempts = prev - 1;
 
           // NOVO: Calcular quantas imagens já foram respondidas nesta rodada
-          const currentAnsweredCount = Object.values(newResults).filter(r => r !== undefined).length; // Conta resultados não-nulos/undefined
-
           // Lógica para exibir o aviso da última tentativa (agora um modal)
           if (newAttempts === 1  && currentAnsweredCount < images.length) { // Se restou apenas 1 tentativa
             setShowLastAttemptWarningModal(true); // Apenas abre o modal, sem timer para fechar
@@ -941,9 +942,6 @@ export default function Frase({}: GameProps) {
         
     }
 
-    const newResults = [...results]; // agora é um array!
-    newResults[index] = { correct_answer, selected: userAnswer };  
-  
     setResults(newResults);
        
     // Armazenar a jogada atual para a gravação
@@ -963,7 +961,9 @@ export default function Frase({}: GameProps) {
     const totalCount = images.length
     const hasWrong = Object.values(newResults).some(r => r && !r.correct_answer)
         
-    saveProgress(currentCorrectCount, 'frases');
+    if (currentAnsweredCount === totalCount) {
+      saveProgress(currentCorrectCount, 'frases');
+    }
       
     // Se errou alguma imagem, mostra botão para recomeçar
     if (hasWrong) {

@@ -3,7 +3,7 @@ import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import { Check, X, Minus, Lock, ChevronDown, ChevronLeft, ChevronRight, Pause, Play, FlagIcon } from 'lucide-react'
 import { motion , AnimatePresence, useMotionValue, useTransform, animate, MotionValue} from 'framer-motion'
-import { saveProgress } from '../lib/progress'
+import { saveProgress, loadProgress, getProgressSummary, getDailyMission, loadPremiumAccess, unlockPremiumAccess, DailyMission } from '../lib/progress'
 import { LockClosedIcon, LockOpenIcon, MusicalNoteIcon, ChevronLeftIcon, ChevronRightIcon, GlobeAmericasIcon, CloudIcon, BeakerIcon, VideoCameraIcon, FilmIcon, LanguageIcon, DeviceTabletIcon, ChatBubbleBottomCenterTextIcon, MapPinIcon, ShoppingCartIcon, TvIcon, MoonIcon, FaceSmileIcon } from '@heroicons/react/24/solid';
 import { useSound } from 'use-sound';
 import dynamic from "next/dynamic";
@@ -255,6 +255,11 @@ export default function Game({}: GameProps) {
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const [currentVideoInfo, setCurrentVideoInfo] = useState<Video | null>(null);
   const [remainingAttempts, setRemainingAttempts] = useState(4); // Começa com 4 tentativas
+  const [maxAttempts, setMaxAttempts] = useState(4);
+  const [isPremium, setIsPremium] = useState(false);
+  const [premiumModalOpen, setPremiumModalOpen] = useState(false);
+  const [gameProgressSummary, setGameProgressSummary] = useState(getProgressSummary([]));
+  const [dailyMission, setDailyMission] = useState<DailyMission | null>(null);
     
   const soundListBoxRef = useRef<HTMLDivElement>(null);
   const videoListBoxRef = useRef<HTMLDivElement>(null);
@@ -303,6 +308,52 @@ export default function Game({}: GameProps) {
     }
   };
 
+  const refreshProgressState = () => {
+    const entries = loadProgress();
+    setGameProgressSummary(getProgressSummary(entries));
+    setDailyMission(getDailyMission(entries));
+  };
+
+  const activatePremiumPack = () => {
+    unlockPremiumAccess();
+    setIsPremium(true);
+    setMaxAttempts(6);
+    setRemainingAttempts(prev => Math.min(prev + 2, 6));
+    setGameProgressSummary(prev => ({ ...prev, isPremium: true }));
+    toast.success('Premium Pack desbloqueado! +2 tentativas e missões especiais ativadas.', { position: 'top-right', autoClose: 2500 });
+    setPremiumModalOpen(false);
+  };
+
+  const handleUnlockPremium = async () => {
+    try {
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: session?.user?.email }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.error || 'Não foi possível iniciar o pagamento.');
+      }
+
+      if (data.fallback) {
+        activatePremiumPack();
+        toast.info('Modo desenvolvimento: Premium liberado sem cobrança. Configure o Stripe para produção.', { position: 'top-right', autoClose: 3500 });
+        return;
+      }
+
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+
+      throw new Error('A sessão do Stripe não retornou uma URL.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao iniciar pagamento.', { position: 'top-right', autoClose: 3000 });
+    }
+  };
 
   const formatTime = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
@@ -676,6 +727,56 @@ export default function Game({}: GameProps) {
     }
   }, [status, router]);
 
+  useEffect(() => {
+    const entries = loadProgress();
+    setGameProgressSummary(getProgressSummary(entries));
+    setDailyMission(getDailyMission(entries));
+    const premium = loadPremiumAccess();
+    setIsPremium(premium);
+    setMaxAttempts(premium ? 6 : 4);
+    if (premium) {
+      setRemainingAttempts(prev => Math.min(prev + 2, 6));
+    }
+  }, []);
+
+  useEffect(() => {
+    const verifyStripeCheckout = async () => {
+      const { stripe_success, stripe_cancelled, session_id } = router.query;
+
+      if (stripe_cancelled) {
+        toast.info('Pagamento cancelado. Você pode continuar estudando normalmente.', { position: 'top-right', autoClose: 2500 });
+        router.replace('/game', undefined, { shallow: true });
+        return;
+      }
+
+      if (stripe_success !== 'true' || typeof session_id !== 'string') {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/checkout-session?session_id=${encodeURIComponent(session_id)}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data?.error || 'Não foi possível verificar o pagamento.');
+        }
+
+        if (data.paid && data.feature === 'premium_pack') {
+          activatePremiumPack();
+          router.replace('/game', undefined, { shallow: true });
+          return;
+        }
+
+        toast.error('Pagamento ainda não confirmado pelo Stripe.', { position: 'top-right', autoClose: 3000 });
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'Erro ao confirmar pagamento.', { position: 'top-right', autoClose: 3000 });
+      }
+    };
+
+    if (router.isReady) {
+      verifyStripeCheckout();
+    }
+  }, [router.isReady, router.query]);
 
   // Salvar as conquistas no localStorage sempre que publishedConquests mudar
   /*useEffect(() => {
@@ -762,7 +863,7 @@ export default function Game({}: GameProps) {
     if (storedFrasesUnlockTime && (now - parseInt(storedFrasesUnlockTime, 10) < ONE_DAY_IN_MS)) {
       if (!isFrasesUnlocked) {
         setIsFrasesUnlocked(true);
-        setRemainingAttempts(4); // Resetar tentativas ao desbloquear via persistência
+        setRemainingAttempts(maxAttempts); // Resetar tentativas ao desbloquear via persistência
       }
     } else {
       if (isFrasesUnlocked) {
@@ -776,7 +877,7 @@ export default function Game({}: GameProps) {
     if (storedProverbsUnlockTime && (now - parseInt(storedProverbsUnlockTime, 10) < ONE_DAY_IN_MS)) {
       if (!isProverbsUnlocked) {
         setIsProverbsUnlocked(true);
-        setRemainingAttempts(4); // Resetar tentativas ao desbloquear via persistência
+        setRemainingAttempts(maxAttempts); // Resetar tentativas ao desbloquear via persistência
         
       }
     } else {
@@ -800,7 +901,7 @@ export default function Game({}: GameProps) {
           setIsFrasesUnlocking(false);
           handleUnlockAnimationEnd(setShowUnlockFrasesAnimation);
           localStorage.setItem('frasesUnlockTime', Date.now().toString());
-          setRemainingAttempts(4);
+          setRemainingAttempts(maxAttempts);
         }, 1000);
       }
     }
@@ -826,7 +927,7 @@ export default function Game({}: GameProps) {
           setIsProverbsUnlocking(false);
           handleUnlockAnimationEnd(setShowUnlockProverbsAnimation);
           localStorage.setItem('proverbsUnlockTime', Date.now().toString());
-          setRemainingAttempts(4);
+          setRemainingAttempts(maxAttempts);
         }, 1000);
       }
     }
@@ -919,6 +1020,9 @@ export default function Game({}: GameProps) {
     
     const correct_word = images[index].title.toLowerCase() === userAnswer.toLowerCase();
     const alreadyCorrect = results[index]?.correct_word;
+    const newResults = [...results];
+    newResults[index] = { correct_word, selected: userAnswer };
+    const currentAnsweredCount = newResults.filter(Boolean).length;
 
     if (correct_word && !alreadyCorrect) { // AQUI É ONDE A CONDIÇÃO COMEÇA
       // Play correct sound (assuming correctSound is defined)
@@ -938,8 +1042,6 @@ export default function Game({}: GameProps) {
           const newAttempts = prev - 1;
 
           // NOVO: Calcular quantas imagens já foram respondidas nesta rodada
-          const currentAnsweredCount = Object.values(newResults).filter(r => r !== undefined).length; // Conta resultados não-nulos/undefined
-
           // Lógica para exibir o aviso da última tentativa (agora um modal)
           if (newAttempts === 1  && currentAnsweredCount < images.length) { // Se restou apenas 1 tentativa
             setShowLastAttemptWarningModal(true); // Apenas abre o modal, sem timer para fechar
@@ -963,9 +1065,6 @@ export default function Game({}: GameProps) {
         
     }
     
-    const newResults = [...results]; // agora é um array!
-    newResults[index] = { correct_word, selected: userAnswer };
-
     setResults(newResults);
 
     // Armazenar a jogada atual para a gravação
@@ -985,13 +1084,10 @@ export default function Game({}: GameProps) {
     const totalCount = images.length;
     const hasWrong = Object.values(newResults).some(r => r && !r.correct_word);
 
-    // Salvar progresso no localStorage
-    saveProgress(currentCorrectCount, selectedTheme ?? 'imagem');
-
-    // Registrar o progresso salvo
-    const savedProgress = localStorage.getItem('learning_progress');
-    const parsedProgress = savedProgress ? JSON.parse(savedProgress) : [];
-    console.log('Progresso Salvo:', { round: parsedProgress.length + 1, correct_word: currentCorrectCount });
+    if (currentAnsweredCount === totalCount) {
+      saveProgress(currentCorrectCount, selectedTheme ?? theme ?? 'imagem');
+      refreshProgressState();
+    }
 
     // Se errou alguma imagem, mostra botão para recomeçar
     if (hasWrong) {
@@ -1028,16 +1124,10 @@ export default function Game({}: GameProps) {
         setCorrectAnswersCount(0);
         setShowCongrats(false);
         setShowPublishButton(false); // Esconder o botão após a transição
-        setRemainingAttempts(4); // Resetar tentativas ao completar uma rodada com sucesso
-        setResults([]);
-      }, 10000);
-
-      if (successSound) {
-        successSound.play();
-      }
+        setRemainingAttempts(maxAttempts); // Resetar tentativas ao completar uma rodada com sucesso
+      }, 2000);
     }
-  };
-  
+  }
 
   // localmente
   /*const handlePublishConquest = () => {
@@ -1931,7 +2021,156 @@ export default function Game({}: GameProps) {
         Jogo para treinar o Francês
       </motion.h1>
 
-      
+      <div className="grid w-full max-w-6xl gap-4 mb-8 md:grid-cols-3">
+        <div className="rounded-3xl border border-blue-800 bg-slate-950 p-5 shadow-xl shadow-blue-900/20">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm uppercase tracking-[0.2em] text-blue-300">Missão do dia</span>
+            <span className={`text-xs font-semibold ${dailyMission?.completed ? 'text-green-300' : 'text-yellow-300'}`}>
+              {dailyMission?.completed ? 'Concluída' : 'Em andamento'}
+            </span>
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">{dailyMission?.title || 'Carregando missão...'}</h2>
+          <p className="text-sm text-gray-400 mb-4">{dailyMission?.description || 'Complete atividades de francês para avançar.'}</p>
+          <div className="rounded-full bg-gray-800 h-3 overflow-hidden mb-3">
+            <div
+              className="h-full bg-gradient-to-r from-blue-500 to-green-400"
+              style={{ width: `${dailyMission ? Math.min(100, Math.round((dailyMission.progress / Math.max(1, dailyMission.target)) * 100)) : 0}%` }}
+            />
+          </div>
+          <p className="text-sm text-gray-300">
+            Progresso: <strong className="text-white">{dailyMission?.progress ?? 0}</strong> / {dailyMission?.target ?? 1}
+          </p>
+        </div>
+
+        <div className="rounded-3xl border border-fuchsia-800 bg-slate-950 p-5 shadow-xl shadow-fuchsia-900/20">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm uppercase tracking-[0.2em] text-fuchsia-300">Nível atual</span>
+            <span className="text-xs text-gray-400">Próximo: {gameProgressSummary.nextLevelName}</span>
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">{gameProgressSummary.levelName}</h2>
+          <p className="text-sm text-gray-400 mb-4">Nível {gameProgressSummary.currentLevel} • {gameProgressSummary.totalXp} XP</p>
+          <div className="rounded-full bg-gray-800 h-3 overflow-hidden mb-3">
+            <div
+              className="h-full bg-gradient-to-r from-green-400 to-cyan-500"
+              style={{ width: `${gameProgressSummary.levelProgress}%` }}
+            />
+          </div>
+          <p className="text-sm text-gray-300">
+            {gameProgressSummary.xpToNext} XP até o próximo nível
+          </p>
+        </div>
+
+        <div className="rounded-3xl border border-emerald-800 bg-slate-950 p-5 shadow-xl shadow-emerald-900/20">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm uppercase tracking-[0.2em] text-emerald-300">Premium Pack</span>
+            <span className={`text-xs font-semibold ${isPremium ? 'text-green-300' : 'text-yellow-300'}`}>
+              {isPremium ? 'Ativo' : 'Disponível'}
+            </span>
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">{isPremium ? 'Bônus ativado' : 'Suporte para liberar'}</h2>
+          <p className="text-sm text-gray-400 mb-4">
+            {isPremium
+              ? 'Você tem +2 tentativas por rodada e missões especiais.'
+              : 'Apoie o projeto para desbloquear vantagens leves no jogo.'}
+          </p>
+          <p className="text-sm text-gray-300 mb-4">Tentativas atuais: <strong className="text-white">{remainingAttempts}</strong> / {maxAttempts}</p>
+          {!isPremium ? (
+            <button
+              type="button"
+              onClick={() => setPremiumModalOpen(true)}
+              className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 py-2 text-sm font-semibold text-slate-950 hover:opacity-90 transition"
+            >
+              Apoiar e desbloquear
+            </button>
+          ) : (
+            <div className="rounded-xl bg-emerald-900/30 p-3 text-sm text-green-200">
+              Premium ativo. Obrigado pelo apoio!
+            </div>
+          )}
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {premiumModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full max-w-md rounded-3xl bg-slate-950 p-6 shadow-2xl border border-cyan-700"
+            >
+              <h3 className="text-2xl font-bold text-white mb-3">Premium Pack</h3>
+              <p className="text-sm text-gray-300 mb-4">Receba um pequeno bônus de jogo e ajude a manter este aplicativo no ar. O pagamento abre em uma página segura do Stripe e você volta ao app automaticamente.</p>
+              <button
+                onClick={handleUnlockPremium}
+                className="w-full rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 py-3 text-sm font-semibold text-slate-950 hover:opacity-90 transition mb-3"
+              >
+                Ir para pagamento seguro
+              </button>
+              <button
+                onClick={() => setPremiumModalOpen(false)}
+                className="w-full rounded-xl border border-gray-700 bg-transparent py-3 text-sm font-semibold text-gray-200 hover:bg-gray-800 transition"
+              >
+                Fechar
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="w-full max-w-6xl mb-8 rounded-2xl border border-slate-700 bg-slate-950 p-5 shadow-xl">
+        <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+          <div>
+            <span className="text-sm uppercase tracking-[0.2em] text-cyan-300">Trilha de estudo</span>
+            <h2 className="mt-2 text-2xl font-bold text-white">Seu caminho no frances</h2>
+            <p className="mt-1 text-sm text-gray-400">Pratique vocabulario, avance para frases e feche com ditados usados no dia a dia.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => router.push('/results')}
+            className="rounded-xl border border-cyan-700 px-4 py-2 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-950"
+          >
+            Ver evolucao
+          </button>
+        </div>
+
+        <div className="mt-5 grid gap-3 md:grid-cols-3">
+          <div className="rounded-xl border border-cyan-800 bg-slate-900 p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-white">1. Vocabulario visual</span>
+              <span className="text-xs text-green-300">Aberto</span>
+            </div>
+            <p className="mt-2 text-sm text-gray-400">Escolha um tema e associe imagem, som e palavra.</p>
+            <p className="mt-3 text-xs text-cyan-200">{gameProgressSummary.uniqueThemes} temas praticados</p>
+          </div>
+          <div className="rounded-xl border border-indigo-800 bg-slate-900 p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-white">2. Frases completas</span>
+              <span className={`text-xs ${isFrasesUnlocked ? 'text-green-300' : 'text-yellow-300'}`}>
+                {isFrasesUnlocked ? 'Liberado' : 'Meta: 4 acertos'}
+              </span>
+            </div>
+            <p className="mt-2 text-sm text-gray-400">Treine contexto e construcao de frases apos dominar uma rodada.</p>
+            <p className="mt-3 text-xs text-indigo-200">{gameProgressSummary.perfectRounds} rodadas perfeitas</p>
+          </div>
+          <div className="rounded-xl border border-emerald-800 bg-slate-900 p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-white">3. Ditados e expressoes</span>
+              <span className={`text-xs ${isProverbsUnlocked ? 'text-green-300' : 'text-yellow-300'}`}>
+                {isProverbsUnlocked ? 'Liberado' : 'Meta: 2 acertos'}
+              </span>
+            </div>
+            <p className="mt-2 text-sm text-gray-400">Ganhe repertorio real para entender falas naturais em frances.</p>
+            <p className="mt-3 text-xs text-emerald-200">Sequencia perfeita: {gameProgressSummary.perfectStreak}</p>
+          </div>
+        </div>
+      </div>
+
       <div className="flex flex-col items-center space-y-6">
         <button
             onClick={() => router.push('/results')}
@@ -2266,7 +2505,7 @@ export default function Game({}: GameProps) {
             onClick={() => {
               setRound(r => r + 1)
               setShowRestart(false);
-              setRemainingAttempts(4);
+              setRemainingAttempts(maxAttempts);
               setResults([]);
             }}
             className="mt-6 border border-e-red text-red bg-transparent hover:bg-lightblue hover:text-white px-4 py-2 rounded shadow transition cursor-pointer"

@@ -7,9 +7,10 @@ const DAILY_AI_GENERATION_LIMIT = Number(process.env.AI_DAILY_GENERATION_LIMIT |
 
 // Hugging Face / Stable Horde (free/community) fallbacks
 const HF_API_KEY = process.env.HF_API_KEY;
-const HF_TEXT_MODEL = process.env.HF_TEXT_MODEL || 'gpt2';
+const HF_TEXT_MODEL = process.env.HF_TEXT_MODEL || 'HuggingFaceH4/zephyr-7b-beta';
 const HF_IMAGE_MODEL = process.env.HF_IMAGE_MODEL || 'runwayml/stable-diffusion-v1-5';
 const STABLE_HORDE_KEY = process.env.STABLE_HORDE_KEY;
+const MAX_DATA_URL_BYTES = Number(process.env.AI_MAX_DATA_URL_BYTES || '900000');
 
 const normalizeTheme = (theme: string) => theme.toLowerCase();
 
@@ -38,17 +39,36 @@ const buildPlaceholderUrl = (theme: string, seed: number) => {
   return `https://picsum.photos/seed/${safeTheme}-${seed}/640/480`;
 };
 
+const extractJsonArray = (text: string) => {
+  const start = text.indexOf('[');
+  const end = text.lastIndexOf(']');
+
+  if (start === -1 || end === -1 || end <= start) {
+    return text;
+  }
+
+  return text.slice(start, end + 1);
+};
+
 const parseJsonResponse = (text: string) => {
   try {
-    return JSON.parse(text);
+    return JSON.parse(extractJsonArray(text));
   } catch (error) {
-    const sanitized = text
+    const sanitized = extractJsonArray(text)
       .replace(/\n/g, '')
       .replace(/\s+\[/, '[')
       .replace(/\]\s+$/, ']');
     return JSON.parse(sanitized);
   }
 };
+
+const normalizeCaptionItems = (items: any[]) =>
+  items
+    .map((item: any) => ({
+      title: String(item.title || item.text || item.caption || '').trim(),
+      description: String(item.description || item.hint || item.caption || item.text || '').trim(),
+    }))
+    .filter((item: any) => item.title);
 
 const generateAICaptions = async (collectionName: string, theme: string, count: number) => {
   const prompt = buildPrompt(collectionName, theme, count);
@@ -80,12 +100,7 @@ const generateAICaptions = async (collectionName: string, theme: string, count: 
 
         const parsed = parseJsonResponse(text);
         if (!Array.isArray(parsed)) throw new Error('Resposta HF inválida');
-        return parsed
-          .map((item: any) => ({
-            title: String(item.title || item.text || item.caption || '').trim(),
-            description: String(item.description || item.hint || item.caption || item.text || '').trim(),
-          }))
-          .filter((item: any) => item.title);
+        return normalizeCaptionItems(parsed);
       }
     } catch (err) {
       console.warn('Hugging Face text fallback falhou, tentando próximo provedor:', err);
@@ -127,15 +142,10 @@ const generateAICaptions = async (collectionName: string, theme: string, count: 
       throw new Error('Formato de resposta AI inválido. Esperado array JSON.');
     }
 
-    return parsed
-      .map((item: any) => ({
-        title: String(item.title || item.text || item.caption || '').trim(),
-        description: String(item.description || item.hint || item.caption || item.text || '').trim(),
-      }))
-      .filter((item: any) => item.title);
+    return normalizeCaptionItems(parsed);
   }
 
-  throw new Error('Nenhum provedor AI configurado (HF_API_KEY ou OPENAI_API_KEY).');
+  return [];
 };
 
 const generateAIImageUrl = async (theme: string, seed: number) => {
@@ -157,6 +167,10 @@ const generateAIImageUrl = async (theme: string, seed: number) => {
 
       if (resp.ok) {
         const buffer = await resp.arrayBuffer();
+        if (buffer.byteLength > MAX_DATA_URL_BYTES) {
+          console.warn(`Imagem HF maior que o limite configurado (${buffer.byteLength} bytes). Usando placeholder.`);
+          return buildPlaceholderUrl(theme, seed);
+        }
         const b64 = Buffer.from(buffer).toString('base64');
         // Return data URL so we can store it directly in DB as `url` if needed
         return `data:image/png;base64,${b64}`;
@@ -240,6 +254,11 @@ export async function ensureDailyAIItems(collectionName: string, theme: string) 
   const db = await getDb();
   const collection = db.collection(collectionName);
 
+  await collection.createIndex(
+    { theme: 1, title: 1 },
+    { unique: true, partialFilterExpression: { source: 'ai' } },
+  ).catch(() => undefined);
+
   const today = new Date();
   const startOfToday = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
   const startOfTomorrow = new Date(startOfToday);
@@ -269,6 +288,10 @@ export async function ensureDailyAIItems(collectionName: string, theme: string) 
   );
 
   if (documents.length > 0) {
-    await collection.insertMany(documents);
+    await collection.insertMany(documents, { ordered: false }).catch((error) => {
+      if (error?.code !== 11000) {
+        throw error;
+      }
+    });
   }
 }

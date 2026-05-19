@@ -883,6 +883,9 @@ export default function Game({}: GameProps) {
           
     const correct_proverb = images[index].title.toLowerCase() === userAnswer.toLowerCase()
     const alreadyCorrect = results[index]?.correct_proverb
+    const newResults = [...results];
+    newResults[index] = { correct_proverb, selected: userAnswer };
+    const currentAnsweredCount = newResults.filter(Boolean).length;
       
     if (correct_proverb && !alreadyCorrect && correctSound) correctSound.play()
     //if (!correct_proverb && wrongSound) wrongSound.play()
@@ -895,8 +898,6 @@ export default function Game({}: GameProps) {
           const newAttempts = prev - 1;
 
           // NOVO: Calcular quantas imagens já foram respondidas nesta rodada
-          const currentAnsweredCount = Object.values(newResults).filter(r => r !== undefined).length; // Conta resultados não-nulos/undefined
-
           // Lógica para exibir o aviso da última tentativa (agora um modal)
           if (newAttempts === 1  && currentAnsweredCount < images.length) { // Se restou apenas 1 tentativa
             setShowLastAttemptWarningModal(true); // Apenas abre o modal, sem timer para fechar
@@ -911,9 +912,6 @@ export default function Game({}: GameProps) {
         
     }
 
-    const newResults = [...results]; // agora é um array!
-    newResults[index] = { correct_proverb, selected: userAnswer };  
-  
     setResults(newResults);
        
     // Armazenar a jogada atual para a gravação
@@ -936,7 +934,9 @@ export default function Game({}: GameProps) {
   
     //saveProgress(correctCount);
   
-    saveProgress(currentCorrectCount, 'proverbios');
+    if (currentAnsweredCount === totalCount) {
+      saveProgress(currentCorrectCount, 'proverbios');
+    }
       
     // Se errou alguma imagem, mostra botão para recomeçar
     if (hasWrong) {
