@@ -2069,8 +2069,7 @@ export default function Game({}: GameProps) {
             Progresso: <strong className="text-white">{dailyMission?.progress ?? 0}</strong> / {dailyMission?.target ?? 1}
           </p>
         
-        
-          // Adicionar após o progresso, antes de fechar o card
+                  
           {dailyMission && !dailyMission.completed && (
             <p className="mt-2 text-[11px] text-yellow-400/70 flex items-center gap-1">
               <span>🎁</span> Recompensa: <strong className="text-yellow-300">+{dailyMission.rewardXp} XP</strong>
