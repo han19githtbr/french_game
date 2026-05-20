@@ -464,6 +464,13 @@ export default function Frase({}: GameProps) {
     setShowYouTubeVideos(!showYouTubeVideos);
   };
 
+
+  useEffect(() => {
+    if (localStorage.getItem('hasNewAIContent_frases') === 'true') {
+      setHasNewAIContent(true);
+    }
+  }, []);
+
   
   useEffect(() => {
       const storedClicked = localStorage.getItem('hasClickedNotification');
@@ -925,14 +932,19 @@ export default function Frase({}: GameProps) {
     setTimeLeft(TIMED_MODE_SECONDS);
     setTimerActive(true);
 
+    const tickAudio = new Audio('/sounds/clock-ticking.mp3'); // coloque um arquivo tick.mp3 em /public/sounds/
     const interval = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(interval);
           setTimerActive(false);
-         
           setShowRestart(true);
           return 0;
+        }
+        // Som de tick nos últimos 10 segundos
+        if (prev <= 10) {
+          tickAudio.currentTime = 0;
+          tickAudio.play().catch(() => {});
         }
         return prev - 1;
       });
@@ -984,7 +996,10 @@ export default function Frase({}: GameProps) {
   
       setImages(data);
       const hasAI = data.some((img: any) => img.aiGenerated === true);
-      if (hasAI) setHasNewAIContent(true);
+      if (hasAI) {
+        setHasNewAIContent(true);
+        localStorage.setItem('hasNewAIContent_frases', 'true');
+      }
       imageRefs.current = []; // limpa os refs antigos
       setResults(Array(data.length).fill(null));
     } catch (error) {
@@ -1413,7 +1428,10 @@ export default function Frase({}: GameProps) {
             </span>
             <img src={session.user.image || ''} alt="Avatar" className="w-10 h-10 rounded-full border-2 border-lightblue" />
             <button
-              onClick={() => setHasNewAIContent(false)}
+              onClick={() => {
+                setHasNewAIContent(false);
+                localStorage.removeItem('hasNewAIContent_frases');
+              }}
               title="Novo conteúdo gerado pela IA disponível"
               className="relative text-gray-300 hover:text-yellow-300 transition ml-2"
             >
@@ -2171,7 +2189,7 @@ export default function Frase({}: GameProps) {
           <div className="text-center text-lg text-gray-300 animate-pulse">🔍 Procurando imagens...</div>
         ) : (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 w-full max-w-4xl mt-6 cursor-pointer">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 w-full max-w-4xl mt-6 cursor-pointer">
               {images.map((img, index) => (
                 <motion.div
                   key={index}
@@ -2206,7 +2224,7 @@ export default function Frase({}: GameProps) {
                         touch-manipulation
                       `}
                       onChange={e => checkAnswer(index, e.target.value)}
-                      disabled={!!results[index]}
+                      disabled={!!results[index] || timeLeft === 0}
                     >
                       <option value="" className="bg-gray-900 text-white font-semibold cursor-pointer">✅ Selecione</option>
                       {img.options.map((opt: string, i: number) => (

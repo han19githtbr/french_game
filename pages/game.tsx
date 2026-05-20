@@ -1409,6 +1409,16 @@ export default function Game({}: GameProps) {
               }
             </span>
             <img src={session.user.image || ''} alt="Avatar" className="w-10 h-10 rounded-full border-2 border-lightblue" />
+            <button
+              onClick={() => setNotificationCount(0)}
+              title="Notificações"
+              className="relative text-gray-300 hover:text-yellow-300 transition ml-2"
+            >
+              <span className="text-xl">🔔</span>
+              {notificationCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full border-2 border-gray-900 animate-pulse" />
+              )}
+            </button>
           </div>
           <div
             className={`absolute border border-blue right-0 mt-2 text-black py-2 px-4 rounded shadow-lg z-10 ${

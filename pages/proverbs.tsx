@@ -433,6 +433,13 @@ export default function Game({}: GameProps) {
     setShowYouTubeVideos(!showYouTubeVideos);
   };
 
+
+  useEffect(() => {
+    if (localStorage.getItem('hasNewAIContent_proverbs') === 'true') {
+      setHasNewAIContent(true);
+    }
+  }, []);
+
     
   useEffect(() => {
       const storedClicked = localStorage.getItem('hasClickedNotification');
@@ -456,52 +463,6 @@ export default function Game({}: GameProps) {
   }, [showNotification]);
 
     
-  /*useEffect(() => {
-      if (selectedTheme) {
-        setSearchStatus('searching');
-        setErrorMessage(null);
-        setCurrentSoundUrl(null);
-        setSearchResults([]);
-        setCurrentSoundInfo(null);
-        setIsPlaying(false);
-  
-        const query = selectedTheme;
-  
-        //fetch(`https://freesound.org/apiv2/search/text/?query=${query}&token=${FREESOUND_API_KEY}`)
-        fetch(`https://freesound.org/apiv2/search/text/?query=${query}&fields=id,name,duration,previews,user,url&token=${FREESOUND_API_KEY}`)
-          .then(response => {
-            if (!response.ok) {
-              throw new Error(`Erro na busca: ${response.status}`);
-            }
-            return response.json();
-          })
-          .then(data => {
-            setSearchResults(data.results);
-            if (data.results.length > 0) {
-              setSearchStatus('results');
-            } else {
-              setSearchStatus('results');
-              setErrorMessage(`Nenhum som encontrado para "${query}".`);
-            }
-          })
-          .catch(error => {
-            console.error("Erro ao buscar sons:", error);
-            setErrorMessage("Erro ao buscar sons.");
-            setSearchStatus('error');
-          })
-          .finally(() => {
-            setIsSearching(false);
-          });
-      } else {
-        setCurrentSoundUrl(null);
-        setIsPlaying(false);
-        setSearchStatus('idle');
-        setSearchResults([]);
-        setErrorMessage(null);
-        setCurrentSoundInfo(null);
-      }
-  }, [selectedTheme]);*/
-  
 
   useEffect(() => {
       if (selectedTheme) {
@@ -596,36 +557,6 @@ export default function Game({}: GameProps) {
     setThemeCarrosselIndex(nextIndex);
     handleThemeSelect(themesSoundCarrossel[nextIndex].id);
   };
-
-
-  /*const loadAndPlaySound = (soundId: number) => {
-      fetch(`https://freesound.org/apiv2/sounds/${soundId}/?token=${FREESOUND_API_KEY}`)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`Erro ao obter detalhes do som: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then(soundDetails => {
-          setCurrentSoundUrl(soundDetails.previews['preview-hq-mp3']);
-          setCurrentSoundInfo(soundDetails);
-          setIsPlaying(true);
-          // SCROLL AUTOMÁTICO PARA O PLAYER APÓS SELECIONAR UM SOM
-          // *** MUDANÇA AQUI: Adicionar setTimeout ***
-          setTimeout(() => {
-            if (soundListBoxRef.current) {
-              // console.log('Tentando rolar para a visualização...'); // Para debug
-              soundListBoxRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
-            }
-          }, 0); // Timeout de 0ms para agendar a rolagem após a próxima renderização
-        })
-        .catch(error => {
-          console.error("Erro ao obter detalhes do som:", error);
-          setErrorMessage("Erro ao obter detalhes do som.");
-          setSearchStatus('error');
-        });
-  };*/
-
 
   const loadAndPlaySound = (soundId: number) => {
     // A requisição agora vai para o seu endpoint de backend '/api/freesound'
@@ -739,14 +670,7 @@ export default function Game({}: GameProps) {
   }, [status, router]);
 
 
-   // Salvar as conquistas no localStorage sempre que publishedConquests mudar
-  /*useEffect(() => {
-    // Adicionar a data atual a cada conquista antes de salvar
-    const conquestsWithDate = publishedConquests.map(conquest => ({ ...conquest, date: getFormattedDate() }));
-    localStorage.setItem('conquests', JSON.stringify(conquestsWithDate));
-  }, [publishedConquests]);*/
-
-  
+    
   const handleUnlockAnimationEnd = (setter: SetterFunction) => {
     setTimeout(() => {
       setter(false);
@@ -963,7 +887,10 @@ export default function Game({}: GameProps) {
     
       setImages(data);
       const hasAI = data.some((img: any) => img.aiGenerated === true);
-      if (hasAI) setHasNewAIContent(true);
+      if (hasAI) {
+        setHasNewAIContent(true);
+        localStorage.setItem('hasNewAIContent_proverbs', 'true');
+      }
       imageRefs.current = []; // limpa os refs antigos
       setResults(Array(data.length).fill(null));
     } catch (error) {
@@ -1305,7 +1232,6 @@ export default function Game({}: GameProps) {
       startReviewVideo();
     }
   };
-
       
     
   return (
@@ -1336,7 +1262,10 @@ export default function Game({}: GameProps) {
             <img src={session.user.image || ''} alt="Avatar" className="w-10 h-10 rounded-full border-2 border-lightblue" />
             {/* Sininho — novo conteúdo gerado pela IA */}
             <button
-              onClick={() => setHasNewAIContent(false)}
+              onClick={() => {
+                setHasNewAIContent(false);
+                localStorage.removeItem('hasNewAIContent_proverbs');
+              }}
               title="Novo conteúdo gerado pela IA disponível"
               className="relative text-gray-300 hover:text-yellow-300 transition ml-2"
             >
@@ -2021,30 +1950,7 @@ export default function Game({}: GameProps) {
             </ul>
           )}
         </div>
-
-
-        {/* Corações de Tentativas */}
-        {/*<div className="flex justify-center mt-5 space-x-4">
-            <span className='text-yellow font-semibold'>Vidas:</span>
-            {[...Array(4)].map((_, i) => (
-              <svg
-                key={i}
-                className={`w-6 h-6 transition-colors duration-300 ${
-                  i < remainingAttempts ? 'text-green animate-pulse' : 'text-gray-700'
-                }`}
-                fill="currentColor"
-                viewBox="0 0 20 20"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            ))}
-        </div>*/}
-
+  
 
         {/* --- Modal de Aviso de Última Tentativa --- */}
         {showLastAttemptWarningModal && (
