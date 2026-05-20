@@ -258,6 +258,8 @@ const generateAIImageUrl = async (theme: string, seed: number) => {
 };
 
 export async function ensureDailyAIItems(collectionName: string, theme: string) {
+  console.log('[AI] HF_API_KEY present:', !!process.env.HF_API_KEY);
+  console.log('[AI] OPENAI_API_KEY present:', !!process.env.OPENAI_API_KEY);
   const normalizedTheme = normalizeTheme(theme);
   const db = await getDb();
   const collection = db.collection(collectionName);

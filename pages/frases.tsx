@@ -152,6 +152,72 @@ const getFormattedDate = () => {
   return `${year}-${month}-${day}`;
 }
 
+const TIMED_MODE_SECONDS = 30;
+
+
+function HourglassTimer({ timeLeft, total }: { timeLeft: number; total: number }) {
+  const ratio = timeLeft / total;
+
+  // Polígonos para o clip da ampulheta
+  const topPoly   = "10,8 40,8 25,40";
+  const bottomPoly = "10,72 40,72 25,40";
+
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <svg width="54" height="84" viewBox="0 0 50 80">
+        {/* Defs para clips */}
+        <defs>
+          <clipPath id="topSandClip">
+            <polygon points={topPoly} />
+          </clipPath>
+          <clipPath id="bottomSandClip">
+            <polygon points={bottomPoly} />
+          </clipPath>
+        </defs>
+
+        {/* Moldura — barras horizontais */}
+        <rect x="5"  y="2"  width="40" height="6" rx="3" fill="#1e3a5f" />
+        <rect x="5"  y="72" width="40" height="6" rx="3" fill="#1e3a5f" />
+
+        {/* Moldura — lados diagonais */}
+        <line x1="8"  y1="5"  x2="25" y2="40" stroke="#1e3a5f" strokeWidth="3" />
+        <line x1="42" y1="5"  x2="25" y2="40" stroke="#1e3a5f" strokeWidth="3" />
+        <line x1="8"  y1="75" x2="25" y2="40" stroke="#1e3a5f" strokeWidth="3" />
+        <line x1="42" y1="75" x2="25" y2="40" stroke="#1e3a5f" strokeWidth="3" />
+
+        {/* Areia de cima (diminui conforme o tempo passa) */}
+        <rect
+          x="10"
+          y={8 + 32 * (1 - ratio)}
+          width="30"
+          height={32 * ratio}
+          fill="#f59e0b"
+          clipPath="url(#topSandClip)"
+        />
+
+        {/* Areia de baixo (aumenta conforme o tempo passa) */}
+        <rect
+          x="10"
+          y={72 - 32 * (1 - ratio)}
+          width="30"
+          height={32 * (1 - ratio)}
+          fill="#f59e0b"
+          clipPath="url(#bottomSandClip)"
+        />
+      </svg>
+
+      {/* Contador numérico — fica vermelho e pisca nos últimos 10s */}
+      <span
+        className={`text-sm font-bold ${
+          timeLeft <= 10 ? 'text-red-400 animate-pulse' : 'text-yellow-300'
+        }`}
+      >
+        {timeLeft}s
+      </span>
+    </div>
+  );
+}
+
 
 export default function Frase({}: GameProps) {
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
@@ -165,6 +231,8 @@ export default function Frase({}: GameProps) {
   const [logoutTimeoutId, setLogoutTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
   const [showRestart, setShowRestart] = useState(false)
+  const [timeLeft, setTimeLeft] = useState(TIMED_MODE_SECONDS);
+  const [timerActive, setTimerActive] = useState(false);
   const [showCongrats, setShowCongrats] = useState(false)
 
   const [theme, setTheme] = useState('')
@@ -250,9 +318,10 @@ export default function Frase({}: GameProps) {
   const [searchResultsVideo, setSearchResultsVideo] = useState<Video[]>([]);
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const [currentVideoInfo, setCurrentVideoInfo] = useState<Video | null>(null);
-    
+
   const [remainingAttempts, setRemainingAttempts] = useState(4); // Começa com 4 tentativas
-  
+  const [hasNewAIContent, setHasNewAIContent] = useState(false);
+
   const soundListBoxRef = useRef<HTMLDivElement>(null);
   const videoListBoxRef = useRef<HTMLDivElement>(null);
   const [currentTime, setCurrentTime] = useState(0);
@@ -848,6 +917,30 @@ export default function Frase({}: GameProps) {
     }
   }, [correctAnswersCount, isReviewUnlocked, lockRotation, lockY, playUnlockSound]);
 
+
+  useEffect(() => {
+    if (images.length === 0) return;
+
+    // Inicia ou reinicia o timer quando as imagens chegam
+    setTimeLeft(TIMED_MODE_SECONDS);
+    setTimerActive(true);
+
+    const interval = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          setTimerActive(false);
+         
+          setShowRestart(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval); 
+  }, [images]);
+
   
   const handleMouseEnter = () => {
     clearTimeout(logoutTimeoutId as NodeJS.Timeout); // Limpa qualquer timeout pendente
@@ -890,6 +983,8 @@ export default function Frase({}: GameProps) {
       console.log('🔁 Dados recebidos:', data) // <-- Adicione isso para depuração
   
       setImages(data);
+      const hasAI = data.some((img: any) => img.aiGenerated === true);
+      if (hasAI) setHasNewAIContent(true);
       imageRefs.current = []; // limpa os refs antigos
       setResults(Array(data.length).fill(null));
     } catch (error) {
@@ -1317,6 +1412,16 @@ export default function Frase({}: GameProps) {
               }
             </span>
             <img src={session.user.image || ''} alt="Avatar" className="w-10 h-10 rounded-full border-2 border-lightblue" />
+            <button
+              onClick={() => setHasNewAIContent(false)}
+              title="Novo conteúdo gerado pela IA disponível"
+              className="relative text-gray-300 hover:text-yellow-300 transition ml-2"
+            >
+              <span className="text-xl">🔔</span>
+              {hasNewAIContent && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full border-2 border-gray-900 animate-pulse" />
+              )}
+            </button>
           </div>
           <div
             className={`absolute border border-blue right-0 mt-2 text-black py-2 px-4 rounded shadow-lg z-10 ${
@@ -2037,6 +2142,7 @@ export default function Frase({}: GameProps) {
               setShowRestart(false);
               setRemainingAttempts(4);
               setResults([]);
+              setTimeLeft(TIMED_MODE_SECONDS);
             }}
             className="mt-6 border border-e-red text-red bg-transparent hover:bg-lightblue hover:text-white px-4 py-2 rounded shadow transition cursor-pointer"
           >
@@ -2050,6 +2156,13 @@ export default function Frase({}: GameProps) {
 
       <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-indigo-900 to-purple-900 min-h-screen text-gray-100">
         
+        {/* Ampulheta com contagem regressiva */}
+        {images.length > 0 && (
+          <div className="flex justify-center mb-4">
+            <HourglassTimer timeLeft={timeLeft} total={TIMED_MODE_SECONDS} />
+          </div>
+        )}
+
         <div className="mb-2 text-center">
           Rodada: <span className="font-semibold text-blue">{round}</span> | Acertos: <span className="font-semibold text-green">{correctAnswersCount} / {images.length}</span>
         </div>
@@ -2058,7 +2171,7 @@ export default function Frase({}: GameProps) {
           <div className="text-center text-lg text-gray-300 animate-pulse">🔍 Procurando imagens...</div>
         ) : (
           <>
-            <div className="flex flex-wrap justify-center gap-6 w-full max-w-6xl mt-6 cursor-pointer">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 w-full max-w-4xl mt-6 cursor-pointer">
               {images.map((img, index) => (
                 <motion.div
                   key={index}
@@ -2068,7 +2181,7 @@ export default function Frase({}: GameProps) {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3, delay: index * 0.1 }}
-                  className="bg-transparent text-black p-4 rounded-2xl flex-grow shadow-2xl max-w-[250px] transition transform hover:scale-105 flex flex-col items-center "
+                  className="bg-transparent text-black p-4 rounded-2xl shadow-2xl transition transform hover:scale-105 flex flex-col items-center "
                 >
                   <img
                     src={img.url}

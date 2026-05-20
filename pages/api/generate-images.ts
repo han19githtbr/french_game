@@ -15,8 +15,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Método não permitido' });
   }
 
-  const { theme } = req.body;
+  const { theme, count = 4 } = req.body;
 
+    
   if (!theme) {
     return res.status(400).json({ error: 'Tema não fornecido.' });
   }
@@ -38,7 +39,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Tema inválido ou sem imagens suficientes.' });
     }
 
-    const selectedImages = shuffle(themeImages).slice(0, 4);
+    const safeCount = Math.min(count, themeImages.length);
+
+    const selectedImages = shuffle(themeImages).slice(0, safeCount);
     const allTitles = themeImages.map(img => img.title);
 
     const imagesWithOptions = selectedImages.map(img => ({

@@ -1050,7 +1050,7 @@ export default function Game({}: GameProps) {
     clearTimeout(logoutTimeoutId as NodeJS.Timeout);
   };
   
-  const loadImages = async () => {
+  const loadImages = async (imageCount: number = 4) => {
     setLoading(true)
     setResults([]);
     console.log('Tema sendo enviado:', theme);  
@@ -1060,7 +1060,7 @@ export default function Game({}: GameProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ theme }),
+        body: JSON.stringify({ theme, count: imageCount }),
       });
   
       if (!res.ok) {
@@ -2436,13 +2436,29 @@ export default function Game({}: GameProps) {
         </div>
 
 
-        <div className="relative">
-          <button 
-            onClick={() => router.push('/classes')} 
-            className="w-64 bg-transparent border border-green hover:border-gray-100 text-green animate-pulse-slow px-7 py-1 rounded-lg text-lg font-medium transition-colors relative cursor-pointer"
+        <div className="relative flex flex-col items-center">
+          {!isPremium && (
+            <p className="text-sm text-gray-400 mb-1 text-center">
+              Este nível está disponível para assinantes Premium.
+            </p>
+          )}
+          <button
+            onClick={() => {
+              if (!isPremium) {
+                setPremiumModalOpen(true); // abre o modal de upgrade já existente
+                return;
+              }
+              router.push('/classes');
+            }}
+            className={`w-64 bg-transparent border px-7 py-1 rounded-lg text-lg font-medium transition-colors relative
+              ${isPremium
+                ? 'border-green text-green animate-pulse-slow cursor-pointer hover:border-gray-100'
+                : 'border-gray-400 text-gray-400 cursor-not-allowed'
+              }`}
           >
+            {!isPremium && <LockClosedIcon className="w-5 h-5 inline-block mr-2" />}
             <span>Curiosidades!</span>
-            {notificationCount > 0 && (
+            {isPremium && notificationCount > 0 && (
               <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
                 {notificationCount}
               </span>

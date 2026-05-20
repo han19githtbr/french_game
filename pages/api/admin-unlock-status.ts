@@ -1,0 +1,13 @@
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { getDb } from '../../lib/mongodb';
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const db = await getDb();
+  const records = await db.collection('admin_unlocks').find({}).toArray();
+  const now = Date.now();
+  const unlocks: Record<string, boolean> = {};
+  for (const r of records) {
+    unlocks[r.section] = r.expiryMs > now;
+  }
+  return res.status(200).json({ unlocks });
+}

@@ -21,7 +21,7 @@ export default function AdminPage() {
   const [unlockSection, setUnlockSection] = useState<'frases' | 'ditados' | ''>('');
   const [unlockDays, setUnlockDays] = useState(1);
   const [unlockStatus, setUnlockStatus] = useState('');
-
+  const [currentUnlocks, setCurrentUnlocks] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -52,6 +52,14 @@ export default function AdminPage() {
       socket.off('newPostNotification');
     };
   }, [socket]);
+
+
+  useEffect(() => {
+    fetch('/api/admin-unlock-status')
+      .then(r => r.json())
+      .then(data => { if (data.unlocks) setCurrentUnlocks(data.unlocks); })
+      .catch(() => {});
+  }, []);
 
 
   if (status === 'loading' || session?.user?.email !== ADMIN_EMAIL) {
@@ -137,7 +145,7 @@ export default function AdminPage() {
               Selecione uma seção e defina por quantos dias ela ficará desbloqueada para todos os usuários.
               O desbloqueio é salvo via API e resolvido no client do usuário.
             </p>
- 
+
             <div className="space-y-4">
               <div>
                 <label className="text-sm text-gray-300 mb-1 block">Seção a desbloquear</label>
@@ -149,9 +157,21 @@ export default function AdminPage() {
                   <option value="">Selecione...</option>
                   <option value="frases">Frases em Francês</option>
                   <option value="ditados">Ditados em Francês</option>
+                  <option value="curiosidades">Curiosidades!</option>
                 </select>
               </div>
- 
+
+              {/* Indicador de status atual da seção selecionada */}
+              {unlockSection && (
+                <div className={`text-sm px-3 py-2 rounded-lg border ${
+                  currentUnlocks[unlockSection]
+                    ? 'bg-green-900/40 text-green-300 border-green-700'
+                    : 'bg-gray-700/40 text-gray-400 border-gray-600'
+                }`}>
+                  Status atual: {currentUnlocks[unlockSection] ? '🔓 Desbloqueada' : '🔒 Bloqueada'}
+                </div>
+              )}
+
               <div>
                 <label className="text-sm text-gray-300 mb-1 block">Duração (dias)</label>
                 <input
@@ -160,32 +180,57 @@ export default function AdminPage() {
                   max={30}
                   value={unlockDays}
                   onChange={e => setUnlockDays(Number(e.target.value))}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-yellow-500"
+                  disabled={!!(unlockSection && currentUnlocks[unlockSection])}
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-yellow-500 disabled:opacity-40"
                 />
               </div>
- 
-              <button
-                onClick={async () => {
-                  if (!unlockSection) return;
-                  const expiryMs = Date.now() + unlockDays * 24 * 60 * 60 * 1000;
-                  const res = await fetch('/api/admin-unlock', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ section: unlockSection, expiryMs }),
-                  });
-                  const data = await res.json();
-                  setUnlockStatus(
-                    data.ok
-                      ? `✅ "${unlockSection}" desbloqueado por ${unlockDays} dia(s).`
-                      : '❌ Erro ao desbloquear.'
-                  );
-                }}
-                className="w-full bg-yellow-600 hover:bg-yellow-500 text-black font-bold py-2.5 rounded-lg transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={!unlockSection}
-              >
-                Desbloquear agora
-              </button>
- 
+
+              {/* Botão de ação: desbloquear OU re-bloquear conforme o estado */}
+              {unlockSection && currentUnlocks[unlockSection] ? (
+                <button
+                  onClick={async () => {
+                    const res = await fetch('/api/admin-unlock', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ section: unlockSection, action: 'lock' }),
+                    });
+                    const data = await res.json();
+                    if (data.ok) {
+                      setCurrentUnlocks(prev => ({ ...prev, [unlockSection]: false }));
+                      setUnlockStatus(`🔒 "${unlockSection}" bloqueada novamente.`);
+                    } else {
+                      setUnlockStatus('❌ Erro ao bloquear.');
+                    }
+                  }}
+                  className="w-full bg-red-700 hover:bg-red-600 text-white font-bold py-2.5 rounded-lg transition cursor-pointer"
+                >
+                  🔒 Bloquear novamente
+                </button>
+              ) : (
+                <button
+                  onClick={async () => {
+                    if (!unlockSection) return;
+                    const expiryMs = Date.now() + unlockDays * 24 * 60 * 60 * 1000;
+                    const res = await fetch('/api/admin-unlock', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ section: unlockSection, expiryMs, action: 'unlock' }),
+                    });
+                    const data = await res.json();
+                    if (data.ok) {
+                      setCurrentUnlocks(prev => ({ ...prev, [unlockSection]: true }));
+                      setUnlockStatus(`✅ "${unlockSection}" desbloqueada por ${unlockDays} dia(s).`);
+                    } else {
+                      setUnlockStatus('❌ Erro ao desbloquear.');
+                    }
+                  }}
+                  disabled={!unlockSection}
+                  className="w-full bg-yellow-600 hover:bg-yellow-500 text-black font-bold py-2.5 rounded-lg transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  🔓 Desbloquear agora
+                </button>
+              )}
+
               {unlockStatus && (
                 <p className="text-sm text-center mt-2 text-green-300">{unlockStatus}</p>
               )}
