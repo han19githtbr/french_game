@@ -182,6 +182,7 @@ export default function Game({}: GameProps) {
   const [wrongSound, setWrongSound] = useState<HTMLAudioElement | null>(null)
   
   const [isFrasesUnlocked, setIsFrasesUnlocked] = useState(false);
+  const [isCuriosidadesUnlocked, setIsCuriosidadesUnlocked] = useState(false);
   const [showLockMessage, setShowLockMessage] = useState(false);
 
   const [isProverbsUnlocked, setIsProverbsUnlocked] = useState(false);
@@ -689,22 +690,7 @@ export default function Game({}: GameProps) {
     }
   };
    
-  // Localmente
   
-  /*useEffect(() => {
-    if (status === 'unauthenticated') router.push('/');
-    const storedConquests = localStorage.getItem('conquests');
-    if (storedConquests) {
-      const parsedConquests: Conquest[] = JSON.parse(storedConquests);
-      // Filtrar as conquistas para manter apenas as do dia atual
-      const currentDate = getFormattedDate();
-      const filteredConquests = parsedConquests.filter((conquest: Conquest) => conquest.date === currentDate); // Use a interface Conquest no filtro
-      setPublishedConquests(filteredConquests);
-
-    }
-  }, [status, router]);*/
-
-
   const fetchRecentConquests = async () => {
     try {
       const response = await fetch('/api/conquests/today');
@@ -886,117 +872,8 @@ export default function Game({}: GameProps) {
   }, [showCongrats, images]);
   
 
+  
   /*useEffect(() => {
-    const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
-    const now = Date.now();
-
-    // --- Lógica de Carregamento/Persistência (Frases) ---
-    const storedFrasesUnlockTime = localStorage.getItem('frasesUnlockTime');
-    if (storedFrasesUnlockTime && (now - parseInt(storedFrasesUnlockTime, 10) < ONE_DAY_IN_MS)) {
-      if (!isFrasesUnlocked) {
-        setIsFrasesUnlocked(true);
-        setRemainingAttempts(maxAttempts); // Resetar tentativas ao desbloquear via persistência
-      }
-    } else {
-      if (isFrasesUnlocked) {
-        setIsFrasesUnlocked(false);
-        localStorage.removeItem('frasesUnlockTime');
-      }
-    }
-
-    // --- Lógica de Carregamento/Persistência (Provérbios) ---
-    const storedProverbsUnlockTime = localStorage.getItem('proverbsUnlockTime');
-    if (storedProverbsUnlockTime && (now - parseInt(storedProverbsUnlockTime, 10) < ONE_DAY_IN_MS)) {
-      if (!isProverbsUnlocked) {
-        setIsProverbsUnlocked(true);
-        setRemainingAttempts(maxAttempts); // Resetar tentativas ao desbloquear via persistência
-        
-      }
-    } else {
-      if (isProverbsUnlocked) {
-        setIsProverbsUnlocked(false);
-        localStorage.removeItem('proverbsUnlockTime');
-      }
-    }
-
-    // --- Lógica de Desbloqueio POR PONTUAÇÃO (Frases) ---
-    if (correctAnswersCount >= 4) {
-      if (!isFrasesUnlocked && !isFrasesUnlocking) {
-        setIsFrasesUnlocking(true);
-        playUnlockSound();
-        setShowUnlockFrasesAnimation(true);
-        // REMOVIDO: setShowUnlockWarningModal(true); AQUI para o desbloqueio de Frases
-        console.log("Desbloqueando Frases por pontuação. hasShownUnlockLevelWarning:", hasShownUnlockLevelWarning); // Debug
-        
-        setTimeout(() => {
-          setIsFrasesUnlocked(true);
-          setIsFrasesUnlocking(false);
-          handleUnlockAnimationEnd(setShowUnlockFrasesAnimation);
-          localStorage.setItem('frasesUnlockTime', Date.now().toString());
-          setRemainingAttempts(maxAttempts);
-        }, 1000);
-      }
-    }
-    // --- Lógica de Desbloqueio POR PONTUAÇÃO (Provérbios) ---
-    else if (correctAnswersCount === 2) {
-      if (!isProverbsUnlocked && !isProverbsUnlocking) {
-        setIsProverbsUnlocking(true);
-        playUnlockSound();
-        setShowUnlockProverbsAnimation(true);
-        
-        // AQUI: A condição para mostrar o modal de aviso APENAS se ainda não foi mostrado
-        // (isto é, a primeira vez que o usuário atinge 2 acertos NESSA SESSÃO de jogo).
-        if (!hasShownUnlockLevelWarning) { 
-          setShowUnlockWarningModal(true); // Abre o modal de aviso de duração
-          setHasShownUnlockLevelWarning(true); // Marca que o aviso já foi mostrado
-          console.log("Desbloqueando Provérbios por pontuação. Aviso de desbloqueio ativado!"); // Debug
-        } else {
-            console.log("Desbloqueando Provérbios, mas aviso de desbloqueio já foi mostrado nesta sessão (provavelmente pelo localStorage)."); // Debug
-        }
-
-        setTimeout(() => {
-          setIsProverbsUnlocked(true);
-          setIsProverbsUnlocking(false);
-          handleUnlockAnimationEnd(setShowUnlockProverbsAnimation);
-          localStorage.setItem('proverbsUnlockTime', Date.now().toString());
-          setRemainingAttempts(maxAttempts);
-        }, 1000);
-      }
-    }
-
-    // --- Lógica de Desbloqueio da Revisão (mantenha aqui) ---
-    if (correctAnswersCount >= 4) { // Condição para desbloquear a revisão (ex: 3 acertos, ajuste se necessário)
-      if (!isReviewUnlocked && !isReviewUnlocking) {
-        setIsReviewUnlocking(true);
-        setShowUnlockReviewAnimation(true);
-                
-        playUnlockSound();
-        
-        setTimeout(() => {
-          setIsReviewUnlocked(true);
-          setIsReviewUnlocking(false);
-          handleUnlockAnimationEnd(setShowUnlockReviewAnimation);
-        }, 1000);
-      }
-    }
-
-  // Dependências do useEffect
-    }, [
-      correctAnswersCount,
-      isFrasesUnlocked,
-      isProverbsUnlocked,
-      isReviewUnlocked,
-      playUnlockSound,
-      isFrasesUnlocking,
-      isProverbsUnlocking,
-      isReviewUnlocking,
-      handleUnlockAnimationEnd,
-      hasShownUnlockLevelWarning, // ESSA DEPENDÊNCIA É CRÍTICA PARA A LÓGICA
-    // animate, lockRotation, lockY // Se usados como dependências
-  ]);*/
-
-
-  useEffect(() => {
     const premiumActive = loadPremiumAccess();
     setIsFrasesUnlocked(premiumActive);
     setIsProverbsUnlocked(premiumActive);
@@ -1028,6 +905,25 @@ export default function Game({}: GameProps) {
         localStorage.removeItem('adminProverbsUnlockExpiry');
       }
     }
+  }, []);*/
+
+
+  useEffect(() => {
+    const premiumActive = loadPremiumAccess();
+    setIsFrasesUnlocked(premiumActive);
+    setIsProverbsUnlocked(premiumActive);
+
+    // Consulta a API de desbloqueio administrativo (salvo no banco pelo admin)
+    fetch('/api/admin-unlock-status')
+      .then(r => r.json())
+      .then(data => {
+        if (data.unlocks) {
+          if (data.unlocks['frases']) setIsFrasesUnlocked(true);
+          if (data.unlocks['ditados']) setIsProverbsUnlocked(true);
+          if (data.unlocks['curiosidades']) setIsCuriosidadesUnlocked(true);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   
@@ -1196,33 +1092,7 @@ export default function Game({}: GameProps) {
     }
   }
 
-  // localmente
-  /*const handlePublishConquest = () => {
-    const videoData: Conquest = {
-      user: session?.user?.name || 'Anônimo',
-      plays: currentRoundPlays,
-      views: 0,
-      timestamp: new Date(),
-      date: getFormattedDate(),
-
-    };
-    setPublishedConquests(prev => [...prev, videoData]);
-    setNewConquestCount(prev => prev + 1);
-    toast.success('Conquista publicada com sucesso!', {
-      position: "top-right", // Onde a notificação aparecerá
-      autoClose: 3000, // Tempo em milissegundos para fechar automaticamente
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "light", // Ou "dark", se preferir
-    });
-    setShowPublishButton(false);
-    setCurrentRoundPlays([]);
-  };*/
-
-
+  
   const handlePublishConquest = async () => {
     const videoData: Conquest = {
       user: session?.user?.name || 'Anônimo',
@@ -1306,16 +1176,7 @@ export default function Game({}: GameProps) {
     startAutomaticReplay(publishedConquests[index].plays);
   };
 
-  // Localmente
-
-  // Função para incrementar o contador de visualizações
-  /*const incrementViewCount = (index: number) => {
-    const updatedConquests = [...publishedConquests];
-    updatedConquests[index].views += 1;
-    setPublishedConquests(updatedConquests);
-  };*/
-
-
+  
   const incrementViewCount = async (index: number) => {
     const conquestToUpdate = publishedConquests[index];
     if (conquestToUpdate && conquestToUpdate._id) { // Certifique-se de que a conquista tem um ID do MongoDB
@@ -2444,19 +2305,18 @@ export default function Game({}: GameProps) {
           )}
           <button
             onClick={() => {
-              if (!isPremium) {
-                setPremiumModalOpen(true); // abre o modal de upgrade já existente
+              if (!isPremium && !isCuriosidadesUnlocked) {
+                setPremiumModalOpen(true);
                 return;
               }
               router.push('/classes');
             }}
-            className={`w-64 bg-transparent border px-7 py-1 rounded-lg text-lg font-medium transition-colors relative
-              ${isPremium
-                ? 'border-green text-green animate-pulse-slow cursor-pointer hover:border-gray-100'
-                : 'border-gray-400 text-gray-400 cursor-not-allowed'
-              }`}
-          >
-            {!isPremium && <LockClosedIcon className="w-5 h-5 inline-block mr-2" />}
+            className={`... ${(isPremium || isCuriosidadesUnlocked)
+              ? 'border-green text-green animate-pulse-slow cursor-pointer hover:border-gray-100'
+              : 'border-gray-400 text-gray-400 cursor-not-allowed'
+            }`}
+            >
+            {!isPremium && !isCuriosidadesUnlocked && <LockClosedIcon className="w-5 h-5 inline-block mr-2" />}
             <span>Curiosidades!</span>
             {isPremium && notificationCount > 0 && (
               <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
