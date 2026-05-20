@@ -3,7 +3,7 @@ import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import { Check, X, Minus, Lock, ChevronDown, ChevronLeft, ChevronRight, Pause, Play, FlagIcon } from 'lucide-react'
 import { motion , AnimatePresence, useMotionValue, useTransform, animate, MotionValue} from 'framer-motion'
-import { saveProgress, loadProgress, getProgressSummary, getDailyMission, loadPremiumAccess, unlockPremiumAccess, DailyMission } from '../lib/progress'
+import { saveProgress, loadProgress, getProgressSummary, getProgressSummaryBySource, getDailyMission, loadPremiumAccess, unlockPremiumAccess, DailyMission } from '../lib/progress'
 import { LockClosedIcon, LockOpenIcon, MusicalNoteIcon, ChevronLeftIcon, ChevronRightIcon, GlobeAmericasIcon, CloudIcon, BeakerIcon, VideoCameraIcon, FilmIcon, LanguageIcon, DeviceTabletIcon, ChatBubbleBottomCenterTextIcon, MapPinIcon, ShoppingCartIcon, TvIcon, MoonIcon, FaceSmileIcon } from '@heroicons/react/24/solid';
 import { useSound } from 'use-sound';
 import dynamic from "next/dynamic";
@@ -259,6 +259,9 @@ export default function Game({}: GameProps) {
   const [isPremium, setIsPremium] = useState(false);
   const [premiumModalOpen, setPremiumModalOpen] = useState(false);
   const [gameProgressSummary, setGameProgressSummary] = useState(getProgressSummary([]));
+  const [vocabProgress, setVocabProgress] = useState(getProgressSummaryBySource([], 'vocabulario'));
+  const [frasesProgress, setFrasesProgress] = useState(getProgressSummaryBySource([], 'frases'));
+  const [ditadosProgress, setDitadosProgress] = useState(getProgressSummaryBySource([], 'ditados'));
   const [dailyMission, setDailyMission] = useState<DailyMission | null>(null);
     
   const soundListBoxRef = useRef<HTMLDivElement>(null);
@@ -312,6 +315,9 @@ export default function Game({}: GameProps) {
     const entries = loadProgress();
     setGameProgressSummary(getProgressSummary(entries));
     setDailyMission(getDailyMission(entries));
+    setVocabProgress(getProgressSummaryBySource(entries, 'vocabulario'));
+    setFrasesProgress(getProgressSummaryBySource(entries, 'frases'));
+    setDitadosProgress(getProgressSummaryBySource(entries, 'ditados'));
   };
 
   const activatePremiumPack = () => {
@@ -731,6 +737,9 @@ export default function Game({}: GameProps) {
     const entries = loadProgress();
     setGameProgressSummary(getProgressSummary(entries));
     setDailyMission(getDailyMission(entries));
+    setVocabProgress(getProgressSummaryBySource(entries, 'vocabulario'));
+    setFrasesProgress(getProgressSummaryBySource(entries, 'frases'));
+    setDitadosProgress(getProgressSummaryBySource(entries, 'ditados'));
     const premium = loadPremiumAccess();
     setIsPremium(premium);
     setMaxAttempts(premium ? 6 : 4);
@@ -877,7 +886,7 @@ export default function Game({}: GameProps) {
   }, [showCongrats, images]);
   
 
-  useEffect(() => {
+  /*useEffect(() => {
     const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
     const now = Date.now();
 
@@ -984,7 +993,42 @@ export default function Game({}: GameProps) {
       handleUnlockAnimationEnd,
       hasShownUnlockLevelWarning, // ESSA DEPENDÊNCIA É CRÍTICA PARA A LÓGICA
     // animate, lockRotation, lockY // Se usados como dependências
-  ]);
+  ]);*/
+
+
+  useEffect(() => {
+    const premiumActive = loadPremiumAccess();
+    setIsFrasesUnlocked(premiumActive);
+    setIsProverbsUnlocked(premiumActive);
+
+    // Desbloqueio administrativo por tempo (se existir)
+    const now = Date.now();
+    const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
+
+    const adminFrasesUnlockTime = localStorage.getItem('adminFrasesUnlockTime');
+    const adminFrasesExpiry = localStorage.getItem('adminFrasesUnlockExpiry');
+    if (adminFrasesUnlockTime && adminFrasesExpiry) {
+      const expiryMs = parseInt(adminFrasesExpiry, 10);
+      if (now < expiryMs) {
+        setIsFrasesUnlocked(true);
+      } else {
+        localStorage.removeItem('adminFrasesUnlockTime');
+        localStorage.removeItem('adminFrasesUnlockExpiry');
+      }
+    }
+
+    const adminProverbsUnlockTime = localStorage.getItem('adminProverbsUnlockTime');
+    const adminProverbsExpiry = localStorage.getItem('adminProverbsUnlockExpiry');
+    if (adminProverbsUnlockTime && adminProverbsExpiry) {
+      const expiryMs = parseInt(adminProverbsExpiry, 10);
+      if (now < expiryMs) {
+        setIsProverbsUnlocked(true);
+      } else {
+        localStorage.removeItem('adminProverbsUnlockTime');
+        localStorage.removeItem('adminProverbsUnlockExpiry');
+      }
+    }
+  }, []);
 
   
   const handleMouseEnter = () => {
@@ -1108,7 +1152,7 @@ export default function Game({}: GameProps) {
     const hasWrong = Object.values(newResults).some(r => r && !r.correct_word);
 
     if (currentAnsweredCount === totalCount) {
-      saveProgress(currentCorrectCount, selectedTheme ?? theme ?? 'imagem');
+      saveProgress(currentCorrectCount, selectedTheme ?? theme ?? 'imagem', 'vocabulario');
       refreshProgressState();
     }
 
@@ -2045,56 +2089,56 @@ export default function Game({}: GameProps) {
       </motion.h1>
 
       <div className="grid w-full max-w-6xl gap-4 mb-8 md:grid-cols-3">
-        <div className="rounded-2xl border border-white/10 bg-[#111318] p-5 shadow-lg relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-500/60 to-transparent rounded-t-2xl" />
+        {/* CARD 1 — Missão do Dia */}
+        <div className="rounded-2xl border border-blue-800/60 bg-[#0d1117] p-5 shadow-lg shadow-blue-900/10 relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-500/80 to-transparent rounded-t-2xl" />
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[10px] uppercase tracking-[0.25em] text-gray-400 font-medium">Missão do dia</span>
+            <span className="text-[10px] uppercase tracking-[0.25em] text-blue-400 font-semibold">Missão do dia</span>
             <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full
               ${dailyMission?.completed
                 ? 'bg-green-900/40 text-green-300 border border-green-700/50'
-                : 'bg-yellow-900/40 text-yellow-300 border border-yellow-700/50'
+                : 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/40'
               }`}>
               {dailyMission?.completed ? '✓ Concluída' : '● Em andamento'}
             </span>
           </div>
-          <h2 className="text-xl font-bold text-white mb-2">{dailyMission?.title || 'Carregando missão...'}</h2>
+          <h2 className="text-xl font-bold text-white mb-1">{dailyMission?.title || 'Carregando missão...'}</h2>
           <p className="text-sm text-gray-400 mb-4">{dailyMission?.description || 'Complete atividades de francês para avançar.'}</p>
           <div className="rounded-full bg-white/5 h-1.5 overflow-hidden mb-3">
             <div
-              className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full shadow-[0_0_8px_rgba(96,165,250,0.5)]"
+              className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full shadow-[0_0_8px_rgba(96,165,250,0.5)] transition-all duration-500"
               style={{ width: `${dailyMission ? Math.min(100, Math.round((dailyMission.progress / Math.max(1, dailyMission.target)) * 100)) : 0}%` }}
             />
           </div>
           <p className="text-sm text-gray-300">
             Progresso: <strong className="text-white">{dailyMission?.progress ?? 0}</strong> / {dailyMission?.target ?? 1}
           </p>
-        
-                  
           {dailyMission && !dailyMission.completed && (
-            <p className="mt-2 text-[11px] text-yellow-400/70 flex items-center gap-1">
-              <span>🎁</span> Recompensa: <strong className="text-yellow-300">+{dailyMission.rewardXp} XP</strong>
+            <p className="mt-2 text-[11px] text-yellow-400/80 flex items-center gap-1">
+              🎁 Recompensa: <strong className="text-yellow-300">+{dailyMission.rewardXp} XP</strong>
             </p>
           )}
           {dailyMission?.completed && (
-            <p className="mt-2 text-[11px] text-green-400/70 flex items-center gap-1">
-              <span>✓</span> Bônus de <strong className="text-green-300">+{dailyMission.rewardXp} XP</strong> ganho!
+            <p className="mt-2 text-[11px] text-green-400/80 flex items-center gap-1">
+              ✓ Bônus de <strong className="text-green-300">+{dailyMission.rewardXp} XP</strong> ganho!
             </p>
           )}
-        
         </div>
 
-        <div className="rounded-3xl border border-fuchsia-800 bg-slate-950 p-5 shadow-xl shadow-fuchsia-900/20">
+        {/* CARD 2 — Nível Atual */}
+        <div className="rounded-2xl border border-fuchsia-800/60 bg-[#0d1117] p-5 shadow-lg shadow-fuchsia-900/10 relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-fuchsia-500/80 to-transparent rounded-t-2xl" />
           <div className="flex items-center justify-between mb-3">
-            <span className="text-sm uppercase tracking-[0.2em] text-fuchsia-300">Nível atual</span>
+            <span className="text-[10px] uppercase tracking-[0.25em] text-fuchsia-400 font-semibold">Nível atual</span>
             <span className="text-[11px] text-gray-400">
               Próximo: <span className="text-fuchsia-300 font-semibold">{gameProgressSummary.nextLevelName}</span>
             </span>
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">{gameProgressSummary.levelName}</h2>
+          <h2 className="text-2xl font-bold text-white mb-1">{gameProgressSummary.levelName}</h2>
           <p className="text-sm text-gray-400 mb-4">Nível {gameProgressSummary.currentLevel} • {gameProgressSummary.totalXp} XP</p>
-          <div className="rounded-full bg-gray-800 h-3 overflow-hidden mb-3">
+          <div className="rounded-full bg-white/5 h-1.5 overflow-hidden mb-3">
             <div
-              className="h-full bg-gradient-to-r from-green-400 to-cyan-500"
+              className="h-full bg-gradient-to-r from-fuchsia-400 to-pink-400 rounded-full transition-all duration-500"
               style={{ width: `${gameProgressSummary.levelProgress}%` }}
             />
           </div>
@@ -2103,30 +2147,34 @@ export default function Game({}: GameProps) {
           </p>
         </div>
 
-        <div className="rounded-3xl border border-emerald-800 bg-slate-950 p-5 shadow-xl shadow-emerald-900/20">
+        {/* CARD 3 — Premium Pack */}
+        <div className="rounded-2xl border border-emerald-800/60 bg-[#0d1117] p-5 shadow-lg shadow-emerald-900/10 relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500/80 to-transparent rounded-t-2xl" />
           <div className="flex items-center justify-between mb-3">
-            <span className="text-sm uppercase tracking-[0.2em] text-emerald-300">Premium Pack</span>
-            <span className={`text-xs font-semibold ${isPremium ? 'text-green-300' : 'text-yellow-300'}`}>
+            <span className="text-[10px] uppercase tracking-[0.25em] text-emerald-400 font-semibold">Premium Pack</span>
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${isPremium ? 'bg-emerald-900/40 text-green-300 border border-emerald-700/50' : 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/40'}`}>
               {isPremium ? 'Ativo' : 'Disponível'}
             </span>
           </div>
-          <h2 className="text-xl font-bold text-white mb-2">{isPremium ? 'Bônus ativado' : 'Suporte para liberar'}</h2>
-          <p className="text-sm text-gray-400 mb-4">
+          <h2 className="text-xl font-bold text-white mb-1">{isPremium ? 'Bônus ativado' : 'Suporte para liberar'}</h2>
+          <p className="text-sm text-gray-400 mb-3">
             {isPremium
               ? 'Você tem +2 tentativas por rodada e missões especiais.'
               : 'Apoie o projeto para desbloquear vantagens leves no jogo.'}
           </p>
-          <p className="text-sm text-gray-300 mb-4">Tentativas atuais: <strong className="text-white">{remainingAttempts}</strong> / {maxAttempts}</p>
+          <p className="text-sm text-gray-300 mb-4">
+            Tentativas atuais: <strong className="text-white">{remainingAttempts}</strong> / {maxAttempts}
+          </p>
           {!isPremium ? (
             <button
               onClick={() => setPremiumModalOpen(true)}
-              className="w-full rounded-xl border border-emerald-700/60 bg-emerald-900/20 py-2 text-sm font-semibold text-emerald-200 hover:bg-emerald-900/40 transition"
+              className="w-full rounded-xl border border-emerald-600/70 bg-emerald-900/20 py-2.5 text-sm font-semibold text-emerald-200 hover:bg-emerald-900/40 hover:border-emerald-500 transition-all duration-200 cursor-pointer"
             >
               Apoiar e desbloquear
             </button>
           ) : (
-            <div className="rounded-xl bg-emerald-900/30 p-3 text-sm text-green-200">
-              Premium ativo. Obrigado pelo apoio!
+            <div className="rounded-xl bg-emerald-900/30 border border-emerald-800/40 p-3 text-sm text-green-200">
+              ✓ Premium ativo. Obrigado pelo apoio!
             </div>
           )}
         </div>
@@ -2144,7 +2192,7 @@ export default function Game({}: GameProps) {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="w-full max-w-md rounded-3xl bg-slate-950 p-6 shadow-2xl border border-cyan-700"
+              className="w-full max-w-md rounded-2xl bg-[#111827] p-6 shadow-2xl border border-cyan-600 ring-1 ring-cyan-500/30"
             >
               <h3 className="text-2xl font-bold text-white mb-3">Premium Pack</h3>
               <p className="text-sm text-gray-300 mb-4">Receba um pequeno bônus de jogo e ajude a manter este aplicativo no ar. O pagamento abre em uma página segura do Stripe e você volta ao app automaticamente.</p>
@@ -2182,41 +2230,54 @@ export default function Game({}: GameProps) {
         </div>
 
         <div className="mt-5 grid gap-3 md:grid-cols-3">
-          <div className="rounded-xl border border-white/10 bg-[#0f1117] p-4 hover:border-cyan-700/50 transition-colors">
+          {/* Card 1 — Vocabulário Visual */}
+          <div className="rounded-xl border border-blue-800/40 bg-[#0a0d14] p-4 hover:border-blue-600/60 transition-all duration-200">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold text-white">1. Vocabulario visual</span>
+              <span className="text-sm font-semibold text-white">1. Vocabulário visual</span>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-900/40 text-green-300 border border-green-800/60">
                 Aberto
               </span>
             </div>
             <p className="text-xs text-gray-500 mb-3">Escolha um tema e associe imagem, som e palavra.</p>
-            <p className="text-xs text-cyan-400 font-medium">
-              {gameProgressSummary.uniqueThemes} temas praticados
+            <p className="text-xs text-blue-400 font-medium">
+              {vocabProgress.uniqueThemes} temas praticados
             </p>
           </div>
-          <div className="rounded-xl border border-indigo-800 bg-slate-900 p-4">
-            <div className="flex items-center justify-between">
+
+          {/* Card 2 — Frases Completas */}
+          <div className="rounded-xl border border-indigo-800/40 bg-[#0a0d14] p-4 hover:border-indigo-600/60 transition-all duration-200">
+            <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-semibold text-white">2. Frases completas</span>
               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full
-                ${isFrasesUnlocked
+                ${isPremium
                   ? 'bg-green-900/40 text-green-300 border border-green-800/60'
-                  : 'bg-yellow-900/40 text-yellow-300 border border-yellow-700/50'
+                  : 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/40'
                 }`}>
-                {isFrasesUnlocked ? 'Liberado' : 'Meta: 4 acertos'}
+                {isPremium ? 'Premium' : 'Requer Premium'}
               </span>
             </div>
-            <p className="mt-2 text-sm text-gray-400">Treine contexto e construcao de frases apos dominar uma rodada.</p>
-            <p className="mt-3 text-xs text-indigo-200">{gameProgressSummary.perfectRounds} rodadas perfeitas</p>
+            <p className="text-xs text-gray-500 mb-3">Treine contexto e construção de frases após dominar uma rodada.</p>
+            <p className="text-xs text-indigo-300 font-medium">
+              {frasesProgress.perfectRounds} rodadas perfeitas
+            </p>
           </div>
-          <div className="rounded-xl border border-emerald-800 bg-slate-900 p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-white">3. Ditados e expressoes</span>
-              <span className={`text-xs ${isProverbsUnlocked ? 'text-green-300' : 'text-yellow-300'}`}>
-                {isProverbsUnlocked ? 'Liberado' : 'Meta: 2 acertos'}
+
+          {/* Card 3 — Ditados e Expressões */}
+          <div className="rounded-xl border border-emerald-800/40 bg-[#0a0d14] p-4 hover:border-emerald-600/60 transition-all duration-200">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-semibold text-white">3. Ditados e expressões</span>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full
+                ${isPremium
+                  ? 'bg-green-900/40 text-green-300 border border-green-800/60'
+                  : 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/40'
+                }`}>
+                {isPremium ? 'Premium' : 'Requer Premium'}
               </span>
             </div>
-            <p className="mt-2 text-sm text-gray-400">Ganhe repertorio real para entender falas naturais em frances.</p>
-            <p className="mt-3 text-xs text-emerald-200">Sequencia perfeita: {gameProgressSummary.perfectStreak}</p>
+            <p className="text-xs text-gray-500 mb-3">Ganhe repertório real para entender falas naturais em francês.</p>
+            <p className="text-xs text-emerald-300 font-medium">
+              Sequência perfeita: {ditadosProgress.perfectStreak}
+            </p>
           </div>
         </div>
       </div>
@@ -2393,7 +2454,7 @@ export default function Game({}: GameProps) {
         {/* Botão "Frases em Francês" */}
         <div className="w-64 flex flex-col items-center">
           {!isFrasesUnlocked && (
-            <p className="text-sm text-gray-400 mb-1 text-center">Selecione uma opção e complete 4 acertos para desbloquear este nível.</p>
+            <p className="text-sm text-gray-400 mb-1 text-center">Este nível está disponível para assinantes Premium.</p>
           )}
           <motion.button
             className={`flex items-center justify-center py-3 px-7 rounded-md mt-2 font-semibold transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75 shadow-[0_0_15px_rgba(0,255,255,0.6)] hover:shadow-[0_0_25px_rgba(0,255,255,0.8)]
@@ -2450,7 +2511,7 @@ export default function Game({}: GameProps) {
         {/* Botão "Ditados em Francês" */}
         <div className="w-64 flex flex-col items-center relative">
           {!isProverbsUnlocked && (
-            <p className="text-sm text-gray-400 mb-1 text-center">Selecione uma opção e complete 2 acertos para desbloquear este nível.</p>
+            <p className="text-sm text-gray-400 mb-1 text-center">Este nível está disponível para assinantes Premium.</p>
           )}
           <motion.button
             className={`flex items-center justify-center py-3 px-6 rounded-md mt-4 font-semibold transition duration-300 ease-in-out focus:outline-none animate-pulse-slow ${

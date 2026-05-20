@@ -5,6 +5,7 @@ export interface LearningProgressEntry {
   date: string
   xp: number
   perfect: boolean
+  source?: 'vocabulario' | 'frases' | 'ditados'
 }
 
 export interface DailyMission {
@@ -64,6 +65,7 @@ const normalizeEntry = (item: any, index: number): LearningProgressEntry => {
     date,
     xp,
     perfect,
+    source: item.source ?? 'vocabulario',
   }
 }
 
@@ -80,7 +82,7 @@ export const unlockPremiumAccess = () => {
   return true
 }
 
-export const saveProgress = (score: number, theme?: string) => {
+export const saveProgress = (score: number, theme?: string, source: LearningProgressEntry['source'] = 'vocabulario') => {
   if (typeof window === 'undefined') return
 
   const saved = window.localStorage.getItem(STORAGE_KEY) || window.localStorage.getItem(LEGACY_STORAGE_KEY)
@@ -92,6 +94,7 @@ export const saveProgress = (score: number, theme?: string) => {
     date: new Date().toISOString().split('T')[0],
     xp: score * 10 + (score >= 4 ? 20 : 0),
     perfect: score >= 4,
+    source,
   }
   parsed.push(entry)
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed))
@@ -203,4 +206,22 @@ export const getDailyMission = (entries: LearningProgressEntry[]): DailyMission 
     completed: progress >= target,
     rewardXp,
   }
+
+}
+
+
+export const getProgressSummaryBySource = (entries: LearningProgressEntry[], source: LearningProgressEntry['source']) => {
+    const filtered = entries.filter(e => e.source === source)
+    return {
+      uniqueThemes: new Set(filtered.filter(e => e.theme).map(e => e.theme?.toLowerCase())).size,
+      perfectRounds: filtered.filter(e => e.perfect).length,
+      perfectStreak: (() => {
+        let streak = 0
+        for (let i = filtered.length - 1; i >= 0; i--) {
+          if (filtered[i].perfect) streak++; else break
+        }
+        return streak
+      })(),
+      totalRounds: filtered.length,
+    }
 }

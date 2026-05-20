@@ -18,6 +18,9 @@ export default function AdminPage() {
   const [notificationCount, setNotificationCount] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const socket = useSocket();
+  const [unlockSection, setUnlockSection] = useState<'frases' | 'ditados' | ''>('');
+  const [unlockDays, setUnlockDays] = useState(1);
+  const [unlockStatus, setUnlockStatus] = useState('');
 
 
   useEffect(() => {
@@ -64,23 +67,30 @@ export default function AdminPage() {
 
   return (
     <div className="relative min-h-screen bg-gray-900 text-white">
+ 
       {/* Top bar */}
       <div className="w-full flex justify-between items-center px-6 py-8 bg-gray-800 shadow-md">
-        <div className="flex items-center space-x-2 ">
-          <button 
-            onClick={() => setActiveTab('create')} 
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setActiveTab('create')}
             className={`px-3 py-1 rounded-lg text-sm ${activeTab === 'create' ? 'border border-e-lightblue cursor-pointer' : 'border border-e-lightblue cursor-pointer hover:bg-gray-600'}`}
           >
             Criar Publicação
           </button>
-          <button 
-            onClick={() => setActiveTab('view')} 
-            className={`px-3 py-1 rounded-lg text-sm ${activeTab === 'view' ? 'border border-e-green cursor-pointer ' : 'border border-e-green hover:bg-gray-600 cursor-pointer'}`}
+          <button
+            onClick={() => setActiveTab('view')}
+            className={`px-3 py-1 rounded-lg text-sm ${activeTab === 'view' ? 'border border-e-green cursor-pointer' : 'border border-e-green hover:bg-gray-600 cursor-pointer'}`}
           >
             Ver Publicações
           </button>
+          <button
+            onClick={() => setActiveTab('unlock')}
+            className={`px-3 py-1 rounded-lg text-sm ${activeTab === 'unlock' ? 'border border-yellow-500 cursor-pointer' : 'border border-yellow-500/50 cursor-pointer hover:bg-gray-600'}`}
+          >
+            🔓 Desbloquear Seções
+          </button>
         </div>
-        
+ 
         <div className="relative flex items-center gap-2" ref={dropdownRef}>
           <NotificationBadge count={notificationCount} />
           <p className="text-sm font-sm hidden sm:block">{session.user?.name}</p>
@@ -94,9 +104,9 @@ export default function AdminPage() {
               className="object-cover w-full h-full cursor-pointer"
             />
           </button>
-
+ 
           {dropdownOpen && (
-            <div className="absolute right-0 mt-34 w-44 bg-transparent border border-e-lightblue text-white rounded-xl shadow-lg z-50 animate-fade-in-up ">
+            <div className="absolute right-0 mt-34 w-44 bg-transparent border border-e-lightblue text-white rounded-xl shadow-lg z-50 animate-fade-in-up">
               <button
                 onClick={() => signOut({ callbackUrl: '/' })}
                 className="flex items-center w-full px-4 py-2 text-sm hover:border border-green rounded-xl transition cursor-pointer"
@@ -108,14 +118,81 @@ export default function AdminPage() {
           )}
         </div>
       </div>
-      
+ 
       {/* Main content */}
       <div className="container mx-auto px-4 py-8 mt-20">
-        {activeTab === 'create' ? (
+ 
+        {activeTab === 'create' && (
           <PostForm onPostCreated={handlePostCreated} />
-        ) : (
+        )}
+ 
+        {activeTab === 'view' && (
           <PostList />
         )}
+ 
+        {activeTab === 'unlock' && (
+          <div className="max-w-lg mx-auto bg-gray-800 rounded-2xl p-6 border border-yellow-600/40 shadow-xl">
+            <h2 className="text-xl font-bold text-yellow-300 mb-4">🔓 Desbloqueio Administrativo</h2>
+            <p className="text-sm text-gray-400 mb-6">
+              Selecione uma seção e defina por quantos dias ela ficará desbloqueada para todos os usuários.
+              O desbloqueio é salvo via API e resolvido no client do usuário.
+            </p>
+ 
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm text-gray-300 mb-1 block">Seção a desbloquear</label>
+                <select
+                  value={unlockSection}
+                  onChange={e => setUnlockSection(e.target.value as any)}
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-yellow-500"
+                >
+                  <option value="">Selecione...</option>
+                  <option value="frases">Frases em Francês</option>
+                  <option value="ditados">Ditados em Francês</option>
+                </select>
+              </div>
+ 
+              <div>
+                <label className="text-sm text-gray-300 mb-1 block">Duração (dias)</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={30}
+                  value={unlockDays}
+                  onChange={e => setUnlockDays(Number(e.target.value))}
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-yellow-500"
+                />
+              </div>
+ 
+              <button
+                onClick={async () => {
+                  if (!unlockSection) return;
+                  const expiryMs = Date.now() + unlockDays * 24 * 60 * 60 * 1000;
+                  const res = await fetch('/api/admin-unlock', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ section: unlockSection, expiryMs }),
+                  });
+                  const data = await res.json();
+                  setUnlockStatus(
+                    data.ok
+                      ? `✅ "${unlockSection}" desbloqueado por ${unlockDays} dia(s).`
+                      : '❌ Erro ao desbloquear.'
+                  );
+                }}
+                className="w-full bg-yellow-600 hover:bg-yellow-500 text-black font-bold py-2.5 rounded-lg transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={!unlockSection}
+              >
+                Desbloquear agora
+              </button>
+ 
+              {unlockStatus && (
+                <p className="text-sm text-center mt-2 text-green-300">{unlockStatus}</p>
+              )}
+            </div>
+          </div>
+        )}
+ 
       </div>
     </div>
   );
