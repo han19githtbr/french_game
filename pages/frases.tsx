@@ -152,7 +152,7 @@ const getFormattedDate = () => {
   return `${year}-${month}-${day}`;
 }
 
-const TIMED_MODE_SECONDS = 30;
+const TIMED_MODE_SECONDS = 50;
 
 
 function HourglassTimer({ timeLeft, total }: { timeLeft: number; total: number }) {
@@ -494,52 +494,6 @@ export default function Frase({}: GameProps) {
   }, [showNotification]);
 
     
-  /*useEffect(() => {
-      if (selectedTheme) {
-        setSearchStatus('searching');
-        setErrorMessage(null);
-        setCurrentSoundUrl(null);
-        setSearchResults([]);
-        setCurrentSoundInfo(null);
-        setIsPlaying(false);
-
-        const query = selectedTheme;
-  
-        //fetch(`https://freesound.org/apiv2/search/text/?query=${query}&token=${FREESOUND_API_KEY}`)
-        fetch(`https://freesound.org/apiv2/search/text/?query=${query}&fields=id,name,duration,previews,user,url&token=${FREESOUND_API_KEY}`)
-          .then(response => {
-            if (!response.ok) {
-              throw new Error(`Erro na busca: ${response.status}`);
-            }
-            return response.json();
-          })
-          .then(data => {
-            setSearchResults(data.results);
-            if (data.results.length > 0) {
-              setSearchStatus('results');
-            } else {
-              setSearchStatus('results');
-              setErrorMessage(`Nenhum som encontrado para "${query}".`);
-            }
-          })
-          .catch(error => {
-            console.error("Erro ao buscar sons:", error);
-            setErrorMessage("Erro ao buscar sons.");
-            setSearchStatus('error');
-          })
-          .finally(() => {
-            setIsSearching(false);
-          });
-      } else {
-        setCurrentSoundUrl(null);
-        setIsPlaying(false);
-        setSearchStatus('idle');
-        setSearchResults([]);
-        setErrorMessage(null);
-        setCurrentSoundInfo(null);
-      }
-  }, [selectedTheme]);*/
-  
 
   useEffect(() => {
       if (selectedTheme) {
@@ -635,36 +589,7 @@ export default function Frase({}: GameProps) {
     handleThemeSelect(themesSoundCarrossel[nextIndex].id);
   };
   
-  /*const loadAndPlaySound = (soundId: number) => {
-      fetch(`https://freesound.org/apiv2/sounds/${soundId}/?token=${FREESOUND_API_KEY}`)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`Erro ao obter detalhes do som: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then(soundDetails => {
-          setCurrentSoundUrl(soundDetails.previews['preview-hq-mp3']);
-          setCurrentSoundInfo(soundDetails);
-          setIsPlaying(true);
-          // SCROLL AUTOMÁTICO PARA O PLAYER APÓS SELECIONAR UM SOM
-          // *** MUDANÇA AQUI: Adicionar setTimeout ***
-          setTimeout(() => {
-            if (soundListBoxRef.current) {
-              // console.log('Tentando rolar para a visualização...'); // Para debug
-              soundListBoxRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
-            }
-          }, 0); // Timeout de 0ms para agendar a rolagem após a próxima renderização
-
-        })
-        .catch(error => {
-          console.error("Erro ao obter detalhes do som:", error);
-          setErrorMessage("Erro ao obter detalhes do som.");
-          setSearchStatus('error');
-        });
-  };*/
-
-
+  
   const loadAndPlaySound = (soundId: number) => {
     // A requisição agora vai para o seu endpoint de backend '/api/freesound'
     // e envia o 'soundId' no corpo da requisição.
@@ -773,14 +698,7 @@ export default function Frase({}: GameProps) {
   }, [status, router]);
 
 
-  // Salvar as conquistas no localStorage sempre que publishedConquests mudar
-  /*useEffect(() => {
-    // Adicionar a data atual a cada conquista antes de salvar
-    const conquestsWithDate = publishedConquests.map(conquest => ({ ...conquest, date: getFormattedDate() }));
-    localStorage.setItem('conquests', JSON.stringify(conquestsWithDate));
-  }, [publishedConquests]);*/
-
-
+  
   const handleUnlockAnimationEnd = (setter: SetterFunction) => {
     setTimeout(() => {
       setter(false);
@@ -933,10 +851,14 @@ export default function Frase({}: GameProps) {
     setTimerActive(true);
 
     const tickAudio = new Audio('/sounds/clock-ticking.mp3'); // coloque um arquivo tick.mp3 em /public/sounds/
+    tickAudio.volume = 0.5;
+    
     const interval = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(interval);
+          tickAudio.pause();
+          tickAudio.currentTime = 0;
           setTimerActive(false);
           setShowRestart(true);
           return 0;
@@ -950,7 +872,12 @@ export default function Frase({}: GameProps) {
       });
     }, 1000);
 
-    return () => clearInterval(interval); 
+    return () => {
+      clearInterval(interval);
+      // Garante que o som para se o componente desmontar ou imagens mudarem
+      tickAudio.pause();
+      tickAudio.currentTime = 0;
+    }; 
   }, [images]);
 
   
@@ -2199,14 +2126,26 @@ export default function Frase({}: GameProps) {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3, delay: index * 0.1 }}
-                  className="bg-transparent text-black p-4 rounded-2xl shadow-2xl transition transform hover:scale-105 flex flex-col items-center "
+                  className={`p-4 rounded-2xl shadow-2xl transition transform flex flex-col items-center relative
+                    ${timeLeft === 0 && !results[index]
+                      ? 'opacity-50 grayscale pointer-events-none'
+                      : 'bg-transparent text-black hover:scale-105'
+                    }`}
                 >
-                  <img
-                    src={img.url}
-                    alt="imagem"
-                    className="w-full h-48 object-cover rounded-xl cursor-zoom-in"
-                    onClick={() => setZoomedImage(img.url)}
-                  />
+                  <div className="relative w-full">
+                    <img
+                      src={img.url}
+                      alt="imagem"
+                      className="w-full h-48 object-cover rounded-xl cursor-zoom-in"
+                      onClick={() => setZoomedImage(img.url)}
+                    />
+                    {timeLeft === 0 && !results[index] && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-black/60">
+                        <span className="text-4xl">⏱️</span>
+                        <span className="text-white text-sm font-bold mt-1">Tempo esgotado</span>
+                      </div>
+                    )}
+                  </div>
                   <div className="mt-2 text-gray-300">Escolha o título correto:</div>
                   <div className="relative w-full mt-1">
                     <select

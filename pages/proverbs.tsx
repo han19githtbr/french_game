@@ -119,7 +119,7 @@ const themesSoundCarrossel = [
 ];
 
 
-const TIMED_MODE_SECONDS = 30;
+const TIMED_MODE_SECONDS = 50;
 
 function HourglassTimer({ timeLeft, total }: { timeLeft: number; total: number }) {
   const ratio = timeLeft / total;
@@ -824,24 +824,38 @@ export default function Game({}: GameProps) {
   useEffect(() => {
     if (images.length === 0) return;
 
-    // Inicia ou reinicia o timer quando as imagens chegam
     setTimeLeft(TIMED_MODE_SECONDS);
     setTimerActive(true);
+
+    const tickAudio = new Audio('/sounds/tick.mp3');
+    tickAudio.volume = 0.5;
 
     const interval = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(interval);
+          // Para e descarrega o som imediatamente ao zerar
+          tickAudio.pause();
+          tickAudio.currentTime = 0;
           setTimerActive(false);
-          // Tempo esgotado → aciona o fluxo de "tentar novamente"
           setShowRestart(true);
           return 0;
+        }
+        // Toca tick nos últimos 10 segundos
+        if (prev <= 10) {
+          tickAudio.currentTime = 0;
+          tickAudio.play().catch(() => {});
         }
         return prev - 1;
       });
     }, 1000);
 
-    return () => clearInterval(interval); // limpa ao trocar de rodada
+    return () => {
+      clearInterval(interval);
+      // Garante que o som para se o componente desmontar ou imagens mudarem
+      tickAudio.pause();
+      tickAudio.currentTime = 0;
+    };
   }, [images]);
 
 
@@ -2015,14 +2029,26 @@ export default function Game({}: GameProps) {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3, delay: index * 0.1 }}
-                  className="bg-transparent text-black p-4 rounded-2xl shadow-2xl transition transform hover:scale-105 flex flex-col items-center "
+                  className={`p-4 rounded-2xl shadow-2xl transition transform flex flex-col items-center relative
+                    ${timeLeft === 0 && !results[index]
+                      ? 'opacity-50 grayscale pointer-events-none'
+                      : 'bg-transparent text-black hover:scale-105'
+                    }`}
                 >
-                  <img
-                    src={img.url}
-                    alt="imagem"
-                    className="w-full h-48 object-cover rounded-xl cursor-zoom-in"
-                    onClick={() => setZoomedImage(img.url)}
-                  />
+                  <div className="relative w-full">
+                    <img
+                      src={img.url}
+                      alt="imagem"
+                      className="w-full h-48 object-cover rounded-xl cursor-zoom-in"
+                      onClick={() => setZoomedImage(img.url)}
+                    />
+                    {timeLeft === 0 && !results[index] && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-black/60">
+                        <span className="text-4xl">⏱️</span>
+                        <span className="text-white text-sm font-bold mt-1">Tempo esgotado</span>
+                      </div>
+                    )}
+                  </div>
                   <div className="mt-2 text-gray-300">Escolha o título correto:</div>
                   <div className="relative w-full mt-1">
                     <select
@@ -2040,7 +2066,7 @@ export default function Game({}: GameProps) {
                         touch-manipulation
                       `}
                       onChange={e => checkAnswer(index, e.target.value)}
-                      disabled={!!results[index]}
+                      disabled={!!results[index] || timeLeft === 0}
                     >
                       <option value="" className="bg-gray-900 text-white font-semibold cursor-pointer">✅ Selecione</option>
                       {img.options.map((opt: string, i: number) => (
