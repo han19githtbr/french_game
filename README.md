@@ -151,4 +151,4 @@ git add .github/workflows/vercel.yml
 
 npx tsx scripts/seed-images.ts
 
-[![My Skills](https://skillicons.dev/icons?i=ts,next,mongodb,socket)](https://skillicons.dev)
+[![My Skills](https://skillicons.dev/icons?i=ts,next,mongodb,websockets)](https://skillicons.dev)
