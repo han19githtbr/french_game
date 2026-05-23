@@ -150,3 +150,5 @@ git add .github/workflows/vercel.yml
 ## popular o banco de dados(MongoDB)
 
 npx tsx scripts/seed-images.ts
+
+[![My Skills](https://skillicons.dev/icons?i=ts,next.js,mongodb,socket.io)](https://skillicons.dev)
