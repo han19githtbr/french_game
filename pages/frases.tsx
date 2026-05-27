@@ -999,7 +999,7 @@ export default function Frase({}: GameProps) {
     const hasWrong = Object.values(newResults).some(r => r && !r.correct_answer)
         
     if (currentAnsweredCount === totalCount) {
-      saveProgress(currentCorrectCount, 'frases');
+      saveProgress(currentCorrectCount, theme || selectedTheme || 'frases', 'frases', totalCount);
     }
       
     // Se errou alguma imagem, mostra botão para recomeçar

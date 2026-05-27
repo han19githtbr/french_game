@@ -1,6 +1,7 @@
 export interface LearningProgressEntry {
   round: number
   score: number
+  totalQuestions?: number
   theme?: string
   date: string
   xp: number
@@ -33,34 +34,88 @@ export interface ProgressSummary {
   levelProgress: number
   nextLevelName: string
   isPremium: boolean
+  levelDescription: string
+  difficultyLabel: string
 }
 
 const STORAGE_KEY = 'learning_progress'
 const LEGACY_STORAGE_KEY = 'progress_answers'
 const PREMIUM_KEY = 'premium_pack_unlocked'
 
-const LEVEL_NAMES = [
-  'Novato',
-  'Aprendiz',
-  'Explorador',
-  'Viajante',
-  'Conquistador',
-  'Fluente',
-  'Mestre do Francês',
-]
+export const LEVELS = [
+  {
+    level: 1,
+    name: 'Iniciante',
+    minXp: 0,
+    minRecentScore: 0,
+    minPerfectRounds: 0,
+    minUniqueThemes: 0,
+    description: 'Base visual, quatro imagens por rodada e alternativas mais diretas.',
+    difficultyLabel: 'Leve',
+    cardsPerRound: 4,
+    optionsPerCard: 4,
+    attempts: 4,
+  },
+  {
+    level: 2,
+    name: 'Intermediario',
+    minXp: 80,
+    minRecentScore: 3,
+    minPerfectRounds: 0,
+    minUniqueThemes: 0,
+    description: 'Mais volume por rodada e alternativas um pouco mais parecidas.',
+    difficultyLabel: 'Moderada',
+    cardsPerRound: 5,
+    optionsPerCard: 5,
+    attempts: 4,
+  },
+  {
+    level: 3,
+    name: 'Avancado',
+    minXp: 180,
+    minRecentScore: 3.5,
+    minPerfectRounds: 2,
+    minUniqueThemes: 0,
+    description: 'Rodadas maiores, menos margem para erro e vocabulario mais variado.',
+    difficultyLabel: 'Alta',
+    cardsPerRound: 6,
+    optionsPerCard: 6,
+    attempts: 3,
+  },
+  {
+    level: 4,
+    name: 'Fluente',
+    minXp: 320,
+    minRecentScore: 4,
+    minPerfectRounds: 5,
+    minUniqueThemes: 4,
+    description: 'Treino intenso com mais distratores e exigencia de consistencia.',
+    difficultyLabel: 'Intensa',
+    cardsPerRound: 6,
+    optionsPerCard: 7,
+    attempts: 3,
+  },
+] as const
+
+export const getLevelDifficulty = (level: number) =>
+  LEVELS[Math.min(LEVELS.length - 1, Math.max(0, level - 1))]
+
+const getLevelName = (level: number) => getLevelDifficulty(level).name
 
 const normalizeEntry = (item: any, index: number): LearningProgressEntry => {
   const score = Number(
     item.score ?? item.correct_word ?? item.correct_answer ?? item.correct_proverb ?? 0,
   )
-  const theme = item.theme ?? item.theme
+  const theme = item.theme
   const date = item.date || new Date().toISOString().split('T')[0]
-  const xp = Number(item.xp ?? score * 10 + (score >= 4 ? 20 : 0))
-  const perfect = item.perfect ?? score >= 4
+  const totalQuestions = Number(item.totalQuestions ?? item.total_questions ?? (item.source === 'frases' ? 6 : 4))
+  const xp = Number(item.xp ?? score * 10 + (score >= totalQuestions ? 20 : 0))
+  const perfect = item.perfect ?? score >= totalQuestions
 
   return {
     round: Number(item.round ?? index + 1),
     score,
+    totalQuestions,
     theme,
     date,
     xp,
@@ -69,7 +124,38 @@ const normalizeEntry = (item: any, index: number): LearningProgressEntry => {
   }
 }
 
-const getLevelName = (level: number) => LEVEL_NAMES[Math.min(LEVEL_NAMES.length - 1, Math.max(0, level - 1))] || `Nível ${level}`
+const getRecentAverageScore = (entries: LearningProgressEntry[]) => {
+  const recent = entries.slice(-8)
+  if (recent.length === 0) return 0
+
+  return recent.reduce((sum, entry) => {
+    const total = Math.max(1, entry.totalQuestions ?? (entry.source === 'frases' ? 6 : 4))
+    return sum + Math.min(4, (entry.score / total) * 4)
+  }, 0) / recent.length
+}
+
+const calculateLevel = (
+  totalXp: number,
+  entries: LearningProgressEntry[],
+  perfectRounds: number,
+  uniqueThemes: number,
+) => {
+  const recentScore = getRecentAverageScore(entries)
+  let unlockedLevel = 1
+
+  LEVELS.forEach(level => {
+    const passesXp = totalXp >= level.minXp
+    const passesScore = !level.minRecentScore || recentScore >= level.minRecentScore
+    const passesPerfect = !level.minPerfectRounds || perfectRounds >= level.minPerfectRounds
+    const passesThemes = !level.minUniqueThemes || uniqueThemes >= level.minUniqueThemes
+
+    if (passesXp && passesScore && passesPerfect && passesThemes) {
+      unlockedLevel = level.level
+    }
+  })
+
+  return unlockedLevel
+}
 
 export const loadPremiumAccess = () => {
   if (typeof window === 'undefined') return false
@@ -82,18 +168,25 @@ export const unlockPremiumAccess = () => {
   return true
 }
 
-export const saveProgress = (score: number, theme?: string, source: LearningProgressEntry['source'] = 'vocabulario') => {
+export const saveProgress = (
+  score: number,
+  theme?: string,
+  source: LearningProgressEntry['source'] = 'vocabulario',
+  totalQuestions?: number,
+) => {
   if (typeof window === 'undefined') return
 
   const saved = window.localStorage.getItem(STORAGE_KEY) || window.localStorage.getItem(LEGACY_STORAGE_KEY)
   const parsed = saved ? JSON.parse(saved) : []
+  const perfect = totalQuestions ? score >= totalQuestions : score >= 4
   const entry: LearningProgressEntry = {
     round: parsed.length + 1,
     score,
+    totalQuestions,
     theme,
     date: new Date().toISOString().split('T')[0],
-    xp: score * 10 + (score >= 4 ? 20 : 0),
-    perfect: score >= 4,
+    xp: score * 10 + (perfect ? 20 : 0),
+    perfect,
     source,
   }
   parsed.push(entry)
@@ -124,10 +217,14 @@ export const getProgressSummary = (entries: LearningProgressEntry[]): ProgressSu
   const totalRounds = entries.length
   const perfectRounds = entries.filter(entry => entry.perfect).length
   const uniqueThemes = new Set(entries.filter(entry => entry.theme).map(entry => entry.theme?.toLowerCase())).size
-  const currentLevel = Math.max(1, Math.floor(totalXp / 50) + 1)
-  const nextLevelXp = currentLevel * 50
+  const currentLevel = calculateLevel(totalXp, entries, perfectRounds, uniqueThemes)
+  const currentDifficulty = getLevelDifficulty(currentLevel)
+  const nextDifficulty = getLevelDifficulty(currentLevel + 1)
+  const nextLevelXp = currentLevel >= LEVELS.length ? totalXp : nextDifficulty.minXp
   const xpToNext = Math.max(nextLevelXp - totalXp, 0)
-  const levelProgress = Math.min(100, Math.round(((totalXp - (currentLevel - 1) * 50) / 50) * 100))
+  const levelProgress = currentLevel >= LEVELS.length
+    ? 100
+    : Math.min(100, Math.round(((totalXp - currentDifficulty.minXp) / Math.max(1, nextDifficulty.minXp - currentDifficulty.minXp)) * 100))
 
   let perfectStreak = 0
   for (let i = entries.length - 1; i >= 0; i -= 1) {
@@ -148,8 +245,10 @@ export const getProgressSummary = (entries: LearningProgressEntry[]): ProgressSu
     recentTheme: entries[entries.length - 1]?.theme ?? null,
     levelName: getLevelName(currentLevel),
     levelProgress,
-    nextLevelName: getLevelName(currentLevel + 1),
+    nextLevelName: currentLevel >= LEVELS.length ? 'Nivel maximo' : getLevelName(currentLevel + 1),
     isPremium: loadPremiumAccess(),
+    levelDescription: currentDifficulty.description,
+    difficultyLabel: currentDifficulty.difficultyLabel,
   }
 }
 
@@ -170,14 +269,14 @@ export const getDailyMission = (entries: LearningProgressEntry[]): DailyMission 
   switch (missionIndex) {
     case 0:
       title = 'Feche uma rodada perfeita'
-      description = 'Conclua 1 rodada com todas as respostas corretas para ganhar um bônus diário.'
+      description = 'Conclua 1 rodada com todas as respostas corretas para ganhar um bonus diario.'
       target = 1
       progress = perfectToday
       rewardXp = 30
       break
     case 1:
       title = 'Ganhe 20 XP hoje'
-      description = 'Acumule 20 XP em atividades de francês no dia de hoje.'
+      description = 'Acumule 20 XP em atividades de frances no dia de hoje.'
       target = 20
       progress = Math.min(xpToday, target)
       rewardXp = 30
@@ -206,22 +305,20 @@ export const getDailyMission = (entries: LearningProgressEntry[]): DailyMission 
     completed: progress >= target,
     rewardXp,
   }
-
 }
 
-
 export const getProgressSummaryBySource = (entries: LearningProgressEntry[], source: LearningProgressEntry['source']) => {
-    const filtered = entries.filter(e => e.source === source)
-    return {
-      uniqueThemes: new Set(filtered.filter(e => e.theme).map(e => e.theme?.toLowerCase())).size,
-      perfectRounds: filtered.filter(e => e.perfect).length,
-      perfectStreak: (() => {
-        let streak = 0
-        for (let i = filtered.length - 1; i >= 0; i--) {
-          if (filtered[i].perfect) streak++; else break
-        }
-        return streak
-      })(),
-      totalRounds: filtered.length,
-    }
+  const filtered = entries.filter(e => e.source === source)
+  return {
+    uniqueThemes: new Set(filtered.filter(e => e.theme).map(e => e.theme?.toLowerCase())).size,
+    perfectRounds: filtered.filter(e => e.perfect).length,
+    perfectStreak: (() => {
+      let streak = 0
+      for (let i = filtered.length - 1; i >= 0; i--) {
+        if (filtered[i].perfect) streak++; else break
+      }
+      return streak
+    })(),
+    totalRounds: filtered.length,
+  }
 }

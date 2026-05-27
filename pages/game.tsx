@@ -3,7 +3,7 @@ import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import { Check, X, Minus, Lock, ChevronDown, ChevronLeft, ChevronRight, Pause, Play, FlagIcon } from 'lucide-react'
 import { motion , AnimatePresence, useMotionValue, useTransform, animate, MotionValue} from 'framer-motion'
-import { saveProgress, loadProgress, getProgressSummary, getProgressSummaryBySource, getDailyMission, loadPremiumAccess, unlockPremiumAccess, DailyMission } from '../lib/progress'
+import { saveProgress, loadProgress, getProgressSummary, getProgressSummaryBySource, getDailyMission, loadPremiumAccess, unlockPremiumAccess, DailyMission, getLevelDifficulty, LEVELS } from '../lib/progress'
 import { LockClosedIcon, LockOpenIcon, MusicalNoteIcon, ChevronLeftIcon, ChevronRightIcon, GlobeAmericasIcon, CloudIcon, BeakerIcon, VideoCameraIcon, FilmIcon, LanguageIcon, DeviceTabletIcon, ChatBubbleBottomCenterTextIcon, MapPinIcon, ShoppingCartIcon, TvIcon, MoonIcon, FaceSmileIcon } from '@heroicons/react/24/solid';
 import { useSound } from 'use-sound';
 import dynamic from "next/dynamic";
@@ -264,6 +264,7 @@ export default function Game({}: GameProps) {
   const [frasesProgress, setFrasesProgress] = useState(getProgressSummaryBySource([], 'frases'));
   const [ditadosProgress, setDitadosProgress] = useState(getProgressSummaryBySource([], 'ditados'));
   const [dailyMission, setDailyMission] = useState<DailyMission | null>(null);
+  const levelDifficulty = getLevelDifficulty(gameProgressSummary.currentLevel);
     
   const soundListBoxRef = useRef<HTMLDivElement>(null);
   const videoListBoxRef = useRef<HTMLDivElement>(null);
@@ -330,6 +331,15 @@ export default function Game({}: GameProps) {
     toast.success('Premium Pack desbloqueado! +2 tentativas e missões especiais ativadas.', { position: 'top-right', autoClose: 2500 });
     setPremiumModalOpen(false);
   };
+
+  useEffect(() => {
+    const difficulty = getLevelDifficulty(gameProgressSummary.currentLevel);
+    const premiumBonus = isPremium ? 2 : 0;
+    const nextMaxAttempts = difficulty.attempts + premiumBonus;
+
+    setMaxAttempts(nextMaxAttempts);
+    setRemainingAttempts(prev => Math.min(prev, nextMaxAttempts));
+  }, [gameProgressSummary.currentLevel, isPremium]);
 
   const handleUnlockPremium = async () => {
     try {
@@ -822,7 +832,7 @@ export default function Game({}: GameProps) {
 
   useEffect(() => {
     if (theme) loadImages()
-  }, [theme, round])
+  }, [theme, round, levelDifficulty.cardsPerRound, levelDifficulty.optionsPerCard])
 
 
   useEffect(() => {
@@ -946,7 +956,7 @@ export default function Game({}: GameProps) {
     clearTimeout(logoutTimeoutId as NodeJS.Timeout);
   };
   
-  const loadImages = async (imageCount: number = 4) => {
+  const loadImages = async (imageCount: number = levelDifficulty.cardsPerRound) => {
     setLoading(true)
     setResults([]);
     console.log('Tema sendo enviado:', theme);  
@@ -956,7 +966,11 @@ export default function Game({}: GameProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ theme, count: imageCount }),
+        body: JSON.stringify({
+          theme,
+          count: imageCount,
+          optionsCount: levelDifficulty.optionsPerCard,
+        }),
       });
   
       if (!res.ok) {
@@ -1048,7 +1062,7 @@ export default function Game({}: GameProps) {
     const hasWrong = Object.values(newResults).some(r => r && !r.correct_word);
 
     if (currentAnsweredCount === totalCount) {
-      saveProgress(currentCorrectCount, selectedTheme ?? theme ?? 'imagem', 'vocabulario');
+      saveProgress(currentCorrectCount, selectedTheme ?? theme ?? 'imagem', 'vocabulario', totalCount);
       refreshProgressState();
     }
 
@@ -1954,14 +1968,14 @@ export default function Game({}: GameProps) {
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }} 
         transition={{ duration: 0.6 }}
-        className="text-3xl text-gray-300 font-thin mb-8 mt-72 text-center drop-shadow-md"
+        className="text-4xl text-white font-semibold mb-8 mt-64 text-center drop-shadow-[0_0_18px_rgba(111,157,226,0.35)]"
       >
         Jogo para treinar o Francês
       </motion.h1>
 
       <div className="grid w-full max-w-6xl gap-4 mb-8 md:grid-cols-3">
         {/* CARD 1 — Missão do Dia */}
-        <div className="rounded-2xl border border-blue-800/60 bg-[#0d1117] p-5 shadow-lg shadow-blue-900/10 relative overflow-hidden">
+        <div className="rounded-xl border border-blue-500/30 bg-[#101722]/95 p-5 shadow-xl shadow-blue-950/30 relative overflow-hidden transition hover:-translate-y-1 hover:border-blue-400/60">
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-500/80 to-transparent rounded-t-2xl" />
           <div className="flex items-center justify-between mb-3">
             <span className="text-[10px] uppercase tracking-[0.25em] text-blue-400 font-semibold">Missão do dia</span>
@@ -1997,7 +2011,7 @@ export default function Game({}: GameProps) {
         </div>
 
         {/* CARD 2 — Nível Atual */}
-        <div className="rounded-2xl border border-fuchsia-800/60 bg-[#0d1117] p-5 shadow-lg shadow-fuchsia-900/10 relative overflow-hidden">
+        <div className="rounded-xl border border-fuchsia-500/30 bg-[#111321]/95 p-5 shadow-xl shadow-fuchsia-950/20 relative overflow-hidden transition hover:-translate-y-1 hover:border-fuchsia-400/60">
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-fuchsia-500/80 to-transparent rounded-t-2xl" />
           <div className="flex items-center justify-between mb-3">
             <span className="text-[10px] uppercase tracking-[0.25em] text-fuchsia-400 font-semibold">Nível atual</span>
@@ -2005,21 +2019,31 @@ export default function Game({}: GameProps) {
               Próximo: <span className="text-fuchsia-300 font-semibold">{gameProgressSummary.nextLevelName}</span>
             </span>
           </div>
-          <h2 className="text-2xl font-bold text-white mb-1">{gameProgressSummary.levelName}</h2>
-          <p className="text-sm text-gray-400 mb-4">Nível {gameProgressSummary.currentLevel} • {gameProgressSummary.totalXp} XP</p>
+          <div className="mb-4 flex items-end justify-between gap-3">
+            <div>
+              <h2 className="text-3xl font-bold text-white mb-1">{gameProgressSummary.levelName}</h2>
+              <p className="text-sm text-gray-400">Nivel {gameProgressSummary.currentLevel} de 4 - {gameProgressSummary.totalXp} XP</p>
+            </div>
+            <span className="rounded-full border border-fuchsia-500/40 bg-fuchsia-500/10 px-3 py-1 text-xs font-bold text-fuchsia-200">
+              {gameProgressSummary.difficultyLabel}
+            </span>
+          </div>
           <div className="rounded-full bg-white/5 h-1.5 overflow-hidden mb-3">
             <div
               className="h-full bg-gradient-to-r from-fuchsia-400 to-pink-400 rounded-full transition-all duration-500"
               style={{ width: `${gameProgressSummary.levelProgress}%` }}
             />
           </div>
+          <p className="mb-2 text-sm text-gray-300">{gameProgressSummary.levelDescription}</p>
           <p className="text-sm text-gray-300">
-            {gameProgressSummary.xpToNext} XP até o próximo nível
+            {gameProgressSummary.currentLevel >= 4
+              ? 'Voce chegou ao nivel maximo.'
+              : `${gameProgressSummary.xpToNext} XP ate o proximo nivel`}
           </p>
         </div>
 
         {/* CARD 3 — Premium Pack */}
-        <div className="rounded-2xl border border-emerald-800/60 bg-[#0d1117] p-5 shadow-lg shadow-emerald-900/10 relative overflow-hidden">
+        <div className="rounded-xl border border-emerald-500/30 bg-[#0f1714]/95 p-5 shadow-xl shadow-emerald-950/20 relative overflow-hidden transition hover:-translate-y-1 hover:border-emerald-400/60">
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500/80 to-transparent rounded-t-2xl" />
           <div className="flex items-center justify-between mb-3">
             <span className="text-[10px] uppercase tracking-[0.25em] text-emerald-400 font-semibold">Premium Pack</span>
@@ -2084,7 +2108,7 @@ export default function Game({}: GameProps) {
         )}
       </AnimatePresence>
 
-      <div className="w-full max-w-6xl mb-8 rounded-2xl border border-slate-700 bg-slate-950 p-5 shadow-xl">
+      <div className="w-full max-w-6xl mb-8 rounded-xl border border-slate-700/80 bg-[#0b1017] p-5 shadow-2xl shadow-black/30">
         <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
             <span className="text-sm uppercase tracking-[0.2em] text-cyan-300">Trilha de estudo</span>
@@ -2098,6 +2122,27 @@ export default function Game({}: GameProps) {
           >
             Ver evolucao
           </button>
+        </div>
+
+        <div className="mt-5 grid gap-3 md:grid-cols-4">
+          {LEVELS.map(level => (
+            <div
+              key={level.level}
+              className={`rounded-xl border p-3 transition ${
+                gameProgressSummary.currentLevel === level.level
+                  ? 'border-cyan-400 bg-cyan-400/10 shadow-[0_0_20px_rgba(34,211,238,0.14)]'
+                  : gameProgressSummary.currentLevel > level.level
+                    ? 'border-green-500/40 bg-green-500/10'
+                    : 'border-slate-700 bg-slate-900/70'
+              }`}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-bold text-white">N{level.level} {level.name}</span>
+                <span className="text-[10px] uppercase tracking-wide text-gray-400">{level.difficultyLabel}</span>
+              </div>
+              <p className="mt-2 text-xs text-gray-400">{level.cardsPerRound} imagens / {level.optionsPerCard} opcoes</p>
+            </div>
+          ))}
         </div>
 
         <div className="mt-5 grid gap-3 md:grid-cols-3">

@@ -1,9 +1,9 @@
 import { getDb } from './mongodb';
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || process.env.OPENAI_KEY;
 const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-3.5-turbo';
 const OPENAI_IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1';
-const DAILY_AI_GENERATION_LIMIT = Number(process.env.AI_DAILY_GENERATION_LIMIT || '4');
+const DAILY_AI_GENERATION_LIMIT = Number(process.env.AI_DAILY_GENERATION_LIMIT || '6');
 
 // Hugging Face / Stable Horde (free/community) fallbacks
 const HF_API_KEY = process.env.HF_API_KEY;
@@ -37,6 +37,11 @@ const buildPrompt = (collectionName: string, theme: string, count: number) => {
 const buildPlaceholderUrl = (theme: string, seed: number) => {
   const safeTheme = encodeURIComponent(theme.replace(/\s+/g, '-'));
   return `https://picsum.photos/seed/${safeTheme}-${seed}/640/480`;
+};
+
+const getOpenAIImageSize = () => {
+  if (OPENAI_IMAGE_MODEL === 'gpt-image-1') return '1024x1024';
+  return '512x512';
 };
 
 const extractJsonArray = (text: string) => {
@@ -219,7 +224,7 @@ const generateAIImageUrl = async (theme: string, seed: number) => {
     }
   }
 
-  // 3) OpenAI (legacy) if configured
+  // 3) OpenAI if configured
   if (OPENAI_API_KEY) {
     try {
       const response = await fetch('https://api.openai.com/v1/images/generations', {
@@ -231,24 +236,35 @@ const generateAIImageUrl = async (theme: string, seed: number) => {
         body: JSON.stringify({
           model: OPENAI_IMAGE_MODEL,
           prompt,
-          size: '640x480',
+          size: getOpenAIImageSize(),
+          n: 1,
         }),
       });
 
       if (!response.ok) {
+        const body = await response.text();
+        console.warn(`OpenAI image generation falhou: ${response.status} ${body}`);
         return buildPlaceholderUrl(theme, seed);
       }
 
       const data = await response.json();
-      const url = data?.data?.[0]?.url;
+      const firstImage = data?.data?.[0];
+      const url = firstImage?.url;
+      const b64 = firstImage?.b64_json;
 
-      // Valida se veio uma URL HTTP real antes de usar
       if (url && url.startsWith('http')) {
         return url;
       }
 
+      if (b64) {
+        const dataUrl = `data:image/png;base64,${b64}`;
+        if (dataUrl.length <= MAX_DATA_URL_BYTES) return dataUrl;
+        console.warn('Imagem OpenAI maior que o limite configurado. Usando placeholder.');
+      }
+
       return buildPlaceholderUrl(theme, seed);
       } catch (error) {
+        console.warn('OpenAI image generation falhou:', error);
         return buildPlaceholderUrl(theme, seed);
       }
   }
@@ -259,7 +275,7 @@ const generateAIImageUrl = async (theme: string, seed: number) => {
 
 export async function ensureDailyAIItems(collectionName: string, theme: string) {
   console.log('[AI] HF_API_KEY present:', !!process.env.HF_API_KEY);
-  console.log('[AI] OPENAI_API_KEY present:', !!process.env.OPENAI_API_KEY);
+  console.log('[AI] OPENAI_API_KEY present:', !!OPENAI_API_KEY);
   const normalizedTheme = normalizeTheme(theme);
   const db = await getDb();
   const collection = db.collection(collectionName);

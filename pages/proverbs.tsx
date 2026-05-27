@@ -971,7 +971,7 @@ export default function Game({}: GameProps) {
     //saveProgress(correctCount);
   
     if (currentAnsweredCount === totalCount) {
-      saveProgress(currentCorrectCount, 'proverbios');
+      saveProgress(currentCorrectCount, theme || 'proverbios', 'ditados', totalCount);
     }
       
     // Se errou alguma imagem, mostra botão para recomeçar
