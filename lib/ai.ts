@@ -1,4 +1,5 @@
 import { getDb } from './mongodb';
+import { notifyNewAIImages } from './push-notifications';
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || process.env.OPENAI_KEY;
 const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-3.5-turbo';
@@ -314,8 +315,20 @@ export async function ensureDailyAIItems(collectionName: string, theme: string) 
   );
 
   if (documents.length > 0) {
-    await collection.insertMany(documents, { ordered: false }).catch((error) => {
+    const insertedDocuments: typeof documents = [];
+    await collection.insertMany(documents, { ordered: false }).then(result => {
+      const insertedIndexes = Object.keys(result.insertedIds).map(Number);
+      insertedIndexes.forEach(index => {
+        if (documents[index]) insertedDocuments.push(documents[index]);
+      });
+    }).catch((error) => {
       console.warn('Erro ao inserir itens AI no MongoDB:', error?.message);
     });
+
+    if (insertedDocuments.length > 0) {
+      await notifyNewAIImages(collectionName, normalizedTheme, insertedDocuments).catch(error => {
+        console.warn('Erro ao enviar notificacoes push de imagens AI:', error?.message || error);
+      });
+    }
   }
 }

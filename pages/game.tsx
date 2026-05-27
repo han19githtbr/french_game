@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, RefObject, useCallback } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/router'
-import { Check, X, Minus, Lock, ChevronDown, ChevronLeft, ChevronRight, Pause, Play, FlagIcon } from 'lucide-react'
+import { Check, X, Minus, Lock, ChevronDown, ChevronLeft, ChevronRight, Pause, Play, FlagIcon, BellRing } from 'lucide-react'
 import { motion , AnimatePresence, useMotionValue, useTransform, animate, MotionValue} from 'framer-motion'
 import { saveProgress, loadProgress, getProgressSummary, getProgressSummaryBySource, getDailyMission, loadPremiumAccess, unlockPremiumAccess, DailyMission, getLevelDifficulty, LEVELS } from '../lib/progress'
 import { LockClosedIcon, LockOpenIcon, MusicalNoteIcon, ChevronLeftIcon, ChevronRightIcon, GlobeAmericasIcon, CloudIcon, BeakerIcon, VideoCameraIcon, FilmIcon, LanguageIcon, DeviceTabletIcon, ChatBubbleBottomCenterTextIcon, MapPinIcon, ShoppingCartIcon, TvIcon, MoonIcon, FaceSmileIcon } from '@heroicons/react/24/solid';
@@ -150,6 +150,19 @@ const getFormattedDate = () => {
   return `${year}-${month}-${day}`;
 }
 
+const urlBase64ToUint8Array = (base64String: string) => {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const rawData = window.atob(base64)
+  const outputArray = new Uint8Array(rawData.length)
+
+  for (let i = 0; i < rawData.length; i += 1) {
+    outputArray[i] = rawData.charCodeAt(i)
+  }
+
+  return outputArray
+}
+
 
 export default function Game({}: GameProps) {
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
@@ -277,6 +290,9 @@ export default function Game({}: GameProps) {
   const [hasShownUnlockLevelWarning, setHasShownUnlockLevelWarning] = useState(false);
 
   const [notificationCount, setNotificationCount] = useState(0);
+  const [pushSupported, setPushSupported] = useState(false);
+  const [pushSubscribed, setPushSubscribed] = useState(false);
+  const [pushStatus, setPushStatus] = useState<'idle' | 'saving' | 'enabled' | 'blocked' | 'unsupported' | 'error'>('idle');
   const socket = useSocket();
 
   const videoRef = useRef<HTMLIFrameElement>(null);
@@ -296,6 +312,85 @@ export default function Game({}: GameProps) {
 
   const handleClearNotifications = () => {
     setNotificationCount(0);
+  };
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const supported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+    setPushSupported(supported);
+
+    if (!supported) {
+      setPushStatus('unsupported');
+      return;
+    }
+
+    if (Notification.permission === 'denied') {
+      setPushStatus('blocked');
+      return;
+    }
+
+    navigator.serviceWorker.ready
+      .then(registration => registration.pushManager.getSubscription())
+      .then(subscription => {
+        setPushSubscribed(Boolean(subscription));
+        if (subscription) setPushStatus('enabled');
+      })
+      .catch(() => undefined);
+  }, []);
+
+  const enablePushNotifications = async () => {
+    if (!pushSupported) {
+      setPushStatus('unsupported');
+      toast.info('Este navegador ainda nao suporta notificacoes push para PWA.', { position: 'top-right', autoClose: 3000 });
+      return;
+    }
+
+    try {
+      setPushStatus('saving');
+
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        setPushStatus(permission === 'denied' ? 'blocked' : 'idle');
+        toast.info('Permissao de notificacao nao ativada.', { position: 'top-right', autoClose: 2500 });
+        return;
+      }
+
+      const keyResponse = await fetch('/api/push/public-key');
+      const keyData = await keyResponse.json();
+
+      if (!keyResponse.ok || !keyData.publicKey) {
+        throw new Error(keyData?.error || 'Chave publica Web Push nao configurada.');
+      }
+
+      const registration = await navigator.serviceWorker.ready;
+      const existingSubscription = await registration.pushManager.getSubscription();
+      const subscription = existingSubscription || await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(keyData.publicKey),
+      });
+
+      const response = await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subscription,
+          userEmail: session?.user?.email,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.error || 'Nao foi possivel salvar a inscricao push.');
+      }
+
+      setPushSubscribed(true);
+      setPushStatus('enabled');
+      toast.success('Notificacoes de novas imagens ativadas neste aparelho.', { position: 'top-right', autoClose: 3000 });
+    } catch (error) {
+      setPushStatus('error');
+      toast.error(error instanceof Error ? error.message : 'Erro ao ativar notificacoes.', { position: 'top-right', autoClose: 3500 });
+    }
   };
 
 
@@ -1423,6 +1518,26 @@ export default function Game({}: GameProps) {
               }
             </span>
             <img src={session.user.image || ''} alt="Avatar" className="w-10 h-10 rounded-full border-2 border-lightblue" />
+            <button
+              onClick={enablePushNotifications}
+              disabled={pushStatus === 'saving' || pushSubscribed || pushStatus === 'blocked' || pushStatus === 'unsupported'}
+              title={
+                pushSubscribed
+                  ? 'Notificacoes push ativadas'
+                  : pushStatus === 'blocked'
+                    ? 'Notificacoes bloqueadas no navegador'
+                    : 'Ativar notificacoes de novas imagens IA'
+              }
+              className={`relative flex h-9 w-9 items-center justify-center rounded-full border transition ${
+                pushSubscribed
+                  ? 'border-green-400/70 text-green-300 bg-green-500/10'
+                  : pushStatus === 'blocked' || pushStatus === 'unsupported'
+                    ? 'border-gray-700 text-gray-600 cursor-not-allowed'
+                    : 'border-yellow-400/50 text-yellow-300 hover:bg-yellow-400/10'
+              }`}
+            >
+              <BellRing className={`h-4 w-4 ${pushStatus === 'saving' ? 'animate-pulse' : ''}`} />
+            </button>
             <button
               onClick={() => setNotificationCount(0)}
               title="Notificações"

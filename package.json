@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "web-push:keys": "web-push generate-vapid-keys"
   },
   "dependencies": {
     "@emoji-mart/react": "^1.1.1",
@@ -15,6 +16,7 @@
     "@heroicons/react": "^2.2.0",
     "@heroui/react": "^2.0.0",
     "@prisma/client": "^6.8.0",
+    "@types/web-push": "^3.6.4",
     "ably": "^2.8.0",
     "axios": "^1.9.0",
     "canvas-confetti": "^1.9.3",
@@ -43,6 +45,7 @@
     "socket.io-client": "^4.8.1",
     "tailwind-merge": "^3.6.0",
     "use-sound": "^5.0.0",
+    "web-push": "^3.6.7",
     "youtube-api": "^3.0.2"
   },
   "devDependencies": {
