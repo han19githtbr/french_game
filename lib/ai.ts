@@ -15,6 +15,17 @@ const MAX_DATA_URL_BYTES = Number(process.env.AI_MAX_DATA_URL_BYTES || '900000')
 
 const normalizeTheme = (theme: string) => theme.toLowerCase();
 
+// Timeout wrapper — evita que a Vercel Lambda trave aguardando HF/Horde
+const fetchWithTimeout = async (url: string, options: RequestInit, timeoutMs = 25000): Promise<Response> => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(id);
+  }
+};
+
 const themePromptLabel = (collectionName: string, normalizedTheme: string) =>
   collectionName === 'images_proverbs'
     ? `provérbios franceses do grupo ${normalizedTheme.replace('grupo-', '')}`
@@ -84,14 +95,15 @@ const generateAICaptions = async (collectionName: string, theme: string, count: 
   if (HF_API_KEY) {
     try {
       const url = `https://api-inference.huggingface.co/models/${HF_TEXT_MODEL}`;
-      const resp = await fetch(url, {
+      console.log('[AI] Tentando HF text model:', HF_TEXT_MODEL);
+      const resp = await fetchWithTimeout(url, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${HF_API_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ inputs: prompt, options: { wait_for_model: true }, parameters: { max_new_tokens: 300 } }),
-      });
+      }, 20000);
       if (resp.ok) {
         const contentType = resp.headers.get('content-type') || '';
         let text: string;
@@ -162,7 +174,8 @@ const generateAIImageUrl = async (theme: string, seed: number) => {
   if (HF_API_KEY) {
     try {
       const url = `https://api-inference.huggingface.co/models/${HF_IMAGE_MODEL}`;
-      const resp = await fetch(url, {
+      console.log('[AI] Tentando HF image model:', HF_IMAGE_MODEL);
+      const resp = await fetchWithTimeout(url, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${HF_API_KEY}`,
@@ -170,7 +183,7 @@ const generateAIImageUrl = async (theme: string, seed: number) => {
           Accept: 'application/octet-stream',
         },
         body: JSON.stringify({ inputs: prompt, options: { wait_for_model: true } }),
-      });
+      }, 25000);
 
       if (resp.ok) {
         const buffer = await resp.arrayBuffer();
@@ -275,8 +288,14 @@ const generateAIImageUrl = async (theme: string, seed: number) => {
 };
 
 export async function ensureDailyAIItems(collectionName: string, theme: string) {
+  console.log('[AI] ====== ensureDailyAIItems START ======');
+  console.log('[AI] collection:', collectionName, '| theme:', theme);
   console.log('[AI] HF_API_KEY present:', !!process.env.HF_API_KEY);
+  console.log('[AI] HF_TEXT_MODEL:', HF_TEXT_MODEL);
+  console.log('[AI] HF_IMAGE_MODEL:', HF_IMAGE_MODEL);
   console.log('[AI] OPENAI_API_KEY present:', !!OPENAI_API_KEY);
+  console.log('[AI] OPENAI_IMAGE_MODEL:', OPENAI_IMAGE_MODEL);
+  console.log('[AI] DAILY_AI_GENERATION_LIMIT:', DAILY_AI_GENERATION_LIMIT);
   const normalizedTheme = normalizeTheme(theme);
   const db = await getDb();
   const collection = db.collection(collectionName);

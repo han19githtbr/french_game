@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState, RefObject, useCallback } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/router'
+// @ts-ignore: module has no declaration file
 import { Check, X, Minus, Lock, ChevronDown, ChevronLeft, ChevronRight, Pause, Play, FlagIcon, BellRing } from 'lucide-react'
 import { motion , AnimatePresence, useMotionValue, useTransform, animate, MotionValue} from 'framer-motion'
 import { saveProgress, loadProgress, getProgressSummary, getProgressSummaryBySource, getDailyMission, loadPremiumAccess, unlockPremiumAccess, DailyMission, getLevelDifficulty, LEVELS } from '../lib/progress'
+// @ts-ignore: module has no declaration file
 import { LockClosedIcon, LockOpenIcon, MusicalNoteIcon, ChevronLeftIcon, ChevronRightIcon, GlobeAmericasIcon, CloudIcon, BeakerIcon, VideoCameraIcon, FilmIcon, LanguageIcon, DeviceTabletIcon, ChatBubbleBottomCenterTextIcon, MapPinIcon, ShoppingCartIcon, TvIcon, MoonIcon, FaceSmileIcon } from '@heroicons/react/24/solid';
 import { useSound } from 'use-sound';
 import dynamic from "next/dynamic";
@@ -1075,11 +1077,21 @@ export default function Game({}: GameProps) {
       }
     
       const data = await res.json();
-      console.log('🔁 Dados recebidos:', data); // <-- Adicione isso para depuração
+      console.log('🔁 Dados recebidos:', data);
     
       setImages(data);
       imageRefs.current = []; // limpa os refs antigos
       setResults(Array(data.length).fill(null));
+
+      // Notifica se há imagens geradas por IA nesta rodada
+      const hasAI = data.some((img: any) => img.aiGenerated === true);
+      if (hasAI) {
+        toast.info('✨ Novas imagens geradas por IA disponíveis nesta rodada!', {
+          position: 'top-right',
+          autoClose: 4000,
+          icon: <span>🤖</span>,
+        });
+      }
     } catch (error) {
       console.error('❌ Erro ao carregar imagens:', error);
     } finally {
@@ -1498,6 +1510,29 @@ export default function Game({}: GameProps) {
       }, 2000); // A mensagem desaparece após 2 segundos
     }
   };
+
+  // Mobile: encolhe os cards do dashboard ao rolar para baixo
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    let lastScrollY = window.scrollY;
+    const handleScroll = () => {
+      const cards = document.querySelector('.sticky-cards-mobile') as HTMLElement | null;
+      if (!cards) return;
+      if (window.innerWidth >= 768) {
+        cards.classList.remove('is-scrolled-down');
+        return;
+      }
+      const currentY = window.scrollY;
+      if (currentY > lastScrollY && currentY > 60) {
+        cards.classList.add('is-scrolled-down');
+      } else {
+        cards.classList.remove('is-scrolled-down');
+      }
+      lastScrollY = currentY;
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-900 from-gray-900 to-gray-900 text-white flex flex-col items-center p-4 relative mb-6">
@@ -2088,9 +2123,16 @@ export default function Game({}: GameProps) {
         Jogo para treinar o Francês
       </motion.h1>
 
-      <div className="grid w-full max-w-6xl gap-4 mb-8 md:grid-cols-3">
+      <div className="grid w-full max-w-6xl gap-4 mb-8 md:grid-cols-3 sticky-cards-mobile">
         {/* CARD 1 — Missão do Dia */}
-        <div className="rounded-xl border border-blue-500/30 bg-[#101722]/95 p-5 shadow-xl shadow-blue-950/30 relative overflow-hidden transition hover:-translate-y-1 hover:border-blue-400/60">
+        <div className={`rounded-xl border bg-[#101722]/95 p-5 shadow-xl relative overflow-hidden transition hover:-translate-y-1 cursor-pointer
+          ${dailyMission && !dailyMission.completed
+            ? 'border-blue-400/60 shadow-blue-950/50 ring-1 ring-blue-500/30 animate-pulse-border'
+            : 'border-blue-500/30 shadow-blue-950/30 hover:border-blue-400/60'
+          }`}
+          onClick={() => { const el = document.querySelector('.flex.flex-wrap.justify-center.gap-6'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }}
+          title="Clique para ir ao jogo"
+        >
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-500/80 to-transparent rounded-t-2xl" />
           <div className="flex items-center justify-between mb-3">
             <span className="text-[10px] uppercase tracking-[0.25em] text-blue-400 font-semibold">Missão do dia</span>
@@ -2126,7 +2168,10 @@ export default function Game({}: GameProps) {
         </div>
 
         {/* CARD 2 — Nível Atual */}
-        <div className="rounded-xl border border-fuchsia-500/30 bg-[#111321]/95 p-5 shadow-xl shadow-fuchsia-950/20 relative overflow-hidden transition hover:-translate-y-1 hover:border-fuchsia-400/60">
+        <div className="rounded-xl border border-fuchsia-500/30 bg-[#111321]/95 p-5 shadow-xl shadow-fuchsia-950/20 relative overflow-hidden transition hover:-translate-y-1 hover:border-fuchsia-400/60 cursor-pointer"
+          onClick={() => { const el = document.querySelector('.mt-5.grid.gap-3.md\\:grid-cols-4'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }}
+          title="Clique para ver os níveis"
+        >
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-fuchsia-500/80 to-transparent rounded-t-2xl" />
           <div className="flex items-center justify-between mb-3">
             <span className="text-[10px] uppercase tracking-[0.25em] text-fuchsia-400 font-semibold">Nível atual</span>
@@ -2697,13 +2742,19 @@ export default function Game({}: GameProps) {
                   transition={{ duration: 0.3, delay: index * 0.1 }}
                   className="bg-transparent text-black p-4 rounded-2xl flex-grow shadow-2xl max-w-[250px] transition transform hover:scale-105 flex flex-col items-center"
                 >
-                  <img
-                    
-                    src={img.url}
-                    alt="imagem"
-                    className="w-full h-48 object-cover rounded-xl cursor-zoom-in"
-                    onClick={() => setZoomedImage(img.url)}
-                  />
+                  <div className="relative w-full">
+                    <img
+                      src={img.url}
+                      alt="imagem"
+                      className="w-full h-48 object-cover rounded-xl cursor-zoom-in"
+                      onClick={() => setZoomedImage(img.url)}
+                    />
+                    {img.aiGenerated && (
+                      <span className="absolute top-2 right-2 flex items-center gap-1 bg-black/70 backdrop-blur-sm text-cyan-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-cyan-500/50 shadow-[0_0_8px_rgba(34,211,238,0.4)]">
+                        🤖 IA
+                      </span>
+                    )}
+                  </div>
                   <div className="mt-2 text-gray-300">Escolha o título correto:</div>
                   <div className="relative w-full mt-1">
                     <select

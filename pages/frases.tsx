@@ -1,10 +1,13 @@
+// @ts-ignore
 import { useEffect, useRef, useState, RefObject, useCallback } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/router'
+// @ts-ignore
 import { Check, X, ChevronLeft, Minus, Lock, ChevronDown, ChevronRight, Pause, Play } from 'lucide-react'
 import { motion, AnimatePresence, useMotionValue, animate, MotionValue } from 'framer-motion'
 import { saveProgress } from '../lib/progress'
 import { useSound } from 'use-sound';
+// @ts-ignore
 import { LockClosedIcon, LockOpenIcon, FlagIcon, MusicalNoteIcon, ChevronLeftIcon, ChevronRightIcon, GlobeAmericasIcon, CloudIcon, BeakerIcon, VideoCameraIcon, FilmIcon, LanguageIcon, DeviceTabletIcon, ChatBubbleBottomCenterTextIcon, MapPinIcon, ShoppingCartIcon, TvIcon, MoonIcon, FaceSmileIcon } from '@heroicons/react/24/solid';
 import dynamic from "next/dynamic";
 import { BiPlay, BiPause, BiVolumeFull, BiVolumeMute } from 'react-icons/bi';
@@ -926,6 +929,10 @@ export default function Frase({}: GameProps) {
       if (hasAI) {
         setHasNewAIContent(true);
         localStorage.setItem('hasNewAIContent_frases', 'true');
+        toast.info('✨ Novas imagens geradas por IA disponíveis nesta rodada!', {
+          position: 'top-right',
+          autoClose: 4000,
+        });
       }
       imageRefs.current = []; // limpa os refs antigos
       setResults(Array(data.length).fill(null));
@@ -2139,6 +2146,11 @@ export default function Frase({}: GameProps) {
                       className="w-full h-48 object-cover rounded-xl cursor-zoom-in"
                       onClick={() => setZoomedImage(img.url)}
                     />
+                    {img.aiGenerated && (
+                      <span className="absolute top-2 right-2 flex items-center gap-1 bg-black/70 backdrop-blur-sm text-cyan-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-cyan-500/50 shadow-[0_0_8px_rgba(34,211,238,0.4)]">
+                        🤖 IA
+                      </span>
+                    )}
                     {timeLeft === 0 && !results[index] && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-black/60">
                         <span className="text-4xl">⏱️</span>
@@ -2505,3 +2517,4 @@ export default function Frase({}: GameProps) {
     </div>
   )
 }
+
