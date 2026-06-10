@@ -19,10 +19,10 @@ interface Phrase {
 
 // Static seed phrases (shown when API is unavailable / rate-limited)
 const SEED_PHRASES: Phrase[] = [
-  { fr: 'Petit à petit, l'oiseau fait son nid.', pt: 'Pouco a pouco, o pássaro constrói seu ninho.', author: 'Provérbio francês' },
+  { fr: 'Petit à petit, l\'oiseau fait son nid.', pt: 'Pouco a pouco, o pássaro constrói seu ninho.', author: 'Provérbio francês' },
   { fr: 'La vie est belle.', pt: 'A vida é bela.', author: 'Expressão popular' },
   { fr: 'Chaque jour est une nouvelle chance.', pt: 'Cada dia é uma nova oportunidade.', author: 'Provérbio' },
-  { fr: 'Vouloir c'est pouvoir.', pt: 'Querer é poder.', author: 'Provérbio francês' },
+  { fr: 'Vouloir c\'est pouvoir.', pt: 'Querer é poder.', author: 'Provérbio francês' },
   { fr: 'Le soleil brille pour tout le monde.', pt: 'O sol brilha para todos.', author: 'Provérbio' },
   { fr: 'Mieux vaut tard que jamais.', pt: 'Melhor tarde do que nunca.', author: 'Provérbio francês' },
   { fr: 'La connaissance est une lumière.', pt: 'O conhecimento é uma luz.', author: 'Expressão popular' },
