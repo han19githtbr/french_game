@@ -6,7 +6,7 @@ const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-3.5-turbo';
 const OPENAI_IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1';
 const DAILY_AI_GENERATION_LIMIT = Number(process.env.AI_DAILY_GENERATION_LIMIT || '6');
 
-// Hugging Face / Stable Horde (free/community) fallbacks
+// Hugging Face / Stable Horde fallbacks
 const HF_API_KEY = process.env.HF_API_KEY;
 const HF_TEXT_MODEL = process.env.HF_TEXT_MODEL || 'HuggingFaceH4/zephyr-7b-beta';
 const HF_IMAGE_MODEL = process.env.HF_IMAGE_MODEL || 'runwayml/stable-diffusion-v1-5';
@@ -15,7 +15,7 @@ const MAX_DATA_URL_BYTES = Number(process.env.AI_MAX_DATA_URL_BYTES || '900000')
 
 const normalizeTheme = (theme: string) => theme.toLowerCase();
 
-// Timeout wrapper — evita que a Vercel Lambda trave aguardando HF/Horde
+// Timeout wrapper
 const fetchWithTimeout = async (url: string, options: RequestInit, timeoutMs = 25000): Promise<Response> => {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
@@ -59,18 +59,14 @@ const getOpenAIImageSize = () => {
 const extractJsonArray = (text: string) => {
   const start = text.indexOf('[');
   const end = text.lastIndexOf(']');
-
-  if (start === -1 || end === -1 || end <= start) {
-    return text;
-  }
-
+  if (start === -1 || end === -1 || end <= start) return text;
   return text.slice(start, end + 1);
 };
 
 const parseJsonResponse = (text: string) => {
   try {
     return JSON.parse(extractJsonArray(text));
-  } catch (error) {
+  } catch {
     const sanitized = extractJsonArray(text)
       .replace(/\/\/[^\n]*/g, '')
       .replace(/,\s*([}\]])/g, '$1')
@@ -102,201 +98,193 @@ const generateAICaptions = async (collectionName: string, theme: string, count: 
           Authorization: `Bearer ${HF_API_KEY}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ inputs: prompt, options: { wait_for_model: true }, parameters: { max_new_tokens: 300 } }),
-      }, 20000);
-      if (resp.ok) {
-        const contentType = resp.headers.get('content-type') || '';
-        let text: string;
-        if (contentType.includes('application/json')) {
-          const data = await resp.json();
-          // HF can return [{generated_text: '...'}] or {generated_text: '...'}
-          if (Array.isArray(data) && data[0]?.generated_text) text = data[0].generated_text;
-          else if (data.generated_text) text = data.generated_text;
-          else text = String(data);
-        } else {
-          text = await resp.text();
-        }
-
-        const parsed = parseJsonResponse(text);
-        if (!Array.isArray(parsed)) throw new Error('Resposta HF inválida');
-        return normalizeCaptionItems(parsed);
-      }
-    } catch (err) {
-      console.warn('Hugging Face text fallback falhou, tentando próximo provedor:', err);
-    }
-  }
-
-  // 2) OpenAI (legacy) if configured
-  if (OPENAI_API_KEY) {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: OPENAI_MODEL,
-        messages: [
-          { role: 'system', content: 'Você responde apenas com JSON válido.' },
-          { role: 'user', content: prompt },
-        ],
-        temperature: 0.8,
-        max_tokens: 300,
-      }),
-    });
-
-    if (!response.ok) {
-      const body = await response.text();
-      throw new Error(`Falha ao chamar OpenAI: ${response.status} ${body}`);
-    }
-
-    const data = await response.json();
-    const text = data?.choices?.[0]?.message?.content;
-    if (!text) {
-      throw new Error('Resposta da AI vazia.');
-    }
-
-    const parsed = parseJsonResponse(text);
-    if (!Array.isArray(parsed)) {
-      throw new Error('Formato de resposta AI inválido. Esperado array JSON.');
-    }
-
-    return normalizeCaptionItems(parsed);
-  }
-
-  return [];
-};
-
-const generateAIImageUrl = async (theme: string, seed: number) => {
-  const prompt = `Uma ilustração colorida e amigável para aprender francês sobre ${theme}. A imagem deve ser clara, educativa e adequada para um jogo de vocabulário.`;
-
-  // 1) Hugging Face image model (returns binary image)
-  if (HF_API_KEY) {
-    try {
-      const url = `https://api-inference.huggingface.co/models/${HF_IMAGE_MODEL}`;
-      console.log('[AI] Tentando HF image model:', HF_IMAGE_MODEL);
-      const resp = await fetchWithTimeout(url, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${HF_API_KEY}`,
-          'Content-Type': 'application/json',
-          Accept: 'application/octet-stream',
-        },
-        body: JSON.stringify({ inputs: prompt, options: { wait_for_model: true } }),
-      }, 25000);
-
-      if (resp.ok) {
-        const buffer = await resp.arrayBuffer();
-        if (buffer.byteLength > MAX_DATA_URL_BYTES) {
-          console.warn(`Imagem HF maior que o limite configurado (${buffer.byteLength} bytes). Usando placeholder.`);
-          return buildPlaceholderUrl(theme, seed);
-        }
-        const b64 = Buffer.from(buffer).toString('base64');
-        // Return data URL so we can store it directly in DB as `url` if needed
-        return `data:image/png;base64,${b64}`;
-      }
-    } catch (err) {
-      console.warn('Hugging Face image generation falhou, tentando próximo provedor:', err);
-    }
-  }
-
-  // 2) Stable Horde
-  if (STABLE_HORDE_KEY) {
-    try {
-      const resp = await fetch('https://stablehorde.net/api/v2/generate/async', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': STABLE_HORDE_KEY },
-        body: JSON.stringify({
-          prompt,
-          params: { steps: 20 },
-          nsfw: false,
-        }),
+        body: JSON.stringify({ inputs: prompt, parameters: { max_new_tokens: 800 } }),
       });
+
       if (resp.ok) {
         const data = await resp.json();
-        // Stable Horde async returns a job id; try sync endpoint instead
-      }
+        let text = '';
+        if (Array.isArray(data) && data[0]?.generated_text) text = data[0].generated_text;
+        else if (data.generated_text) text = data.generated_text;
 
-      // try sync generate v2
-      const syncResp = await fetch('https://stablehorde.net/api/v2/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': STABLE_HORDE_KEY },
-        body: JSON.stringify({
-          prompt,
-          params: { steps: 20 },
-          nsfw: false,
-        }),
-      });
-      if (syncResp.ok) {
-        const data = await syncResp.json();
-        // data.images is an array of base64 strings
-        const first = data?.images?.[0];
-        if (first) return `data:image/png;base64,${first}`;
+        if (text) {
+          const items = parseJsonResponse(text);
+          if (Array.isArray(items) && items.length > 0) {
+            return normalizeCaptionItems(items);
+          }
+        }
       }
     } catch (err) {
-      console.warn('Stable Horde image generation falhou:', err);
+      console.warn('[AI] HF text falhou:', err);
     }
   }
 
-  // 3) OpenAI if configured
+  // 2) OpenAI fallback
   if (OPENAI_API_KEY) {
     try {
-      const response = await fetch('https://api.openai.com/v1/images/generations', {
+      console.log('[AI] Tentando OpenAI text model:', OPENAI_MODEL);
+      const resp = await fetchWithTimeout('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: OPENAI_MODEL,
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.8,
+        }),
+      });
+
+      if (resp.ok) {
+        const data = await resp.json();
+        const text = data.choices?.[0]?.message?.content || '';
+        if (text) {
+          const items = parseJsonResponse(text);
+          if (Array.isArray(items) && items.length > 0) {
+            return normalizeCaptionItems(items);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('[AI] OpenAI text falhou:', err);
+    }
+  }
+
+  // 3) Static placeholder fallback
+  console.warn('[AI] Sem provedor de texto disponível, usando placeholders estáticos.');
+  return Array.from({ length: count }, (_, i) => ({
+    title: `${theme} ${i + 1}`,
+    description: `Vocabulário sobre ${theme}`,
+  }));
+};
+
+const generateAIImageUrl = async (theme: string, seed: number): Promise<string> => {
+  // 1) OpenAI image generation
+  if (OPENAI_API_KEY && OPENAI_IMAGE_MODEL) {
+    try {
+      const resp = await fetchWithTimeout('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           model: OPENAI_IMAGE_MODEL,
-          prompt,
-          size: getOpenAIImageSize(),
+          prompt: `Illustration for French language learning about ${theme}, colorful, clean, educational style`,
           n: 1,
+          size: getOpenAIImageSize(),
+          response_format: OPENAI_IMAGE_MODEL === 'gpt-image-1' ? 'b64_json' : 'url',
         }),
       });
 
-      if (!response.ok) {
-        const body = await response.text();
-        console.warn(`OpenAI image generation falhou: ${response.status} ${body}`);
-        return buildPlaceholderUrl(theme, seed);
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.data?.[0]?.url) return data.data[0].url;
+        if (data.data?.[0]?.b64_json) {
+          const dataUrl = `data:image/png;base64,${data.data[0].b64_json}`;
+          if (dataUrl.length <= MAX_DATA_URL_BYTES) return dataUrl;
+        }
       }
-
-      const data = await response.json();
-      const firstImage = data?.data?.[0];
-      const url = firstImage?.url;
-      const b64 = firstImage?.b64_json;
-
-      if (url && url.startsWith('http')) {
-        return url;
-      }
-
-      if (b64) {
-        const dataUrl = `data:image/png;base64,${b64}`;
-        if (dataUrl.length <= MAX_DATA_URL_BYTES) return dataUrl;
-        console.warn('Imagem OpenAI maior que o limite configurado. Usando placeholder.');
-      }
-
-      return buildPlaceholderUrl(theme, seed);
-      } catch (error) {
-        console.warn('OpenAI image generation falhou:', error);
-        return buildPlaceholderUrl(theme, seed);
-      }
+    } catch (err) {
+      console.warn('[AI] OpenAI image falhou:', err);
+    }
   }
 
-  // Fallback placeholder
+  // 2) Hugging Face image generation
+  if (HF_API_KEY) {
+    try {
+      const url = `https://api-inference.huggingface.co/models/${HF_IMAGE_MODEL}`;
+      const resp = await fetchWithTimeout(url, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${HF_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inputs: `French language learning illustration about ${theme}, colorful, educational` }),
+      }, 30000);
+
+      if (resp.ok) {
+        const blob = await resp.blob();
+        const arrayBuffer = await blob.arrayBuffer();
+        const base64 = Buffer.from(arrayBuffer).toString('base64');
+        const dataUrl = `data:image/jpeg;base64,${base64}`;
+        if (dataUrl.length <= MAX_DATA_URL_BYTES) return dataUrl;
+      }
+    } catch (err) {
+      console.warn('[AI] HF image falhou:', err);
+    }
+  }
+
+  // 3) Stable Horde fallback
+  if (STABLE_HORDE_KEY) {
+    try {
+      const asyncResp = await fetch('https://stablehorde.net/api/v2/generate/async', {
+        method: 'POST',
+        headers: {
+          apikey: STABLE_HORDE_KEY,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: `French language learning about ${theme}, illustration, colorful`,
+          params: { width: 512, height: 512, steps: 20 },
+        }),
+      });
+
+      if (asyncResp.ok) {
+        const asyncData = await asyncResp.json();
+        const jobId = asyncData.id;
+
+        // Poll for result (max 25s)
+        for (let i = 0; i < 5; i++) {
+          await new Promise(r => setTimeout(r, 5000));
+          const checkResp = await fetch(`https://stablehorde.net/api/v2/generate/check/${jobId}`);
+          if (checkResp.ok) {
+            const checkData = await checkResp.json();
+            if (checkData.done) {
+              const statusResp = await fetch(`https://stablehorde.net/api/v2/generate/status/${jobId}`);
+              if (statusResp.ok) {
+                const statusData = await statusResp.json();
+                const imgUrl = statusData.generations?.[0]?.img;
+                if (imgUrl) return imgUrl;
+              }
+              break;
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('[AI] Stable Horde falhou:', err);
+    }
+  }
+
+  // 4) Placeholder image
   return buildPlaceholderUrl(theme, seed);
 };
 
-export async function ensureDailyAIItems(collectionName: string, theme: string) {
-  console.log('[AI] ====== ensureDailyAIItems START ======');
-  console.log('[AI] collection:', collectionName, '| theme:', theme);
-  console.log('[AI] HF_API_KEY present:', !!process.env.HF_API_KEY);
-  console.log('[AI] HF_TEXT_MODEL:', HF_TEXT_MODEL);
-  console.log('[AI] HF_IMAGE_MODEL:', HF_IMAGE_MODEL);
-  console.log('[AI] OPENAI_API_KEY present:', !!OPENAI_API_KEY);
-  console.log('[AI] OPENAI_IMAGE_MODEL:', OPENAI_IMAGE_MODEL);
-  console.log('[AI] DAILY_AI_GENERATION_LIMIT:', DAILY_AI_GENERATION_LIMIT);
+// ─── Store pending in-app notifications in MongoDB ─────────────────────────
+// When Web Push isn't configured, we store notifications in the DB and let
+// the frontend poll or receive them via socket.
+const storeInAppNotification = async (payload: {
+  title: string;
+  body: string;
+  tag: string;
+  url: string;
+  imageUrl?: string;
+  createdAt: Date;
+}) => {
+  try {
+    const db = await getDb();
+    await db.collection('in_app_notifications').insertOne({
+      ...payload,
+      read: false,
+      createdAt: payload.createdAt,
+    });
+  } catch (err) {
+    console.warn('[AI] Falha ao salvar notificação in-app:', err);
+  }
+};
+
+export const ensureDailyAIItems = async (collectionName: string, theme: string) => {
   const normalizedTheme = normalizeTheme(theme);
+
   const db = await getDb();
   const collection = db.collection(collectionName);
 
@@ -345,9 +333,38 @@ export async function ensureDailyAIItems(collectionName: string, theme: string) 
     });
 
     if (insertedDocuments.length > 0) {
-      await notifyNewAIImages(collectionName, normalizedTheme, insertedDocuments).catch(error => {
-        console.warn('Erro ao enviar notificacoes push de imagens AI:', error?.message || error);
+      // ── FIX: Try Web Push; on skip/failure, always store in-app notification ──
+      const moduleLabel = collectionName === 'images_sentences'
+        ? 'frases'
+        : collectionName === 'images_proverbs'
+          ? 'ditados'
+          : 'vocabulário';
+
+      const notifTitle = '🤖 Novas imagens geradas pela IA';
+      const notifBody = `${insertedDocuments.length} nova(s) imagem(ns) de ${moduleLabel} sobre "${normalizedTheme}" foram geradas.`;
+      const notifTag = `ai-${collectionName}-${normalizedTheme}-${Date.now()}`;
+      const notifUrl = collectionName === 'images'
+        ? '/game'
+        : collectionName === 'images_sentences'
+          ? '/frases'
+          : '/proverbs';
+
+      // Always store in DB (used by /api/ai-notifications endpoint + socket polling)
+      await storeInAppNotification({
+        title: notifTitle,
+        body: notifBody,
+        tag: notifTag,
+        url: notifUrl,
+        imageUrl: insertedDocuments[0]?.url?.startsWith('http') ? insertedDocuments[0].url : undefined,
+        createdAt: new Date(),
+      });
+
+      // Also attempt Web Push (non-blocking)
+      notifyNewAIImages(collectionName, normalizedTheme, insertedDocuments).then(() => {
+        console.log('[AI] Web Push enviado (ou ignorado silenciosamente).');
+      }).catch(error => {
+        console.warn('[AI] Erro ao enviar Web Push:', error?.message || error);
       });
     }
   }
-}
+};

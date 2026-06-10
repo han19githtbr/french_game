@@ -4,14 +4,15 @@ export interface Post {
   _id?: ObjectId;
   caption: string;
   imageUrl: string;
+  videoUrl?: string;       // URL do vídeo gerado pelo Kling.ai (opcional)
+  videoPrompt?: string;    // Prompt usado para gerar o vídeo
+  videoDuration?: number;  // Duração em segundos (30–120)
   theme: 'Gramática' | 'Cultura' | 'Gastronomia' | 'Tecnologia' | 'Ditados' | 'Natureza' | 'Turismo' | 'Pensamentos';
   startDate: Date;
-  endDate: Date | null; // null significa publicação permanente
+  endDate: Date | null;
   likes: number;
-  //views: 0;
   comments: Comment[];
-  likedBy?: LikedUser[]; // Lista de usuários que curtiram
-  //viewedBy?: string[]; // Lista de userIds que visualizaram
+  likedBy?: LikedUser[];
   createdAt: Date;
   updatedAt: Date;
 }
