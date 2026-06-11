@@ -253,7 +253,7 @@ const generateAIImageUrl = async (theme: string, seed: number): Promise<string> 
         const jobId = asyncData.id;
 
         // Poll for result (max 25s)
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 10; i++) {
           await new Promise(r => setTimeout(r, 5000));
           const checkResp = await fetch(`https://stablehorde.net/api/v2/generate/check/${jobId}`);
           if (checkResp.ok) {
