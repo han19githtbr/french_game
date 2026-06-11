@@ -77,27 +77,27 @@ export default function AdminPage() {
     <div className="relative min-h-screen bg-gray-900 text-white">
  
       {/* Top bar */}
-      <div className="w-full flex justify-between items-center px-6 py-8 bg-gray-800 shadow-md">
-        <div className="flex items-center space-x-2">
+      <div className="w-full flex flex-col sm:flex-row justify-between items-start px-6 py-8 bg-gray-800 shadow-md gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <button
             onClick={() => setActiveTab('create')}
-            className={`px-3 py-1 rounded-lg text-sm ${activeTab === 'create' ? 'border border-e-lightblue cursor-pointer' : 'border border-e-lightblue cursor-pointer hover:bg-gray-600'}`}
+            className={`w-full sm:w-auto px-3 py-1 rounded-lg text-sm ${activeTab === 'create' ? 'border border-e-lightblue cursor-pointer' : 'border border-e-lightblue cursor-pointer hover:bg-gray-600'}`}
           >
             Criar Publicação
           </button>
           <button
             onClick={() => setActiveTab('view')}
-            className={`px-3 py-1 rounded-lg text-sm ${activeTab === 'view' ? 'border border-e-green cursor-pointer' : 'border border-e-green hover:bg-gray-600 cursor-pointer'}`}
+            className={`w-full sm:w-auto px-3 py-1 rounded-lg text-sm ${activeTab === 'view' ? 'border border-e-green cursor-pointer' : 'border border-e-green hover:bg-gray-600 cursor-pointer'}`}
           >
             Ver Publicações
           </button>
-          <button
-            onClick={() => setActiveTab('unlock')}
-            className={`px-3 py-1 rounded-lg text-sm ${activeTab === 'unlock' ? 'border border-yellow-500 cursor-pointer' : 'border border-yellow-500/50 cursor-pointer hover:bg-gray-600'}`}
-          >
-            🔓 Desbloquear Seções
-          </button>
         </div>
+        <button
+          onClick={() => setActiveTab('unlock')}
+          className={`w-full sm:w-auto px-3 py-1 rounded-lg text-sm ${activeTab === 'unlock' ? 'border border-yellow-500 cursor-pointer' : 'border border-yellow-500/50 cursor-pointer hover:bg-gray-600'}`}
+        >
+          🔓 Desbloquear Seções
+        </button>
  
         <div className="relative flex items-center gap-2" ref={dropdownRef}>
           <NotificationBadge count={notificationCount} />

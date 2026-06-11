@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getDb } from '../../lib/mongodb'
-import { ensureDailyAIItems } from '../../lib/ai'
+import { ensureDailyAIItems, isInvalidCaptionTitle } from '../../lib/ai'
 
 const shuffle = <T>(array: T[]): T[] => [...array].sort(() => Math.random() - 0.5)
 
@@ -32,15 +32,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const themeImages = await collection.find({ theme: normalizedTheme }).toArray()
+    const validThemeImages = themeImages.filter(img => img.title && !isInvalidCaptionTitle(img.title))
 
-    if (!themeImages || themeImages.length < 4) {
-      return res.status(400).json({ error: 'Tema invalido ou sem imagens suficientes.' })
+    if (!validThemeImages || validThemeImages.length < 1) {
+      return res.status(400).json({ error: 'Tema inválido ou sem títulos válidos disponíveis.' })
     }
 
-    const safeCount = Math.min(Number(count) || 4, themeImages.length)
-    const safeOptionsCount = Math.min(Math.max(Number(optionsCount) || 4, 2), themeImages.length)
-    const selectedImages = shuffle(themeImages).slice(0, safeCount)
-    const allTitles = themeImages.map(img => img.title)
+    const safeCount = Math.min(Number(count) || 4, validThemeImages.length)
+    const validTitles = Array.from(new Set(validThemeImages.map(img => img.title)))
+    const safeOptionsCount = Math.min(Math.max(Number(optionsCount) || 4, 2), validTitles.length)
+    const selectedImages = shuffle(validThemeImages).slice(0, safeCount)
+    const allTitles = validTitles
 
     const imagesWithOptions = selectedImages.map(img => ({
       url: img.url,

@@ -36,7 +36,7 @@ const buildPrompt = (collectionName: string, theme: string, count: number) => {
   const themeDescription = themePromptLabel(collectionName, normalizedTheme);
 
   if (collectionName === 'images') {
-    return `Você é um assistente que gera apenas JSON. Crie ${count} legendas curtas em francês para imagens de vocabulário de ${themeDescription}. Cada item deve vir no formato {"title":"...", "description":"..."}, onde title é o texto curto exibido como resposta e description é uma frase rápida que ajuda o aluno a conectar a imagem ao significado. Responda somente com um array JSON válido.`;
+    return `Você é um assistente que gera apenas JSON. Crie ${count} legendas específicas em francês para imagens de vocabulário de ${themeDescription}. Cada item deve vir no formato {"title":"...", "description":"..."}. O campo title deve ser um substantivo ou expressão francesa muito específico que descreva com precisão um elemento visível na imagem. Nunca use palavras em português, inglês ou termos genéricos como "turismo", "natureza", "animais", "tecnologia", "gastronomia", "cultura" ou quaisquer números de sequência como "turismo 1". Exemplos válidos: "L'aéroport", "La voiture", "Les feuilles", "Un oiseau". O campo description deve ser uma frase curta em francês que ajude a conectar o título ao conteúdo da imagem. Responda somente com um array JSON válido.`;
   }
 
   if (collectionName === 'images_sentences') {
@@ -76,13 +76,24 @@ const parseJsonResponse = (text: string) => {
   }
 };
 
+export const isInvalidCaptionTitle = (title: string) => {
+  const normalized = title.trim().toLowerCase();
+  if (!normalized) return true;
+
+  const genericPattern = /\b(?:turismo|natureza|animais|tecnologia|gastronomia|cultura|pensamentos|tourisme|natureza|animaux|technologie|gastronomie|culture|pensée|objet|image|illustration|photo|scène|scene|titre)\b/i;
+  if (genericPattern.test(normalized)) return true;
+  if (/\d+/.test(normalized)) return true;
+
+  return false;
+};
+
 const normalizeCaptionItems = (items: any[]) =>
   items
     .map((item: any) => ({
       title: String(item.title || item.text || item.caption || '').trim(),
       description: String(item.description || item.hint || item.caption || item.text || '').trim(),
     }))
-    .filter((item: any) => item.title);
+    .filter((item: any) => item.title && !isInvalidCaptionTitle(item.title));
 
 const generateAICaptions = async (collectionName: string, theme: string, count: number) => {
   const prompt = buildPrompt(collectionName, theme, count);
@@ -131,8 +142,12 @@ const generateAICaptions = async (collectionName: string, theme: string, count: 
         },
         body: JSON.stringify({
           model: OPENAI_MODEL,
-          messages: [{ role: 'user', content: prompt }],
-          temperature: 0.8,
+          messages: [
+            { role: 'system', content: 'Você é um assistente que responde apenas com um array JSON válido. Não adicione comentários ou texto fora do JSON.' },
+            { role: 'user', content: prompt },
+          ],
+          temperature: 0.4,
+          max_tokens: 600,
         }),
       });
 
@@ -154,8 +169,8 @@ const generateAICaptions = async (collectionName: string, theme: string, count: 
   // 3) Static placeholder fallback
   console.warn('[AI] Sem provedor de texto disponível, usando placeholders estáticos.');
   return Array.from({ length: count }, (_, i) => ({
-    title: `${theme} ${i + 1}`,
-    description: `Vocabulário sobre ${theme}`,
+    title: `Objet ${i + 1}`,
+    description: `Illustration de vocabulaire en français sur ${theme}`,
   }));
 };
 
@@ -171,7 +186,7 @@ const generateAIImageUrl = async (theme: string, seed: number): Promise<string> 
         },
         body: JSON.stringify({
           model: OPENAI_IMAGE_MODEL,
-          prompt: `Illustration for French language learning about ${theme}, colorful, clean, educational style`,
+          prompt: `Educational illustration for French vocabulary about ${theme}. The image should show a clear, concrete object or scene that can be described by a precise French title, without generic theme labels or text overlays. Bright, clean, educational style.`,
           n: 1,
           size: getOpenAIImageSize(),
           response_format: OPENAI_IMAGE_MODEL === 'gpt-image-1' ? 'b64_json' : 'url',

@@ -5,7 +5,8 @@
  * Kling.ai docs: https://docs.kling.ai/
  *
  * Required env vars:
- *   KLING_API_KEY   — your Kling.ai access token
+ *   KLING_API_KEY   — your Kling.ai access token (optional)
+ *   KLING_ACCESS_KEY + KLING_SECRET_KEY — use these to generate a Kling JWT token if KLING_API_KEY is not available
  *
  * Request body:
  *   { imageUrl: string, prompt: string, duration?: number }
@@ -39,7 +40,21 @@ function generateKlingToken(): string {
 
 
 const KLING_API_KEY = process.env.KLING_API_KEY;
+const KLING_ACCESS_KEY = process.env.KLING_ACCESS_KEY;
+const KLING_SECRET_KEY = process.env.KLING_SECRET_KEY;
 const KLING_BASE_URL = 'https://api.klingai.com';
+
+function getKlingAuthorizationHeader(): string {
+  if (KLING_API_KEY) {
+    return `Bearer ${KLING_API_KEY}`;
+  }
+
+  if (KLING_ACCESS_KEY && KLING_SECRET_KEY) {
+    return `Bearer ${generateKlingToken()}`;
+  }
+
+  throw new Error('KLING_API_KEY ou KLING_ACCESS_KEY/KLING_SECRET_KEY não configurados. Adicione-os no Vercel.');
+}
 
 // Vercel: set `export const config = { maxDuration: 120 }` if using Pro plan.
 // Otherwise keep polling conservative (60s).
@@ -61,9 +76,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(401).json({ error: 'Não autenticado' });
   }
 
-  if (!KLING_API_KEY) {
+  let authHeader: string;
+  try {
+    authHeader = getKlingAuthorizationHeader();
+  } catch (err) {
     return res.status(503).json({
-      error: 'KLING_API_KEY não configurada. Adicione a variável de ambiente no Vercel.',
+      error: err instanceof Error ? err.message : 'Kling API auth não configurada.',
     });
   }
 
@@ -89,7 +107,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const submitRes = await fetch(`${KLING_BASE_URL}/v1/videos/image2video`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${KLING_API_KEY}`,
+        Authorization: authHeader,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -125,7 +143,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await sleep(POLL_INTERVAL_MS);
 
       const pollRes = await fetch(`${KLING_BASE_URL}/v1/videos/image2video/${taskId}`, {
-        headers: { Authorization: `Bearer ${KLING_API_KEY}` },
+        headers: { Authorization: authHeader },
       });
 
       if (!pollRes.ok) {
