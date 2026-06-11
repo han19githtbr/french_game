@@ -423,3 +423,34 @@ select option:checked {
     background: rgba(96, 165, 250, 0.85);
   }
 }
+
+/* ── Scrollbar do carrossel — Desktop only (seletor direto, sem conflito Tailwind) ── */
+.carousel-scroll-desktop::-webkit-scrollbar        { display: none; height: 0; }
+.carousel-scroll-desktop::-webkit-scrollbar-track  { display: none; }
+.carousel-scroll-desktop::-webkit-scrollbar-thumb  { display: none; }
+
+@media screen and (min-width: 768px) {
+  .carousel-scroll-desktop {
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(96,165,250,0.6) rgba(255,255,255,0.06) !important;
+  }
+  .carousel-scroll-desktop::-webkit-scrollbar {
+    display: block !important;
+    height: 5px !important;
+  }
+  .carousel-scroll-desktop::-webkit-scrollbar-track {
+    display: block !important;
+    background: rgba(255,255,255,0.06) !important;
+    border-radius: 99px !important;
+    margin: 0 4px !important;
+  }
+  .carousel-scroll-desktop::-webkit-scrollbar-thumb {
+    display: block !important;
+    background: rgba(96,165,250,0.6) !important;
+    border-radius: 99px !important;
+    min-width: 40px !important;
+  }
+  .carousel-scroll-desktop::-webkit-scrollbar-thumb:hover {
+    background: rgba(96,165,250,1) !important;
+  }
+}
