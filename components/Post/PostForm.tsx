@@ -1,29 +1,70 @@
-import { useState, useRef, ChangeEvent } from 'react';
+import { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { Post } from '../../models/Post';
+import { uploadImage } from '../../lib/utils';
 
 const themes = ['Cultura', 'Gastronomia', 'Tecnologia', 'Ditados', 'Natureza', 'Turismo', 'Pensamentos'];
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+// French narration templates based on theme and video prompt keywords
+const getNarrationSuggestions = (prompt: string, theme: string): string[] => {
+  const suggestions: Record<string, string[]> = {
+    Natureza: [
+      "Regardez comme la nature s'éveille doucement sous nos yeux émerveillés. Chaque mouvement, chaque geste raconte l'histoire silencieuse du monde vivant.",
+      "La beauté sauvage de cet instant nous rappelle la puissance et la délicatesse de Mère Nature. Un spectacle à couper le souffle.",
+      "Dans ce coin préservé, la vie suit son cours paisiblement. Observons avec respect ces merveilles qui nous entourent."
+    ],
+    Turismo: [
+      "Bienvenue dans ce lieu emblématique où l'histoire et la modernité se rencontrent. Chaque coin de rue cache une merveille à découvrir.",
+      "Découvrons ensemble les secrets bien gardés de cette destination unique. Préparez vos yeux et votre cœur pour l'aventure.",
+      "Le voyage nous transforme. Laissez-vous porter par l'âme de cette région authentique et chaleureuse."
+    ],
+    Gastronomia: [
+      "Les saveurs s'entremêlent dans une danse délicate. Chaque bouchée est une invitation au voyage gustatif.",
+      "La cuisine, c'est l'art de transformer des ingrédients simples en émotions inoubliables. Regardez comme c'est beau.",
+      "Entre tradition et créativité, ce plat raconte des générations de passionnés. Un véritable héritage culinaire."
+    ],
+    Cultura: [
+      "La culture nous unit, nous élève et nous transforme. Ce que vous voyez est l'expression pure d'une identité riche et fière.",
+      "Plongez au cœur de cette tradition ancestrale qui continue de vibrer aujourd'hui encore. Un héritage précieux.",
+      "L'art et la culture sont les miroirs de l'âme humaine. Ce moment partagé est une fenêtre sur notre humanité."
+    ],
+    Tecnologia: [
+      "La technologie repousse sans cesse les frontières du possible. Observez l'innovation prendre vie sous vos yeux.",
+      "Le futur est déjà là. Chaque avancée technologique nous rapproche un peu plus de nos rêves les plus fous.",
+      "Entre code et créativité, naissent des merveilles modernes. Regardez le monde se transformer en temps réel."
+    ],
+    Ditados: [
+      "Comme dit le proverbe, une image vaut mille mots. Cette scène illustre parfaitement la sagesse populaire.",
+      "Les anciens savaient. Leurs paroles résonnent encore dans chaque geste, chaque instant de vie capturé ici.",
+      "Ce moment est une leçon de vie silencieuse. Écoutons ce qu'il a à nous apprendre."
+    ],
+    Pensamentos: [
+      "Un instant de réflexion s'impose. Que voyez-vous ? Que ressentez-vous ? Laissez vos pensées vagabonder.",
+      "Dans le silence de l'image, se cachent mille histoires. Prenez le temps d'écouter votre propre interprétation.",
+      "Ce tableau vivant nous invite à la contemplation. Fermez les yeux un instant, puis ouvrez-les sur l'essentiel."
+    ]
+  };
 
-const toBase64 = (file: File): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve((reader.result as string).split(',')[1]);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+  // Custom suggestion based on prompt keywords
+  const customSuggestions: string[] = [];
+  
+  if (prompt.toLowerCase().includes('oiseau') || prompt.toLowerCase().includes('bird')) {
+    customSuggestions.push("L'oiseau déploie ses ailes avec grâce, s'élevant vers le ciel comme une promesse de liberté. Un spectacle naturel d'une beauté rare.");
+  }
+  if (prompt.toLowerCase().includes('mer') || prompt.toLowerCase().includes('sea') || prompt.toLowerCase().includes('ocean')) {
+    customSuggestions.push("Les vagues dansent au rythme des marées, un ballet éternel entre la terre et l'océan. La mer nous offre son plus beau spectacle.");
+  }
+  if (prompt.toLowerCase().includes('ville') || prompt.toLowerCase().includes('city')) {
+    customSuggestions.push("La ville vibre d'énergie. Entre ombre et lumière, les rues racontent les histoires de ceux qui les traversent.");
+  }
+  if (prompt.toLowerCase().includes('fleur') || prompt.toLowerCase().includes('flower')) {
+    customSuggestions.push("La fleur s'épanouit doucement, offrant sa beauté éphémère au monde qui l'entoure. Un moment de grâce pure.");
+  }
 
-const uploadImage = async (file: File): Promise<string> => {
-  const base64 = await toBase64(file);
-  const res = await fetch('/api/upload-image', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ image: base64, mime: file.type }),
-  });
-  if (!res.ok) throw new Error('Erro ao fazer upload da imagem');
-  const data = await res.json();
-  return data.url as string;
+  const themeSuggestions = suggestions[theme] || suggestions.Cultura;
+  const allSuggestions = [...customSuggestions, ...themeSuggestions];
+  
+  return allSuggestions.slice(0, 3);
 };
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -45,6 +86,14 @@ export default function PostForm({ onPostCreated }: { onPostCreated: () => void 
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [videoGenStep, setVideoGenStep] = useState<'idle' | 'uploading' | 'generating' | 'done' | 'error'>('idle');
   const [videoError, setVideoError] = useState('');
+
+  // French narration
+  const [frenchNarration, setFrenchNarration] = useState('');
+  const [isGeneratingNarration, setIsGeneratingNarration] = useState(false);
+  const [narrationAudioUrl, setNarrationAudioUrl] = useState<string | null>(null);
+  const [narrationError, setNarrationError] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const narrationAudioRef = useRef<HTMLAudioElement>(null);
 
   // submit
   const [isLoading, setIsLoading] = useState(false);
@@ -84,7 +133,7 @@ export default function PostForm({ onPostCreated }: { onPostCreated: () => void 
     setVideoUrl(null);
 
     try {
-      // Step 1 – upload source image
+      // Step 1 – upload source image via Cloudinary
       setVideoGenStep('uploading');
       const uploadedImageUrl = await uploadImage(image);
 
@@ -96,7 +145,7 @@ export default function PostForm({ onPostCreated }: { onPostCreated: () => void 
         body: JSON.stringify({
           imageUrl: uploadedImageUrl,
           prompt: videoPrompt,
-          duration: 5, // Kling free tier supports 5s; adjust as needed
+          duration: 5,
         }),
       });
 
@@ -116,6 +165,102 @@ export default function PostForm({ onPostCreated }: { onPostCreated: () => void 
     } finally {
       setIsGeneratingVideo(false);
     }
+  };
+
+  // ── Use Web Speech API for TTS preview ────────────────────────────────────
+  const speakWithWebSpeech = (text: string) => {
+    if (!window.speechSynthesis) {
+      setNarrationError('Seu navegador não suporta síntese de voz.');
+      return;
+    }
+
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'fr-FR';
+    utterance.rate = 0.9;
+    utterance.pitch = 1.0;
+    
+    // Try to get a French voice if available
+    const setFrenchVoice = () => {
+      const voices = window.speechSynthesis.getVoices();
+      const frenchVoice = voices.find(voice => voice.lang === 'fr-FR' || voice.lang === 'fr');
+      if (frenchVoice) utterance.voice = frenchVoice;
+    };
+    
+    if (window.speechSynthesis.getVoices().length > 0) {
+      setFrenchVoice();
+    } else {
+      window.speechSynthesis.onvoiceschanged = setFrenchVoice;
+    }
+    
+    window.speechSynthesis.speak(utterance);
+    setNarrationAudioUrl('web-speech');
+  };
+
+  // ── Generate narration from suggestions (free, no API key) ─────────────
+  const handleGenerateNarrationWithSuggestions = () => {
+    const sourceText = videoPrompt.trim() || caption.trim();
+    if (!sourceText) {
+      setNarrationError('Preencha o prompt do vídeo ou a legenda antes de gerar sugestões.');
+      return;
+    }
+
+    setIsGeneratingNarration(true);
+    setNarrationError('');
+    setNarrationAudioUrl(null);
+    setShowSuggestions(false);
+
+    try {
+      const suggestions = getNarrationSuggestions(sourceText, theme);
+      
+      if (suggestions.length > 0) {
+        // Use the first suggestion as the narration
+        const selectedNarration = suggestions[0];
+        setFrenchNarration(selectedNarration);
+        setShowSuggestions(true);
+        setNarrationError('Sugestão gerada! Você pode editar o texto ou usar outras sugestões.');
+      } else {
+        // Fallback generic narration
+        const fallback = `Cette scène captivante nous invite à observer et à réfléchir. Chaque détail raconte une histoire unique, celle d'un monde en mouvement perpétuel. Prenez le temps d'apprécier ce moment précieux.`;
+        setFrenchNarration(fallback);
+        setShowSuggestions(true);
+      }
+    } catch (err) {
+      setNarrationError('Erro ao gerar sugestão. Por favor, escreva manualmente.');
+    } finally {
+      setIsGeneratingNarration(false);
+    }
+  };
+
+  // ── Use alternative suggestion ─────────────────────────────────────────
+  const useAlternativeSuggestion = () => {
+    const sourceText = videoPrompt.trim() || caption.trim();
+    const suggestions = getNarrationSuggestions(sourceText, theme);
+    
+    // Cycle through suggestions
+    const currentIndex = suggestions.findIndex(s => s === frenchNarration);
+    const nextIndex = (currentIndex + 1) % suggestions.length;
+    setFrenchNarration(suggestions[nextIndex]);
+  };
+
+  // ── Preview audio using Web Speech API ─────────────────────────────────
+  const handlePreviewAudio = () => {
+    if (!frenchNarration.trim()) {
+      setNarrationError('Escreva ou gere uma narração primeiro.');
+      return;
+    }
+    speakWithWebSpeech(frenchNarration);
+    setNarrationAudioUrl('web-speech');
+  };
+
+  // ── Stop audio preview ────────────────────────────────────────────────
+  const handleStopAudio = () => {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    setNarrationAudioUrl(null);
   };
 
   // ── Submit post ───────────────────────────────────────────────────────────
@@ -142,13 +287,14 @@ export default function PostForm({ onPostCreated }: { onPostCreated: () => void 
     }
 
     try {
-      // Upload source image (will reuse if already uploaded during video gen)
+      // Upload source image via Cloudinary
       const imageUrl = await uploadImage(image);
 
       const newPost: Omit<Post, '_id'> = {
         caption,
         imageUrl,
         ...(videoUrl ? { videoUrl, videoPrompt } : {}),
+        ...(frenchNarration.trim() ? { frenchNarration: frenchNarration.trim() } : {}),
         theme: theme as Post['theme'],
         startDate: new Date(),
         endDate: isPermanent
@@ -166,7 +312,10 @@ export default function PostForm({ onPostCreated }: { onPostCreated: () => void 
         body: JSON.stringify(newPost),
       });
 
-      if (!response.ok) throw new Error('Erro ao criar publicação');
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData?.message || 'Erro ao criar publicação');
+      }
 
       // Reset
       setCaption('');
@@ -176,6 +325,10 @@ export default function PostForm({ onPostCreated }: { onPostCreated: () => void 
       setVideoPrompt('');
       setVideoGenStep('idle');
       setVideoError('');
+      setFrenchNarration('');
+      setNarrationAudioUrl(null);
+      setNarrationError('');
+      setShowSuggestions(false);
       setIsPermanent(false);
       setEndDate('');
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -190,6 +343,18 @@ export default function PostForm({ onPostCreated }: { onPostCreated: () => void 
     }
   };
 
+  // Cleanup speech on unmount
+  const cleanupSpeech = () => {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+  };
+  
+  // Component cleanup
+  useEffect(() => {
+    return cleanupSpeech;
+  }, []);
+
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="bg-gray-800 p-6 rounded-xl shadow-2xl max-w-2xl mx-auto border border-gray-700">
@@ -197,7 +362,7 @@ export default function PostForm({ onPostCreated }: { onPostCreated: () => void 
         🎬 Criar Nova Publicação
       </h2>
       <p className="text-gray-400 text-sm mb-5">
-        Carregue uma foto, descreva o comportamento e gere um vídeo animado via Kling.ai.
+        Carregue uma foto, descreva o comportamento e gere um vídeo animado via Kling.ai com narração em francês.
       </p>
 
       {error && (
@@ -321,6 +486,104 @@ export default function PostForm({ onPostCreated }: { onPostCreated: () => void 
             </p>
           </div>
         )}
+
+        {/* ── Narração em Francês (Sem API paga!) ── */}
+        <div className="bg-gray-900/60 border border-yellow-800/50 rounded-xl p-4 space-y-3">
+          <h3 className="text-yellow-300 font-semibold text-sm flex items-center gap-2">
+            🎙️ Narração em Francês
+            <span className="text-gray-500 font-normal">(tocada automaticamente quando o vídeo for assistido)</span>
+          </h3>
+
+          <div className="text-xs text-emerald-400 bg-emerald-900/30 p-2 rounded-lg">
+            💚 Sem custo extra! Usamos Web Speech API para voz em francês e sugestões pré-definidas.
+          </div>
+
+          <div>
+            <label className="block text-gray-300 text-sm mb-1.5">
+              Texto da narração em francês <span className="text-gray-500">— estilo documentário</span>
+            </label>
+            <textarea
+              rows={4}
+              placeholder="Ex: Un merle posé sur la branche observe le monde avec curiosité. Soudain, il déploie ses ailes et s'envole vers un autre arbre, portant avec lui la légèreté du matin..."
+              value={frenchNarration}
+              onChange={(e) => {
+                setFrenchNarration(e.target.value);
+                setNarrationAudioUrl(null);
+              }}
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 text-white rounded-lg
+                focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm resize-none placeholder-gray-600"
+            />
+          </div>
+
+          <div className="flex gap-2 flex-wrap">
+            {/* Generate suggestions button (FREE - no API key) */}
+            <button
+              type="button"
+              onClick={handleGenerateNarrationWithSuggestions}
+              disabled={isGeneratingNarration}
+              className="flex-1 py-2 px-3 bg-yellow-800/50 hover:bg-yellow-700/60 border border-yellow-700/50
+                text-yellow-300 font-medium rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed
+                flex items-center justify-center gap-2 text-sm"
+            >
+              {isGeneratingNarration ? (
+                <>
+                  <span className="animate-spin inline-block w-3 h-3 border-2 border-yellow-300 border-t-transparent rounded-full"></span>
+                  Gerando sugestão...
+                </>
+              ) : (
+                '✨ Sugerir narração (grátis)'
+              )}
+            </button>
+
+            {/* Alternative suggestion button */}
+            {showSuggestions && frenchNarration && (
+              <button
+                type="button"
+                onClick={useAlternativeSuggestion}
+                className="py-2 px-3 bg-purple-800/50 hover:bg-purple-700/60 border border-purple-700/50
+                  text-purple-300 font-medium rounded-lg text-sm transition"
+              >
+                🔄 Outra sugestão
+              </button>
+            )}
+
+            {/* Preview audio button - Web Speech API */}
+            {frenchNarration.trim() && (
+              <button
+                type="button"
+                onClick={narrationAudioUrl === 'web-speech' ? handleStopAudio : handlePreviewAudio}
+                className="py-2 px-3 bg-gray-700 hover:bg-gray-600 border border-gray-600
+                  text-gray-300 rounded-lg text-sm transition flex items-center gap-1"
+              >
+                {narrationAudioUrl === 'web-speech' ? '⏹️ Parar áudio' : '🔊 Ouvir prévia (grátis)'}
+              </button>
+            )}
+          </div>
+
+          {narrationError && (
+            <p className="text-orange-400 text-xs">ℹ️ {narrationError}</p>
+          )}
+
+          {narrationAudioUrl === 'web-speech' && (
+            <div className="mt-2 p-2 bg-cyan-900/30 rounded-lg">
+              <p className="text-green-400 text-xs mb-1.5 font-medium flex items-center gap-1">
+                🎤 Áudio sendo reproduzido com Web Speech API:
+              </p>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-1 bg-gray-700 rounded-full overflow-hidden">
+                  <div className="h-full w-full bg-cyan-400 animate-pulse rounded-full"></div>
+                </div>
+                <span className="text-xs text-gray-400">voz natural do navegador</span>
+              </div>
+            </div>
+          )}
+
+          <p className="text-gray-500 text-xs">
+            💡 <strong>100% gratuito!</strong> As sugestões são geradas localmente baseadas no tema e descrição. 
+            O áudio usa a Web Speech API do seu navegador (qualidade de voz depende do sistema). 
+            Você também pode escrever ou editar manualmente o texto.
+          </p>
+        </div>
 
         {/* ── Legenda narrativa ── */}
         <div>

@@ -4,9 +4,10 @@ export interface Post {
   _id?: ObjectId;
   caption: string;
   imageUrl: string;
-  videoUrl?: string;       // URL do vídeo gerado pelo Kling.ai (opcional)
-  videoPrompt?: string;    // Prompt usado para gerar o vídeo
-  videoDuration?: number;  // Duração em segundos (30–120)
+  videoUrl?: string;        // URL do vídeo gerado pelo Kling.ai (opcional)
+  videoPrompt?: string;     // Prompt usado para gerar o vídeo
+  videoDuration?: number;   // Duração em segundos (30–120)
+  frenchNarration?: string; // Narração em francês que será lida em áudio quando o vídeo tocar
   theme: 'Gramática' | 'Cultura' | 'Gastronomia' | 'Tecnologia' | 'Ditados' | 'Natureza' | 'Turismo' | 'Pensamentos';
   startDate: Date;
   endDate: Date | null;
