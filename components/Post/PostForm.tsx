@@ -86,6 +86,7 @@ export default function PostForm({ onPostCreated }: { onPostCreated: () => void 
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [videoGenStep, setVideoGenStep] = useState<'idle' | 'uploading' | 'generating' | 'done' | 'error'>('idle');
   const [videoError, setVideoError] = useState('');
+  const [videoCreatedLocally, setVideoCreatedLocally] = useState(false);
 
   // French narration
   const [frenchNarration, setFrenchNarration] = useState('');
@@ -109,12 +110,124 @@ export default function PostForm({ onPostCreated }: { onPostCreated: () => void 
     setVideoUrl(null);
     setVideoGenStep('idle');
     setVideoError('');
+    setVideoCreatedLocally(false);
     if (file) {
       const url = URL.createObjectURL(file);
       setImagePreview(url);
     } else {
       setImagePreview(null);
     }
+  };
+
+  const generateLocalVideoFallback = async (sourceUrl: string, promptText: string, duration = 5): Promise<string> => {
+    if (typeof window === 'undefined') {
+      throw new Error('Fallback de vídeo local só funciona no navegador.');
+    }
+    if (!('MediaRecorder' in window)) {
+      throw new Error('Seu navegador não suporta MediaRecorder para gerar vídeo local.');
+    }
+
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      image.crossOrigin = 'anonymous';
+      image.src = sourceUrl;
+      image.onload = () => {
+        const width = 640;
+        const height = 480;
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+
+        if (!ctx) {
+          reject(new Error('Falha ao inicializar o contexto de desenho.'));
+          return;
+        }
+
+        const stream = canvas.captureStream(25);
+        const recordedChunks: BlobPart[] = [];
+        let recorder: MediaRecorder;
+
+        try {
+          recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8' });
+        } catch (err) {
+          reject(new Error('Seu navegador não suporta gravação de vídeo WebM.'));
+          return;
+        }
+
+        recorder.ondataavailable = (event) => {
+          if (event.data && event.data.size > 0) {
+            recordedChunks.push(event.data);
+          }
+        };
+        recorder.onerror = () => reject(new Error('Falha na gravação do vídeo local.'));
+        recorder.onstop = () => {
+          const blob = new Blob(recordedChunks, { type: 'video/webm' });
+          resolve(URL.createObjectURL(blob));
+        };
+
+        recorder.start();
+
+        const frameCount = Math.max(1, Math.floor(duration * 20));
+        let frame = 0;
+
+        const wrapText = (text: string, x: number, y: number, maxWidth: number, lineHeight: number) => {
+          const words = text.split(' ');
+          let line = '';
+          for (const word of words) {
+            const testLine = line ? `${line} ${word}` : word;
+            const metrics = ctx.measureText(testLine);
+            if (metrics.width > maxWidth && line) {
+              ctx.fillText(line, x, y);
+              line = word;
+              y += lineHeight;
+            } else {
+              line = testLine;
+            }
+          }
+          if (line) ctx.fillText(line, x, y);
+        };
+
+        const drawFrame = () => {
+          const progress = frame / frameCount;
+          const zoom = 1 + 0.05 * Math.sin(progress * Math.PI * 2);
+          const aspect = image.width / image.height;
+          let drawWidth = width * zoom;
+          let drawHeight = height * zoom;
+
+          if (aspect > width / height) {
+            drawHeight = drawWidth / aspect;
+          } else {
+            drawWidth = drawHeight * aspect;
+          }
+
+          const x = (width - drawWidth) / 2;
+          const y = (height - drawHeight) / 2;
+
+          ctx.clearRect(0, 0, width, height);
+          ctx.fillStyle = '#121212';
+          ctx.fillRect(0, 0, width, height);
+          ctx.drawImage(image, x, y, drawWidth, drawHeight);
+
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+          ctx.fillRect(0, height - 90, width, 90);
+          ctx.fillStyle = '#fff';
+          ctx.font = '16px sans-serif';
+          ctx.textBaseline = 'top';
+          wrapText(promptText.trim() || 'Animação gerada localmente', 16, height - 84, width - 32, 22);
+
+          frame += 1;
+          if (frame < frameCount) {
+            window.requestAnimationFrame(drawFrame);
+          } else {
+            recorder.stop();
+          }
+        };
+
+        drawFrame();
+      };
+      image.onerror = () => reject(new Error('Não foi possível carregar a imagem para o vídeo local.'));
+    });
   };
 
   // ── Generate video with Kling.ai ─────────────────────────────────────────
@@ -131,6 +244,7 @@ export default function PostForm({ onPostCreated }: { onPostCreated: () => void 
     setIsGeneratingVideo(true);
     setVideoError('');
     setVideoUrl(null);
+    setVideoCreatedLocally(false);
 
     try {
       // Step 1 – upload source image via Cloudinary
@@ -157,11 +271,35 @@ export default function PostForm({ onPostCreated }: { onPostCreated: () => void 
       const klingData = await klingRes.json();
       const generatedVideoUrl: string = klingData.videoUrl;
 
+      setVideoCreatedLocally(false);
       setVideoUrl(generatedVideoUrl);
       setVideoGenStep('done');
     } catch (err) {
       setVideoGenStep('error');
-      setVideoError(err instanceof Error ? err.message : 'Erro desconhecido ao gerar vídeo');
+      const message = err instanceof Error ? err.message : 'Erro desconhecido ao gerar vídeo';
+      const balanceError = /account balance not enough/i.test(message) || /balance.*not enough/i.test(message);
+
+      if (balanceError && imagePreview) {
+        try {
+          setVideoError('Saldo Kling.ai insuficiente. Tentando gerar vídeo localmente...');
+          const fallbackUrl = await generateLocalVideoFallback(imagePreview, videoPrompt, 5);
+          setVideoCreatedLocally(true);
+          setVideoUrl(fallbackUrl);
+          setVideoGenStep('done');
+          setVideoError('');
+          return;
+        } catch (fallbackErr) {
+          const fallbackMessage = fallbackErr instanceof Error ? fallbackErr.message : 'Erro no fallback de vídeo local.';
+          setVideoError(`Kling.ai sem saldo e fallback local falhou: ${fallbackMessage}`);
+          return;
+        }
+      }
+
+      if (balanceError) {
+        setVideoError('Saldo insuficiente na conta Kling.ai. Reponha créditos no painel Kling.ai ou tente novamente mais tarde.');
+      } else {
+        setVideoError(message);
+      }
     } finally {
       setIsGeneratingVideo(false);
     }
@@ -464,6 +602,10 @@ export default function PostForm({ onPostCreated }: { onPostCreated: () => void 
 
             {videoError && (
               <p className="text-red-400 text-xs mt-1">⚠️ {videoError}</p>
+            )}
+
+            {videoCreatedLocally && videoUrl && (
+              <p className="text-emerald-300 text-xs mt-1">🎬 Vídeo criado localmente com fallback gratuito.</p>
             )}
 
             {/* Video preview */}
