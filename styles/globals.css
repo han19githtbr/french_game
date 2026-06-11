@@ -376,3 +376,11 @@ select option:checked {
 .loss-modal .modal-content { background: linear-gradient(180deg, rgba(20,20,20,0.95), rgba(10,10,10,0.95)); border: 2px solid rgba(255,80,80,0.85); }
 .loss-modal .modal-content h2 { color: #ff7a7a; }
 .loss-modal .modal-actions button { margin: 0 8px; }
+/* ── Carrossel de cards – esconde a scrollbar mas mantém funcional ── */
+.hide-scrollbar {
+  scrollbar-width: none;       /* Firefox */
+  -ms-overflow-style: none;    /* IE/Edge */
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;               /* Chrome/Safari */
+}

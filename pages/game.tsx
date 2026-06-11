@@ -2123,117 +2123,225 @@ export default function Game({}: GameProps) {
         Jogo para treinar o Francês
       </motion.h1>
 
-      <div className="grid w-full max-w-6xl gap-4 mb-8 md:grid-cols-3 sticky-cards-mobile">
-        {/* CARD 1 — Missão do Dia */}
-        <div className={`rounded-xl border bg-[#101722]/95 p-5 shadow-xl relative overflow-hidden transition hover:-translate-y-1 cursor-pointer
-          ${dailyMission && !dailyMission.completed
-            ? 'border-blue-400/60 shadow-blue-950/50 ring-1 ring-blue-500/30 animate-pulse-border'
-            : 'border-blue-500/30 shadow-blue-950/30 hover:border-blue-400/60'
-          }`}
-          onClick={() => { const el = document.querySelector('.flex.flex-wrap.justify-center.gap-6'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }}
-          title="Clique para ir ao jogo"
-        >
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-500/80 to-transparent rounded-t-2xl" />
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[10px] uppercase tracking-[0.25em] text-blue-400 font-semibold">Missão do dia</span>
-            <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full
-              ${dailyMission?.completed
-                ? 'bg-green-900/40 text-green-300 border border-green-700/50'
-                : 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/40'
-              }`}>
-              {dailyMission?.completed ? '✓ Concluída' : '● Em andamento'}
-            </span>
-          </div>
-          <h2 className="text-xl font-bold text-white mb-1">{dailyMission?.title || 'Carregando missão...'}</h2>
-          <p className="text-sm text-gray-400 mb-4">{dailyMission?.description || 'Complete atividades de francês para avançar.'}</p>
-          <div className="rounded-full bg-white/5 h-1.5 overflow-hidden mb-3">
-            <div
-              className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full shadow-[0_0_8px_rgba(96,165,250,0.5)] transition-all duration-500"
-              style={{ width: `${dailyMission ? Math.min(100, Math.round((dailyMission.progress / Math.max(1, dailyMission.target)) * 100)) : 0}%` }}
-            />
-          </div>
-          <p className="text-sm text-gray-300">
-            Progresso: <strong className="text-white">{dailyMission?.progress ?? 0}</strong> / {dailyMission?.target ?? 1}
-          </p>
-          {dailyMission && !dailyMission.completed && (
-            <p className="mt-2 text-[11px] text-yellow-400/80 flex items-center gap-1">
-              🎁 Recompensa: <strong className="text-yellow-300">+{dailyMission.rewardXp} XP</strong>
-            </p>
-          )}
-          {dailyMission?.completed && (
-            <p className="mt-2 text-[11px] text-green-400/80 flex items-center gap-1">
-              ✓ Bônus de <strong className="text-green-300">+{dailyMission.rewardXp} XP</strong> ganho!
-            </p>
-          )}
+      {/* ── CARROSSEL DE CARDS (topo) ──────────────────────────────────────
+           Desktop : 3 cards visíveis lado a lado, scroll horizontal para ver o 4º (Trilha).
+           Mobile  : 1 card visível por vez, scroll horizontal para os demais.
+      ─────────────────────────────────────────────────────────────────────── */}
+      <div
+        className="w-full max-w-6xl mb-8 overflow-x-auto pb-3 hide-scrollbar"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
+        {/* Faixa indicadora de scroll (aparece só no mobile) */}
+        <div className="flex md:hidden items-center justify-end pr-1 mb-1 gap-1">
+          <span className="text-[10px] text-gray-500 italic">deslize para ver mais</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-500"><path d="M9 18l6-6-6-6"/></svg>
         </div>
 
-        {/* CARD 2 — Nível Atual */}
-        <div className="rounded-xl border border-fuchsia-500/30 bg-[#111321]/95 p-5 shadow-xl shadow-fuchsia-950/20 relative overflow-hidden transition hover:-translate-y-1 hover:border-fuchsia-400/60 cursor-pointer"
-          onClick={() => { const el = document.querySelector('.mt-5.grid.gap-3.md\\:grid-cols-4'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }}
-          title="Clique para ver os níveis"
+        <div
+          className="
+            flex gap-4
+            /* Mobile: cada card ocupa ~88vw → um card por vez */
+            [&>*]:min-w-[88vw]
+            /* Desktop: cada card ocupa (100%-2×gap)/3 → 3 cards por vez */
+            md:[&>*]:min-w-[calc(33.333%-11px)]
+            sticky-cards-mobile
+          "
         >
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-fuchsia-500/80 to-transparent rounded-t-2xl" />
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[10px] uppercase tracking-[0.25em] text-fuchsia-400 font-semibold">Nível atual</span>
-            <span className="text-[11px] text-gray-400">
-              Próximo: <span className="text-fuchsia-300 font-semibold">{gameProgressSummary.nextLevelName}</span>
-            </span>
-          </div>
-          <div className="mb-4 flex items-end justify-between gap-3">
-            <div>
-              <h2 className="text-3xl font-bold text-white mb-1">{gameProgressSummary.levelName}</h2>
-              <p className="text-sm text-gray-400">Nivel {gameProgressSummary.currentLevel} de 4 - {gameProgressSummary.totalXp} XP</p>
+          {/* CARD 1 — Missão do Dia */}
+          <div className={`rounded-xl border bg-[#101722]/95 p-5 shadow-xl relative overflow-hidden transition hover:-translate-y-1 cursor-pointer flex-shrink-0
+            ${dailyMission && !dailyMission.completed
+              ? 'border-blue-400/60 shadow-blue-950/50 ring-1 ring-blue-500/30 animate-pulse-border'
+              : 'border-blue-500/30 shadow-blue-950/30 hover:border-blue-400/60'
+            }`}
+            onClick={() => { const el = document.querySelector('.flex.flex-wrap.justify-center.gap-6'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }}
+            title="Clique para ir ao jogo"
+          >
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-500/80 to-transparent rounded-t-2xl" />
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[10px] uppercase tracking-[0.25em] text-blue-400 font-semibold">Missão do dia</span>
+              <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full
+                ${dailyMission?.completed
+                  ? 'bg-green-900/40 text-green-300 border border-green-700/50'
+                  : 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/40'
+                }`}>
+                {dailyMission?.completed ? '✓ Concluída' : '● Em andamento'}
+              </span>
             </div>
-            <span className="rounded-full border border-fuchsia-500/40 bg-fuchsia-500/10 px-3 py-1 text-xs font-bold text-fuchsia-200">
-              {gameProgressSummary.difficultyLabel}
-            </span>
+            <h2 className="text-xl font-bold text-white mb-1">{dailyMission?.title || 'Carregando missão...'}</h2>
+            <p className="text-sm text-gray-400 mb-4">{dailyMission?.description || 'Complete atividades de francês para avançar.'}</p>
+            <div className="rounded-full bg-white/5 h-1.5 overflow-hidden mb-3">
+              <div
+                className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full shadow-[0_0_8px_rgba(96,165,250,0.5)] transition-all duration-500"
+                style={{ width: `${dailyMission ? Math.min(100, Math.round((dailyMission.progress / Math.max(1, dailyMission.target)) * 100)) : 0}%` }}
+              />
+            </div>
+            <p className="text-sm text-gray-300">
+              Progresso: <strong className="text-white">{dailyMission?.progress ?? 0}</strong> / {dailyMission?.target ?? 1}
+            </p>
+            {dailyMission && !dailyMission.completed && (
+              <p className="mt-2 text-[11px] text-yellow-400/80 flex items-center gap-1">
+                🎁 Recompensa: <strong className="text-yellow-300">+{dailyMission.rewardXp} XP</strong>
+              </p>
+            )}
+            {dailyMission?.completed && (
+              <p className="mt-2 text-[11px] text-green-400/80 flex items-center gap-1">
+                ✓ Bônus de <strong className="text-green-300">+{dailyMission.rewardXp} XP</strong> ganho!
+              </p>
+            )}
           </div>
-          <div className="rounded-full bg-white/5 h-1.5 overflow-hidden mb-3">
-            <div
-              className="h-full bg-gradient-to-r from-fuchsia-400 to-pink-400 rounded-full transition-all duration-500"
-              style={{ width: `${gameProgressSummary.levelProgress}%` }}
-            />
-          </div>
-          <p className="mb-2 text-sm text-gray-300">{gameProgressSummary.levelDescription}</p>
-          <p className="text-sm text-gray-300">
-            {gameProgressSummary.currentLevel >= 4
-              ? 'Voce chegou ao nivel maximo.'
-              : `${gameProgressSummary.xpToNext} XP ate o proximo nivel`}
-          </p>
-        </div>
 
-        {/* CARD 3 — Premium Pack */}
-        <div className="rounded-xl border border-emerald-500/30 bg-[#0f1714]/95 p-5 shadow-xl shadow-emerald-950/20 relative overflow-hidden transition hover:-translate-y-1 hover:border-emerald-400/60">
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500/80 to-transparent rounded-t-2xl" />
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[10px] uppercase tracking-[0.25em] text-emerald-400 font-semibold">Premium Pack</span>
-            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${isPremium ? 'bg-emerald-900/40 text-green-300 border border-emerald-700/50' : 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/40'}`}>
-              {isPremium ? 'Ativo' : 'Disponível'}
-            </span>
-          </div>
-          <h2 className="text-xl font-bold text-white mb-1">{isPremium ? 'Bônus ativado' : 'Suporte para liberar'}</h2>
-          <p className="text-sm text-gray-400 mb-3">
-            {isPremium
-              ? 'Você tem +2 tentativas por rodada e missões especiais.'
-              : 'Apoie o projeto para desbloquear vantagens leves no jogo.'}
-          </p>
-          <p className="text-sm text-gray-300 mb-4">
-            Tentativas atuais: <strong className="text-white">{remainingAttempts}</strong> / {maxAttempts}
-          </p>
-          {!isPremium ? (
-            <button
-              onClick={() => setPremiumModalOpen(true)}
-              className="w-full rounded-xl border border-emerald-600/70 bg-emerald-900/20 py-2.5 text-sm font-semibold text-emerald-200 hover:bg-emerald-900/40 hover:border-emerald-500 transition-all duration-200 cursor-pointer"
-            >
-              Apoiar e desbloquear
-            </button>
-          ) : (
-            <div className="rounded-xl bg-emerald-900/30 border border-emerald-800/40 p-3 text-sm text-green-200">
-              ✓ Premium ativo. Obrigado pelo apoio!
+          {/* CARD 2 — Nível Atual */}
+          <div className="rounded-xl border border-fuchsia-500/30 bg-[#111321]/95 p-5 shadow-xl shadow-fuchsia-950/20 relative overflow-hidden transition hover:-translate-y-1 hover:border-fuchsia-400/60 cursor-pointer flex-shrink-0"
+            onClick={() => { const el = document.querySelector('.mt-5.grid.gap-3.md\\:grid-cols-4'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }}
+            title="Clique para ver os níveis"
+          >
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-fuchsia-500/80 to-transparent rounded-t-2xl" />
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[10px] uppercase tracking-[0.25em] text-fuchsia-400 font-semibold">Nível atual</span>
+              <span className="text-[11px] text-gray-400">
+                Próximo: <span className="text-fuchsia-300 font-semibold">{gameProgressSummary.nextLevelName}</span>
+              </span>
             </div>
-          )}
-        </div>
-      </div>
+            <div className="mb-4 flex items-end justify-between gap-3">
+              <div>
+                <h2 className="text-3xl font-bold text-white mb-1">{gameProgressSummary.levelName}</h2>
+                <p className="text-sm text-gray-400">Nivel {gameProgressSummary.currentLevel} de 4 - {gameProgressSummary.totalXp} XP</p>
+              </div>
+              <span className="rounded-full border border-fuchsia-500/40 bg-fuchsia-500/10 px-3 py-1 text-xs font-bold text-fuchsia-200">
+                {gameProgressSummary.difficultyLabel}
+              </span>
+            </div>
+            <div className="rounded-full bg-white/5 h-1.5 overflow-hidden mb-3">
+              <div
+                className="h-full bg-gradient-to-r from-fuchsia-400 to-pink-400 rounded-full transition-all duration-500"
+                style={{ width: `${gameProgressSummary.levelProgress}%` }}
+              />
+            </div>
+            <p className="mb-2 text-sm text-gray-300">{gameProgressSummary.levelDescription}</p>
+            <p className="text-sm text-gray-300">
+              {gameProgressSummary.currentLevel >= 4
+                ? 'Voce chegou ao nivel maximo.'
+                : `${gameProgressSummary.xpToNext} XP ate o proximo nivel`}
+            </p>
+          </div>
+
+          {/* CARD 3 — Premium Pack */}
+          <div className="rounded-xl border border-emerald-500/30 bg-[#0f1714]/95 p-5 shadow-xl shadow-emerald-950/20 relative overflow-hidden transition hover:-translate-y-1 hover:border-emerald-400/60 flex-shrink-0">
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500/80 to-transparent rounded-t-2xl" />
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[10px] uppercase tracking-[0.25em] text-emerald-400 font-semibold">Premium Pack</span>
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${isPremium ? 'bg-emerald-900/40 text-green-300 border border-emerald-700/50' : 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/40'}`}>
+                {isPremium ? 'Ativo' : 'Disponível'}
+              </span>
+            </div>
+            <h2 className="text-xl font-bold text-white mb-1">{isPremium ? 'Bônus ativado' : 'Suporte para liberar'}</h2>
+            <p className="text-sm text-gray-400 mb-3">
+              {isPremium
+                ? 'Você tem +2 tentativas por rodada e missões especiais.'
+                : 'Apoie o projeto para desbloquear vantagens leves no jogo.'}
+            </p>
+            <p className="text-sm text-gray-300 mb-4">
+              Tentativas atuais: <strong className="text-white">{remainingAttempts}</strong> / {maxAttempts}
+            </p>
+            {!isPremium ? (
+              <button
+                onClick={() => setPremiumModalOpen(true)}
+                className="w-full rounded-xl border border-emerald-600/70 bg-emerald-900/20 py-2.5 text-sm font-semibold text-emerald-200 hover:bg-emerald-900/40 hover:border-emerald-500 transition-all duration-200 cursor-pointer"
+              >
+                Apoiar e desbloquear
+              </button>
+            ) : (
+              <div className="rounded-xl bg-emerald-900/30 border border-emerald-800/40 p-3 text-sm text-green-200">
+                ✓ Premium ativo. Obrigado pelo apoio!
+              </div>
+            )}
+          </div>
+
+          {/* CARD 4 — Trilha de Estudo (entra no carrossel como 4º item) */}
+          <div className="rounded-xl border border-slate-700/80 bg-[#0b1017] p-5 shadow-2xl shadow-black/30 flex-shrink-0">
+            <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between mb-5">
+              <div>
+                <span className="text-sm uppercase tracking-[0.2em] text-cyan-300">Trilha de estudo</span>
+                <h2 className="mt-2 text-2xl font-bold text-white">Seu caminho no frances</h2>
+                <p className="mt-1 text-sm text-gray-400">Pratique vocabulario, avance para frases e feche com ditados usados no dia a dia.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => router.push('/results')}
+                className="rounded-xl border border-cyan-700 px-4 py-2 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-950 whitespace-nowrap"
+              >
+                Ver evolucao
+              </button>
+            </div>
+
+            <div className="mt-2 grid gap-3 grid-cols-2 md:grid-cols-4">
+              {LEVELS.map(level => (
+                <div
+                  key={level.level}
+                  className={`rounded-xl border p-3 transition ${
+                    gameProgressSummary.currentLevel === level.level
+                      ? 'border-cyan-400 bg-cyan-400/10 shadow-[0_0_20px_rgba(34,211,238,0.14)]'
+                      : gameProgressSummary.currentLevel > level.level
+                        ? 'border-green-500/40 bg-green-500/10'
+                        : 'border-slate-700 bg-slate-900/70'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-bold text-white">N{level.level} {level.name}</span>
+                    <span className="text-[10px] uppercase tracking-wide text-gray-400">{level.difficultyLabel}</span>
+                  </div>
+                  <p className="mt-2 text-xs text-gray-400">{level.cardsPerRound} imagens / {level.optionsPerCard} opcoes</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-5 grid gap-3 grid-cols-1 md:grid-cols-3">
+              {/* Card — Vocabulário Visual */}
+              <div className="rounded-xl border border-blue-800/40 bg-[#0a0d14] p-4 hover:border-blue-600/60 transition-all duration-200">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-semibold text-white">1. Vocabulário visual</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-900/40 text-green-300 border border-green-800/60">Aberto</span>
+                </div>
+                <p className="text-xs text-gray-500 mb-3">Escolha um tema e associe imagem, som e palavra.</p>
+                <p className="text-xs text-blue-400 font-medium">{vocabProgress.uniqueThemes} temas praticados</p>
+              </div>
+
+              {/* Card — Frases Completas */}
+              <div className="rounded-xl border border-indigo-800/40 bg-[#0a0d14] p-4 hover:border-indigo-600/60 transition-all duration-200">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-semibold text-white">2. Frases completas</span>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full
+                    ${isPremium
+                      ? 'bg-green-900/40 text-green-300 border border-green-800/60'
+                      : 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/40'
+                    }`}>
+                    {isPremium ? 'Premium' : 'Requer Premium'}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mb-3">Treine contexto e construção de frases após dominar uma rodada.</p>
+                <p className="text-xs text-indigo-300 font-medium">{frasesProgress.perfectRounds} rodadas perfeitas</p>
+              </div>
+
+              {/* Card — Ditados e Expressões */}
+              <div className="rounded-xl border border-emerald-800/40 bg-[#0a0d14] p-4 hover:border-emerald-600/60 transition-all duration-200">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-semibold text-white">3. Ditados e expressões</span>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full
+                    ${isPremium
+                      ? 'bg-green-900/40 text-green-300 border border-green-800/60'
+                      : 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/40'
+                    }`}>
+                    {isPremium ? 'Premium' : 'Requer Premium'}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mb-3">Ganhe repertório real para entender falas naturais em francês.</p>
+                <p className="text-xs text-emerald-300 font-medium">Sequência perfeita: {ditadosProgress.perfectStreak}</p>
+              </div>
+            </div>
+          </div>
+
+        </div>{/* fim da faixa flex do carrossel */}
+      </div>{/* fim do wrapper scroll */}
 
       <AnimatePresence>
         {premiumModalOpen && (
@@ -2268,95 +2376,7 @@ export default function Game({}: GameProps) {
         )}
       </AnimatePresence>
 
-      <div className="w-full max-w-6xl mb-8 rounded-xl border border-slate-700/80 bg-[#0b1017] p-5 shadow-2xl shadow-black/30">
-        <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-          <div>
-            <span className="text-sm uppercase tracking-[0.2em] text-cyan-300">Trilha de estudo</span>
-            <h2 className="mt-2 text-2xl font-bold text-white">Seu caminho no frances</h2>
-            <p className="mt-1 text-sm text-gray-400">Pratique vocabulario, avance para frases e feche com ditados usados no dia a dia.</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => router.push('/results')}
-            className="rounded-xl border border-cyan-700 px-4 py-2 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-950"
-          >
-            Ver evolucao
-          </button>
-        </div>
 
-        <div className="mt-5 grid gap-3 md:grid-cols-4">
-          {LEVELS.map(level => (
-            <div
-              key={level.level}
-              className={`rounded-xl border p-3 transition ${
-                gameProgressSummary.currentLevel === level.level
-                  ? 'border-cyan-400 bg-cyan-400/10 shadow-[0_0_20px_rgba(34,211,238,0.14)]'
-                  : gameProgressSummary.currentLevel > level.level
-                    ? 'border-green-500/40 bg-green-500/10'
-                    : 'border-slate-700 bg-slate-900/70'
-              }`}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-bold text-white">N{level.level} {level.name}</span>
-                <span className="text-[10px] uppercase tracking-wide text-gray-400">{level.difficultyLabel}</span>
-              </div>
-              <p className="mt-2 text-xs text-gray-400">{level.cardsPerRound} imagens / {level.optionsPerCard} opcoes</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-5 grid gap-3 md:grid-cols-3">
-          {/* Card 1 — Vocabulário Visual */}
-          <div className="rounded-xl border border-blue-800/40 bg-[#0a0d14] p-4 hover:border-blue-600/60 transition-all duration-200">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold text-white">1. Vocabulário visual</span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-900/40 text-green-300 border border-green-800/60">
-                Aberto
-              </span>
-            </div>
-            <p className="text-xs text-gray-500 mb-3">Escolha um tema e associe imagem, som e palavra.</p>
-            <p className="text-xs text-blue-400 font-medium">
-              {vocabProgress.uniqueThemes} temas praticados
-            </p>
-          </div>
-
-          {/* Card 2 — Frases Completas */}
-          <div className="rounded-xl border border-indigo-800/40 bg-[#0a0d14] p-4 hover:border-indigo-600/60 transition-all duration-200">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold text-white">2. Frases completas</span>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full
-                ${isPremium
-                  ? 'bg-green-900/40 text-green-300 border border-green-800/60'
-                  : 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/40'
-                }`}>
-                {isPremium ? 'Premium' : 'Requer Premium'}
-              </span>
-            </div>
-            <p className="text-xs text-gray-500 mb-3">Treine contexto e construção de frases após dominar uma rodada.</p>
-            <p className="text-xs text-indigo-300 font-medium">
-              {frasesProgress.perfectRounds} rodadas perfeitas
-            </p>
-          </div>
-
-          {/* Card 3 — Ditados e Expressões */}
-          <div className="rounded-xl border border-emerald-800/40 bg-[#0a0d14] p-4 hover:border-emerald-600/60 transition-all duration-200">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold text-white">3. Ditados e expressões</span>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full
-                ${isPremium
-                  ? 'bg-green-900/40 text-green-300 border border-green-800/60'
-                  : 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/40'
-                }`}>
-                {isPremium ? 'Premium' : 'Requer Premium'}
-              </span>
-            </div>
-            <p className="text-xs text-gray-500 mb-3">Ganhe repertório real para entender falas naturais em francês.</p>
-            <p className="text-xs text-emerald-300 font-medium">
-              Sequência perfeita: {ditadosProgress.perfectStreak}
-            </p>
-          </div>
-        </div>
-      </div>
 
       <div className="flex flex-col items-center space-y-6">
         <button
