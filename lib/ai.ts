@@ -121,7 +121,9 @@ const generateAICaptions = async (collectionName: string, theme: string, count: 
         if (text) {
           const items = parseJsonResponse(text);
           if (Array.isArray(items) && items.length > 0) {
-            return normalizeCaptionItems(items);
+            const normalized = normalizeCaptionItems(items);
+            if (Array.isArray(normalized) && normalized.length > 0) return normalized;
+            console.warn('[AI] HF model retornou itens, mas todos foram filtrados como inválidos.');
           }
         }
       }
@@ -157,7 +159,9 @@ const generateAICaptions = async (collectionName: string, theme: string, count: 
         if (text) {
           const items = parseJsonResponse(text);
           if (Array.isArray(items) && items.length > 0) {
-            return normalizeCaptionItems(items);
+            const normalized = normalizeCaptionItems(items);
+            if (Array.isArray(normalized) && normalized.length > 0) return normalized;
+            console.warn('[AI] OpenAI retornou itens, mas todos foram filtrados como inválidos.');
           }
         }
       }
@@ -166,10 +170,11 @@ const generateAICaptions = async (collectionName: string, theme: string, count: 
     }
   }
 
-  // 3) Static placeholder fallback
-  console.warn('[AI] Sem provedor de texto disponível, usando placeholders estáticos.');
+  // 3) Static placeholder fallback — use safe, specific French nouns so they pass validation
+  console.warn('[AI] Sem provedor de texto disponível ou respostas inválidas; usando placeholders válidos.');
+  const safeNouns = ['La chaise', 'La table', 'La fenêtre', 'La porte', 'Le livre', 'La tasse', 'La pomme', 'Le chapeau', 'La valise', 'La voiture'];
   return Array.from({ length: count }, (_, i) => ({
-    title: `Objet ${i + 1}`,
+    title: safeNouns[i % safeNouns.length],
     description: `Illustration de vocabulaire en français sur ${theme}`,
   }));
 };
@@ -325,6 +330,11 @@ export const ensureDailyAIItems = async (collectionName: string, theme: string) 
   }
 
   const generated = await generateAICaptions(collectionName, normalizedTheme, toGenerate);
+  console.log(`[AI] generateAICaptions returned ${Array.isArray(generated) ? generated.length : 0} items for theme="${normalizedTheme}"`);
+  if (Array.isArray(generated) && generated.length > 0) {
+    console.log('[AI] Generated titles:', generated.map((g: any) => String(g.title || '').slice(0, 120)));
+  }
+
   const documents = await Promise.all(
     generated.map(async (item, index) => ({
       url: await generateAIImageUrl(normalizedTheme, Date.now() + index),
@@ -336,6 +346,8 @@ export const ensureDailyAIItems = async (collectionName: string, theme: string) 
     })),
   );
 
+  console.log(`[AI] Prepared ${Array.isArray(documents) ? documents.length : 0} documents to insert for theme="${normalizedTheme}"`);
+
   if (documents.length > 0) {
     const insertedDocuments: typeof documents = [];
     await collection.insertMany(documents, { ordered: false }).then(result => {
@@ -346,6 +358,11 @@ export const ensureDailyAIItems = async (collectionName: string, theme: string) 
     }).catch((error) => {
       console.warn('Erro ao inserir itens AI no MongoDB:', error?.message);
     });
+
+    console.log(`[AI] Inserted ${insertedDocuments.length} new AI documents for theme="${normalizedTheme}"`);
+    if (insertedDocuments.length > 0) {
+      console.log('[AI] Inserted document titles:', insertedDocuments.map(d => String(d.title).slice(0, 120)));
+    }
 
     if (insertedDocuments.length > 0) {
       // ── FIX: Try Web Push; on skip/failure, always store in-app notification ──

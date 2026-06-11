@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getDb } from '../../lib/mongodb';
-import { ensureDailyAIItems } from '../../lib/ai';
+import { ensureDailyAIItems, isInvalidCaptionTitle } from '../../lib/ai';
 
 
 const shuffle = <T>(array: T[]): T[] => [...array].sort(() => Math.random() - 0.5);
@@ -33,14 +33,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const themeImages = await collection.find({ theme: theme.toLowerCase() }).toArray();
+    const validThemeImages = themeImages.filter((img: any) => img.title && !isInvalidCaptionTitle(img.title));
 
-    const safeCount = Math.min(count, themeImages.length);
-    if (!themeImages || themeImages.length < safeCount) {
-      return res.status(400).json({ error: 'Tema inválido ou sem imagens suficientes.' });
+    if (!validThemeImages || validThemeImages.length < 1) {
+      return res.status(400).json({ error: 'Tema inválido ou sem títulos válidos disponíveis.' });
     }
 
-    const selectedImages = shuffle(themeImages).slice(0, safeCount);
-    const allTitles = themeImages.map(img => img.title);
+    const safeCount = Math.min(count, validThemeImages.length);
+    const selectedImages = shuffle(validThemeImages).slice(0, safeCount);
+    const validTitles = Array.from(new Set(validThemeImages.map((img: any) => img.title)));
+    const allTitles = validTitles;
 
     const imagesWithOptions = selectedImages.map(img => ({
       url: img.url,
