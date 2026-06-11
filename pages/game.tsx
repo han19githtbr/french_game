@@ -2144,7 +2144,7 @@ export default function Game({}: GameProps) {
         </div>
 
         <div
-          className="overflow-x-auto pb-2 hide-scrollbar"
+          className="overflow-x-auto pb-2 hide-scrollbar md:show-scrollbar md:pb-4"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
           {/* Faixa flex — largura de cada card controlada por min/max-width */}
