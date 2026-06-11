@@ -384,3 +384,18 @@ select option:checked {
 .hide-scrollbar::-webkit-scrollbar {
   display: none;               /* Chrome/Safari */
 }
+
+/* ── Seta animada do carrossel ─────────────────────────────────────── */
+@keyframes carousel-bounce {
+  0%, 100% { transform: translateX(0); opacity: 0.5; }
+  50%       { transform: translateX(5px); opacity: 1; }
+}
+
+.carousel-arrow {
+  animation: carousel-bounce 1.4s ease-in-out infinite;
+}
+
+/* Esconde a hint depois que o usuário já scrollou o carrossel */
+.carousel-hint {
+  transition: opacity 0.4s;
+}
