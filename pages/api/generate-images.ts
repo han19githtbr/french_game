@@ -32,7 +32,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const themeImages = await collection.find({ theme: normalizedTheme }).toArray()
-    const validThemeImages = themeImages.filter(img => img.title && !isInvalidCaptionTitle(img.title))
+
+    // Filtra imagens: exclui títulos inválidos E imagens marcadas explicitamente como inválidas
+    const validThemeImages = themeImages.filter(img =>
+      img.title &&
+      !isInvalidCaptionTitle(img.title) &&
+      img.validated !== false  // exclui apenas se explicitamente false; undefined = ainda não revisado = aceito
+    )
 
     if (!validThemeImages || validThemeImages.length < 1) {
       return res.status(400).json({ error: 'Tema inválido ou sem títulos válidos disponíveis.' })
@@ -42,14 +48,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const validTitles = Array.from(new Set(validThemeImages.map(img => img.title)))
     const safeOptionsCount = Math.min(Math.max(Number(optionsCount) || 4, 2), validTitles.length)
     const selectedImages = shuffle(validThemeImages).slice(0, safeCount)
-    const allTitles = validTitles
 
     const imagesWithOptions = selectedImages.map(img => ({
       url: img.url,
       title: img.title,
       description: img.description || '',
       aiGenerated: img.source === 'ai',
-      options: randomOptions(img.title, allTitles, safeOptionsCount),
+      validated: img.validated,
+      options: randomOptions(img.title, validTitles, safeOptionsCount),
     }))
 
     return res.status(200).json(imagesWithOptions)

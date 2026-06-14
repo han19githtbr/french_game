@@ -2,18 +2,11 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { getDb } from '../../lib/mongodb';
 import { ensureDailyAIItems, isInvalidCaptionTitle } from '../../lib/ai';
 
-
-// Embaralhar um array
 const shuffle = <T>(array: T[]): T[] => [...array].sort(() => Math.random() - 0.5);
-
 
 const randomOptions = (correct: string, allTitles: string[]) => {
   const otherTitles = allTitles.filter(title => title !== correct)
-  const options = shuffle([
-    correct,
-    ...shuffle(otherTitles).slice(0, 5)
-  ])
-  return options
+  return shuffle([correct, ...shuffle(otherTitles).slice(0, 5)])
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -29,8 +22,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const db = await getDb();
-    
     const collection = db.collection('images_sentences');
+
     try {
       await ensureDailyAIItems('images_sentences', theme);
     } catch (aiError) {
@@ -38,7 +31,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const themeImages = await collection.find({ theme: theme.toLowerCase() }).toArray();
-    const validThemeImages = themeImages.filter((img: any) => img.title && !isInvalidCaptionTitle(img.title));
+
+    // Filtra imagens: exclui títulos inválidos E imagens marcadas explicitamente como inválidas
+    const validThemeImages = themeImages.filter((img: any) =>
+      img.title &&
+      !isInvalidCaptionTitle(img.title) &&
+      img.validated !== false
+    );
 
     if (!validThemeImages || validThemeImages.length < 1) {
       return res.status(400).json({ error: 'Tema inválido ou sem títulos válidos disponíveis.' });
@@ -47,19 +46,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const safeCount = Math.min(count, validThemeImages.length);
     const selectedImages = shuffle(validThemeImages).slice(0, safeCount);
     const validTitles = Array.from(new Set(validThemeImages.map((img: any) => img.title)));
-    const allTitles = validTitles;
 
     const imagesWithOptions = selectedImages.map(img => ({
       url: img.url,
       title: img.title,
       description: img.description || '',
       aiGenerated: img.source === 'ai',
-      options: randomOptions(img.title, allTitles),
+      validated: img.validated,
+      options: randomOptions(img.title, validTitles as string[]),
     }))
 
     res.status(200).json(imagesWithOptions);
   } catch (error) {
     console.error('Erro ao buscar imagens:', error);
-    res.status(500).json({ error: 'Erro interno ao buscar imagens.' });
+    res.status(500).json({ error: 'Erro interno ao buscar imagens.' });
   }
 }

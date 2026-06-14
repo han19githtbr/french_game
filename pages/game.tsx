@@ -2372,27 +2372,60 @@ export default function Game({}: GameProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+            onClick={(e) => { if (e.target === e.currentTarget) setPremiumModalOpen(false); }}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="w-full max-w-md rounded-2xl bg-[#111827] p-6 shadow-2xl border border-cyan-600 ring-1 ring-cyan-500/30"
+              initial={{ scale: 0.92, opacity: 0, y: 16 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.92, opacity: 0, y: 16 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+              className="w-full max-w-sm rounded-2xl bg-[#0d1520] p-6 shadow-2xl border border-emerald-600/50 ring-1 ring-emerald-500/20"
             >
-              <h3 className="text-2xl font-bold text-white mb-3">Premium Pack</h3>
-              <p className="text-sm text-gray-300 mb-4">Receba um pequeno bônus de jogo e ajude a manter este aplicativo no ar. O pagamento abre em uma página segura do Stripe e você volta ao app automaticamente.</p>
+              {/* Header */}
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <span className="text-[10px] uppercase tracking-[0.25em] text-emerald-400 font-semibold">Apoio ao Projeto</span>
+                  <h3 className="text-xl font-bold text-white mt-0.5">Premium Pack 🏆</h3>
+                </div>
+                <button
+                  onClick={() => setPremiumModalOpen(false)}
+                  className="text-gray-500 hover:text-white transition text-xl leading-none cursor-pointer"
+                >✕</button>
+              </div>
+
+              {/* Benefits */}
+              <div className="space-y-2 mb-5">
+                <p className="text-xs text-gray-400 mb-3">Apoie e desbloqueie vantagens permanentes no jogo:</p>
+                {[
+                  { icon: '🎯', text: '+2 tentativas por rodada (4 → 6)' },
+                  { icon: '⭐', text: 'Missões especiais com XP bônus' },
+                  { icon: '🔓', text: 'Acesso antecipado a novos temas' },
+                  { icon: '🚀', text: 'Jogo sem interrupções' },
+                  { icon: '💚', text: 'Ajuda a manter o app no ar' },
+                ].map((b, i) => (
+                  <div key={i} className="flex items-center gap-2.5 bg-emerald-900/20 border border-emerald-800/30 rounded-lg px-3 py-2">
+                    <span className="text-base">{b.icon}</span>
+                    <span className="text-sm text-gray-200">{b.text}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* CTA */}
               <button
                 onClick={handleUnlockPremium}
-                className="w-full rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 py-3 text-sm font-semibold text-slate-950 hover:opacity-90 transition mb-3"
+                className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 py-3 text-sm font-bold text-slate-950 hover:opacity-90 active:scale-95 transition-all mb-2 cursor-pointer"
               >
-                Ir para pagamento seguro
+                🔓 Apoiar e desbloquear
               </button>
+              <p className="text-[10px] text-gray-500 text-center mb-3">
+                Pagamento seguro via Stripe · Você retorna automaticamente ao app
+              </p>
               <button
                 onClick={() => setPremiumModalOpen(false)}
-                className="w-full rounded-xl border border-gray-700 bg-transparent py-3 text-sm font-semibold text-gray-200 hover:bg-gray-800 transition"
+                className="w-full rounded-xl border border-gray-700 bg-transparent py-2.5 text-sm text-gray-400 hover:bg-gray-800 hover:text-white transition cursor-pointer"
               >
-                Fechar
+                Agora não
               </button>
             </motion.div>
           </motion.div>
