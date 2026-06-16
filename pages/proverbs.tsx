@@ -218,6 +218,7 @@ export default function Game({}: GameProps) {
 
   const [round, setRound] = useState(1);
   const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
+  const [optionsCount, setOptionsCount] = useState(4);
 
   const [correctSound, setCorrectSound] = useState<HTMLAudioElement | null>(null)
   const [wrongSound, setWrongSound] = useState<HTMLAudioElement | null>(null)
@@ -767,7 +768,7 @@ export default function Game({}: GameProps) {
   
   useEffect(() => {
     if (theme) loadImages()
-  }, [theme, round])
+  }, [theme, round, optionsCount])
 
 
   useEffect(() => {
@@ -888,7 +889,7 @@ export default function Game({}: GameProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ theme }),
+        body: JSON.stringify({ theme, optionsCount }),
       });
   
       if (!res.ok) {
@@ -2003,6 +2004,26 @@ export default function Game({}: GameProps) {
 
       </div>
 
+      <div className="flex flex-wrap justify-center gap-2 mb-4 text-sm text-gray-200">
+        <span className="inline-flex items-center gap-2 rounded-full border border-gray-600 bg-gray-900/80 px-3 py-2">
+          Dificuldade:
+        </span>
+        {[
+          { label: 'Fácil', value: 2 },
+          { label: 'Médio', value: 4 },
+          { label: 'Difícil', value: 6 },
+        ].map(({ label, value }) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => setOptionsCount(value)}
+            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${optionsCount === value ? 'bg-fuchsia-500 text-white shadow-lg shadow-fuchsia-500/30' : 'bg-gray-800 text-gray-200 hover:bg-gray-700'}`}
+          >
+            {label} ({value})
+          </button>
+        ))}
+      </div>
+
       {theme && <h2 className="text-2xl text-gray-300 font-semibold mt-4 mb-6 text-center">Opção: {theme}</h2>}
 
       <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-indigo-900 to-purple-900 min-h-screen text-gray-100">
@@ -2034,33 +2055,35 @@ export default function Game({}: GameProps) {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3, delay: index * 0.1 }}
-                  className={`p-4 rounded-2xl shadow-2xl transition transform flex flex-col items-center relative
+                  className={`p-4 rounded-[40px] shadow-[0_25px_80px_-45px_rgba(124,58,237,0.95)] transition transform flex flex-col items-center relative overflow-hidden border border-violet-400/10 bg-gradient-to-br from-slate-900 via-violet-950 to-purple-950 text-white
                     ${timeLeft === 0 && !results[index]
                       ? 'opacity-50 grayscale pointer-events-none'
-                      : 'bg-transparent text-black hover:scale-105'
+                      : 'hover:-translate-y-0.5 hover:shadow-[0_35px_90px_-55px_rgba(124,58,237,0.95)]'
                     }`}
                 >
-                  <div className="relative w-full">
-                    <img
-                      src={img.url}
-                      alt="imagem"
-                      className="w-full h-48 object-cover rounded-xl cursor-zoom-in"
-                      onClick={() => setZoomedImage(img.url)}
-                    />
+                  <div className="absolute inset-x-4 top-4 flex items-center justify-between gap-2 text-[10px] uppercase tracking-[0.24em] text-violet-200/80">
+                    <span className="inline-flex items-center gap-1 rounded-full border border-violet-300/10 bg-black/40 px-3 py-1">
+                      <span className="h-2 w-2 rounded-full bg-violet-300" />DITADO
+                    </span>
                     {img.aiGenerated && (
-                      <span className="absolute top-2 right-2 flex items-center gap-1 bg-black/70 backdrop-blur-sm text-cyan-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-cyan-500/50 shadow-[0_0_8px_rgba(34,211,238,0.4)]">
+                      <span className="inline-flex items-center gap-1 rounded-full border border-cyan-300/20 bg-cyan-500/10 px-3 py-1 text-cyan-200">
                         🤖 IA
                       </span>
                     )}
-                    {timeLeft === 0 && !results[index] && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-black/60">
-                        <span className="text-4xl">⏱️</span>
-                        <span className="text-white text-sm font-bold mt-1">Tempo esgotado</span>
-                      </div>
-                    )}
                   </div>
-                  <div className="mt-2 text-gray-300">Escolha o título correto:</div>
-                  <div className="relative w-full mt-1">
+                  <div className="relative w-full rounded-[32px] overflow-hidden border border-white/10 shadow-inner shadow-black/30 mt-6">
+                    <img
+                      src={img.url}
+                      alt="imagem"
+                      className="w-full h-52 object-cover"
+                      onClick={() => setZoomedImage(img.url)}
+                    />
+                  </div>
+                  <div className="mt-4 w-full rounded-[28px] border border-white/10 bg-white/5 p-4 text-sm leading-6 text-slate-200 shadow-[0_15px_40px_-32px_rgba(15,23,42,0.8)]">
+                    {img.description || 'Um cartão visual que ilustra o ditado e ajuda a conectar o significado à imagem.'}
+                  </div>
+                  <div className="mt-4 text-slate-300 text-xs uppercase tracking-[0.24em]">Escolha o título correto</div>
+                  <div className="relative w-full mt-3">
                     <select
                       className={`
                         w-full p-4 rounded-xl border-2 border-neon-blue

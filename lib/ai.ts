@@ -15,6 +15,178 @@ const MAX_DATA_URL_BYTES = Number(process.env.AI_MAX_DATA_URL_BYTES || '900000')
 
 const normalizeTheme = (theme: string) => theme.toLowerCase();
 
+const normalizeText = (text: string) =>
+  String(text || '')
+    .trim()
+    .replace(/[“”]/g, '"')
+    .replace(/\s+/g, ' ')
+    .replace(/\s+([,.!?;:])/g, '$1');
+
+const levenshteinDistance = (a: string, b: string) => {
+  const matrix: number[][] = Array.from({ length: a.length + 1 }, () => []);
+  for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
+  for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,
+        matrix[i][j - 1] + 1,
+        matrix[i - 1][j - 1] + cost,
+      );
+    }
+  }
+  return matrix[a.length][b.length];
+};
+
+const titleSimilarity = (a: string, b: string) => {
+  const first = normalizeText(a).toLowerCase();
+  const second = normalizeText(b).toLowerCase();
+  if (!first || !second) return 0;
+  if (first === second) return 1;
+
+  const tokensA = Array.from(new Set(first.split(/\W+/).filter(Boolean)));
+  const tokensB = Array.from(new Set(second.split(/\W+/).filter(Boolean)));
+  const intersection = tokensA.filter(token => tokensB.includes(token)).length;
+  const union = new Set([...tokensA, ...tokensB]).size;
+  const wordScore = union ? intersection / union : 0;
+  const charScore = 1 - levenshteinDistance(first, second) / Math.max(first.length, second.length, 1);
+  return Math.max(0, Math.min(1, wordScore * 0.6 + charScore * 0.4));
+};
+
+const chooseBestTitle = (candidate: string, titles: string[]) => {
+  const normalizedCandidate = normalizeText(candidate).toLowerCase();
+  if (!normalizedCandidate) return null;
+
+  let bestMatch: string | null = null;
+  let bestScore = 0;
+
+  titles.forEach(title => {
+    const normalizedTitle = normalizeText(title).toLowerCase();
+    if (!normalizedTitle) return;
+    if (normalizedCandidate === normalizedTitle) {
+      bestMatch = title;
+      bestScore = 1;
+      return;
+    }
+
+    if (normalizedCandidate.includes(normalizedTitle) || normalizedTitle.includes(normalizedCandidate)) {
+      bestMatch = title;
+      bestScore = Math.max(bestScore, 0.9);
+      return;
+    }
+
+    const score = titleSimilarity(normalizedCandidate, normalizedTitle);
+    if (score > bestScore) {
+      bestScore = score;
+      bestMatch = title;
+    }
+  });
+
+  return bestScore >= 0.65 ? bestMatch : null;
+};
+
+const buildFallbackTitlePrompt = (collectionName: string, theme: string, candidate: string) => {
+  const normalizedTheme = normalizeTheme(theme);
+  if (collectionName === 'images') {
+    return `Você é um assistente que gera apenas JSON. Dado um rascunho de título em francês: "${candidate}", gere uma nova legenda curta em francês que seja um substantivo ou expressão específica e apropriada para vocabulário sobre o tema ${normalizedTheme}. Retorne apenas um array JSON com um objeto no formato {"title":"..."}. O título deve ser preciso, concreto e não genérico.`;
+  }
+
+  if (collectionName === 'images_sentences') {
+    return `Você é um assistente que gera apenas JSON. Dado um rascunho de frase em francês: "${candidate}", gere uma frase completa natural em francês que descreva uma cena ou situação relacionada ao tema ${normalizedTheme}. Retorne apenas um array JSON com um objeto no formato {"title":"..."}. O título deve ser uma frase natural, curta e descritiva.`;
+  }
+
+  return `Você é um assistente que gera apenas JSON. Dado um rascunho de explicação de provérbio: "${candidate}", gere uma explicação curta em português para um provérbio francês relacionado ao tema ${normalizedTheme}. Retorne apenas um array JSON com um objeto no formato {"title":"..."}. O título deve ser uma explicação didática de provérbio, em português, e evitar termos genéricos.`;
+};
+
+const fetchThemeTitles = async (collectionName: string, theme: string) => {
+  const db = await getDb();
+  const collection = db.collection(collectionName);
+  const documents = await collection
+    .find({ theme: normalizeTheme(theme), title: { $exists: true, $ne: '' }, validated: { $ne: false } })
+    .project({ title: 1 })
+    .toArray();
+  return Array.from(new Set(documents.map(doc => String(doc.title).trim()).filter(Boolean)));
+};
+
+const findClosestTitleInDb = async (collectionName: string, theme: string, candidate: string) => {
+  const titles = await fetchThemeTitles(collectionName, theme);
+  if (!titles.length) return null;
+  return chooseBestTitle(candidate, titles);
+};
+
+const generateFallbackCaptionWithPrompt = async (collectionName: string, theme: string, prompt: string) => {
+  if (!OPENAI_API_KEY) return null;
+
+  try {
+    const resp = await fetchWithTimeout('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: OPENAI_MODEL,
+        messages: [
+          { role: 'system', content: 'Você é um assistente que responde apenas com JSON válido.' },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.3,
+        max_tokens: 120,
+      }),
+    });
+
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    const text = data.choices?.[0]?.message?.content || '';
+    if (!text) return null;
+    const items = parseJsonResponse(text);
+    if (!Array.isArray(items) || items.length === 0) return null;
+    const item = items[0];
+    const title = normalizeText(String(item.title || item.text || item.caption || ''));
+    return title && !isInvalidCaptionTitle(title) ? title : null;
+  } catch (err) {
+    console.warn('[AI] fallback caption prompt falhou:', err);
+    return null;
+  }
+};
+
+const generateFallbackTitle = async (collectionName: string, theme: string, candidate: string) => {
+  const prompt = buildFallbackTitlePrompt(collectionName, theme, candidate);
+  const titleFromPrompt = await generateFallbackCaptionWithPrompt(collectionName, theme, prompt);
+  if (titleFromPrompt) return titleFromPrompt;
+
+  const fallbackItems = await generateAICaptions(collectionName, theme, 1);
+  if (Array.isArray(fallbackItems) && fallbackItems.length > 0) {
+    const item = fallbackItems[0];
+    const fallbackTitle = normalizeText(item.title);
+    if (fallbackTitle && !isInvalidCaptionTitle(fallbackTitle)) return fallbackTitle;
+  }
+
+  const safeFallbacks = {
+    images: ['La chaise', 'Le livre', 'La fenêtre', 'La tasse'],
+    images_sentences: ['Le chat dort sur le canapé.', 'La famille mange ensemble.', 'Le soleil brille sur le jardin.'],
+    images_proverbs: ['Ter calma nas adversidades', 'Saber ouvir antes de falar', 'Valorizar as pequenas vitórias'],
+  };
+
+  return safeFallbacks[collectionName as keyof typeof safeFallbacks][0];
+};
+
+export const resolveAIImageTitle = async (collectionName: string, theme: string, candidate: string) => {
+  const normalizedCandidate = normalizeText(candidate);
+  if (!normalizedCandidate || isInvalidCaptionTitle(normalizedCandidate)) {
+    return await generateFallbackTitle(collectionName, theme, candidate);
+  }
+
+  const dbMatch = await findClosestTitleInDb(collectionName, theme, normalizedCandidate);
+  if (dbMatch) return dbMatch;
+
+  const fallbackTitle = await generateFallbackTitle(collectionName, theme, normalizedCandidate);
+  if (fallbackTitle && !isInvalidCaptionTitle(fallbackTitle)) return fallbackTitle;
+
+  return normalizedCandidate;
+};
+
 // Timeout wrapper
 const fetchWithTimeout = async (url: string, options: RequestInit, timeoutMs = 25000): Promise<Response> => {
   const controller = new AbortController();
@@ -40,10 +212,10 @@ const buildPrompt = (collectionName: string, theme: string, count: number) => {
   }
 
   if (collectionName === 'images_sentences') {
-    return `Você é um assistente que gera apenas JSON. Crie ${count} frases simples em francês que descrevem cenas ou objetos relacionados a ${themeDescription}. Cada item deve vir no formato {"title":"...", "description":"..."}, onde title é a frase principal e description é uma dica de contexto em português. Responda somente com um array JSON válido.`;
+    return `Você é um assistente que gera apenas JSON. Crie ${count} frases simples em francês que descrevem cenas ou objetos relacionados a ${themeDescription}. Cada item deve vir no formato {"title":"...", "description":"..."}, onde title é a frase principal e description é uma dica de contexto em português. Evite títulos que pareçam genéricos ou incompletos. Responda somente com um array JSON válido.`;
   }
 
-  return `Você é um assistente que gera apenas JSON. Crie ${count} explicações ou legendas em português para provérbios ou expressões francesas relacionadas a ${themeDescription}. Cada item deve vir no formato {"title":"...", "description":"..."}. Responda somente com um array JSON válido.`;
+  return `Você é um assistente que gera apenas JSON. Crie ${count} explicações curtas em português para provérbios ou expressões francesas relacionadas a ${themeDescription}. Cada item deve vir no formato {"title":"...", "description":"..."}. O campo title deve ser uma explicação de provérbio em português, curta e didática. Responda somente com um array JSON válido.`;
 };
 
 const buildPlaceholderUrl = (theme: string, seed: number) => {
@@ -179,7 +351,22 @@ const generateAICaptions = async (collectionName: string, theme: string, count: 
   }));
 };
 
-const generateAIImageUrl = async (theme: string, seed: number): Promise<string> => {
+const buildImagePrompt = (collectionName: string, theme: string) => {
+  const normalizedTheme = normalizeTheme(theme);
+  if (collectionName === 'images') {
+    return `Educational illustration for French vocabulary about ${normalizedTheme}. The image should show a clear, concrete object or scene that can be described by a precise French title, without generic theme labels or distracting overlays. Bright, clean, educational style.`;
+  }
+
+  if (collectionName === 'images_sentences') {
+    return `Educational illustration for a French sentence about ${normalizedTheme}. The image should depict a scene or situation that matches a short French sentence, with clear, colorful details and a learning-card style.`;
+  }
+
+  return `Educational flashcard or poster style image for a French proverb about ${normalizedTheme}. The image should feel like a proverb learning card with an elegant illustration and a clear connection to the proverb meaning. Prefer a subtle text hint or hand-drawn typography that reinforces the theme without being generic.`;
+};
+
+const generateAIImageUrl = async (collectionName: string, theme: string, seed: number): Promise<string> => {
+  const prompt = buildImagePrompt(collectionName, theme);
+
   // 1) OpenAI image generation
   if (OPENAI_API_KEY && OPENAI_IMAGE_MODEL) {
     try {
@@ -191,7 +378,7 @@ const generateAIImageUrl = async (theme: string, seed: number): Promise<string> 
         },
         body: JSON.stringify({
           model: OPENAI_IMAGE_MODEL,
-          prompt: `Educational illustration for French vocabulary about ${theme}. The image should show a clear, concrete object or scene that can be described by a precise French title, without generic theme labels or text overlays. Bright, clean, educational style.`,
+          prompt,
           n: 1,
           size: getOpenAIImageSize(),
           response_format: OPENAI_IMAGE_MODEL === 'gpt-image-1' ? 'b64_json' : 'url',
@@ -336,14 +523,17 @@ export const ensureDailyAIItems = async (collectionName: string, theme: string) 
   }
 
   const documents = await Promise.all(
-    generated.map(async (item, index) => ({
-      url: await generateAIImageUrl(normalizedTheme, Date.now() + index),
-      title: item.title,
-      description: item.description,
-      theme: normalizedTheme,
-      source: 'ai',
-      createdAt: new Date(),
-    })),
+    generated.map(async (item, index) => {
+      const resolvedTitle = await resolveAIImageTitle(collectionName, normalizedTheme, item.title);
+      return {
+        url: await generateAIImageUrl(collectionName, normalizedTheme, Date.now() + index),
+        title: resolvedTitle || normalizeText(item.title),
+        description: item.description,
+        theme: normalizedTheme,
+        source: 'ai',
+        createdAt: new Date(),
+      };
+    }),
   );
 
   console.log(`[AI] Prepared ${Array.isArray(documents) ? documents.length : 0} documents to insert for theme="${normalizedTheme}"`);

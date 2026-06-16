@@ -250,6 +250,7 @@ export default function Frase({}: GameProps) {
 
   const [round, setRound] = useState(1);
   const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
+  const [optionsCount, setOptionsCount] = useState(4);
 
   const [correctSound, setCorrectSound] = useState<HTMLAudioElement | null>(null)
   const [wrongSound, setWrongSound] = useState<HTMLAudioElement | null>(null)
@@ -792,7 +793,7 @@ export default function Frase({}: GameProps) {
 
   useEffect(() => {
     if (theme) loadImages()
-  }, [theme, round])
+  }, [theme, round, optionsCount])
 
 
   useEffect(() => {
@@ -912,7 +913,7 @@ export default function Frase({}: GameProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ theme }),
+        body: JSON.stringify({ theme, optionsCount }),
       })
 
       if (!res.ok) {
@@ -2102,6 +2103,26 @@ export default function Frase({}: GameProps) {
           </button>
         )}
 
+      </div>
+
+      <div className="flex flex-wrap justify-center gap-2 mb-4 text-sm text-gray-200">
+        <span className="inline-flex items-center gap-2 rounded-full border border-gray-600 bg-gray-900/80 px-3 py-2">
+          Dificuldade:
+        </span>
+        {[
+          { label: 'Fácil', value: 2 },
+          { label: 'Médio', value: 4 },
+          { label: 'Difícil', value: 6 },
+        ].map(({ label, value }) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => setOptionsCount(value)}
+            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${optionsCount === value ? 'bg-fuchsia-500 text-white shadow-lg shadow-fuchsia-500/30' : 'bg-gray-800 text-gray-200 hover:bg-gray-700'}`}
+          >
+            {label} ({value})
+          </button>
+        ))}
       </div>
 
       {theme && <h2 className="text-2xl font-semibold text-gray-300 mt-4 mb-6 text-center">Opção: {theme}</h2>}
