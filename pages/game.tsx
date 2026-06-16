@@ -280,6 +280,7 @@ export default function Game({}: GameProps) {
   const [ditadosProgress, setDitadosProgress] = useState(getProgressSummaryBySource([], 'ditados'));
   const [dailyMission, setDailyMission] = useState<DailyMission | null>(null);
   const levelDifficulty = getLevelDifficulty(gameProgressSummary.currentLevel);
+  const [optionsCount, setOptionsCount] = useState<number | null>(null); // null = usa levelDifficulty automaticamente
     
   const soundListBoxRef = useRef<HTMLDivElement>(null);
   const videoListBoxRef = useRef<HTMLDivElement>(null);
@@ -929,7 +930,7 @@ export default function Game({}: GameProps) {
 
   useEffect(() => {
     if (theme) loadImages()
-  }, [theme, round, levelDifficulty.cardsPerRound, levelDifficulty.optionsPerCard])
+  }, [theme, round, levelDifficulty.cardsPerRound, levelDifficulty.optionsPerCard, optionsCount])
 
 
   useEffect(() => {
@@ -1066,7 +1067,7 @@ export default function Game({}: GameProps) {
         body: JSON.stringify({
           theme,
           count: imageCount,
-          optionsCount: levelDifficulty.optionsPerCard,
+          optionsCount: optionsCount !== null ? optionsCount : levelDifficulty.optionsPerCard,
         }),
       });
   
@@ -2794,7 +2795,45 @@ export default function Game({}: GameProps) {
 
       </div>
 
-      {theme && <h2 className="text-2xl text-gray-300 font-semibold mt-4 mb-6 text-center">Opção: {theme}</h2>}
+      {/* Difficulty Selector */}
+      <div className="flex flex-col items-center gap-2 mb-6 mt-2">
+        <div className="flex flex-wrap justify-center items-center gap-2">
+          <span className="inline-flex items-center gap-2 rounded-full border border-green-500/40 bg-gray-900/80 backdrop-blur-sm px-4 py-2 text-sm font-semibold text-green-200">
+            🎯 Dificuldade:
+          </span>
+          <button
+            type="button"
+            onClick={() => setOptionsCount(null)}
+            className={`rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 border ${
+              optionsCount === null
+                ? 'bg-blue-600 border-blue-400 text-white shadow-lg shadow-blue-500/40 scale-105'
+                : 'bg-gray-800/80 border-gray-600/50 text-gray-300 hover:bg-gray-700 hover:border-gray-500'
+            }`}
+          >
+            ⚡ Auto (nível {gameProgressSummary.currentLevel})
+          </button>
+          {[
+            { label: 'Fácil', value: 2, icon: '🟢' },
+            { label: 'Médio', value: 4, icon: '🟡' },
+            { label: 'Difícil', value: 6, icon: '🔴' },
+          ].map(({ label, value, icon }) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setOptionsCount(value)}
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 border ${
+                optionsCount === value
+                  ? 'bg-fuchsia-600 border-fuchsia-400 text-white shadow-lg shadow-fuchsia-500/40 scale-105'
+                  : 'bg-gray-800/80 border-gray-600/50 text-gray-300 hover:bg-gray-700 hover:border-gray-500'
+              }`}
+            >
+              {icon} {label} ({value})
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {theme && <h2 className="text-2xl text-gray-300 font-semibold mt-2 mb-6 text-center">Opção: {theme}</h2>}
 
       <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-indigo-900 to-purple-900 min-h-screen text-gray-100">
         

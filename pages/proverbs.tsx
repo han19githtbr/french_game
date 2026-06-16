@@ -2004,27 +2004,34 @@ export default function Game({}: GameProps) {
 
       </div>
 
-      <div className="flex flex-wrap justify-center gap-2 mb-4 text-sm text-gray-200">
-        <span className="inline-flex items-center gap-2 rounded-full border border-gray-600 bg-gray-900/80 px-3 py-2">
-          Dificuldade:
-        </span>
-        {[
-          { label: 'Fácil', value: 2 },
-          { label: 'Médio', value: 4 },
-          { label: 'Difícil', value: 6 },
-        ].map(({ label, value }) => (
-          <button
-            key={value}
-            type="button"
-            onClick={() => setOptionsCount(value)}
-            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${optionsCount === value ? 'bg-fuchsia-500 text-white shadow-lg shadow-fuchsia-500/30' : 'bg-gray-800 text-gray-200 hover:bg-gray-700'}`}
-          >
-            {label} ({value})
-          </button>
-        ))}
+      {/* Difficulty Selector */}
+      <div className="flex flex-col items-center gap-2 mb-6 mt-2">
+        <div className="flex flex-wrap justify-center items-center gap-2">
+          <span className="inline-flex items-center gap-2 rounded-full border border-violet-500/40 bg-slate-900/80 backdrop-blur-sm px-4 py-2 text-sm font-semibold text-violet-200">
+            🎯 Dificuldade:
+          </span>
+          {[
+            { label: 'Fácil', value: 2, icon: '🟢' },
+            { label: 'Médio', value: 4, icon: '🟡' },
+            { label: 'Difícil', value: 6, icon: '🔴' },
+          ].map(({ label, value, icon }) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setOptionsCount(value)}
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 border ${
+                optionsCount === value
+                  ? 'bg-fuchsia-600 border-fuchsia-400 text-white shadow-lg shadow-fuchsia-500/40 scale-105'
+                  : 'bg-slate-800/80 border-slate-600/50 text-slate-300 hover:bg-slate-700 hover:border-slate-500'
+              }`}
+            >
+              {icon} {label} ({value})
+            </button>
+          ))}
+        </div>
       </div>
 
-      {theme && <h2 className="text-2xl text-gray-300 font-semibold mt-4 mb-6 text-center">Opção: {theme}</h2>}
+      {theme && <h2 className="text-2xl text-gray-300 font-semibold mt-2 mb-6 text-center">Opção: {theme}</h2>}
 
       <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-indigo-900 to-purple-900 min-h-screen text-gray-100">
         
@@ -2045,7 +2052,7 @@ export default function Game({}: GameProps) {
           <div className="text-center text-lg text-gray-300 animate-pulse">🔍 Procurando imagens...</div>
         ) : (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 w-full max-w-4xl mt-6 cursor-pointer">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl mt-6 cursor-pointer">
               {images.map((img, index) => (
                 <motion.div
                   key={index}
@@ -2075,7 +2082,7 @@ export default function Game({}: GameProps) {
                     <img
                       src={img.url}
                       alt="imagem"
-                      className="w-full h-52 object-cover"
+                      className="w-full h-56 sm:h-60 object-cover"
                       onClick={() => setZoomedImage(img.url)}
                     />
                   </div>

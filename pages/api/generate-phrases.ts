@@ -1,12 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getDb } from '../../lib/mongodb';
 import { ensureDailyAIItems, isInvalidCaptionTitle } from '../../lib/ai';
+import { filterSentenceTitles, resolveAIImageTitleByVision } from '../../lib/ai-image-resolver';
 
 const shuffle = <T>(array: T[]): T[] => [...array].sort(() => Math.random() - 0.5);
 
-const randomOptions = (correct: string, allTitles: string[], optionsCount: number) => {
-  const otherTitles = allTitles.filter(title => title !== correct);
-  return shuffle([correct, ...shuffle(otherTitles).slice(0, Math.max(0, optionsCount - 1))]);
+const randomOptions = (correct: string, pool: string[], optionsCount: number) => {
+  const others = pool.filter(t => t !== correct);
+  return shuffle([correct, ...shuffle(others).slice(0, Math.max(0, optionsCount - 1))]);
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -32,7 +33,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const themeImages = await collection.find({ theme: theme.toLowerCase() }).toArray();
 
-    // Filtra imagens: exclui títulos inválidos E imagens marcadas explicitamente como inválidas
     const validThemeImages = themeImages.filter((img: any) =>
       img.title &&
       !isInvalidCaptionTitle(img.title) &&
@@ -43,19 +43,68 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Tema inválido ou sem títulos válidos disponíveis.' });
     }
 
-    const validTitles = Array.from(new Set(validThemeImages.map((img: any) => img.title)));
     const safeCount = Math.min(count, validThemeImages.length);
-    const safeOptionsCount = Math.min(Math.max(optionsCount, 2), validTitles.length);
     const selectedImages = shuffle(validThemeImages).slice(0, safeCount);
 
-    const imagesWithOptions = selectedImages.map(img => ({
+    // --- STEP 1: Resolve correct titles for AI images via Vision ---
+    const resolvedImages = await Promise.all(
+      selectedImages.map(async (img: any) => {
+        // If already resolved by a previous request, skip vision
+        if (img.source === 'ai' && img.aiTitleResolved === true) {
+          return { ...img };
+        }
+
+        if (img.source === 'ai' && img.url) {
+          const nonAiSentenceTitles = filterSentenceTitles(
+            Array.from(new Set(
+              validThemeImages
+                .filter((i: any) => i.source !== 'ai' || i.aiTitleResolved === true)
+                .map((i: any) => i.title as string)
+            ))
+          );
+
+          const allSentenceTitles = filterSentenceTitles(
+            Array.from(new Set(validThemeImages.map((i: any) => i.title as string)))
+          );
+          const candidatePool = nonAiSentenceTitles.length >= 2 ? nonAiSentenceTitles : allSentenceTitles;
+
+          if (candidatePool.length >= 2) {
+            const visionTitle = await resolveAIImageTitleByVision(img.url, candidatePool, 'images_sentences');
+            if (visionTitle) {
+              collection.updateOne(
+                { _id: img._id },
+                { $set: { title: visionTitle, aiTitleResolved: true } }
+              ).catch(() => {});
+              return { ...img, title: visionTitle, aiTitleResolved: true };
+            }
+          }
+        }
+
+        return { ...img };
+      })
+    );
+
+    // --- STEP 2: Build options pool including just-resolved titles ---
+    const allValidTitles = Array.from(new Set(validThemeImages.map((img: any) => img.title as string)));
+    const resolvedAiTitles = resolvedImages
+      .filter((img: any) => img.source === 'ai' && img.aiTitleResolved)
+      .map((img: any) => img.title as string);
+
+    const mergedTitles = Array.from(new Set([...allValidTitles, ...resolvedAiTitles]));
+    const sentenceTitles = filterSentenceTitles(mergedTitles);
+    const validTitles = sentenceTitles.length >= 2 ? sentenceTitles : mergedTitles;
+
+    const safeOptionsCount = Math.min(Math.max(optionsCount, 2), validTitles.length);
+
+    // --- STEP 3: Build final response ---
+    const imagesWithOptions = resolvedImages.map((img: any) => ({
       url: img.url,
       title: img.title,
       description: img.description || '',
       aiGenerated: img.source === 'ai',
       validated: img.validated,
-      options: randomOptions(img.title, validTitles as string[], safeOptionsCount),
-    }))
+      options: randomOptions(img.title as string, validTitles, safeOptionsCount),
+    }));
 
     res.status(200).json(imagesWithOptions);
   } catch (error) {
