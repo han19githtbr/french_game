@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getDb } from '../../lib/mongodb';
-import { ensureDailyAIItems, isInvalidCaptionTitle } from '../../lib/ai';
+import { ensureDailyAIItems, isInvalidCaptionTitle, resolveAIImageTitle } from '../../lib/ai';
 import { resolveAIImageTitleByVision } from '../../lib/ai-image-resolver';
 
 const shuffle = <T>(array: T[]): T[] => [...array].sort(() => Math.random() - 0.5);
@@ -55,6 +55,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         if (img.source === 'ai' && img.url) {
+          const normalizedTheme = theme.toLowerCase();
+          const candidate = String(img.title || img.description || '').trim();
+
+          const fallbackTitle = await resolveAIImageTitle('images_proverbs', normalizedTheme, candidate);
+          if (fallbackTitle && fallbackTitle !== img.title) {
+            collection.updateOne(
+              { _id: img._id },
+              { $set: { title: fallbackTitle, aiTitleResolved: true } }
+            ).catch(() => {});
+            return { ...img, title: fallbackTitle, aiTitleResolved: true };
+          }
+
           // For proverbs: use all non-AI titles as candidates
           const nonAiTitles = Array.from(new Set(
             validThemeImages

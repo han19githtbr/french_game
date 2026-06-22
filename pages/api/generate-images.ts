@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getDb } from '../../lib/mongodb'
-import { ensureDailyAIItems, isInvalidCaptionTitle } from '../../lib/ai'
+import { ensureDailyAIItems, isInvalidCaptionTitle, resolveAIImageTitle } from '../../lib/ai'
 import { filterWordTitles, resolveAIImageTitleByVision } from '../../lib/ai-image-resolver'
 
 const shuffle = <T>(array: T[]): T[] => [...array].sort(() => Math.random() - 0.5)
@@ -57,6 +57,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         if (img.source === 'ai' && img.url) {
+          const candidate = String(img.title || img.description || '').trim()
+
+          // Step A: Try to resolve using DB matching / fallback generation before vision.
+          const fallbackTitle = await resolveAIImageTitle('images', normalizedTheme, candidate)
+          if (fallbackTitle && fallbackTitle !== img.title) {
+            collection.updateOne(
+              { _id: img._id },
+              { $set: { title: fallbackTitle, aiTitleResolved: true } }
+            ).catch(() => {})
+            return { ...img, title: fallbackTitle, aiTitleResolved: true }
+          }
+
           // Build candidate title pool for vision: all non-AI word titles from this theme
           // (we don't include other unresolved AI titles to avoid circular contamination)
           const nonAiWordTitles = filterWordTitles(
