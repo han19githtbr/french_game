@@ -44,7 +44,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const safeCount = Math.min(count, validThemeImages.length);
-    const selectedImages = shuffle(validThemeImages).slice(0, safeCount);
+    const initialSelectionCount = Math.min(validThemeImages.length, safeCount * 3);
+    const selectedImages = shuffle(validThemeImages).slice(0, initialSelectionCount);
 
     // --- STEP 1: Resolve correct titles for AI images via Vision ---
     const resolvedImages = await Promise.all(
@@ -56,7 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         if (img.source === 'ai' && img.url) {
           const normalizedTheme = theme.toLowerCase();
-          const candidate = String(img.title || img.description || '').trim();
+          const candidate = String(img.description || img.title || '').trim();
 
           const fallbackTitle = await resolveAIImageTitle('images_proverbs', normalizedTheme, candidate);
           if (fallbackTitle && fallbackTitle !== img.title) {
@@ -94,8 +95,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     );
 
     // --- STEP 2: Build options pool including just-resolved titles ---
-    const allValidTitles = Array.from(new Set(validThemeImages.map((img: any) => img.title as string)));
-    const resolvedAiTitles = resolvedImages
+    const stableImages = resolvedImages
+      .filter((img: any) => !(img.source === 'ai' && img.url && img.aiTitleResolved !== true));
+    const finalImages = stableImages.length >= safeCount
+      ? stableImages.slice(0, safeCount)
+      : resolvedImages.slice(0, safeCount);
+
+    const allValidTitles = Array.from(new Set(finalImages.map((img: any) => img.title as string)));
+    const resolvedAiTitles = finalImages
       .filter((img: any) => img.source === 'ai' && img.aiTitleResolved)
       .map((img: any) => img.title as string);
 
@@ -103,7 +110,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const safeOptionsCount = Math.min(Math.max(optionsCount, 2), mergedTitles.length);
 
     // --- STEP 3: Build final response ---
-    const imagesWithOptions = resolvedImages.map((img: any) => ({
+    const imagesWithOptions = finalImages.map((img: any) => ({
       url: img.url,
       title: img.title,
       description: img.description || '',

@@ -45,7 +45,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const safeCount = Math.min(Number(count) || 4, validThemeImages.length)
-    const selectedImages = shuffle(validThemeImages).slice(0, safeCount)
+    const initialSelectionCount = Math.min(validThemeImages.length, safeCount * 3)
+    const selectedImages = shuffle(validThemeImages).slice(0, initialSelectionCount)
 
     // --- STEP 1: Resolve correct titles for AI images via Vision ---
     // Do this BEFORE building the options pool so resolved titles are included
@@ -57,7 +58,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         if (img.source === 'ai' && img.url) {
-          const candidate = String(img.title || img.description || '').trim()
+          const candidate = String(img.description || img.title || '').trim()
 
           // Step A: Try to resolve using DB matching / fallback generation before vision.
           const fallbackTitle = await resolveAIImageTitle('images', normalizedTheme, candidate)
@@ -103,10 +104,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     )
 
     // --- STEP 2: Build options pool from ALL valid titles (including just-resolved ones) ---
-    const allValidTitles = Array.from(new Set(validThemeImages.map(img => img.title as string)))
-    const resolvedAiTitles = (resolvedImages as any[])
-      .filter(img => img.source === 'ai' && img.aiTitleResolved)
-      .map(img => img.title as string)
+    const stableImages = (resolvedImages as any[])
+      .filter(img => !(img.source === 'ai' && img.url && img.aiTitleResolved !== true))
+    const finalImages = stableImages.length >= safeCount
+      ? stableImages.slice(0, safeCount)
+      : (resolvedImages as any[]).slice(0, safeCount)
+
+    const allValidTitles = Array.from(new Set(finalImages.map(img => img.title as string)))
+    const resolvedAiTitles = finalImages
+      .filter((img: any) => img.source === 'ai' && img.aiTitleResolved)
+      .map((img: any) => img.title as string)
 
     // Merge resolved titles into the pool so they appear as options
     const mergedTitles = Array.from(new Set([...allValidTitles, ...resolvedAiTitles]))
@@ -116,7 +123,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const safeOptionsCount = Math.min(Math.max(Number(optionsCount) || 4, 2), validTitles.length)
 
     // --- STEP 3: Build final response with correct options for each card ---
-    const imagesWithOptions = resolvedImages.map(img => {
+    const imagesWithOptions = finalImages.map(img => {
       const imgData = img as any
       return {
         url: imgData.url,
