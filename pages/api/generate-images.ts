@@ -32,6 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.warn('Nao foi possivel gerar imagens via AI:', aiError)
     }
 
+    // Busca TODOS os itens do tema para ter um pool grande de opções
     const themeImages = await collection.find({ theme: normalizedTheme }).toArray()
 
     const validThemeImages = themeImages.filter(img =>
@@ -49,10 +50,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const selectedImages = shuffle(validThemeImages).slice(0, initialSelectionCount)
 
     // --- STEP 1: Resolve correct titles for AI images via Vision ---
-    // Do this BEFORE building the options pool so resolved titles are included
     const resolvedImages = await Promise.all(
       selectedImages.map(async (img) => {
-        // If already resolved by a previous request, use stored title directly
         if (img.source === 'ai' && img.aiTitleResolved === true) {
           return { ...img }
         }
@@ -60,9 +59,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (img.source === 'ai' && img.url) {
           const candidate = String(img.description || img.title || '').trim()
 
-          // Step A: Try to resolve using DB matching / fallback generation before vision.
+          // Step A: Try DB matching first
           const fallbackTitle = await resolveAIImageTitle('images', normalizedTheme, candidate)
-          if (fallbackTitle && fallbackTitle !== img.title) {
+          if (fallbackTitle && fallbackTitle !== img.title && !isInvalidCaptionTitle(fallbackTitle)) {
             collection.updateOne(
               { _id: img._id },
               { $set: { title: fallbackTitle, aiTitleResolved: true } }
@@ -70,9 +69,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return { ...img, title: fallbackTitle, aiTitleResolved: true }
           }
 
-          // Build candidate title pool for vision: all non-AI word titles from this theme
-          // (we don't include other unresolved AI titles to avoid circular contamination)
-          const nonAiWordTitles = filterWordTitles(
+          // Step B: Vision - use ALL non-AI word titles from this theme as candidates
+          // This gives Vision the full vocabulary pool to choose from
+          const allNonAiWordTitles = filterWordTitles(
             Array.from(new Set(
               validThemeImages
                 .filter(i => i.source !== 'ai' || i.aiTitleResolved === true)
@@ -80,16 +79,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             ))
           )
 
-          // Fall back to all word titles if not enough non-AI ones
           const allWordTitles = filterWordTitles(
             Array.from(new Set(validThemeImages.map(i => i.title as string)))
           )
-          const candidatePool = nonAiWordTitles.length >= 2 ? nonAiWordTitles : allWordTitles
+          const candidatePool = allNonAiWordTitles.length >= 2 ? allNonAiWordTitles : allWordTitles
 
           if (candidatePool.length >= 2) {
             const visionTitle = await resolveAIImageTitleByVision(img.url, candidatePool, 'images')
-            if (visionTitle) {
-              // Persist resolved title so we skip vision next time
+            if (visionTitle && !isInvalidCaptionTitle(visionTitle)) {
               collection.updateOne(
                 { _id: img._id },
                 { $set: { title: visionTitle, aiTitleResolved: true } }
@@ -97,32 +94,52 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               return { ...img, title: visionTitle, aiTitleResolved: true }
             }
           }
+
+          // Step C: If Vision also fails, mark as unresolved so it doesn't appear with wrong title
+          // Only include if we have a non-generic title
+          if (!isInvalidCaptionTitle(img.title)) {
+            return { ...img }
+          }
+          // Skip this AI image entirely if we can't resolve its title
+          return { ...img, _skipUnresolved: true }
         }
 
         return { ...img }
       })
     )
 
-    // --- STEP 2: Build options pool from ALL valid titles (including just-resolved ones) ---
-    const stableImages = (resolvedImages as any[])
+    // --- STEP 2: Filter out unresolved AI images with bad titles ---
+    const cleanResolved = resolvedImages.filter((img: any) => !img._skipUnresolved)
+
+    const stableImages = (cleanResolved as any[])
       .filter(img => !(img.source === 'ai' && img.url && img.aiTitleResolved !== true))
     const finalImages = stableImages.length >= safeCount
       ? stableImages.slice(0, safeCount)
-      : (resolvedImages as any[]).slice(0, safeCount)
+      : (cleanResolved as any[]).slice(0, safeCount)
 
-    const allValidTitles = Array.from(new Set(finalImages.map(img => img.title as string)))
-    const resolvedAiTitles = finalImages
+    // --- STEP 3: Build a RICH options pool ---
+    // Include: all valid non-AI titles + resolved AI titles
+    // This ensures the correct answer always appears in options
+    const resolvedAiTitles = (cleanResolved as any[])
       .filter((img: any) => img.source === 'ai' && img.aiTitleResolved)
       .map((img: any) => img.title as string)
 
-    // Merge resolved titles into the pool so they appear as options
-    const mergedTitles = Array.from(new Set([...allValidTitles, ...resolvedAiTitles]))
+    const allNonAiTitles = filterWordTitles(
+      Array.from(new Set(
+        validThemeImages
+          .filter(i => i.source !== 'ai')
+          .map(i => i.title as string)
+      ))
+    )
+
+    // Merge: non-AI titles + resolved AI titles
+    const mergedTitles = Array.from(new Set([...allNonAiTitles, ...resolvedAiTitles]))
     const wordTitles = filterWordTitles(mergedTitles)
     const validTitles = wordTitles.length >= 2 ? wordTitles : mergedTitles
 
     const safeOptionsCount = Math.min(Math.max(Number(optionsCount) || 4, 2), validTitles.length)
 
-    // --- STEP 3: Build final response with correct options for each card ---
+    // --- STEP 4: Build final response ---
     const imagesWithOptions = finalImages.map(img => {
       const imgData = img as any
       return {
@@ -131,6 +148,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         description: imgData.description || '',
         aiGenerated: imgData.source === 'ai',
         validated: imgData.validated,
+        // Ensure correct title is always in options
         options: randomOptions(imgData.title as string, validTitles, safeOptionsCount),
       }
     })

@@ -2078,17 +2078,33 @@ export default function Game({}: GameProps) {
                       </span>
                     )}
                   </div>
-                  <div className="relative w-full rounded-[32px] overflow-hidden border border-white/10 shadow-inner shadow-black/30 mt-6">
+                  {/* Ditado em francês no topo do card (para imagens AI com proverbText, ou todas as imagens) */}
+                  {img.proverbText && (
+                    <div className="mt-10 mb-1 w-full text-center">
+                      <span className="text-base font-bold text-violet-200 tracking-wide italic">
+                        {img.proverbText}*
+                      </span>
+                    </div>
+                  )}
+                  <div className="relative w-full rounded-[32px] overflow-hidden border border-white/10 shadow-inner shadow-black/30 mt-2">
                     <img
                       src={img.url}
                       alt="imagem"
                       className="w-full h-56 sm:h-60 object-cover"
                       onClick={() => setZoomedImage(img.url)}
                     />
+                    {/* Overlay com significado do ditado na parte inferior da imagem */}
+                    {img.description && (
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-3 py-2">
+                        <p className="text-xs text-slate-200 text-center italic">{img.description}</p>
+                      </div>
+                    )}
                   </div>
-                  <div className="mt-4 w-full rounded-[28px] border border-white/10 bg-white/5 p-4 text-sm leading-6 text-slate-200 shadow-[0_15px_40px_-32px_rgba(15,23,42,0.8)]">
-                    {img.description || 'Um cartão visual que ilustra o ditado e ajuda a conectar o significado à imagem.'}
-                  </div>
+                  {!img.proverbText && (
+                    <div className="mt-4 w-full rounded-[28px] border border-white/10 bg-white/5 p-4 text-sm leading-6 text-slate-200 shadow-[0_15px_40px_-32px_rgba(15,23,42,0.8)]">
+                      {img.description || 'Um cartão visual que ilustra o ditado e ajuda a conectar o significado à imagem.'}
+                    </div>
+                  )}
                   <div className="mt-4 text-slate-300 text-xs uppercase tracking-[0.24em]">Escolha o título correto</div>
                   <div className="relative w-full mt-3">
                     <select

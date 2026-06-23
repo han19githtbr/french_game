@@ -215,7 +215,7 @@ const buildPrompt = (collectionName: string, theme: string, count: number) => {
     return `Você é um assistente que gera apenas JSON. Crie ${count} frases simples em francês que descrevem cenas ou objetos relacionados a ${themeDescription}. Cada item deve vir no formato {"title":"...", "description":"..."}, onde title é a frase principal e description é uma dica de contexto em português. Evite títulos que pareçam genéricos ou incompletos. Responda somente com um array JSON válido.`;
   }
 
-  return `Você é um assistente que gera apenas JSON. Crie ${count} explicações curtas em português para provérbios ou expressões francesas relacionadas a ${themeDescription}. Cada item deve vir no formato {"title":"...", "description":"..."}. O campo title deve ser uma explicação de provérbio em português, curta e didática. Responda somente com um array JSON válido.`;
+  return `Você é um assistente que gera apenas JSON. Crie ${count} provérbios ou expressões idiomáticas francesas relacionadas a ${themeDescription}. Cada item deve vir no formato {"proverbText":"...", "title":"...", "description":"..."}. O campo "proverbText" deve ser o ditado/expressão em FRANCÊS (ex: "Au ras des pâquerettes"). O campo "title" deve ser o SIGNIFICADO em PORTUGUÊS, curto e didático (ex: "Desinteressante"). O campo "description" deve ser o significado detalhado em português precedido de asterisco (ex: "*D''un niveau très bas, inintéressant."). Nunca use termos genéricos. Responda somente com um array JSON válido.`;
 };
 
 const buildPlaceholderUrl = (theme: string, seed: number) => {
@@ -263,6 +263,7 @@ const normalizeCaptionItems = (items: any[]) =>
   items
     .map((item: any) => ({
       title: String(item.title || item.text || item.caption || '').trim(),
+      proverbText: item.proverbText ? String(item.proverbText).trim() : undefined,
       description: String(item.description || item.hint || item.caption || item.text || '').trim(),
     }))
     .filter((item: any) => item.title && !isInvalidCaptionTitle(item.title));
@@ -351,7 +352,7 @@ const generateAICaptions = async (collectionName: string, theme: string, count: 
   }));
 };
 
-const buildImagePrompt = (collectionName: string, theme: string) => {
+const buildImagePrompt = (collectionName: string, theme: string, proverbText?: string) => {
   const normalizedTheme = normalizeTheme(theme);
   if (collectionName === 'images') {
     return `Educational illustration for French vocabulary about ${normalizedTheme}. The image should show a clear, concrete object or scene that can be described by a precise French title, without generic theme labels or distracting overlays. Bright, clean, educational style.`;
@@ -361,11 +362,14 @@ const buildImagePrompt = (collectionName: string, theme: string) => {
     return `Educational illustration for a French sentence about ${normalizedTheme}. The image should depict a scene or situation that matches a short French sentence, with clear, colorful details and a learning-card style.`;
   }
 
-  return `Educational flashcard or poster style image for a French proverb about ${normalizedTheme}. The image should feel like a proverb learning card with an elegant illustration and a clear connection to the proverb meaning. Prefer a subtle text hint or hand-drawn typography that reinforces the theme without being generic.`;
+  // Proverbs: generate a flashcard-style image with the French proverb text at the top
+  // and a symbolic illustration of its meaning in the body, matching the style in the reference images
+  const proverbHint = proverbText ? `The French expression is: "${proverbText}". ` : '';
+  return `Black and white hand-drawn illustration style educational flashcard for a French idiomatic expression. ${proverbHint}The image should have: the French expression written at the top in bold typography, a clear symbolic illustration in the center depicting the literal or figurative meaning of the expression, and a short Portuguese explanation at the bottom in smaller text. Style similar to a textbook illustration: clean lines, black ink on white background, no color, cartoon/sketch style. The illustration should clearly symbolize the meaning of the French idiom.`;
 };
 
-const generateAIImageUrl = async (collectionName: string, theme: string, seed: number): Promise<string> => {
-  const prompt = buildImagePrompt(collectionName, theme);
+const generateAIImageUrl = async (collectionName: string, theme: string, seed: number, proverbText?: string): Promise<string> => {
+  const prompt = buildImagePrompt(collectionName, theme, proverbText);
 
   // 1) OpenAI image generation
   if (OPENAI_API_KEY && OPENAI_IMAGE_MODEL) {
@@ -516,23 +520,28 @@ export const ensureDailyAIItems = async (collectionName: string, theme: string) 
     return;
   }
 
-  const generated = await generateAICaptions(collectionName, normalizedTheme, toGenerate);
+  const generated: any[] = await generateAICaptions(collectionName, normalizedTheme, toGenerate);
   console.log(`[AI] generateAICaptions returned ${Array.isArray(generated) ? generated.length : 0} items for theme="${normalizedTheme}"`);
   if (Array.isArray(generated) && generated.length > 0) {
     console.log('[AI] Generated titles:', generated.map((g: any) => String(g.title || '').slice(0, 120)));
   }
 
   const documents = await Promise.all(
-    generated.map(async (item, index) => {
+    generated.map(async (item: any, index: number) => {
       const resolvedTitle = await resolveAIImageTitle(collectionName, normalizedTheme, item.title);
-      return {
-        url: await generateAIImageUrl(collectionName, normalizedTheme, Date.now() + index),
+      const doc: any = {
+        url: await generateAIImageUrl(collectionName, normalizedTheme, Date.now() + index, collectionName === 'images_proverbs' ? item.proverbText : undefined),
         title: resolvedTitle || normalizeText(item.title),
         description: item.description,
         theme: normalizedTheme,
         source: 'ai',
         createdAt: new Date(),
       };
+      // For proverbs: save the French proverb text alongside the Portuguese meaning
+      if (collectionName === 'images_proverbs' && item.proverbText) {
+        doc.proverbText = String(item.proverbText).trim();
+      }
+      return doc;
     }),
   );
 
