@@ -889,7 +889,7 @@ export default function Game({}: GameProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ theme, optionsCount }),
+        body: JSON.stringify({ theme, count: optionsCount, optionsCount }),
       });
   
       if (!res.ok) {
@@ -995,8 +995,9 @@ export default function Game({}: GameProps) {
           
       // Adiciona os acertos da rodada ao histórico de revisão
       const currentRoundCorrect = images.filter((_, i) => newResults[i]?.correct_proverb).map(img => ({
-        url: img.url,
+        url: '',  // sem imagem agora
         title: img.title,
+        proverbText: img.proverbText,
       }));
       if (currentRoundCorrect.length > 0) {
         setReviewHistory(prev => [...prev, ...currentRoundCorrect]);
@@ -2049,7 +2050,7 @@ export default function Game({}: GameProps) {
 
         
         {loading ? (
-          <div className="text-center text-lg text-gray-300 animate-pulse">🔍 Procurando imagens...</div>
+          <div className="text-center text-lg text-gray-300 animate-pulse">🔍 Buscando ditados...</div>
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl mt-6 cursor-pointer">
@@ -2062,163 +2063,146 @@ export default function Game({}: GameProps) {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3, delay: index * 0.1 }}
-                  className={`p-4 rounded-[40px] shadow-[0_25px_80px_-45px_rgba(124,58,237,0.95)] transition transform flex flex-col items-center relative overflow-hidden border border-violet-400/10 bg-gradient-to-br from-slate-900 via-violet-950 to-purple-950 text-white
+                  className={`rounded-[32px] shadow-[0_20px_60px_-30px_rgba(139,92,246,0.8)] transition transform flex flex-col items-center relative overflow-hidden border bg-gradient-to-br from-[#0d0d1a] via-[#12103a] to-[#1a0d2e] text-white
                     ${timeLeft === 0 && !results[index]
                       ? 'opacity-50 grayscale pointer-events-none'
-                      : 'hover:-translate-y-0.5 hover:shadow-[0_35px_90px_-55px_rgba(124,58,237,0.95)]'
-                    }`}
+                      : 'hover:-translate-y-1 hover:shadow-[0_30px_80px_-40px_rgba(139,92,246,0.9)]'
+                    } ${results[index]?.correct_proverb ? 'border-green-400/60' : results[index] && !results[index].correct_proverb ? 'border-red-400/60' : 'border-violet-400/20'}`}
                 >
-                  <div className="absolute inset-x-4 top-4 flex items-center justify-between gap-2 text-[10px] uppercase tracking-[0.24em] text-violet-200/80">
-                    <span className="inline-flex items-center gap-1 rounded-full border border-violet-300/10 bg-black/40 px-3 py-1">
-                      <span className="h-2 w-2 rounded-full bg-violet-300" />DITADO
-                    </span>
-                    {img.aiGenerated && (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-cyan-300/20 bg-cyan-500/10 px-3 py-1 text-cyan-200">
-                        🤖 IA
+                  {/* Header do card */}
+                  <div className="w-full px-5 pt-5 pb-3">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-violet-300/20 bg-violet-500/10 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-violet-200/80">
+                        <span className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-pulse" />
+                        Ditado Popular
                       </span>
-                    )}
-                  </div>
-                  {/* Ditado em francês no topo do card (para imagens AI com proverbText, ou todas as imagens) */}
-                  {img.proverbText && (
-                    <div className="mt-10 mb-1 w-full text-center">
-                      <span className="text-base font-bold text-violet-200 tracking-wide italic">
-                        {img.proverbText}*
-                      </span>
+                      <span className="text-[10px] text-violet-300/60 font-mono">#{index + 1}</span>
                     </div>
-                  )}
-                  <div className="relative w-full rounded-[32px] overflow-hidden border border-white/10 shadow-inner shadow-black/30 mt-2">
-                    <img
-                      src={img.url}
-                      alt="imagem"
-                      className="w-full h-56 sm:h-60 object-cover"
-                      onClick={() => setZoomedImage(img.url)}
-                    />
-                    {/* Overlay com significado do ditado na parte inferior da imagem */}
-                    {img.description && (
-                      <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-3 py-2">
-                        <p className="text-xs text-slate-200 text-center italic">{img.description}</p>
-                      </div>
-                    )}
-                  </div>
-                  {!img.proverbText && (
-                    <div className="mt-4 w-full rounded-[28px] border border-white/10 bg-white/5 p-4 text-sm leading-6 text-slate-200 shadow-[0_15px_40px_-32px_rgba(15,23,42,0.8)]">
-                      {img.description || 'Um cartão visual que ilustra o ditado e ajuda a conectar o significado à imagem.'}
+
+                    {/* Ditado em francês — destaque principal */}
+                    <div className="relative mb-4">
+                      {/* Aspas decorativas */}
+                      <span className="absolute -top-2 -left-1 text-5xl text-violet-500/20 font-serif leading-none select-none">"</span>
+                      <p className="text-lg sm:text-xl font-bold text-white leading-snug tracking-wide pt-3 px-2 text-center italic">
+                        {img.proverbText}
+                      </p>
+                      <span className="absolute -bottom-4 -right-1 text-5xl text-violet-500/20 font-serif leading-none select-none rotate-180">"</span>
                     </div>
-                  )}
-                  <div className="mt-4 text-slate-300 text-xs uppercase tracking-[0.24em]">Escolha o título correto</div>
-                  <div className="relative w-full mt-3">
-                    <select
-                      className={`
-                        w-full p-4 rounded-xl border-2 border-neon-blue
-                        bg-gradient-to-br from-gray-900 to-neon-blue
-                        text-white font-bold text-lg tracking-wide
-                        appearance-none cursor-pointer
-                        shadow-[0_0_15px_rgba(0,255,255,0.6)] hover:shadow-[0_0_25px_rgba(0,255,255,0.8)]
-                        active:scale-95
-                        transition-all duration-300 ease-in-out
-                        focus:outline-none focus:ring-2 focus:ring-neon-pink focus:ring-offset-2 focus:ring-offset-gray-900
-                        animate-pulse-slow
-                        sm:p-3 sm:text-base
-                        touch-manipulation
-                      `}
-                      onChange={e => checkAnswer(index, e.target.value)}
-                      disabled={!!results[index] || timeLeft === 0}
-                    >
-                      <option value="" className="bg-gray-900 text-white font-semibold cursor-pointer">✅ Selecione</option>
-                      {img.options.map((opt: string, i: number) => (
-                        <option
-                          className="bg-gray-900 text-white font-semibold hover:bg-neon-blue active:bg-neon-pink transition-colors duration-200 "
-                          key={i}
-                          value={opt}
-                        >
-                          {opt}
-                        </option>
-                      ))}
-                    </select>
-                    {/* Custom dropdown arrow */}
-                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+
+                    {/* Divider decorativo */}
+                    <div className="w-full h-px bg-gradient-to-r from-transparent via-violet-500/40 to-transparent my-4" />
+
+                    {/* Explicação/dica (se houver) */}
+                    {img.explanation && (
                       <motion.div
-                        animate={{
-                          y: [0, 5, 0], // sobe e desce
-                          opacity: [0.8, 1, 0.8], // animação de leve brilho
-                        }}
-                        transition={{
-                          duration: 0.4,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                        }}
-                        className={`text-white flex justify-center items-center ${results[index] ? 'hidden' : ''}`} // Adiciona 'hidden' se a resposta já foi selecionada
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: results[index] ? 1 : 0.6 }}
+                        className="text-[11px] text-slate-300/70 text-center italic px-2 mb-3 leading-relaxed"
                       >
-                        <ChevronDown size={28} strokeWidth={2.5} />
+                        💡 {img.explanation}
                       </motion.div>
-                    </div>
-                    {results[index] && (
-                      <div className="w-full text-center font-bold text-lg tracking-wide text-white p-4">
-                        {Object.values(results[index])[0]} {/* Exibe o valor da opção selecionada */}
-                      </div>
                     )}
                   </div>
-                  
 
-                  <button
-                    onClick={() => speakPortuguese(img.title, speechSpeeds[index])}
-                    className="mt-3 p-3 border border-green rounded-xl bg-blue-500 text-white shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-green transition-colors duration-300 cursor-pointer"
-                    style={{
-                      width: '48px', // Aumentei um pouco para melhor visualização
-                      height: '48px',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                    }}
-                  >
-                    {/* Ícone de "play" estilizado */}
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      className="w-6 h-6 animate-pulse" // Aumentei um pouco o tamanho do ícone
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.54.848l3-2a1 1 0 000-1.696l-3-2z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </button>
-
-                  <div className="flex items-center mt-2"> 
-                    
-                    <input
-                      type="range"
-                      min="0.1"
-                      max="2"
-                      step="0.01"
-                      value={speechSpeeds[index]}
-                      onChange={(e) => handleSpeedChange(index, parseFloat(e.target.value))}
-                      className="w-34 h-3 rounded-full bg-transparent border-1 border-green cursor-pointer appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-lightblue [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer"
-                    />
-                    <span className="ml-2 mb-1 text-sm text-white font-bold">{(speechSpeeds[index] ?? 1).toFixed(1)}x</span>
-                  </div>
-
-                  {results[index] && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="mt-2 flex items-center"
-                    >
-                      {results[index].correct_proverb ? (
-                        <>
-                          <Check className="mr-2 text-green" size={20} />
-                          <span className="font-medium text-green">Correto!</span>
-                        </>
-                      ) : (
-                        <>
-                          <X className="mr-2 text-red" size={20} />
-                          <span className="font-medium text-red">Errado. <span className="text-green">Resposta: {img.title}</span></span>
-                        </>
+                  {/* Área de resposta */}
+                  <div className="w-full px-4 pb-5">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 text-center mb-2">
+                      Qual o significado em português?
+                    </p>
+                    <div className="relative w-full">
+                      <select
+                        className={`
+                          w-full p-3 rounded-2xl border-2
+                          bg-gradient-to-br from-gray-900/90 to-violet-950/80
+                          text-white font-semibold text-sm tracking-wide
+                          appearance-none cursor-pointer
+                          shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_30px_rgba(139,92,246,0.5)]
+                          active:scale-95 transition-all duration-300 ease-in-out
+                          focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-gray-900
+                          ${results[index]?.correct_proverb ? 'border-green-400/60' : results[index] ? 'border-red-400/60' : 'border-violet-400/40 animate-pulse-slow'}
+                          sm:p-3 touch-manipulation disabled:opacity-60 disabled:cursor-not-allowed
+                        `}
+                        onChange={e => checkAnswer(index, e.target.value)}
+                        disabled={!!results[index] || timeLeft === 0}
+                      >
+                        <option value="" className="bg-gray-900 text-white font-semibold">✅ Selecione o significado</option>
+                        {img.options.map((opt: string, i: number) => (
+                          <option
+                            className="bg-gray-900 text-white font-semibold"
+                            key={i}
+                            value={opt}
+                          >
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                      {/* Seta animada */}
+                      {!results[index] && (
+                        <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                          <motion.div
+                            animate={{ y: [0, 5, 0], opacity: [0.8, 1, 0.8] }}
+                            transition={{ duration: 0.4, repeat: Infinity, ease: 'easeInOut' }}
+                            className="text-violet-300"
+                          >
+                            <ChevronDown size={22} strokeWidth={2.5} />
+                          </motion.div>
+                        </div>
                       )}
-                    </motion.div>
-                  )}
+                    </div>
+
+                    {/* Resultado */}
+                    {results[index] && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mt-3 flex flex-col items-center gap-1"
+                      >
+                        {results[index].correct_proverb ? (
+                          <div className="flex items-center gap-2">
+                            <Check className="text-green-400" size={18} />
+                            <span className="font-semibold text-green-300 text-sm">Correto!</span>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex items-center gap-2">
+                              <X className="text-red-400" size={18} />
+                              <span className="font-semibold text-red-300 text-sm">Errado!</span>
+                            </div>
+                            <p className="text-[11px] text-slate-300 text-center">
+                              Significado correto: <span className="text-green-300 font-semibold">{img.title}</span>
+                            </p>
+                          </>
+                        )}
+                      </motion.div>
+                    )}
+
+                    {/* Botão de ouvir o ditado em francês */}
+                    <div className="flex justify-center mt-3">
+                      <button
+                        onClick={() => {
+                          // Fala o ditado em francês usando voz francesa quando disponível
+                          if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                            const synth = window.speechSynthesis;
+                            const voices = synth.getVoices();
+                            const frVoice = voices.find(v => ['fr-FR','fr-CA','fr-BE','fr-CH'].includes(v.lang));
+                            synth.cancel();
+                            const utt = new SpeechSynthesisUtterance(img.proverbText);
+                            if (frVoice) utt.voice = frVoice;
+                            utt.lang = 'fr-FR';
+                            utt.rate = speechSpeeds[index] ?? 1;
+                            synth.speak(utt);
+                          }
+                        }}
+                        title="Ouvir o ditado em francês"
+                        className="p-2.5 border border-violet-400/40 rounded-xl bg-violet-900/30 text-violet-200 shadow-md hover:bg-violet-800/50 focus:outline-none focus:ring-2 focus:ring-violet-400 transition-all duration-200 cursor-pointer flex items-center gap-2 text-xs"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 animate-pulse">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.54.848l3-2a1 1 0 000-1.696l-3-2z" clipRule="evenodd" />
+                        </svg>
+                        Ouvir em FR
+                      </button>
+                    </div>
+                  </div>
                 </motion.div>
               ))}
             </div>
@@ -2384,15 +2368,16 @@ export default function Game({}: GameProps) {
                   >
                     {/*<h2 className="text-2xl font-bold text-white mb-4">Revisão dos Acertos</h2>*/}
                     <div className="relative">
-                      <img
-                        src={reviewHistory[currentReviewIndex]?.url}
-                        alt={reviewHistory[currentReviewIndex]?.title}
-                        className="w-full rounded-lg shadow-md"
-                      />
-                      <div className="absolute bottom-2 left-0 right-0 bg-black bg-opacity-60 text-white py-2 rounded-b-lg">
-                        <p className="text-2xl font-semibold text-lightblue text-shadow-glow">{reviewHistory[currentReviewIndex]?.title}</p>
+                      {/* Nova revisão: exibe o ditado em francês e o significado */}
+                      <div className="rounded-2xl border border-violet-400/30 bg-gradient-to-br from-[#0d0d1a] to-[#1a0d2e] p-6 text-center">
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-violet-300/60 mb-3">Ditado em Francês</p>
+                        <p className="text-xl font-bold text-white italic mb-4">
+                          {(reviewHistory[currentReviewIndex] as any)?.proverbText || reviewHistory[currentReviewIndex]?.title}
+                        </p>
+                        <div className="w-full h-px bg-gradient-to-r from-transparent via-violet-500/40 to-transparent mb-4" />
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-violet-300/60 mb-2">Significado em Português</p>
+                        <p className="text-lg font-semibold text-lightblue">{reviewHistory[currentReviewIndex]?.title}</p>
                       </div>
-                    </div>
                     <div className="flex justify-between items-center w-full mt-2 px-2">
                       <button
                         onClick={handlePauseResumeReview}
@@ -2410,8 +2395,9 @@ export default function Game({}: GameProps) {
                         Sair
                       </button>
                     </div>
-                  </motion.div>
+                  </div>
                 </motion.div>
+              </motion.div>
               )}
             </AnimatePresence>
           </>

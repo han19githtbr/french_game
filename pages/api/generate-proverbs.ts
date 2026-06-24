@@ -1,7 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getDb } from '../../lib/mongodb';
-import { ensureDailyAIItems, isInvalidCaptionTitle, resolveAIImageTitle } from '../../lib/ai';
-import { resolveAIImageTitleByVision } from '../../lib/ai-image-resolver';
 
 const shuffle = <T>(array: T[]): T[] => [...array].sort(() => Math.random() - 0.5);
 
@@ -10,31 +8,16 @@ const randomOptions = (correct: string, pool: string[], optionsCount: number) =>
   return shuffle([correct, ...shuffle(others).slice(0, Math.max(0, optionsCount - 1))]);
 };
 
-/**
- * Para imagens AI de provérbios, gera o ditado em francês e seu significado em português
- * chamando Claude com a imagem.
- * Retorna { proverbText: string (ditado em fr), meaning: string (significado em pt) } ou null.
- */
-async function resolveProverbByVision(
-  imageUrl: string,
-  portugueseMeanings: string[],
-): Promise<{ proverbText: string | null; meaning: string | null }> {
+// Busca ditados populares em francês via Claude com web_search
+async function fetchProverbsFromAI(count: number, group: string): Promise<Array<{ proverbText: string; meaning: string; explanation: string }>> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return { proverbText: null, meaning: null };
+  if (!apiKey) return [];
+
+  const groupLabel = group === 'grupo-1' ? 'animais, natureza e vida cotidiana'
+    : group === 'grupo-2' ? 'amor, família e relações humanas'
+    : 'trabalho, sabedoria e filosofia';
 
   try {
-    const imageResp = await fetch(imageUrl, { signal: AbortSignal.timeout(12000) });
-    if (!imageResp.ok) return { proverbText: null, meaning: null };
-    const contentType = imageResp.headers.get('content-type') || 'image/jpeg';
-    const rawType = contentType.split(';')[0].trim();
-    const mediaType = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(rawType)
-      ? rawType : 'image/jpeg';
-    const buffer = await imageResp.arrayBuffer();
-    if (buffer.byteLength > 5 * 1024 * 1024) return { proverbText: null, meaning: null };
-    const base64 = Buffer.from(buffer).toString('base64');
-
-    // Step 1: Identify which meaning from the list best matches the image
-    const meaningList = portugueseMeanings.map((m, i) => `${i + 1}. ${m}`).join('\n');
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -43,51 +26,74 @@ async function resolveProverbByVision(
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 200,
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1500,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         messages: [{
           role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
-            {
-              type: 'text',
-              text: `This image illustrates a French proverb or idiomatic expression. 
+          content: `Pesquise e liste ${count} ditados populares franceses autênticos sobre o tema: ${groupLabel}.
 
-Here is a list of Portuguese meanings of French proverbs:
-${meaningList}
+Para cada ditado, retorne SOMENTE um array JSON válido com este formato (sem markdown, sem texto extra):
+[
+  {
+    "proverbText": "Le texte du dicton en français",
+    "meaning": "Significado curto em português (máx 8 palavras)",
+    "explanation": "Explicação do significado em português (1-2 frases)"
+  }
+]
 
-Reply ONLY with a JSON object in this format:
-{"meaningIndex": <number from 1 to ${portugueseMeanings.length}>, "frenchProverb": "<the French proverb or expression that this image illustrates, in French>"}
-
-Choose the meaning that best matches what this image symbolically represents. Also provide the French proverb text.`
-            }
-          ]
-        }]
+Os ditados devem ser variados, autênticos e bem conhecidos na cultura francesa. Responda SOMENTE com o array JSON.`
+        }],
       }),
-      signal: AbortSignal.timeout(20000),
+      signal: AbortSignal.timeout(30000),
     });
 
-    if (!resp.ok) return { proverbText: null, meaning: null };
+    if (!resp.ok) return [];
     const data = await resp.json();
-    const raw = (data.content?.[0]?.text || '').trim();
 
-    try {
-      const jsonMatch = raw.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        const idx = Number(parsed.meaningIndex) - 1;
-        const meaning = portugueseMeanings[idx] || null;
-        const frenchProverb = typeof parsed.frenchProverb === 'string' ? parsed.frenchProverb.trim() : null;
-        return { proverbText: frenchProverb, meaning };
-      }
-    } catch {
-      // fallback: try to find the meaning by text
-    }
+    // Extrai o texto da resposta (pode vir após tool_use)
+    const textBlock = (data.content || []).find((b: any) => b.type === 'text');
+    if (!textBlock) return [];
 
-    return { proverbText: null, meaning: null };
+    const raw = textBlock.text.trim();
+    const jsonMatch = raw.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) return [];
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed
+      .filter((p: any) => p.proverbText && p.meaning && p.explanation)
+      .map((p: any) => ({
+        proverbText: String(p.proverbText).trim(),
+        meaning: String(p.meaning).trim(),
+        explanation: String(p.explanation).trim(),
+      }));
   } catch (err) {
-    console.warn('[proverbs] resolveProverbByVision failed:', err);
-    return { proverbText: null, meaning: null };
+    console.warn('[proverbs] fetchProverbsFromAI failed:', err);
+    return [];
+  }
+}
+
+// Fallback: busca do banco de dados (images_proverbs)
+async function fetchProverbsFromDB(group: string, count: number): Promise<Array<{ proverbText: string; meaning: string; explanation: string }>> {
+  try {
+    const db = await getDb();
+    const collection = db.collection('images_proverbs');
+    const items = await collection
+      .find({ theme: group.toLowerCase(), proverbText: { $exists: true, $ne: '' } })
+      .toArray();
+
+    const valid = items.filter((i: any) => i.proverbText && i.title);
+    const selected = shuffle(valid).slice(0, count);
+
+    return selected.map((i: any) => ({
+      proverbText: i.proverbText as string,
+      meaning: i.title as string,
+      explanation: i.description || '',
+    }));
+  } catch {
+    return [];
   }
 }
 
@@ -96,145 +102,57 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Método não permitido' });
   }
 
-  const { theme, count = 6, optionsCount = 4 } = req.body;
+  const { theme, count = 4, optionsCount = 4 } = req.body;
 
   if (!theme) {
     return res.status(400).json({ error: 'Tema não fornecido.' });
   }
 
   try {
-    const db = await getDb();
-    const collection = db.collection('images_proverbs');
+    const safeCount = Math.min(Math.max(Number(count) || 4, 2), 6);
+    const safeOptionsCount = Math.min(Math.max(Number(optionsCount) || 4, 2), 6);
 
-    try {
-      await ensureDailyAIItems('images_proverbs', theme);
-    } catch (aiError) {
-      console.warn('Não foi possível gerar provérbios via AI:', aiError);
+    // Tenta buscar ditados via IA (web search)
+    let proverbs = await fetchProverbsFromAI(safeCount + 4, theme);
+
+    // Fallback: banco de dados
+    if (proverbs.length < safeCount) {
+      const dbProverbs = await fetchProverbsFromDB(theme, safeCount);
+      // Mescla e deduplica
+      const allTexts = new Set(proverbs.map(p => p.proverbText.toLowerCase()));
+      for (const dp of dbProverbs) {
+        if (!allTexts.has(dp.proverbText.toLowerCase())) {
+          proverbs.push(dp);
+          allTexts.add(dp.proverbText.toLowerCase());
+        }
+      }
     }
 
-    // Busca TODOS os itens do tema
-    const themeImages = await collection.find({ theme: theme.toLowerCase() }).toArray();
-
-    const validThemeImages = themeImages.filter((img: any) =>
-      img.title &&
-      !isInvalidCaptionTitle(img.title) &&
-      img.validated !== false
-    );
-
-    if (!validThemeImages || validThemeImages.length < 1) {
-      return res.status(400).json({ error: 'Tema inválido ou sem títulos válidos disponíveis.' });
+    if (proverbs.length === 0) {
+      return res.status(404).json({ error: 'Não foi possível obter ditados para este grupo.' });
     }
 
-    const safeCount = Math.min(count, validThemeImages.length);
-    const initialSelectionCount = Math.min(validThemeImages.length, safeCount * 3);
-    const selectedImages = shuffle(validThemeImages).slice(0, initialSelectionCount);
+    // Seleciona os ditados para esta rodada
+    const selectedProverbs = shuffle(proverbs).slice(0, safeCount);
 
-    // Pool de significados em português (todos os títulos não-AI do banco)
-    // Em proverbs, title = significado em português
-    const allPortugueseMeanings = Array.from(new Set(
-      validThemeImages
-        .filter((i: any) => i.source !== 'ai' || i.aiTitleResolved === true)
-        .map((i: any) => i.title as string)
-        .filter(Boolean)
-    ));
+    // Pool de significados para as opções (todos os ditados buscados)
+    const allMeanings = Array.from(new Set(proverbs.map(p => p.meaning)));
 
-    // --- STEP 1: Resolve correct titles for AI images ---
-    const resolvedImages = await Promise.all(
-      selectedImages.map(async (img: any) => {
-        // Already resolved
-        if (img.source === 'ai' && img.aiTitleResolved === true) {
-          return { ...img };
-        }
+    const safePool = allMeanings.length >= safeOptionsCount
+      ? allMeanings
+      : [...allMeanings, ...shuffle(allMeanings)].slice(0, safeOptionsCount);
 
-        if (img.source === 'ai' && img.url) {
-          const normalizedTheme = theme.toLowerCase();
-
-          // Step A: Try DB matching on description/title
-          const candidate = String(img.description || img.title || '').trim();
-          const fallbackTitle = await resolveAIImageTitle('images_proverbs', normalizedTheme, candidate);
-          if (fallbackTitle && fallbackTitle !== img.title && !isInvalidCaptionTitle(fallbackTitle)) {
-            collection.updateOne(
-              { _id: img._id },
-              { $set: { title: fallbackTitle, aiTitleResolved: true } }
-            ).catch(() => {});
-            return { ...img, title: fallbackTitle, aiTitleResolved: true };
-          }
-
-          // Step B: Vision - match against all Portuguese meanings
-          if (allPortugueseMeanings.length >= 2) {
-            const visionTitle = await resolveAIImageTitleByVision(img.url, allPortugueseMeanings, 'images_proverbs');
-            if (visionTitle && !isInvalidCaptionTitle(visionTitle)) {
-              collection.updateOne(
-                { _id: img._id },
-                { $set: { title: visionTitle, aiTitleResolved: true } }
-              ).catch(() => {});
-              return { ...img, title: visionTitle, aiTitleResolved: true };
-            }
-          }
-
-          // Step C: Full Vision analysis - get both the French proverb text and Portuguese meaning
-          const { proverbText, meaning } = await resolveProverbByVision(img.url, allPortugueseMeanings);
-
-          if (meaning && !isInvalidCaptionTitle(meaning)) {
-            const updateData: any = { title: meaning, aiTitleResolved: true };
-            if (proverbText) updateData.proverbText = proverbText;
-            collection.updateOne({ _id: img._id }, { $set: updateData }).catch(() => {});
-            return { ...img, title: meaning, proverbText: proverbText || img.proverbText, aiTitleResolved: true };
-          }
-
-          // Skip unresolved AI images with invalid titles
-          if (!isInvalidCaptionTitle(img.title)) {
-            return { ...img };
-          }
-          return { ...img, _skipUnresolved: true };
-        }
-
-        return { ...img };
-      })
-    );
-
-    // --- STEP 2: Filter out unresolved ---
-    const cleanResolved = resolvedImages.filter((img: any) => !img._skipUnresolved);
-
-    const stableImages = cleanResolved
-      .filter((img: any) => !(img.source === 'ai' && img.url && img.aiTitleResolved !== true));
-    const finalImages = stableImages.length >= safeCount
-      ? stableImages.slice(0, safeCount)
-      : cleanResolved.slice(0, safeCount);
-
-    // --- STEP 3: Build options pool (all Portuguese meanings from the entire theme) ---
-    const resolvedAiMeanings = cleanResolved
-      .filter((img: any) => img.source === 'ai' && img.aiTitleResolved)
-      .map((img: any) => img.title as string);
-
-    // Base pool: all non-AI Portuguese meanings + resolved AI meanings
-    const allNonAiMeanings = Array.from(new Set(
-      validThemeImages
-        .filter((i: any) => i.source !== 'ai')
-        .map((i: any) => i.title as string)
-        .filter(Boolean)
-    ));
-
-    const mergedMeanings = Array.from(new Set([...allNonAiMeanings, ...resolvedAiMeanings]));
-    const safeOptionsCount = Math.min(Math.max(optionsCount, 2), mergedMeanings.length);
-
-    // --- STEP 4: Build final response ---
-    // For proverbs: title = Portuguese meaning (the answer)
-    // proverbText = French proverb text (displayed in card header/image)
-    // description = context description shown below image
-    const imagesWithOptions = finalImages.map((img: any) => ({
-      url: img.url,
-      title: img.title,                           // Portuguese meaning = correct answer
-      proverbText: img.proverbText || null,        // French proverb text (for display in card)
-      description: img.description || '',
-      aiGenerated: img.source === 'ai',
-      validated: img.validated,
-      options: randomOptions(img.title as string, mergedMeanings, safeOptionsCount),
+    // Monta resposta
+    const result = selectedProverbs.map(proverb => ({
+      proverbText: proverb.proverbText,
+      title: proverb.meaning,           // resposta correta = significado em PT
+      explanation: proverb.explanation, // explicação detalhada
+      options: randomOptions(proverb.meaning, safePool, safeOptionsCount),
     }));
 
-    res.status(200).json(imagesWithOptions);
+    return res.status(200).json(result);
   } catch (error) {
-    console.error('Erro ao buscar imagens:', error);
-    res.status(500).json({ error: 'Erro interno ao buscar imagens.' });
+    console.error('Erro ao buscar provérbios:', error);
+    return res.status(500).json({ error: 'Erro interno ao buscar provérbios.' });
   }
 }

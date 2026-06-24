@@ -1016,6 +1016,9 @@ export default function Game({}: GameProps) {
   }, []);*/
 
 
+  // Ponto 4: armazena datas de expiração dos desbloqueios admin para exibir ao usuário
+  const [adminUnlockExpiry, setAdminUnlockExpiry] = useState<Record<string, number>>({});
+
   useEffect(() => {
     const premiumActive = loadPremiumAccess();
     setIsFrasesUnlocked(premiumActive);
@@ -1030,9 +1033,22 @@ export default function Game({}: GameProps) {
           if (data.unlocks['ditados']) setIsProverbsUnlocked(true);
           if (data.unlocks['curiosidades']) setIsCuriosidadesUnlocked(true);
         }
+        if (data.expiryDates) {
+          setAdminUnlockExpiry(data.expiryDates);
+        }
       })
       .catch(() => {});
   }, []);
+
+  // Formata tempo restante de desbloqueio admin
+  const formatAdminUnlockTimeLeft = (expiryMs: number): string => {
+    const diff = expiryMs - Date.now();
+    if (diff <= 0) return 'Expirado';
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    if (hours > 0) return `${hours}h ${minutes}min restantes`;
+    return `${minutes}min restantes`;
+  };
 
   
   const handleMouseEnter = () => {
@@ -1066,7 +1082,9 @@ export default function Game({}: GameProps) {
         },
         body: JSON.stringify({
           theme,
-          count: imageCount,
+          // Ponto 3: quando dificuldade manual (Fácil/Médio/Difícil) está selecionada,
+          // o número de cards exibidos = valor escolhido (2, 4 ou 6)
+          count: optionsCount !== null ? optionsCount : imageCount,
           optionsCount: optionsCount !== null ? optionsCount : levelDifficulty.optionsPerCard,
         }),
       });
@@ -2265,16 +2283,33 @@ export default function Game({}: GameProps) {
               {/* Linha topo */}
               <div className="flex items-center justify-between">
                 <span className="text-[10px] uppercase tracking-[0.25em] text-emerald-400 font-semibold">Premium Pack</span>
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${isPremium ? 'bg-emerald-900/40 text-green-300 border border-emerald-700/50' : 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/40'}`}>
-                  {isPremium ? 'Ativo' : 'Disponível'}
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${isPremium ? 'bg-emerald-900/40 text-green-300 border border-emerald-700/50' : (adminUnlockExpiry['frases'] || adminUnlockExpiry['ditados']) ? 'bg-blue-900/40 text-blue-300 border border-blue-700/50' : 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/40'}`}>
+                  {isPremium ? 'Ativo' : (adminUnlockExpiry['frases'] || adminUnlockExpiry['ditados']) ? '🔓 Liberado' : 'Disponível'}
                 </span>
               </div>
               {/* Título + descrição compacta */}
               <div className="min-w-0">
-                <h2 className="text-base font-bold text-white leading-tight">{isPremium ? 'Bônus ativado' : 'Suporte para liberar'}</h2>
+                <h2 className="text-base font-bold text-white leading-tight">
+                  {isPremium ? 'Bônus ativado' : (adminUnlockExpiry['frases'] || adminUnlockExpiry['ditados']) ? 'Conteúdo liberado!' : 'Suporte para liberar'}
+                </h2>
                 <p className="text-[11px] text-gray-400 line-clamp-2">
-                  {isPremium ? 'Você tem +2 tentativas por rodada e missões especiais.' : 'Apoie o projeto para desbloquear vantagens leves no jogo.'}
+                  {isPremium
+                    ? 'Você tem +2 tentativas por rodada e missões especiais.'
+                    : (adminUnlockExpiry['frases'] || adminUnlockExpiry['ditados'])
+                      ? 'O administrador liberou o acesso temporariamente. Aproveite!'
+                      : 'Apoie o projeto para desbloquear vantagens leves no jogo.'}
                 </p>
+                {/* Ponto 4: exibe tempo restante dos desbloqueios admin */}
+                {!isPremium && (adminUnlockExpiry['frases'] || adminUnlockExpiry['ditados']) && (
+                  <div className="mt-1 space-y-0.5">
+                    {adminUnlockExpiry['frases'] && (
+                      <p className="text-[10px] text-blue-300">📖 Frases: {formatAdminUnlockTimeLeft(adminUnlockExpiry['frases'])}</p>
+                    )}
+                    {adminUnlockExpiry['ditados'] && (
+                      <p className="text-[10px] text-violet-300">💬 Ditados: {formatAdminUnlockTimeLeft(adminUnlockExpiry['ditados'])}</p>
+                    )}
+                  </div>
+                )}
                 <p className="text-[11px] text-gray-300 mt-0.5">
                   Tentativas: <strong className="text-white">{remainingAttempts}</strong> / {maxAttempts}
                 </p>

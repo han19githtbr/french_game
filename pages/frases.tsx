@@ -913,7 +913,7 @@ export default function Frase({}: GameProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ theme, optionsCount }),
+        body: JSON.stringify({ theme, count: optionsCount, optionsCount }),
       })
 
       if (!res.ok) {
