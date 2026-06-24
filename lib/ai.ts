@@ -4,11 +4,13 @@ import { notifyNewAIImages } from './push-notifications';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || process.env.OPENAI_KEY;
 const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-3.5-turbo';
 const OPENAI_IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1';
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+
+// Quantas imagens extras a IA gera por tema por dia (por título existente)
 const DAILY_AI_GENERATION_LIMIT = Number(process.env.AI_DAILY_GENERATION_LIMIT || '6');
 
 // Hugging Face / Stable Horde fallbacks
 const HF_API_KEY = process.env.HF_API_KEY;
-const HF_TEXT_MODEL = process.env.HF_TEXT_MODEL || 'HuggingFaceH4/zephyr-7b-beta';
 const HF_IMAGE_MODEL = process.env.HF_IMAGE_MODEL || 'runwayml/stable-diffusion-v1-5';
 const STABLE_HORDE_KEY = process.env.STABLE_HORDE_KEY;
 const MAX_DATA_URL_BYTES = Number(process.env.AI_MAX_DATA_URL_BYTES || '900000');
@@ -18,7 +20,7 @@ const normalizeTheme = (theme: string) => theme.toLowerCase();
 const normalizeText = (text: string) =>
   String(text || '')
     .trim()
-    .replace(/[“”]/g, '"')
+    .replace(/[""]/g, '"')
     .replace(/\s+/g, ' ')
     .replace(/\s+([,.!?;:])/g, '$1');
 
@@ -86,107 +88,6 @@ const chooseBestTitle = (candidate: string, titles: string[]) => {
   return bestScore >= 0.65 ? bestMatch : null;
 };
 
-const buildFallbackTitlePrompt = (collectionName: string, theme: string, candidate: string) => {
-  const normalizedTheme = normalizeTheme(theme);
-  if (collectionName === 'images') {
-    return `Você é um assistente que gera apenas JSON. Dado um rascunho de título em francês: "${candidate}", gere uma nova legenda curta em francês que seja um substantivo ou expressão específica e apropriada para vocabulário sobre o tema ${normalizedTheme}. Retorne apenas um array JSON com um objeto no formato {"title":"..."}. O título deve ser preciso, concreto e não genérico.`;
-  }
-
-  if (collectionName === 'images_sentences') {
-    return `Você é um assistente que gera apenas JSON. Dado um rascunho de frase em francês: "${candidate}", gere uma frase completa natural em francês que descreva uma cena ou situação relacionada ao tema ${normalizedTheme}. Retorne apenas um array JSON com um objeto no formato {"title":"..."}. O título deve ser uma frase natural, curta e descritiva.`;
-  }
-
-  return `Você é um assistente que gera apenas JSON. Dado um rascunho de explicação de provérbio: "${candidate}", gere uma explicação curta em português para um provérbio francês relacionado ao tema ${normalizedTheme}. Retorne apenas um array JSON com um objeto no formato {"title":"..."}. O título deve ser uma explicação didática de provérbio, em português, e evitar termos genéricos.`;
-};
-
-const fetchThemeTitles = async (collectionName: string, theme: string) => {
-  const db = await getDb();
-  const collection = db.collection(collectionName);
-  const documents = await collection
-    .find({ theme: normalizeTheme(theme), title: { $exists: true, $ne: '' }, validated: { $ne: false } })
-    .project({ title: 1 })
-    .toArray();
-  return Array.from(new Set(documents.map(doc => String(doc.title).trim()).filter(Boolean)));
-};
-
-const findClosestTitleInDb = async (collectionName: string, theme: string, candidate: string) => {
-  const titles = await fetchThemeTitles(collectionName, theme);
-  if (!titles.length) return null;
-  return chooseBestTitle(candidate, titles);
-};
-
-const generateFallbackCaptionWithPrompt = async (collectionName: string, theme: string, prompt: string) => {
-  if (!OPENAI_API_KEY) return null;
-
-  try {
-    const resp = await fetchWithTimeout('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: OPENAI_MODEL,
-        messages: [
-          { role: 'system', content: 'Você é um assistente que responde apenas com JSON válido.' },
-          { role: 'user', content: prompt },
-        ],
-        temperature: 0.3,
-        max_tokens: 120,
-      }),
-    });
-
-    if (!resp.ok) return null;
-    const data = await resp.json();
-    const text = data.choices?.[0]?.message?.content || '';
-    if (!text) return null;
-    const items = parseJsonResponse(text);
-    if (!Array.isArray(items) || items.length === 0) return null;
-    const item = items[0];
-    const title = normalizeText(String(item.title || item.text || item.caption || ''));
-    return title && !isInvalidCaptionTitle(title) ? title : null;
-  } catch (err) {
-    console.warn('[AI] fallback caption prompt falhou:', err);
-    return null;
-  }
-};
-
-const generateFallbackTitle = async (collectionName: string, theme: string, candidate: string) => {
-  const prompt = buildFallbackTitlePrompt(collectionName, theme, candidate);
-  const titleFromPrompt = await generateFallbackCaptionWithPrompt(collectionName, theme, prompt);
-  if (titleFromPrompt) return titleFromPrompt;
-
-  const fallbackItems = await generateAICaptions(collectionName, theme, 1);
-  if (Array.isArray(fallbackItems) && fallbackItems.length > 0) {
-    const item = fallbackItems[0];
-    const fallbackTitle = normalizeText(item.title);
-    if (fallbackTitle && !isInvalidCaptionTitle(fallbackTitle)) return fallbackTitle;
-  }
-
-  const safeFallbacks = {
-    images: ['La chaise', 'Le livre', 'La fenêtre', 'La tasse'],
-    images_sentences: ['Le chat dort sur le canapé.', 'La famille mange ensemble.', 'Le soleil brille sur le jardin.'],
-    images_proverbs: ['Ter calma nas adversidades', 'Saber ouvir antes de falar', 'Valorizar as pequenas vitórias'],
-  };
-
-  return safeFallbacks[collectionName as keyof typeof safeFallbacks][0];
-};
-
-export const resolveAIImageTitle = async (collectionName: string, theme: string, candidate: string) => {
-  const normalizedCandidate = normalizeText(candidate);
-  if (!normalizedCandidate || isInvalidCaptionTitle(normalizedCandidate)) {
-    return await generateFallbackTitle(collectionName, theme, candidate);
-  }
-
-  const dbMatch = await findClosestTitleInDb(collectionName, theme, normalizedCandidate);
-  if (dbMatch) return dbMatch;
-
-  const fallbackTitle = await generateFallbackTitle(collectionName, theme, normalizedCandidate);
-  if (fallbackTitle && !isInvalidCaptionTitle(fallbackTitle)) return fallbackTitle;
-
-  return normalizedCandidate;
-};
-
 // Timeout wrapper
 const fetchWithTimeout = async (url: string, options: RequestInit, timeoutMs = 25000): Promise<Response> => {
   const controller = new AbortController();
@@ -196,26 +97,6 @@ const fetchWithTimeout = async (url: string, options: RequestInit, timeoutMs = 2
   } finally {
     clearTimeout(id);
   }
-};
-
-const themePromptLabel = (collectionName: string, normalizedTheme: string) =>
-  collectionName === 'images_proverbs'
-    ? `provérbios franceses do grupo ${normalizedTheme.replace('grupo-', '')}`
-    : `o tema ${normalizedTheme}`;
-
-const buildPrompt = (collectionName: string, theme: string, count: number) => {
-  const normalizedTheme = normalizeTheme(theme);
-  const themeDescription = themePromptLabel(collectionName, normalizedTheme);
-
-  if (collectionName === 'images') {
-    return `Você é um assistente que gera apenas JSON. Crie ${count} legendas específicas em francês para imagens de vocabulário de ${themeDescription}. Cada item deve vir no formato {"title":"...", "description":"..."}. O campo title deve ser um substantivo ou expressão francesa muito específico que descreva com precisão um elemento visível na imagem. Nunca use palavras em português, inglês ou termos genéricos como "turismo", "natureza", "animais", "tecnologia", "gastronomia", "cultura" ou quaisquer números de sequência como "turismo 1". Exemplos válidos: "L'aéroport", "La voiture", "Les feuilles", "Un oiseau". O campo description deve ser uma frase curta em francês que ajude a conectar o título ao conteúdo da imagem. Responda somente com um array JSON válido.`;
-  }
-
-  if (collectionName === 'images_sentences') {
-    return `Você é um assistente que gera apenas JSON. Crie ${count} frases simples em francês que descrevem cenas ou objetos relacionados a ${themeDescription}. Cada item deve vir no formato {"title":"...", "description":"..."}, onde title é a frase principal e description é uma dica de contexto em português. Evite títulos que pareçam genéricos ou incompletos. Responda somente com um array JSON válido.`;
-  }
-
-  return `Você é um assistente que gera apenas JSON. Crie ${count} provérbios ou expressões idiomáticas francesas relacionadas a ${themeDescription}. Cada item deve vir no formato {"proverbText":"...", "title":"...", "description":"..."}. O campo "proverbText" deve ser o ditado/expressão em FRANCÊS (ex: "Au ras des pâquerettes"). O campo "title" deve ser o SIGNIFICADO em PORTUGUÊS, curto e didático (ex: "Desinteressante"). O campo "description" deve ser o significado detalhado em português precedido de asterisco (ex: "*D''un niveau très bas, inintéressant."). Nunca use termos genéricos. Responda somente com um array JSON válido.`;
 };
 
 const buildPlaceholderUrl = (theme: string, seed: number) => {
@@ -252,7 +133,7 @@ export const isInvalidCaptionTitle = (title: string) => {
   const normalized = title.trim().toLowerCase();
   if (!normalized) return true;
 
-  const genericPattern = /\b(?:turismo|natureza|animais|tecnologia|gastronomia|cultura|pensamentos|tourisme|natureza|animaux|technologie|gastronomie|culture|pensée|objet|image|illustration|photo|scène|scene|titre)\b/i;
+  const genericPattern = /\b(?:turismo|natureza|animais|tecnologia|gastronomia|cultura|pensamentos|tourisme|animaux|technologie|gastronomie|culture|pensée|objet|image|illustration|photo|scène|scene|titre)\b/i;
   if (genericPattern.test(normalized)) return true;
   if (/\d+/.test(normalized)) return true;
 
@@ -268,110 +149,106 @@ const normalizeCaptionItems = (items: any[]) =>
     }))
     .filter((item: any) => item.title && !isInvalidCaptionTitle(item.title));
 
-const generateAICaptions = async (collectionName: string, theme: string, count: number) => {
-  const prompt = buildPrompt(collectionName, theme, count);
+// ─── NOVA LÓGICA: busca títulos já existentes no banco para o tema ──────────
+// Em vez de inventar títulos novos, reutiliza os títulos fixos do banco e
+// gera novas imagens para eles — ampliando o pool visual sem mudar as legendas.
+const fetchExistingTitlesForTheme = async (
+  collectionName: string,
+  theme: string,
+  limit = 10,
+): Promise<Array<{ title: string; description?: string; proverbText?: string }>> => {
+  try {
+    const db = await getDb();
+    const collection = db.collection(collectionName);
 
-  // 1) Hugging Face text-generation
-  if (HF_API_KEY) {
-    try {
-      const url = `https://api-inference.huggingface.co/models/${HF_TEXT_MODEL}`;
-      console.log('[AI] Tentando HF text model:', HF_TEXT_MODEL);
-      const resp = await fetchWithTimeout(url, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${HF_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ inputs: prompt, parameters: { max_new_tokens: 800 } }),
-      });
+    // Busca apenas itens do banco fixo (source != 'ai') para garantir qualidade
+    const docs = await collection
+      .find({
+        theme: normalizeTheme(theme),
+        title: { $exists: true, $ne: '' },
+        validated: { $ne: false },
+        source: { $ne: 'ai' }, // apenas itens validados pelo admin
+      })
+      .project({ title: 1, description: 1, proverbText: 1 })
+      .toArray();
 
-      if (resp.ok) {
-        const data = await resp.json();
-        let text = '';
-        if (Array.isArray(data) && data[0]?.generated_text) text = data[0].generated_text;
-        else if (data.generated_text) text = data.generated_text;
+    // Embaralha e retorna até `limit` títulos únicos
+    const shuffled = docs.sort(() => Math.random() - 0.5);
+    const seen = new Set<string>();
+    const result: Array<{ title: string; description?: string; proverbText?: string }> = [];
 
-        if (text) {
-          const items = parseJsonResponse(text);
-          if (Array.isArray(items) && items.length > 0) {
-            const normalized = normalizeCaptionItems(items);
-            if (Array.isArray(normalized) && normalized.length > 0) return normalized;
-            console.warn('[AI] HF model retornou itens, mas todos foram filtrados como inválidos.');
-          }
-        }
+    for (const doc of shuffled) {
+      const t = String(doc.title || '').trim();
+      if (t && !seen.has(t.toLowerCase()) && !isInvalidCaptionTitle(t)) {
+        seen.add(t.toLowerCase());
+        result.push({
+          title: t,
+          description: doc.description ? String(doc.description) : undefined,
+          proverbText: doc.proverbText ? String(doc.proverbText) : undefined,
+        });
+        if (result.length >= limit) break;
       }
-    } catch (err) {
-      console.warn('[AI] HF text falhou:', err);
     }
+
+    return result;
+  } catch (err) {
+    console.warn('[AI] fetchExistingTitlesForTheme falhou:', err);
+    return [];
   }
-
-  // 2) OpenAI fallback
-  if (OPENAI_API_KEY) {
-    try {
-      console.log('[AI] Tentando OpenAI text model:', OPENAI_MODEL);
-      const resp = await fetchWithTimeout('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: OPENAI_MODEL,
-          messages: [
-            { role: 'system', content: 'Você é um assistente que responde apenas com um array JSON válido. Não adicione comentários ou texto fora do JSON.' },
-            { role: 'user', content: prompt },
-          ],
-          temperature: 0.4,
-          max_tokens: 600,
-        }),
-      });
-
-      if (resp.ok) {
-        const data = await resp.json();
-        const text = data.choices?.[0]?.message?.content || '';
-        if (text) {
-          const items = parseJsonResponse(text);
-          if (Array.isArray(items) && items.length > 0) {
-            const normalized = normalizeCaptionItems(items);
-            if (Array.isArray(normalized) && normalized.length > 0) return normalized;
-            console.warn('[AI] OpenAI retornou itens, mas todos foram filtrados como inválidos.');
-          }
-        }
-      }
-    } catch (err) {
-      console.warn('[AI] OpenAI text falhou:', err);
-    }
-  }
-
-  // 3) Static placeholder fallback — use safe, specific French nouns so they pass validation
-  console.warn('[AI] Sem provedor de texto disponível ou respostas inválidas; usando placeholders válidos.');
-  const safeNouns = ['La chaise', 'La table', 'La fenêtre', 'La porte', 'Le livre', 'La tasse', 'La pomme', 'Le chapeau', 'La valise', 'La voiture'];
-  return Array.from({ length: count }, (_, i) => ({
-    title: safeNouns[i % safeNouns.length],
-    description: `Illustration de vocabulaire en français sur ${theme}`,
-  }));
 };
 
-const buildImagePrompt = (collectionName: string, theme: string, proverbText?: string) => {
+// ─── Gera prompt de imagem específico para um título/legenda já conhecido ───
+// Antes o prompt era genérico por tema. Agora é dirigido ao título exato,
+// garantindo que a imagem gerada corresponda à legenda correta no jogo.
+const buildImagePromptForTitle = (
+  collectionName: string,
+  theme: string,
+  title: string,
+  proverbText?: string,
+): string => {
   const normalizedTheme = normalizeTheme(theme);
+
   if (collectionName === 'images') {
-    return `Educational illustration for French vocabulary about ${normalizedTheme}. The image should show a clear, concrete object or scene that can be described by a precise French title, without generic theme labels or distracting overlays. Bright, clean, educational style.`;
+    // Vocabulário: gera imagem que ilustra o substantivo/expressão francesa
+    return `Educational illustration for French language learning. 
+Theme: ${normalizedTheme}. 
+The image must clearly depict: "${title}".
+Style: bright, clean, colorful, educational card style. 
+No text overlays. The visual should unambiguously represent the French word or expression "${title}".`;
   }
 
   if (collectionName === 'images_sentences') {
-    return `Educational illustration for a French sentence about ${normalizedTheme}. The image should depict a scene or situation that matches a short French sentence, with clear, colorful details and a learning-card style.`;
+    // Frases: gera cena que ilustra a frase francesa
+    return `Educational illustration for French language learning.
+Theme: ${normalizedTheme}.
+The image must depict the scene described by the French sentence: "${title}".
+Style: colorful, clear, educational learning-card style. 
+No text overlays. The visual should unambiguously represent the situation described.`;
   }
 
-  // Proverbs: generate a flashcard-style image with the French proverb text at the top
-  // and a symbolic illustration of its meaning in the body, matching the style in the reference images
-  const proverbHint = proverbText ? `The French expression is: "${proverbText}". ` : '';
-  return `Black and white hand-drawn illustration style educational flashcard for a French idiomatic expression. ${proverbHint}The image should have: the French expression written at the top in bold typography, a clear symbolic illustration in the center depicting the literal or figurative meaning of the expression, and a short Portuguese explanation at the bottom in smaller text. Style similar to a textbook illustration: clean lines, black ink on white background, no color, cartoon/sketch style. The illustration should clearly symbolize the meaning of the French idiom.`;
+  // Provérbios: ilustração simbólica do ditado
+  const frText = proverbText || title;
+  return `Educational illustration for a French proverb or idiomatic expression.
+French expression: "${frText}".
+Meaning (in Portuguese): "${title}".
+Style: clean symbolic illustration, educational, colorful.
+No text overlays. The image should symbolically represent the meaning of the proverb.`;
 };
 
-const generateAIImageUrl = async (collectionName: string, theme: string, seed: number, proverbText?: string): Promise<string> => {
-  const prompt = buildImagePrompt(collectionName, theme, proverbText);
+// ─── Gera URL de imagem via IA para um título específico ────────────────────
+const generateAIImageUrlForTitle = async (
+  collectionName: string,
+  theme: string,
+  title: string,
+  seed: number,
+  proverbText?: string,
+): Promise<string> => {
+  const prompt = buildImagePromptForTitle(collectionName, theme, title, proverbText);
 
-  // 1) OpenAI image generation
+  // 1) Anthropic Claude com tool de geração de imagem via prompt
+  //    (Claude não gera imagens diretamente — usa OpenAI como primeiro provedor)
+
+  // 2) OpenAI image generation
   if (OPENAI_API_KEY && OPENAI_IMAGE_MODEL) {
     try {
       const resp = await fetchWithTimeout('https://api.openai.com/v1/images/generations', {
@@ -402,14 +279,14 @@ const generateAIImageUrl = async (collectionName: string, theme: string, seed: n
     }
   }
 
-  // 2) Hugging Face image generation
+  // 3) Hugging Face image generation
   if (HF_API_KEY) {
     try {
       const url = `https://api-inference.huggingface.co/models/${HF_IMAGE_MODEL}`;
       const resp = await fetchWithTimeout(url, {
         method: 'POST',
         headers: { Authorization: `Bearer ${HF_API_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inputs: `French language learning illustration about ${theme}, colorful, educational` }),
+        body: JSON.stringify({ inputs: prompt }),
       }, 30000);
 
       if (resp.ok) {
@@ -424,7 +301,7 @@ const generateAIImageUrl = async (collectionName: string, theme: string, seed: n
     }
   }
 
-  // 3) Stable Horde fallback
+  // 4) Stable Horde fallback
   if (STABLE_HORDE_KEY) {
     try {
       const asyncResp = await fetch('https://stablehorde.net/api/v2/generate/async', {
@@ -434,7 +311,7 @@ const generateAIImageUrl = async (collectionName: string, theme: string, seed: n
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          prompt: `French language learning about ${theme}, illustration, colorful`,
+          prompt,
           params: { width: 512, height: 512, steps: 20 },
         }),
       });
@@ -443,7 +320,6 @@ const generateAIImageUrl = async (collectionName: string, theme: string, seed: n
         const asyncData = await asyncResp.json();
         const jobId = asyncData.id;
 
-        // Poll for result (max 25s)
         for (let i = 0; i < 10; i++) {
           await new Promise(r => setTimeout(r, 5000));
           const checkResp = await fetch(`https://stablehorde.net/api/v2/generate/check/${jobId}`);
@@ -466,13 +342,11 @@ const generateAIImageUrl = async (collectionName: string, theme: string, seed: n
     }
   }
 
-  // 4) Placeholder image
+  // 5) Placeholder como último recurso
   return buildPlaceholderUrl(theme, seed);
 };
 
 // ─── Store pending in-app notifications in MongoDB ─────────────────────────
-// When Web Push isn't configured, we store notifications in the DB and let
-// the frontend poll or receive them via socket.
 const storeInAppNotification = async (payload: {
   title: string;
   body: string;
@@ -493,12 +367,29 @@ const storeInAppNotification = async (payload: {
   }
 };
 
+// ─── resolveAIImageTitle: mantido para compatibilidade ──────────────────────
+// Com a nova lógica o título já vem do banco, então esta função é usada
+// apenas como validação de segurança.
+export const resolveAIImageTitle = async (collectionName: string, theme: string, candidate: string) => {
+  return normalizeText(candidate) || candidate;
+};
+
+// ─── FUNÇÃO PRINCIPAL: ensureDailyAIItems ───────────────────────────────────
+//
+// NOVA LÓGICA:
+// 1. Busca os títulos FIXOS já existentes no banco para o tema
+// 2. Para cada título, verifica se já existe uma imagem gerada por IA hoje
+// 3. Se não, gera uma nova imagem via IA especificamente para aquele título
+// 4. Salva no banco com source='ai' — o jogo passa a ter múltiplas imagens
+//    para o mesmo título, ampliando a variedade visual sem alterar as legendas.
+//
 export const ensureDailyAIItems = async (collectionName: string, theme: string) => {
   const normalizedTheme = normalizeTheme(theme);
 
   const db = await getDb();
   const collection = db.collection(collectionName);
 
+  // Índice para evitar duplicatas de (theme + title + source=ai)
   await collection.createIndex(
     { theme: 1, title: 1 },
     { unique: true, partialFilterExpression: { source: 'ai' } },
@@ -509,6 +400,7 @@ export const ensureDailyAIItems = async (collectionName: string, theme: string) 
   const startOfTomorrow = new Date(startOfToday);
   startOfTomorrow.setUTCDate(startOfTomorrow.getUTCDate() + 1);
 
+  // Quantas imagens AI já foram geradas hoje para este tema
   const aiTodayCount = await collection.countDocuments({
     theme: normalizedTheme,
     source: 'ai',
@@ -517,85 +409,91 @@ export const ensureDailyAIItems = async (collectionName: string, theme: string) 
 
   const toGenerate = Math.max(0, DAILY_AI_GENERATION_LIMIT - aiTodayCount);
   if (toGenerate <= 0) {
+    console.log(`[AI] Limite diário atingido para tema="${normalizedTheme}" (${aiTodayCount} geradas hoje)`);
     return;
   }
 
-  const generated: any[] = await generateAICaptions(collectionName, normalizedTheme, toGenerate);
-  console.log(`[AI] generateAICaptions returned ${Array.isArray(generated) ? generated.length : 0} items for theme="${normalizedTheme}"`);
-  if (Array.isArray(generated) && generated.length > 0) {
-    console.log('[AI] Generated titles:', generated.map((g: any) => String(g.title || '').slice(0, 120)));
+  // ── NOVA LÓGICA: busca títulos já existentes no banco ──────────────────
+  const existingItems = await fetchExistingTitlesForTheme(collectionName, normalizedTheme, toGenerate);
+
+  if (existingItems.length === 0) {
+    console.warn(`[AI] Nenhum título fixo encontrado para tema="${normalizedTheme}" na coleção "${collectionName}". Abortando geração.`);
+    return;
   }
 
+  console.log(`[AI] Gerando ${existingItems.length} imagens extras para tema="${normalizedTheme}" com títulos existentes:`, existingItems.map(i => i.title));
+
+  // ── Gera uma imagem por título já existente ─────────────────────────────
   const documents = await Promise.all(
-    generated.map(async (item: any, index: number) => {
-      const resolvedTitle = await resolveAIImageTitle(collectionName, normalizedTheme, item.title);
+    existingItems.map(async (item, index) => {
       const doc: any = {
-        url: await generateAIImageUrl(collectionName, normalizedTheme, Date.now() + index, collectionName === 'images_proverbs' ? item.proverbText : undefined),
-        title: resolvedTitle || normalizeText(item.title),
-        description: item.description,
+        url: await generateAIImageUrlForTitle(
+          collectionName,
+          normalizedTheme,
+          item.title,
+          Date.now() + index,
+          item.proverbText,
+        ),
+        title: item.title,           // título idêntico ao item fixo do banco
+        description: item.description || '',
         theme: normalizedTheme,
         source: 'ai',
         createdAt: new Date(),
       };
-      // For proverbs: save the French proverb text alongside the Portuguese meaning
+
       if (collectionName === 'images_proverbs' && item.proverbText) {
-        doc.proverbText = String(item.proverbText).trim();
+        doc.proverbText = item.proverbText;
       }
+
       return doc;
     }),
   );
 
-  console.log(`[AI] Prepared ${Array.isArray(documents) ? documents.length : 0} documents to insert for theme="${normalizedTheme}"`);
+  console.log(`[AI] Preparados ${documents.length} documentos para inserção no tema="${normalizedTheme}"`);
 
-  if (documents.length > 0) {
-    const insertedDocuments: typeof documents = [];
-    await collection.insertMany(documents, { ordered: false }).then(result => {
+  if (documents.length === 0) return;
+
+  const insertedDocuments: typeof documents = [];
+
+  await collection.insertMany(documents, { ordered: false })
+    .then(result => {
       const insertedIndexes = Object.keys(result.insertedIds).map(Number);
-      insertedIndexes.forEach(index => {
-        if (documents[index]) insertedDocuments.push(documents[index]);
+      insertedIndexes.forEach(i => {
+        if (documents[i]) insertedDocuments.push(documents[i]);
       });
-    }).catch((error) => {
-      console.warn('Erro ao inserir itens AI no MongoDB:', error?.message);
+    })
+    .catch(error => {
+      // E11000 = duplicate key — normal se a imagem já existe
+      console.warn('[AI] Erro ao inserir (pode ser duplicata):', error?.message);
     });
 
-    console.log(`[AI] Inserted ${insertedDocuments.length} new AI documents for theme="${normalizedTheme}"`);
-    if (insertedDocuments.length > 0) {
-      console.log('[AI] Inserted document titles:', insertedDocuments.map(d => String(d.title).slice(0, 120)));
-    }
+  console.log(`[AI] Inseridos ${insertedDocuments.length} novos documentos para tema="${normalizedTheme}"`);
 
-    if (insertedDocuments.length > 0) {
-      // ── FIX: Try Web Push; on skip/failure, always store in-app notification ──
-      const moduleLabel = collectionName === 'images_sentences'
-        ? 'frases'
-        : collectionName === 'images_proverbs'
-          ? 'ditados'
-          : 'vocabulário';
+  if (insertedDocuments.length > 0) {
+    const moduleLabel =
+      collectionName === 'images_sentences' ? 'frases'
+      : collectionName === 'images_proverbs' ? 'ditados'
+      : 'vocabulário';
 
-      const notifTitle = '🤖 Novas imagens geradas pela IA';
-      const notifBody = `${insertedDocuments.length} nova(s) imagem(ns) de ${moduleLabel} sobre "${normalizedTheme}" foram geradas.`;
-      const notifTag = `ai-${collectionName}-${normalizedTheme}-${Date.now()}`;
-      const notifUrl = collectionName === 'images'
-        ? '/game'
-        : collectionName === 'images_sentences'
-          ? '/frases'
-          : '/proverbs';
+    const notifTitle = '🤖 Novas imagens geradas pela IA';
+    const notifBody = `${insertedDocuments.length} nova(s) imagem(ns) de ${moduleLabel} sobre "${normalizedTheme}" foram geradas.`;
+    const notifTag = `ai-${collectionName}-${normalizedTheme}-${Date.now()}`;
+    const notifUrl =
+      collectionName === 'images' ? '/game'
+      : collectionName === 'images_sentences' ? '/frases'
+      : '/proverbs';
 
-      // Always store in DB (used by /api/ai-notifications endpoint + socket polling)
-      await storeInAppNotification({
-        title: notifTitle,
-        body: notifBody,
-        tag: notifTag,
-        url: notifUrl,
-        imageUrl: insertedDocuments[0]?.url?.startsWith('http') ? insertedDocuments[0].url : undefined,
-        createdAt: new Date(),
-      });
+    await storeInAppNotification({
+      title: notifTitle,
+      body: notifBody,
+      tag: notifTag,
+      url: notifUrl,
+      imageUrl: insertedDocuments[0]?.url?.startsWith('http') ? insertedDocuments[0].url : undefined,
+      createdAt: new Date(),
+    });
 
-      // Also attempt Web Push (non-blocking)
-      notifyNewAIImages(collectionName, normalizedTheme, insertedDocuments).then(() => {
-        console.log('[AI] Web Push enviado (ou ignorado silenciosamente).');
-      }).catch(error => {
-        console.warn('[AI] Erro ao enviar Web Push:', error?.message || error);
-      });
-    }
+    notifyNewAIImages(collectionName, normalizedTheme, insertedDocuments).catch(error => {
+      console.warn('[AI] Erro ao enviar Web Push:', error?.message || error);
+    });
   }
 };

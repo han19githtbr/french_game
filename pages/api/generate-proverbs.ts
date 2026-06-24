@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getDb } from '../../lib/mongodb';
+import { ensureDailyAIItems } from '../../lib/ai';
 
 const shuffle = <T>(array: T[]): T[] => [...array].sort(() => Math.random() - 0.5);
 
@@ -127,6 +128,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       }
     }
+
+    // ── NOVA LÓGICA: aciona a IA em background para salvar ditados no banco,
+    // enriquecendo o pool para rodadas futuras (não bloqueia a resposta atual).
+    ensureDailyAIItems('images_proverbs', theme.toLowerCase()).catch(err =>
+      console.warn('[generate-proverbs] ensureDailyAIItems falhou:', err)
+    );
 
     if (proverbs.length === 0) {
       return res.status(404).json({ error: 'Não foi possível obter ditados para este grupo.' });

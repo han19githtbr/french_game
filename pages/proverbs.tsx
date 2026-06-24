@@ -29,7 +29,11 @@ const DAILY_LIMIT = 10;
 const Picker = dynamic(() => import("@emoji-mart/react"), { ssr: false });
 
 
-const groups = ['grupo-1', 'grupo-2', 'grupo-3']
+const groups = [
+  { id: 'grupo-1', label: '🐾 Animais & Natureza', emoji: '🌿' },
+  { id: 'grupo-2', label: '❤️ Amor & Família', emoji: '💞' },
+  { id: 'grupo-3', label: '💡 Sabedoria & Filosofia', emoji: '🧠' },
+]
 
 
 type Result = {
@@ -1008,7 +1012,7 @@ export default function Game({}: GameProps) {
       }
 
       setTimeout(() => {
-        const nextGroup = groups.filter(t => t !== theme)[Math.floor(Math.random() * (groups.length - 1))]
+        const nextGroup = groups.filter(g => g.id !== theme)[Math.floor(Math.random() * (groups.length - 1))]?.id
         setTheme(nextGroup)
         setRound(r => r + 1)
         setRound(r => r + 1);
@@ -1869,7 +1873,7 @@ export default function Game({}: GameProps) {
             className="w-full flex items-center justify-between py-3 px-6 rounded-md border-2 border-e-lightblue bg-gradient-to-br from-purple-700 to-indigo-800 text-blue shadow-lg shadow-purple-500/40 hover:shadow-xl hover:shadow-pink-500/50 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-2 text-lg tracking-wide font-semibold text-center cursor-pointer transition-all duration-300 ease-out"
           >
             {theme ? (
-              `🎯 ${theme}`
+              groups.find(g => g.id === theme)?.label || `🎯 ${theme}`
             ) : (
               <span className="flex items-center gap-2">
                 {/* Ícone Check animado */}
@@ -1941,31 +1945,17 @@ export default function Game({}: GameProps) {
                 Escolha uma opção
               </li>
                               
-              {groups.map((t) => (
+              {groups.map((g) => (
                 <li
-                  key={t}
+                  key={g.id}
                   onClick={() => {
-                    setTheme(t);
+                    setTheme(g.id);
                     setOpen(false);
                   }}
-                  className="flex items-center justify-start gap-3 px-6 py-3 hover:bg-lightblue text-black text-lg font-semibold cursor-pointer transition-all duration-300"
+                  className="flex items-center justify-start gap-3 px-6 py-3 hover:bg-violet-800/40 text-gray-100 text-lg font-semibold cursor-pointer transition-all duration-300 rounded-lg"
                 >
-                  {/* Setinha animada */}
-                  <motion.div
-                    animate={{
-                      x: [0, 5, 0], // sobe e desce
-                      opacity: [0.8, 1, 0.8], // animação de leve brilho
-                    }}
-                    transition={{
-                      duration: 1.2,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                    className="text-green flex justify-center items-center"
-                  >
-                    <ChevronRight size={32} strokeWidth={2.5} />
-                  </motion.div>
-                  {t.charAt(0).toUpperCase() + t.slice(1)}
+                  <span className="text-2xl">{g.emoji}</span>
+                  {g.label}
                 </li>
               ))}
             </ul>
@@ -2032,7 +2022,7 @@ export default function Game({}: GameProps) {
         </div>
       </div>
 
-      {theme && <h2 className="text-2xl text-gray-300 font-semibold mt-2 mb-6 text-center">Opção: {theme}</h2>}
+      {theme && <h2 className="text-2xl text-gray-300 font-semibold mt-2 mb-6 text-center">{groups.find(g => g.id === theme)?.label || theme}</h2>}
 
       <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-indigo-900 to-purple-900 min-h-screen text-gray-100">
         

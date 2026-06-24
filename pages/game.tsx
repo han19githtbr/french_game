@@ -2315,17 +2315,21 @@ export default function Game({}: GameProps) {
                 </p>
               </div>
               {/* Botão compacto */}
-              {!isPremium ? (
+              {isPremium ? (
+                <div className="rounded-lg bg-emerald-900/30 border border-emerald-800/40 py-1.5 px-2 text-[11px] text-green-200 text-center">
+                  ✓ Premium ativo. Obrigado!
+                </div>
+              ) : (adminUnlockExpiry['frases'] || adminUnlockExpiry['ditados'] || adminUnlockExpiry['curiosidades']) ? (
+                <div className="rounded-lg bg-blue-900/30 border border-blue-700/50 py-1.5 px-2 text-[11px] text-blue-200 text-center animate-pulse">
+                  🔓 Acesso liberado pelo administrador
+                </div>
+              ) : (
                 <button
                   onClick={() => setPremiumModalOpen(true)}
                   className="w-full rounded-lg border border-emerald-600/70 bg-emerald-900/20 py-1.5 text-[11px] font-semibold text-emerald-200 hover:bg-emerald-900/40 hover:border-emerald-500 transition-all duration-200 cursor-pointer"
                 >
                   Apoiar e desbloquear
                 </button>
-              ) : (
-                <div className="rounded-lg bg-emerald-900/30 border border-emerald-800/40 py-1.5 px-2 text-[11px] text-green-200 text-center">
-                  ✓ Premium ativo. Obrigado!
-                </div>
               )}
             </div>
 

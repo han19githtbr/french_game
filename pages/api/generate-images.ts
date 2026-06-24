@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getDb } from '../../lib/mongodb'
-import { isInvalidCaptionTitle } from '../../lib/ai'
+import { isInvalidCaptionTitle, ensureDailyAIItems } from '../../lib/ai'
 import { filterWordTitles } from '../../lib/ai-image-resolver'
 
 const shuffle = <T>(array: T[]): T[] => [...array].sort(() => Math.random() - 0.5)
@@ -10,12 +10,14 @@ const randomOptions = (correct: string, pool: string[], optionsCount: number) =>
   return shuffle([correct, ...shuffle(others).slice(0, Math.max(0, optionsCount - 1))])
 }
 
+// Mínimo de imagens distintas por tema antes de acionar geração por IA
+const MIN_IMAGES_PER_THEME = 6
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Metodo nao permitido' })
   }
 
-  // count agora controla quantos CARDS são exibidos (dificuldade)
   const { theme, count = 4, optionsCount = 4 } = req.body
 
   if (!theme || typeof theme !== 'string') {
@@ -27,7 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const collection = db.collection('images')
     const normalizedTheme = theme.toLowerCase()
 
-    // Busca TODOS os itens do tema para ter um pool grande de opções
+    // Busca TODAS as imagens do tema (banco + AI geradas)
     const themeImages = await collection.find({ theme: normalizedTheme }).toArray()
 
     const validThemeImages = themeImages.filter(img =>
@@ -39,16 +41,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       img.url.trim() !== ''
     )
 
+    // ── NOVA LÓGICA: se o pool de imagens para este tema for escasso,
+    // acionar a IA em background para gerar e salvar mais imagens no banco.
+    // A geração é assíncrona (não bloqueia a resposta) — nas próximas
+    // chamadas o usuário já terá mais variedade disponível.
+    if (validThemeImages.length < MIN_IMAGES_PER_THEME) {
+      ensureDailyAIItems('images', normalizedTheme).catch(err =>
+        console.warn('[generate-images] ensureDailyAIItems falhou:', err)
+      )
+    }
+
     if (!validThemeImages || validThemeImages.length < 1) {
       return res.status(400).json({ error: 'Tema inválido ou sem imagens disponíveis.' })
     }
 
-    // count controla quantos cards são exibidos na rodada
-    const safeCount = Math.min(Number(count) || 4, validThemeImages.length)
-    
-    // Nova lógica: para cada título único do tema, pode haver múltiplas imagens.
-    // Agrupamos as imagens por título e selecionamos até `safeCount` títulos distintos,
-    // priorizando títulos com mais imagens disponíveis (maior variedade para o usuário).
+    // Agrupa imagens por título: para um mesmo título pode haver múltiplas
+    // imagens (banco fixo + geradas por IA), ampliando a variedade visual.
     const imagesByTitle = new Map<string, any[]>()
     for (const img of validThemeImages) {
       const t = img.title as string
@@ -56,22 +64,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       imagesByTitle.get(t)!.push(img)
     }
 
-    // Seleciona `safeCount` títulos distintos aleatoriamente
+    // Seleciona `count` títulos distintos aleatoriamente
+    const safeCount = Math.min(Number(count) || 4, imagesByTitle.size)
     const distinctTitles = shuffle(Array.from(imagesByTitle.keys()))
     const selectedTitles = distinctTitles.slice(0, safeCount)
 
-    // Para cada título selecionado, escolhe uma imagem aleatória do banco
+    // Para cada título, escolhe UMA imagem aleatória do pool disponível
+    // (pode ser a do banco fixo ou uma gerada pela IA — ambas têm o mesmo título/legenda)
     const finalImages = selectedTitles.map(title => {
       const imgsForTitle = imagesByTitle.get(title)!
       return imgsForTitle[Math.floor(Math.random() * imgsForTitle.length)]
     })
 
-    // Pool de títulos para as opções (todos os títulos válidos do tema)
+    // Pool de títulos para as opções de resposta (todos os títulos válidos do tema)
     const allValidTitles = filterWordTitles(
       Array.from(new Set(validThemeImages.map(i => i.title as string)))
     )
-    const validTitles = allValidTitles.length >= 2 ? allValidTitles : 
-      Array.from(new Set(validThemeImages.map(i => i.title as string)))
+    const validTitles = allValidTitles.length >= 2
+      ? allValidTitles
+      : Array.from(new Set(validThemeImages.map(i => i.title as string)))
 
     const safeOptionsCount = Math.min(Math.max(Number(optionsCount) || 4, 2), validTitles.length)
 
