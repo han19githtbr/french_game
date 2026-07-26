@@ -1,12 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getDb } from '../../lib/mongodb';
 import { ensureDailyAIItems } from '../../lib/ai';
+import { buildResponseOptions } from '../../lib/ai-content';
 
 const shuffle = <T>(array: T[]): T[] => [...array].sort(() => Math.random() - 0.5);
 
-const randomOptions = (correct: string, pool: string[], optionsCount: number) => {
-  const others = pool.filter(t => t !== correct);
-  return shuffle([correct, ...shuffle(others).slice(0, Math.max(0, optionsCount - 1))]);
+const randomOptions = (correct: string, pool: string[], optionsCount: number, fallbackPool: string[] = []) => {
+  return buildResponseOptions(correct, pool, optionsCount, fallbackPool);
 };
 
 // Busca ditados populares em francês via Claude com web_search
@@ -154,7 +154,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       proverbText: proverb.proverbText,
       title: proverb.meaning,           // resposta correta = significado em PT
       explanation: proverb.explanation, // explicação detalhada
-      options: randomOptions(proverb.meaning, safePool, safeOptionsCount),
+      options: randomOptions(proverb.meaning, safePool, safeOptionsCount, allMeanings),
     }));
 
     return res.status(200).json(result);

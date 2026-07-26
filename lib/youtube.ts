@@ -1,10 +1,12 @@
-import { youtube_v3 } from '@googleapis/youtube';
-import { google } from 'googleapis';
+const YOUTUBE_API_KEY = process.env.YOUTUBE_API_NEW_KEY;
 
-const youtube = google.youtube({
-  version: 'v3',
-  auth: process.env.YOUTUBE_API_NEW_KEY,
-});
+async function fetchJson(url: string) {
+  const response = await fetch(url, { headers: { Accept: 'application/json' } });
+  if (!response.ok) {
+    throw new Error(`YouTube request failed with ${response.status}`);
+  }
+  return response.json();
+}
 
 interface Video {
   id: string;
@@ -17,50 +19,43 @@ interface Video {
 
 // Função auxiliar para obter a duração de um vídeo
 async function getVideoDuration(videoId: string): Promise<string | undefined> {
+  if (!YOUTUBE_API_KEY) return undefined;
+
   try {
-    const response = await youtube.videos.list({
-      part: ['contentDetails'],
-      id: [videoId],
-    });
-    return response.data.items?.[0]?.contentDetails?.duration ?? undefined;
+    const payload = await fetchJson(
+      `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${encodeURIComponent(videoId)}&key=${encodeURIComponent(YOUTUBE_API_KEY)}`,
+    );
+    return payload.items?.[0]?.contentDetails?.duration ?? undefined;
   } catch (error) {
     console.error(`Erro ao obter a duração do vídeo ${videoId}:`, error);
-    return undefined; // Em caso de erro, retorne undefined
+    return undefined;
   }
 }
 
-
 export async function searchYouTubeVideos(theme: string): Promise<Video[]> {
-  try {
-    const response = await youtube.search.list({
-      part: ['id,snippet'],
-      q: `${theme} french`,
-      type: ['video'],
-      videoDuration: 'medium', // Videos up to 4 minutes
-      maxResults: 30,
-      regionCode: 'FR', // Prioritize French content
-      relevanceLanguage: 'fr', // French language relevance
-    });
+  if (!YOUTUBE_API_KEY) {
+    return [];
+  }
 
-    /*const videos = response.data.items?.map((item) => ({
-      id: item.id?.videoId || '',
-      name: item.snippet?.title || 'Untitled',
-      url: `https://www.youtube.com/watch?v=${item.id?.videoId}`,
-      user: { username: item.snippet?.channelTitle || 'Unknown' },
-    })) || [];*/
+  try {
+    const payload = await fetchJson(
+      `https://www.googleapis.com/youtube/v3/search?part=id,snippet&q=${encodeURIComponent(`${theme} french`)}&type=video&videoDuration=medium&maxResults=30&regionCode=FR&relevanceLanguage=fr&key=${encodeURIComponent(YOUTUBE_API_KEY)}`,
+    );
+
+    const items = payload.items ?? [];
     const videos = await Promise.all(
-      response.data.items?.map(async (item) => {
+      items.map(async (item: any) => {
         const videoId = item.id?.videoId || '';
-        const duration = await getVideoDuration(videoId); // Obtenha a duração
+        const duration = await getVideoDuration(videoId);
         return {
           id: videoId,
           name: item.snippet?.title || 'Untitled',
           url: `https://www.youtube.com/watch?v=${videoId}`,
           user: { username: item.snippet?.channelTitle || 'Unknown' },
-          duration, // Inclua a duração no objeto do vídeo
+          duration,
         };
-      }) || []
-    ); 
+      }),
+    );
 
     return videos;
   } catch (error) {

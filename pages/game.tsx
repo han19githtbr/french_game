@@ -1554,7 +1554,7 @@ export default function Game({}: GameProps) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-900 from-gray-900 to-gray-900 text-white flex flex-col items-center p-4 relative mb-6">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.16),_transparent_40%),linear-gradient(135deg,_#050816_0%,_#0f172a_50%,_#111827_100%)] text-white flex flex-col items-center p-4 relative mb-6">
       
       {session?.user && (
         <div 
@@ -1623,7 +1623,7 @@ export default function Game({}: GameProps) {
         <div className="fixed top-4 left-2 z-50">
           <button
             onClick={toggleRelaxSoundsVisibility}
-            className="relative border-2 border-lightblue hover:bg-lightblue text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4"
+            className="relative border border-cyan-400/40 bg-slate-900/80 backdrop-blur-sm hover:bg-cyan-500/20 text-white rounded-full p-2 shadow-lg shadow-cyan-500/10 transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400 cursor-pointer mt-4"
           >
             <MusicalNoteIcon className="h-6 w-6 text-blue" />
           </button>
@@ -1809,7 +1809,7 @@ export default function Game({}: GameProps) {
         <div className="fixed top-36 left-2 z-40">
           <button
             onClick={toggleVideosVisibility}
-            className="relative border-2 border-lightblue hover:bg-lightblue text-white rounded-full p-2 shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer mt-4"
+            className="relative border border-fuchsia-400/40 bg-slate-900/80 backdrop-blur-sm hover:bg-fuchsia-500/20 text-white rounded-full p-2 shadow-lg shadow-fuchsia-500/10 transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-fuchsia-400 cursor-pointer mt-4"
           >
             <VideoCameraIcon className="h-6 w-6 text-blue" />
           </button>
@@ -2512,10 +2512,10 @@ export default function Game({}: GameProps) {
             onClick={() => setOpen(!open)}
             disabled={showRestart}
             className={`
-              w-full flex items-center justify-between py-3 px-6 rounded-md border-2 border-e-lightblue shadow-lg 
+              w-full flex items-center justify-between py-3 px-6 rounded-2xl border shadow-lg backdrop-blur-sm
               ${showRestart 
-                ? 'bg-gray-600 text-gray-400 cursor-not-allowed border-gray-500 shadow-none' // Estilos quando desabilitado
-                : 'bg-gradient-to-br text-blue shadow-purple-500/40 hover:shadow-xl hover:shadow-pink-500/50 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-2 cursor-pointer' // Estilos normais
+                ? 'bg-gray-700/70 text-gray-400 cursor-not-allowed border-gray-600 shadow-none' 
+                : 'bg-slate-900/80 text-white border-cyan-400/40 shadow-cyan-500/10 hover:shadow-cyan-500/20 hover:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 cursor-pointer'
               }
               text-lg tracking-wide font-semibold text-center transition-all duration-300 ease-out
             `}
@@ -2566,7 +2566,7 @@ export default function Game({}: GameProps) {
 
           {/* Lista de opções */}
           {open && (
-            <ul className="absolute mt-2 w-full rounded-xl bg-gray-900 shadow-lg border-2 border-e-lightblue max-h-72 overflow-y-auto custom-scrollbar z-10">
+            <ul className="absolute mt-2 w-full rounded-2xl bg-slate-900/95 shadow-2xl border border-cyan-400/30 max-h-72 overflow-y-auto custom-scrollbar z-10">
               
               {/* Opção padrão */}
               <li
@@ -2574,7 +2574,7 @@ export default function Game({}: GameProps) {
                   setTheme('');
                   setOpen(false);
                 }}
-                className="flex items-center justify-start gap-3 px-8 py-3 hover:bg-lightblue text-gray-400 text-lg font-semibold cursor-pointer transition-all duration-300"
+                className="flex items-center justify-start gap-3 px-8 py-3 hover:bg-cyan-500/10 text-gray-300 text-lg font-semibold cursor-pointer transition-all duration-300"
               >
                 <motion.div
                   initial={{ x: -10, opacity: 0 }}
@@ -2603,7 +2603,7 @@ export default function Game({}: GameProps) {
                     setTheme(t);
                     setOpen(false);
                   }}
-                  className="flex items-center justify-start gap-3 px-6 py-3 hover:bg-lightblue text-black text-lg font-semibold cursor-pointer transition-all duration-300"
+                  className="flex items-center justify-start gap-3 px-6 py-3 hover:bg-cyan-500/10 text-white text-lg font-semibold cursor-pointer transition-all duration-300"
                 >
                   {/* Setinha animada */}
                   <motion.div
@@ -2628,194 +2628,144 @@ export default function Game({}: GameProps) {
         </div>
 
 
-        <div className="relative flex flex-col items-center">
-          {!isPremium && (
-            <p className="text-sm text-gray-400 mb-1 text-center">
-              Este nível está disponível para assinantes Premium.
-            </p>
-          )}
-          <button
-            onClick={() => {
-              if (!isPremium && !isCuriosidadesUnlocked) {
-                setPremiumModalOpen(true);
-                return;
-              }
-              router.push('/classes');
-            }}
-            className={`... ${(isPremium || isCuriosidadesUnlocked)
-              ? 'border-green text-green animate-pulse-slow cursor-pointer hover:border-gray-100'
-              : 'border-gray-400 text-gray-400 cursor-not-allowed'
-            }`}
-            >
-            {!isPremium && !isCuriosidadesUnlocked && <LockClosedIcon className="w-5 h-5 inline-block mr-2" />}
-            <span>Curiosidades!</span>
-            {isPremium && notificationCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
-                {notificationCount}
-              </span>
-            )}
-          </button>
-        </div>
+        <div className="w-full max-w-5xl rounded-3xl border border-white/10 bg-slate-900/70 p-4 shadow-2xl shadow-black/20 backdrop-blur-xl">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-cyan-300">Módulos do aprendizado</p>
+              <h3 className="text-lg font-semibold text-white">Escolha o caminho ideal para estudar</h3>
+            </div>
+            <div className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-[11px] font-medium text-cyan-200">
+              Conteúdo premium e liberado pelo admin
+            </div>
+          </div>
 
-
-        {/* Botão "Frases em Francês" */}
-        <div className="w-64 flex flex-col items-center">
-          {!isFrasesUnlocked && (
-            <p className="text-sm text-gray-400 mb-1 text-center">Este nível está disponível para assinantes Premium.</p>
-          )}
-          <motion.button
-            className={`flex items-center justify-center py-3 px-7 rounded-md mt-2 font-semibold transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75 shadow-[0_0_15px_rgba(0,255,255,0.6)] hover:shadow-[0_0_25px_rgba(0,255,255,0.8)]
-                        active:scale-95
-                        focus:ring-neon-pink focus:ring-offset-2 focus:ring-offset-gray-900
-                        animate-pulse-slow ${
-              isFrasesUnlocked
-                ? 'bg-gray-900 border-2 border-e-green hover:bg-lightblue cursor-pointer text-white shadow-md '
-                : 'bg-gray-900 text-gray-400 border border-gray-400 cursor-not-allowed shadow-sm'
-            }`}
-            onClick={handleFrasesClick}
-            disabled={!isFrasesUnlocked || isFrasesUnlocking}
-            variants={unlockButtonVariants}
-            animate={isFrasesUnlocking ? 'unlocking' : 'locked'}
-          >
-            {isFrasesUnlocked ? <LockOpenIcon className="w-5 h-5 mr-2 text-yellow" /> : <LockClosedIcon className="w-5 h-5 mr-2 " />}
-            Frases em Francês
-          </motion.button>
-
-          
-          {/* Mensagem de bloqueio */}
-          <AnimatePresence>
-            {showLockMessage && !isFrasesUnlocked && (
-              <motion.div
-                className="absolute bottom-[-30px] text-sm text-yellow font-semibold"
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                variants={lockMessageVariants}
-              >
-                Nível bloqueado!
-              </motion.div>
-            )}
-          </AnimatePresence>
-        
-          {/* Animação de desbloqueio */}
-          <AnimatePresence>
-            {showUnlockFrasesAnimation && (
-              <motion.div
-                className="absolute top-[-40px] text-green-500 font-bold text-lg"
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                variants={unlockAnimationVariants}
-              >
-                Desbloqueado!
-              </motion.div>
-            )}
-          </AnimatePresence>  
-        
-        
-        </div>
-
-        {/* Botão "Ditados em Francês" */}
-        <div className="w-64 flex flex-col items-center relative">
-          {!isProverbsUnlocked && (
-            <p className="text-sm text-gray-400 mb-1 text-center">Este nível está disponível para assinantes Premium.</p>
-          )}
-          <motion.button
-            className={`flex items-center justify-center py-3 px-6 rounded-md mt-4 font-semibold transition duration-300 ease-in-out focus:outline-none animate-pulse-slow ${
-              isProverbsUnlocked
-                ? 'bg-gray-900 border-2 border-e-green hover:bg-lightblue cursor-pointer text-white shadow-md'
-                : 'bg-gray-900 text-gray-400 border border-gray-400 cursor-not-allowed shadow-sm'
-            }`}
-            onClick={handleProverbsClick}
-            disabled={!isProverbsUnlocked || isProverbsUnlocking}
-            variants={unlockButtonVariants}
-            animate={isProverbsUnlocking ? 'unlocking' : 'locked'}
-          >
-            {isProverbsUnlocked ? <LockOpenIcon className="w-5 h-5 mr-2 text-yellow" /> : <LockClosedIcon className="w-5 h-5 mr-2 " />}
-            Ditados em Francês
-          </motion.button>
-
-
-          {/* Corações de Tentativas */}
-          {/*<div className="flex justify-center mt-5 space-x-4">
-            <span className='text-yellow font-semibold'>Vidas:</span>
-            {[...Array(4)].map((_, i) => (
-              <svg
-                key={i}
-                className={`w-6 h-6 transition-colors duration-300 ${
-                  i < remainingAttempts ? 'text-green animate-pulse' : 'text-gray-700'
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="relative flex flex-col items-start rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4">
+              {!isPremium && !isCuriosidadesUnlocked && (
+                <p className="mb-3 text-sm text-gray-400">
+                  Este módulo fica disponível para assinantes Premium.
+                </p>
+              )}
+              <button
+                onClick={() => {
+                  if (!isPremium && !isCuriosidadesUnlocked) {
+                    setPremiumModalOpen(true);
+                    return;
+                  }
+                  router.push('/classes');
+                }}
+                className={`inline-flex w-full items-center justify-center rounded-2xl border px-4 py-3 text-sm font-semibold transition-all duration-300 ${
+                  (isPremium || isCuriosidadesUnlocked)
+                    ? 'border-emerald-400/50 bg-emerald-500/10 text-emerald-200 shadow-lg shadow-emerald-500/10 hover:border-emerald-300 cursor-pointer'
+                    : 'border-gray-600 bg-slate-900/70 text-gray-400 cursor-not-allowed'
                 }`}
-                fill="currentColor"
-                viewBox="0 0 20 20"
-                xmlns="http://www.w3.org/2000/svg"
               >
-                <path
-                  fillRule="evenodd"
-                  d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            ))}
-          </div>*/}
-
-          
-          {/* --- Modal de Aviso de Duração do Desbloqueio --- */}
-          {showUnlockWarningModal && (
-            <div className="modal-overlay z-40">
-              <div className="modal-content unlock-warning">
-                <button className="modal-close-button" onClick={handleCloseUnlockWarningModal}>
-                  &times;
-                </button>
-                <div className="typing">
-                  🎉Parabéns! Você desbloqueiou um nível, cada desbloqueio dura um dia, então aproveite!.
-                </div>
-              </div>
+                {!isPremium && !isCuriosidadesUnlocked && <LockClosedIcon className="mr-2 h-5 w-5" />}
+                <span>Curiosidades!</span>
+                {isPremium && notificationCount > 0 && (
+                  <span className="ml-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                    {notificationCount}
+                  </span>
+                )}
+              </button>
             </div>
-          )}
 
-          {/* --- Modal de Aviso de Última Tentativa --- */}
-          {showLastAttemptWarningModal && (
-            <div className="modal-overlay">
-              <div className="modal-content last-attempt-warning">
-                <button className="modal-close-button" onClick={handleCloseLastAttemptWarningModal}>
-                  &times;
-                </button>
-                <div className="typing-last-attempt">
-                  Você tem mais uma tentativa, acerte ou jogue de novo!
-                </div>
-              </div>
+            <div className="relative flex flex-col items-start rounded-2xl border border-cyan-400/20 bg-cyan-500/10 p-4">
+              {!isFrasesUnlocked && (
+                <p className="mb-3 text-sm text-gray-400">Este módulo fica disponível para assinantes Premium.</p>
+              )}
+              <motion.button
+                className={`flex w-full items-center justify-center rounded-2xl border px-4 py-3 text-sm font-semibold transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-gray-900 active:scale-95 ${
+                  isFrasesUnlocked
+                    ? 'border-cyan-400/40 bg-slate-900/80 text-white shadow-lg shadow-cyan-500/10 hover:bg-cyan-500/10 cursor-pointer'
+                    : 'border-gray-700 bg-slate-900/70 text-gray-400 cursor-not-allowed shadow-sm'
+                }`}
+                onClick={handleFrasesClick}
+                disabled={!isFrasesUnlocked || isFrasesUnlocking}
+                variants={unlockButtonVariants}
+                animate={isFrasesUnlocking ? 'unlocking' : 'locked'}
+              >
+                {isFrasesUnlocked ? <LockOpenIcon className="mr-2 h-5 w-5 text-yellow" /> : <LockClosedIcon className="mr-2 h-5 w-5" />}
+                Frases em Francês
+              </motion.button>
+
+              <AnimatePresence>
+                {showLockMessage && !isFrasesUnlocked && (
+                  <motion.div
+                    className="absolute bottom-[-26px] text-sm font-semibold text-yellow-300"
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    variants={lockMessageVariants}
+                  >
+                    Nível bloqueado!
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <AnimatePresence>
+                {showUnlockFrasesAnimation && (
+                  <motion.div
+                    className="absolute top-[-30px] text-lg font-bold text-emerald-400"
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    variants={unlockAnimationVariants}
+                  >
+                    Desbloqueado!
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          )}
 
-          {/* Mensagem de bloqueio */}
-          <AnimatePresence>
-            {showLockMessage && !isProverbsUnlocked && (
-              <motion.div
-                className="absolute bottom-[-30px] text-sm text-yellow font-semibold"
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                variants={lockMessageVariants}
+            <div className="relative flex flex-col items-start rounded-2xl border border-fuchsia-400/20 bg-fuchsia-500/10 p-4">
+              {!isProverbsUnlocked && (
+                <p className="mb-3 text-sm text-gray-400">Este módulo fica disponível para assinantes Premium.</p>
+              )}
+              <motion.button
+                className={`flex w-full items-center justify-center rounded-2xl border px-4 py-3 text-sm font-semibold transition duration-300 ease-in-out focus:outline-none ${
+                  isProverbsUnlocked
+                    ? 'border-fuchsia-400/40 bg-slate-900/80 text-white shadow-lg shadow-fuchsia-500/10 hover:bg-fuchsia-500/10 cursor-pointer'
+                    : 'border-gray-700 bg-slate-900/70 text-gray-400 cursor-not-allowed shadow-sm'
+                }`}
+                onClick={handleProverbsClick}
+                disabled={!isProverbsUnlocked || isProverbsUnlocking}
+                variants={unlockButtonVariants}
+                animate={isProverbsUnlocking ? 'unlocking' : 'locked'}
               >
-                Nível bloqueado!
-              </motion.div>
-            )}
-          </AnimatePresence>
+                {isProverbsUnlocked ? <LockOpenIcon className="mr-2 h-5 w-5 text-yellow" /> : <LockClosedIcon className="mr-2 h-5 w-5" />}
+                Ditados em Francês
+              </motion.button>
 
-          {/* Animação de desbloqueio */}
-          <AnimatePresence>
-            {showUnlockProverbsAnimation && (
-              <motion.div
-                className="absolute top-[-40px] text-green-500 font-bold text-lg"
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                variants={unlockAnimationVariants}
-              >
-                Desbloqueado!
-              </motion.div>
-            )}
-          </AnimatePresence>
+              <AnimatePresence>
+                {showLockMessage && !isProverbsUnlocked && (
+                  <motion.div
+                    className="absolute bottom-[-26px] text-sm font-semibold text-yellow-300"
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    variants={lockMessageVariants}
+                  >
+                    Nível bloqueado!
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <AnimatePresence>
+                {showUnlockProverbsAnimation && (
+                  <motion.div
+                    className="absolute top-[-30px] text-lg font-bold text-emerald-400"
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    variants={unlockAnimationVariants}
+                  >
+                    Desbloqueado!
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
         </div>
 
         {showRestart && (

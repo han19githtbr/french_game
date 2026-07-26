@@ -2,12 +2,12 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { getDb } from '../../lib/mongodb'
 import { isInvalidCaptionTitle, ensureDailyAIItems } from '../../lib/ai'
 import { filterWordTitles } from '../../lib/ai-image-resolver'
+import { buildResponseOptions } from '../../lib/ai-content'
 
 const shuffle = <T>(array: T[]): T[] => [...array].sort(() => Math.random() - 0.5)
 
-const randomOptions = (correct: string, pool: string[], optionsCount: number) => {
-  const others = pool.filter(t => t !== correct)
-  return shuffle([correct, ...shuffle(others).slice(0, Math.max(0, optionsCount - 1))])
+const randomOptions = (correct: string, pool: string[], optionsCount: number, fallbackPool: string[] = []) => {
+  return buildResponseOptions(correct, pool, optionsCount, fallbackPool)
 }
 
 // Mínimo de imagens distintas por tema antes de acionar geração por IA
@@ -95,7 +95,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         description: imgData.description || '',
         aiGenerated: imgData.source === 'ai',
         validated: imgData.validated,
-        options: randomOptions(imgData.title as string, validTitles, safeOptionsCount),
+        options: randomOptions(imgData.title as string, validTitles, safeOptionsCount, validTitles),
       }
     })
 

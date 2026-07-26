@@ -9,6 +9,7 @@
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
+    "useUnknownInCatchVariables": false,
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
@@ -35,6 +36,10 @@
     ".next/types/**/*.ts",
     "next.config.js",
     "pages/api/socket.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "node_modules/googleapis/build/src/apis/servicedirectory"
   ],
   "exclude": [
     "node_modules"

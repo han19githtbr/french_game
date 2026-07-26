@@ -63,8 +63,5 @@ export const theme = {
     
     
 };
-export const plugins = [
-    require('tailwindcss-scrollbar')({ preferredStrategy: 'class' }),
-    require('tailwindcss-animate'),
-];
+export const plugins = [];
   

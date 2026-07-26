@@ -165,31 +165,35 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-gray-900 text-white">
+    <div className="relative min-h-screen bg-[radial-gradient(circle_at_top,_rgba(147,51,234,0.18),_transparent_38%),linear-gradient(135deg,_#050816_0%,_#111827_55%,_#0f172a_100%)] text-white">
       {/* Top bar */}
-      <div className="w-full flex flex-col sm:flex-row justify-between items-start px-6 py-8 bg-gray-800 shadow-md gap-2">
+      <div className="w-full flex flex-col sm:flex-row justify-between items-start px-6 py-8 bg-slate-900/80 border-b border-white/10 shadow-2xl shadow-black/20 backdrop-blur gap-2">
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+          <div className="w-full sm:w-auto rounded-2xl border border-purple-400/30 bg-purple-500/10 px-3 py-2 mb-1 sm:mb-0">
+            <p className="text-[10px] uppercase tracking-[0.35em] text-purple-200">Painel administrativo</p>
+            <h1 className="text-lg font-semibold text-white">Gerencie conteúdo, acesso e validações</h1>
+          </div>
           <button
             onClick={() => setActiveTab('create')}
-            className={`px-3 py-1 rounded-lg text-sm border border-e-lightblue cursor-pointer ${activeTab === 'create' ? 'bg-blue-900/40' : 'hover:bg-gray-600'}`}
+            className={`px-3 py-1 rounded-lg text-sm border cursor-pointer transition ${activeTab === 'create' ? 'bg-cyan-900/40 border-cyan-400/60' : 'border-cyan-500/20 hover:bg-cyan-500/10'}`}
           >
             Criar Publicação
           </button>
           <button
             onClick={() => setActiveTab('view')}
-            className={`px-3 py-1 rounded-lg text-sm border border-e-green cursor-pointer ${activeTab === 'view' ? 'bg-green-900/40' : 'hover:bg-gray-600'}`}
+            className={`px-3 py-1 rounded-lg text-sm border cursor-pointer transition ${activeTab === 'view' ? 'bg-emerald-900/40 border-emerald-400/60' : 'border-emerald-500/20 hover:bg-emerald-500/10'}`}
           >
             Ver Publicações
           </button>
           <button
             onClick={() => setActiveTab('unlock')}
-            className={`px-3 py-1 rounded-lg text-sm border border-yellow-500 cursor-pointer ${activeTab === 'unlock' ? 'bg-yellow-900/30' : 'hover:bg-gray-600'}`}
+            className={`px-3 py-1 rounded-lg text-sm border cursor-pointer transition ${activeTab === 'unlock' ? 'bg-yellow-900/30 border-yellow-400/60' : 'border-yellow-500/20 hover:bg-yellow-500/10'}`}
           >
             🔓 Desbloquear Seções
           </button>
           <button
             onClick={() => setActiveTab('images')}
-            className={`px-3 py-1 rounded-lg text-sm border border-purple-500 cursor-pointer ${activeTab === 'images' ? 'bg-purple-900/30' : 'hover:bg-gray-600'}`}
+            className={`px-3 py-1 rounded-lg text-sm border cursor-pointer transition ${activeTab === 'images' ? 'bg-purple-900/30 border-purple-400/60' : 'border-purple-500/20 hover:bg-purple-500/10'}`}
           >
             🖼️ Gerenciar Imagens
           </button>

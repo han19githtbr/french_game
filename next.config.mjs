@@ -19,6 +19,10 @@ const nextConfig = {
   turbopack: {},
   webpack: (config) => {
     config.resolve.fallback = { fs: false, net: false, tls: false };
+    config.resolve.alias = {
+      ...(config.resolve.alias || {}),
+      'googleapis/build/src/apis/servicedirectory/v1': false,
+    };
     return config;
   },
 };
