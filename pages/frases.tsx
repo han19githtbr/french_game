@@ -22,6 +22,35 @@ import { youtube_v3 } from '@googleapis/youtube';
 
 const DAILY_LIMIT = 10; // Limite diário de vídeos
 
+const isPlaceholderImageUrl = (url: string) =>
+  typeof url === 'string' && /https?:\/\/picsum\.photos\//.test(url)
+
+const normalizeOptionValue = (value: string) => String(value || '').trim().toLowerCase()
+
+const ensureCorrectOptions = (item: any, targetCount: number) => {
+  const title = String(item.title || '').trim()
+  const options: string[] = Array.from(
+    new Set<string>(
+      (item.options || [])
+        .map((opt: any) => String(opt || '').trim())
+        .filter(Boolean),
+    ),
+  )
+
+  if (!title) return options.slice(0, targetCount)
+  if (options.some(opt => normalizeOptionValue(opt) === normalizeOptionValue(title))) {
+    return options.slice(0, targetCount)
+  }
+
+  if (options.length >= targetCount) {
+    options[targetCount - 1] = title
+  } else {
+    options.push(title)
+  }
+
+  return Array.from(new Set(options)).slice(0, targetCount)
+}
+
 const Picker = dynamic(() => import("@emoji-mart/react"), { ssr: false });
 
 
@@ -924,9 +953,28 @@ export default function Frase({}: GameProps) {
   
       const data = await res.json()
       console.log('🔁 Dados recebidos:', data) // <-- Adicione isso para depuração
-  
-      setImages(data);
-      const hasAI = data.some((img: any) => img.aiGenerated === true);
+
+      const cleanedImages = data
+        .filter((img: any) => !isPlaceholderImageUrl(img.url))
+        .map((img: any) => ({
+          ...img,
+          options: ensureCorrectOptions(img, optionsCount),
+        }))
+
+      if (cleanedImages.length < data.length) {
+        toast.warn('Algumas imagens foram removidas porque não correspondiam ao título corretamente. Recarregue se quiser tentar novamente.', {
+          position: 'top-right',
+          autoClose: 5000,
+        });
+      }
+
+      const imagesToUse = cleanedImages.length > 0 ? cleanedImages : data.map((img: any) => ({
+        ...img,
+        options: ensureCorrectOptions(img, optionsCount),
+      }))
+
+      setImages(imagesToUse);
+      const hasAI = imagesToUse.some((img: any) => img.aiGenerated === true);
       if (hasAI) {
         setHasNewAIContent(true);
         localStorage.setItem('hasNewAIContent_frases', 'true');
@@ -936,7 +984,7 @@ export default function Frase({}: GameProps) {
         });
       }
       imageRefs.current = []; // limpa os refs antigos
-      setResults(Array(data.length).fill(null));
+      setResults(Array(imagesToUse.length).fill(null));
     } catch (error) {
       console.error('❌ Erro ao carregar imagens:', error)
     } finally {
@@ -1341,7 +1389,7 @@ export default function Frase({}: GameProps) {
       <div className="absolute top-76 left-4 z-30">
         <button
             onClick={() => router.push('/game')}
-            className="flex border border-blue text-gray-300 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75 cursor-pointer"
+            className="flex border border-blue bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75 cursor-pointer"
         >
             <ChevronLeft className="mr-2" color="blue" /> Voltar para tela principal
         </button>

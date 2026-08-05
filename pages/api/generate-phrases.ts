@@ -84,7 +84,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const safeOptionsCount = Math.min(Math.max(Number(optionsCount) || 4, 2), validTitles.length)
 
-    // Monta resposta final
+    // NOTA: a validação por IA de visão já acontece uma única vez, no momento
+    // da geração (lib/ai.ts), que grava `validated: true/false`. Repetir a
+    // checagem a cada requisição foi removido — era a causa raiz das
+    // legendas trocadas (ver comentário equivalente em generate-images.ts).
     const imagesWithOptions = finalImages.map((img: any) => ({
       url: img.url,
       title: img.title,

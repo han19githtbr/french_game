@@ -86,7 +86,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const safeOptionsCount = Math.min(Math.max(Number(optionsCount) || 4, 2), validTitles.length)
 
-    // Monta resposta final
+    // NOTA: a validação por IA de visão já acontece uma única vez, no momento
+    // da geração (ver ensureDailyAIItems / validateGeneratedAIImageTitle em
+    // lib/ai.ts), que grava `validated: true/false` no banco. Imagens não
+    // confirmadas já foram excluídas pelo filtro `validated !== false` acima.
+    // Repetir a checagem de visão a cada requisição foi removido de propósito:
+    // além de caro, ela podia "trocar" a legenda correta a cada nova rodada,
+    // pois a IA era forçada a escolher sempre algo da lista mesmo sem uma
+    // correspondência real — essa era a causa raiz das respostas trocadas.
     const imagesWithOptions = finalImages.map(img => {
       const imgData = img as any
       return {

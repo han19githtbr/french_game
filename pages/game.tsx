@@ -27,6 +27,35 @@ const Picker = dynamic(() => import("@emoji-mart/react"), { ssr: false });
 
 const themes = ['família', 'natureza', 'turismo', 'animais', 'tecnologia', 'gastronomia']
 
+const isPlaceholderImageUrl = (url: string) =>
+  typeof url === 'string' && /https?:\/\/picsum\.photos\//.test(url)
+
+const normalizeOptionValue = (value: string) => String(value || '').trim().toLowerCase()
+
+const ensureCorrectOptions = (item: any, targetCount: number) => {
+  const title = String(item.title || '').trim()
+  const options: string[] = Array.from(
+    new Set<string>(
+      (item.options || [])
+        .map((opt: any) => String(opt || '').trim())
+        .filter(Boolean),
+    ),
+  )
+
+  if (!title) return options.slice(0, targetCount)
+  if (options.some(opt => normalizeOptionValue(opt) === normalizeOptionValue(title))) {
+    return options.slice(0, targetCount)
+  }
+
+  if (options.length >= targetCount) {
+    options[targetCount - 1] = title
+  } else {
+    options.push(title)
+  }
+
+  return Array.from(new Set(options)).slice(0, targetCount)
+}
+
 const animalSounds: Record<string, string> = {
   'Le Chien': '/sounds/cachorro.mp3',
   'Jouer avec son chien': '/sounds/cachorro.mp3',
@@ -979,42 +1008,7 @@ export default function Game({}: GameProps) {
     }
   }, [showCongrats, images]);
   
-
-  
-  /*useEffect(() => {
-    const premiumActive = loadPremiumAccess();
-    setIsFrasesUnlocked(premiumActive);
-    setIsProverbsUnlocked(premiumActive);
-
-    // Desbloqueio administrativo por tempo (se existir)
-    const now = Date.now();
-    const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
-
-    const adminFrasesUnlockTime = localStorage.getItem('adminFrasesUnlockTime');
-    const adminFrasesExpiry = localStorage.getItem('adminFrasesUnlockExpiry');
-    if (adminFrasesUnlockTime && adminFrasesExpiry) {
-      const expiryMs = parseInt(adminFrasesExpiry, 10);
-      if (now < expiryMs) {
-        setIsFrasesUnlocked(true);
-      } else {
-        localStorage.removeItem('adminFrasesUnlockTime');
-        localStorage.removeItem('adminFrasesUnlockExpiry');
-      }
-    }
-
-    const adminProverbsUnlockTime = localStorage.getItem('adminProverbsUnlockTime');
-    const adminProverbsExpiry = localStorage.getItem('adminProverbsUnlockExpiry');
-    if (adminProverbsUnlockTime && adminProverbsExpiry) {
-      const expiryMs = parseInt(adminProverbsExpiry, 10);
-      if (now < expiryMs) {
-        setIsProverbsUnlocked(true);
-      } else {
-        localStorage.removeItem('adminProverbsUnlockTime');
-        localStorage.removeItem('adminProverbsUnlockExpiry');
-      }
-    }
-  }, []);*/
-
+ 
 
   // Ponto 4: armazena datas de expiração dos desbloqueios admin para exibir ao usuário
   const [adminUnlockExpiry, setAdminUnlockExpiry] = useState<Record<string, number>>({});
@@ -1097,13 +1091,38 @@ export default function Game({}: GameProps) {
     
       const data = await res.json();
       console.log('🔁 Dados recebidos:', data);
-    
-      setImages(data);
+
+      const cleanedImages = data
+        .filter((img: any) => !isPlaceholderImageUrl(img.url))
+        .map((img: any) => ({
+          ...img,
+          options: ensureCorrectOptions(
+            img,
+            optionsCount !== null ? optionsCount : levelDifficulty.optionsPerCard,
+          ),
+        }))
+
+      if (cleanedImages.length < data.length) {
+        toast.warn('Algumas imagens foram removidas porque não correspondiam ao título corretamente. Recarregue se quiser tentar novamente.', {
+          position: 'top-right',
+          autoClose: 5000,
+        });
+      }
+
+      const imagesToUse = cleanedImages.length > 0 ? cleanedImages : data.map((img: any) => ({
+        ...img,
+        options: ensureCorrectOptions(
+          img,
+          optionsCount !== null ? optionsCount : levelDifficulty.optionsPerCard,
+        ),
+      }))
+
+      setImages(imagesToUse);
       imageRefs.current = []; // limpa os refs antigos
-      setResults(Array(data.length).fill(null));
+      setResults(Array(imagesToUse.length).fill(null));
 
       // Notifica se há imagens geradas por IA nesta rodada
-      const hasAI = data.some((img: any) => img.aiGenerated === true);
+      const hasAI = imagesToUse.some((img: any) => img.aiGenerated === true);
       if (hasAI) {
         toast.info('✨ Novas imagens geradas por IA disponíveis nesta rodada!', {
           position: 'top-right',
@@ -2718,53 +2737,13 @@ export default function Game({}: GameProps) {
               </AnimatePresence>
             </div>
 
-            <div className="relative flex flex-col items-start rounded-2xl border border-fuchsia-400/20 bg-fuchsia-500/10 p-4">
-              {!isProverbsUnlocked && (
-                <p className="mb-3 text-sm text-gray-400">Este módulo fica disponível para assinantes Premium.</p>
-              )}
-              <motion.button
-                className={`flex w-full items-center justify-center rounded-2xl border px-4 py-3 text-sm font-semibold transition duration-300 ease-in-out focus:outline-none ${
-                  isProverbsUnlocked
-                    ? 'border-fuchsia-400/40 bg-slate-900/80 text-white shadow-lg shadow-fuchsia-500/10 hover:bg-fuchsia-500/10 cursor-pointer'
-                    : 'border-gray-700 bg-slate-900/70 text-gray-400 cursor-not-allowed shadow-sm'
-                }`}
-                onClick={handleProverbsClick}
-                disabled={!isProverbsUnlocked || isProverbsUnlocking}
-                variants={unlockButtonVariants}
-                animate={isProverbsUnlocking ? 'unlocking' : 'locked'}
-              >
-                {isProverbsUnlocked ? <LockOpenIcon className="mr-2 h-5 w-5 text-yellow" /> : <LockClosedIcon className="mr-2 h-5 w-5" />}
-                Ditados em Francês
-              </motion.button>
-
-              <AnimatePresence>
-                {showLockMessage && !isProverbsUnlocked && (
-                  <motion.div
-                    className="absolute bottom-[-26px] text-sm font-semibold text-yellow-300"
-                    initial="initial"
-                    animate="animate"
-                    exit="exit"
-                    variants={lockMessageVariants}
-                  >
-                    Nível bloqueado!
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <AnimatePresence>
-                {showUnlockProverbsAnimation && (
-                  <motion.div
-                    className="absolute top-[-30px] text-lg font-bold text-emerald-400"
-                    initial="initial"
-                    animate="animate"
-                    exit="exit"
-                    variants={unlockAnimationVariants}
-                  >
-                    Desbloqueado!
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+            {/* Ditados em revisão - componente temporariamente oculto */}
+            {/*<div className="relative flex flex-col items-start rounded-2xl border border-fuchsia-400/20 bg-fuchsia-500/10 p-4 opacity-40 pointer-events-none">
+              <p className="mb-3 text-sm text-gray-400">Seção de ditados em revisão. Voltará em breve.</p>
+              <div className="inline-flex w-full items-center justify-center rounded-2xl border border-gray-700 bg-slate-900/70 py-3 text-sm font-semibold text-gray-400 shadow-sm">
+                Em revisão
+              </div>
+            </div>*/}
           </div>
         </div>
 
@@ -2835,7 +2814,9 @@ export default function Game({}: GameProps) {
         ) : (
           <>
             <div className="flex flex-wrap justify-center gap-6 w-full max-w-6xl mt-6 cursor-pointer">
-              {images.map((img, index) => (
+              {images.map((img, index) => {
+                const currentResult = results[index];
+                return (
                 <motion.div
                   key={index}
                   ref={(el) => {
@@ -2876,7 +2857,7 @@ export default function Game({}: GameProps) {
                         touch-manipulation
                       `}
                       onChange={e => checkAnswer(index, e.target.value)}
-                      disabled={!!results[index]}
+                      disabled={!!currentResult}
                     >
                       <option value="" className="bg-gray-900 text-white font-semibold cursor-pointer">✅ Selecione</option>
                       {img.options.map((opt: string, i: number) => (
@@ -2901,14 +2882,14 @@ export default function Game({}: GameProps) {
                           repeat: Infinity,
                           ease: "easeInOut",
                         }}
-                        className={`text-white flex justify-center items-center ${results[index] ? 'hidden' : ''}`} // Adiciona 'hidden' se a resposta já foi selecionada
+                        className={`text-white flex justify-center items-center ${currentResult ? 'hidden' : ''}`} // Adiciona 'hidden' se a resposta já foi selecionada
                       >
                         <ChevronDown size={28} strokeWidth={2.5} />
                       </motion.div>
                     </div>
-                    {results[index] && (
+                    {currentResult && (
                       <div className="w-full text-center font-bold text-lg tracking-wide text-white p-4">
-                        {Object.values(results[index])[0]} {/* Exibe o valor da opção selecionada */}
+                        {Object.values(currentResult)[0]} {/* Exibe o valor da opção selecionada */}
                       </div>
                     )}
                   </div>
@@ -2954,13 +2935,13 @@ export default function Game({}: GameProps) {
                     <span className="ml-2 mb-1 text-sm text-white font-bold">{(speechSpeeds[index] ?? 1).toFixed(1)}x</span>
                   </div>
                   
-                  {results[index] && (
+                  {currentResult && (
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="mt-2 flex items-center"
                     >
-                      {results[index].correct_word ? (
+                      {currentResult.correct_word ? (
                         <>
                           <Check className="mr-2 text-green" size={20} />
                           <span className="font-medium text-green">Correto!</span>
@@ -2974,7 +2955,8 @@ export default function Game({}: GameProps) {
                     </motion.div>
                   )}
                 </motion.div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="mt-8 flex gap-4 mb-20">

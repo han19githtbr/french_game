@@ -1,5 +1,6 @@
 import { getDb } from './mongodb';
 import { notifyNewAIImages } from './push-notifications';
+import { resolveAIImageTitleByVision } from './ai-image-resolver';
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || process.env.OPENAI_KEY;
 const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-3.5-turbo';
@@ -138,6 +139,56 @@ export const isInvalidCaptionTitle = (title: string) => {
   if (/\d+/.test(normalized)) return true;
 
   return false;
+};
+
+// Returns the title to store AND whether it should be marked `validated`.
+// Crucially: when vision can't confidently confirm ANY title for the image
+// (abstained), we no longer silently keep the "intended" title — that
+// assumption (the image must show what we asked for) is exactly what let
+// mismatched images (e.g. a sand photo captioned "La tasse") reach players.
+// Instead the image is stored with validated=false, which the existing
+// admin review flow and the `validated !== false` query filters already
+// know how to exclude from being served — same mechanism used for the
+// admin-curated "banco fixo" images.
+const validateGeneratedAIImageTitle = async (
+  collectionName: string,
+  imageUrl: string,
+  intendedTitle: string,
+  validTitles: string[],
+): Promise<{ title: string; validated: boolean }> => {
+  if (!imageUrl || !validTitles.length) return { title: intendedTitle, validated: false };
+
+  try {
+    const result = await resolveAIImageTitleByVision(imageUrl, validTitles, collectionName as any);
+
+    // Vision call itself failed (network/API error, no API key, etc.) —
+    // we genuinely don't know if the image matches. Don't serve it yet.
+    if (result === null) {
+      console.warn(`[AI] Vision indisponível para validar "${intendedTitle}" (collection=${collectionName}) — marcando como não validada`);
+      return { title: intendedTitle, validated: false };
+    }
+
+    // Vision explicitly found no match among candidates — the generated
+    // image doesn't clearly depict the intended title (or anything else
+    // in the pool). Keep the intended title as a label for admin review,
+    // but do NOT let it be served to players.
+    if (result.abstained || !result.title) {
+      console.warn(`[AI] Imagem gerada para "${intendedTitle}" não foi confirmada pela IA de visão — marcando como não validada (collection=${collectionName})`);
+      return { title: intendedTitle, validated: false };
+    }
+
+    const normalizedMatched = String(result.title).trim().toLowerCase();
+    const normalizedIntended = String(intendedTitle).trim().toLowerCase();
+    if (normalizedMatched !== normalizedIntended) {
+      console.log(
+        `[AI] Legenda corrigida pela IA de visão: pretendida="${intendedTitle}" confirmada="${result.title}" (collection=${collectionName})`,
+      );
+    }
+    return { title: result.title, validated: true };
+  } catch (err) {
+    console.warn('[AI] Falha ao validar imagem gerada:', err);
+    return { title: intendedTitle, validated: false };
+  }
 };
 
 const normalizeCaptionItems = (items: any[]) =>
@@ -423,21 +474,37 @@ export const ensureDailyAIItems = async (collectionName: string, theme: string) 
 
   console.log(`[AI] Gerando ${existingItems.length} imagens extras para tema="${normalizedTheme}" com títulos existentes:`, existingItems.map(i => i.title));
 
+  const validTitlesForValidation = existingItems.map(item => item.title).filter(Boolean);
+
   // ── Gera uma imagem por título já existente ─────────────────────────────
   const documents = await Promise.all(
     existingItems.map(async (item, index) => {
+      const url = await generateAIImageUrlForTitle(
+        collectionName,
+        normalizedTheme,
+        item.title,
+        Date.now() + index,
+        item.proverbText,
+      );
+
+      const { title: validatedTitle, validated } = await validateGeneratedAIImageTitle(
+        collectionName,
+        url,
+        item.title,
+        validTitlesForValidation,
+      );
+
       const doc: any = {
-        url: await generateAIImageUrlForTitle(
-          collectionName,
-          normalizedTheme,
-          item.title,
-          Date.now() + index,
-          item.proverbText,
-        ),
-        title: item.title,           // título idêntico ao item fixo do banco
+        url,
+        title: validatedTitle,
         description: item.description || '',
         theme: normalizedTheme,
         source: 'ai',
+        // Only images the vision check actually confirmed are marked
+        // validated. Unconfirmed images stay in the DB (for admin review
+        // in /admin) but are excluded from the game via the existing
+        // `validated !== false` filters in generate-images.ts / generate-phrases.ts.
+        validated,
         createdAt: new Date(),
       };
 
