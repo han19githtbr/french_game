@@ -43,7 +43,7 @@ const renderHighlightedTitle = (text: string, activeIndex: number) =>
           : 'text-slate-200/90',
       )}
     >
-      {char === ' ' ? '\u00A0' : char}
+      {char === ' ' ? ' ' : char}
     </span>
   ));
 
@@ -151,15 +151,15 @@ export default function Home() {
           transition={{ duration: 0.45 }}
           className="w-full max-w-5xl rounded-[28px] border border-white/10 bg-slate-900/75 p-6 shadow-2xl shadow-cyan-950/50 backdrop-blur-xl sm:p-8 lg:p-10"
         >
-          <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-            <div className="space-y-6">
-              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-sm font-medium text-cyan-200">
-                <Sparkles className="h-4 w-4" />
-                Uma experiência de francês mais divertida e envolvente
+          <div className="grid min-w-0 gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+            <div className="min-w-0 space-y-6">
+              <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-sm font-medium text-cyan-200">
+                <Sparkles className="h-4 w-4 shrink-0" />
+                <span>Uma experiência de francês mais divertida e envolvente</span>
               </div>
 
               <div className="space-y-3">
-                <h1 className="text-3xl font-semibold leading-tight text-white sm:text-4xl lg:text-5xl">
+                <h1 className="break-words text-3xl font-semibold leading-tight text-white sm:text-4xl lg:text-5xl">
                   {renderHighlightedTitle(title, currentIndex)}
                 </h1>
                 <p className="max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
@@ -197,7 +197,7 @@ export default function Home() {
               </motion.div>
             </div>
 
-            <div className="space-y-4">
+            <div className="min-w-0 space-y-4">
               <button
                 onClick={handleSignInClick}
                 className="flex w-full items-center justify-center gap-3 rounded-2xl border border-cyan-400/40 bg-cyan-400/10 px-5 py-4 text-left font-semibold text-cyan-100 shadow-lg shadow-cyan-950/20 transition duration-300 hover:-translate-y-0.5 hover:border-cyan-300 hover:bg-cyan-400/20"
@@ -208,7 +208,7 @@ export default function Home() {
                   <path d="M119.2 322.7c-10.4-30.7-10.4-63.7 0-94.4v-70.7H31.6c-35.5 70.8-35.5 154.7 0 225.5l87.6-70.4z" fill="#fbbc04" />
                   <path d="M272 107.7c39.9-.6 78 13.8 107.5 39.4l80.3-80.3C407.2 24.3 345.6 0 272 0 167.4 0 75.6 61.7 31.6 162.3l87.6 70.7C140.8 155.6 201 107.7 272 107.7z" fill="#ea4335" />
                 </svg>
-                <span className="text-lg">{renderHighlightedTitle(titleGoogle, currentIndex)}</span>
+                <span className="whitespace-normal break-words text-lg">{renderHighlightedTitle(titleGoogle, currentIndex)}</span>
               </button>
 
               <button
