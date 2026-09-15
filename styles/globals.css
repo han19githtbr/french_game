@@ -105,7 +105,7 @@ body {
 }
 
 ::selection {
-  background: rgba(34, 211, 238, 0.35);
+  background: rgba(109, 94, 248, 0.35);
   color: white;
 }
 
@@ -129,14 +129,6 @@ body {
   100% { filter: drop-shadow(0 0 5px rgba(192, 192, 192, 0.8)); } /* Retorna ao brilho inicial */
 }
 
-select option {
-  background-color: #111827; /* Use a cor de fundo desejada (a mesma do seu background principal) */
-  color: rgb(35, 138, 211); /* Cor do texto das opções */
-}
-
-select option:hover {
-  background-color: #374151; /* Cor de fundo ao passar o mouse (opcional) */
-}
 
 @keyframes progress-flash {
   0% {
@@ -193,17 +185,17 @@ select option:hover {
 }
 
 ::-webkit-scrollbar-track {
-  background: #373a51;
+  background: var(--color-surface-alt, #191c25);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: '#0e25d3';
+  background: var(--color-accent, #6d5ef8);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #6dd6ed;
+  background: var(--color-accent-strong, #4f3ff0);
   cursor: grab;
 }
 
@@ -511,4 +503,52 @@ select option:checked {
   .carousel-scroll-desktop::-webkit-scrollbar-thumb:hover {
     background: rgba(96,165,250,1) !important;
   }
+}
+
+/* ── Skeleton loading ────────────────────────────────────────────────────── */
+@keyframes skeleton-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton {
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-alt) 25%,
+    var(--color-surface)     50%,
+    var(--color-surface-alt) 75%
+  );
+  background-size: 800px 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+/* Variante mais sutil para imagens */
+.skeleton-image {
+  border-radius: 12px;
+  aspect-ratio: 4/3;
+  background: linear-gradient(
+    135deg,
+    var(--color-surface-alt) 25%,
+    color-mix(in srgb, var(--color-surface-alt) 70%, var(--color-accent) 30%) 50%,
+    var(--color-surface-alt) 75%
+  );
+  background-size: 800px 100%;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+/* ── Focus ring acessível global ─────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* ── Transição de página suave ───────────────────────────────────────────── */
+@keyframes page-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.page-enter {
+  animation: page-fade-in 0.35s ease-out both;
 }

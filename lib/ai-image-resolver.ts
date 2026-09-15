@@ -168,7 +168,7 @@ export const resolveAIImageTitleByVision = async (
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: process.env.ANTHROPIC_VISION_MODEL || 'claude-haiku-4-5-20251001',
         max_tokens: 150,
         messages: [
           {

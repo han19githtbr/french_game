@@ -80,11 +80,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const allValidTitles = filterWordTitles(
       Array.from(new Set(validThemeImages.map(i => i.title as string)))
     )
+    // Fallback: se filterWordTitles retornar menos de 2, usa pool sem filtro de tipo
     const validTitles = allValidTitles.length >= 2
       ? allValidTitles
       : Array.from(new Set(validThemeImages.map(i => i.title as string)))
 
-    const safeOptionsCount = Math.min(Math.max(Number(optionsCount) || 4, 2), validTitles.length)
+    // Garante pelo menos 2 opções (correto + 1 distrator), mas nunca mais que o pool
+    const safeOptionsCount = Math.min(Math.max(Number(optionsCount) || 4, 2), Math.max(validTitles.length, 2))
 
     // NOTA: a validação por IA de visão já acontece uma única vez, no momento
     // da geração (ver ensureDailyAIItems / validateGeneratedAIImageTitle em

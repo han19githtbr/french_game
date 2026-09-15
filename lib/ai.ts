@@ -323,7 +323,13 @@ const generateAIImageUrlForTitle = async (
         if (data.data?.[0]?.b64_json) {
           const dataUrl = `data:image/png;base64,${data.data[0].b64_json}`;
           if (dataUrl.length <= MAX_DATA_URL_BYTES) return dataUrl;
+          console.warn(
+            `[AI] OpenAI b64_json descartada: tamanho ${dataUrl.length} excede limite ${MAX_DATA_URL_BYTES}. Tentando próximo provider.`,
+          );
         }
+      } else {
+        const errText = await resp.text().catch(() => '');
+        console.warn(`[AI] OpenAI image retornou HTTP ${resp.status}: ${errText.slice(0, 200)}`);
       }
     } catch (err) {
       console.warn('[AI] OpenAI image falhou:', err);
@@ -444,7 +450,12 @@ export const ensureDailyAIItems = async (collectionName: string, theme: string) 
   await collection.createIndex(
     { theme: 1, title: 1 },
     { unique: true, partialFilterExpression: { source: 'ai' } },
-  ).catch(() => undefined);
+  ).catch((err) => {
+    // Código 85 = IndexOptionsConflict, 11000 = duplicata — ambos são normais
+    if (err?.code !== 85 && err?.code !== 11000) {
+      console.warn('[AI] ensureDailyAIItems — erro ao criar índice:', err?.message || err);
+    }
+  });
 
   const today = new Date();
   const startOfToday = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
