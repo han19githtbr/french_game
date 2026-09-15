@@ -83,7 +83,7 @@ export default function AdminPage() {
   }, []);
 
   if (status === 'loading' || session?.user?.email !== ADMIN_EMAIL) {
-    return <p className="text-white text-center mt-10">Verificando permissões...</p>;
+    return <p className="text-(--color-text) text-center mt-10">Verificando permissões...</p>;
   }
 
   const handlePostCreated = () => {
@@ -165,17 +165,18 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[radial-gradient(circle_at_top,_rgba(147,51,234,0.18),_transparent_38%),linear-gradient(135deg,_#050816_0%,_#111827_55%,_#0f172a_100%)] text-white">
+    <div className="relative min-h-screen bg-(--color-bg) text-(--color-text)">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--color-accent-soft),_transparent_38%)]" />
       {/* Top bar */}
-      <div className="w-full flex flex-col sm:flex-row justify-between items-start px-6 py-8 bg-slate-900/80 border-b border-white/10 shadow-2xl shadow-black/20 backdrop-blur gap-2">
+      <div className="w-full flex flex-col sm:flex-row justify-between items-start px-6 py-8 bg-(--color-surface)/80 border-b border-(--color-border) shadow-2xl shadow-black/20 backdrop-blur gap-2">
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-          <div className="w-full sm:w-auto rounded-2xl border border-purple-400/30 bg-purple-500/10 px-3 py-2 mb-1 sm:mb-0">
-            <p className="text-[10px] uppercase tracking-[0.35em] text-purple-200">Painel administrativo</p>
-            <h1 className="text-lg font-semibold text-white">Gerencie conteúdo, acesso e validações</h1>
+          <div className="w-full sm:w-auto rounded-2xl border border-(--color-accent)/30 bg-(--color-accent)/10 px-3 py-2 mb-1 sm:mb-0">
+            <p className="text-[10px] uppercase tracking-[0.35em] text-(--color-accent)">Painel administrativo</p>
+            <h1 className="text-lg font-semibold text-(--color-text)">Gerencie conteúdo, acesso e validações</h1>
           </div>
           <button
             onClick={() => setActiveTab('create')}
-            className={`px-3 py-1 rounded-lg text-sm border cursor-pointer transition ${activeTab === 'create' ? 'bg-cyan-900/40 border-cyan-400/60' : 'border-cyan-500/20 hover:bg-cyan-500/10'}`}
+            className={`px-3 py-1 rounded-lg text-sm border cursor-pointer transition ${activeTab === 'create' ? 'bg-(--color-accent)/40 border-(--color-accent)/60' : 'border-(--color-accent)/20 hover:bg-(--color-accent)/10'}`}
           >
             Criar Publicação
           </button>
@@ -193,7 +194,7 @@ export default function AdminPage() {
           </button>
           <button
             onClick={() => setActiveTab('images')}
-            className={`px-3 py-1 rounded-lg text-sm border cursor-pointer transition ${activeTab === 'images' ? 'bg-purple-900/30 border-purple-400/60' : 'border-purple-500/20 hover:bg-purple-500/10'}`}
+            className={`px-3 py-1 rounded-lg text-sm border cursor-pointer transition ${activeTab === 'images' ? 'bg-(--color-accent)/30 border-(--color-accent)/60' : 'border-(--color-accent)/20 hover:bg-(--color-accent)/10'}`}
           >
             🖼️ Gerenciar Imagens
           </button>
@@ -213,7 +214,7 @@ export default function AdminPage() {
             />
           </button>
           {dropdownOpen && (
-            <div className="absolute right-0 mt-34 w-44 bg-transparent border border-e-lightblue text-white rounded-xl shadow-lg z-50 animate-fade-in-up">
+            <div className="absolute right-0 mt-34 w-44 bg-transparent border border-e-lightblue text-(--color-text) rounded-xl shadow-lg z-50 animate-fade-in-up">
               <button
                 onClick={() => signOut({ callbackUrl: '/' })}
                 className="flex items-center w-full px-4 py-2 text-sm hover:border border-green rounded-xl transition cursor-pointer"
@@ -234,20 +235,20 @@ export default function AdminPage() {
 
         {/* === UNLOCK TAB === */}
         {activeTab === 'unlock' && (
-          <div className="max-w-lg mx-auto bg-gray-800 rounded-2xl p-6 border border-yellow-600/40 shadow-xl">
+          <div className="max-w-lg mx-auto bg-(--color-surface) rounded-2xl p-6 border border-yellow-600/40 shadow-xl">
             <h2 className="text-xl font-bold text-yellow-300 mb-1">🔓 Desbloqueio Administrativo</h2>
-            <p className="text-sm text-gray-400 mb-6">
+            <p className="text-sm text-(--color-text-muted) mb-6">
               Selecione uma seção, defina a duração e clique em desbloquear. O acesso expira automaticamente após o prazo.
             </p>
 
             <div className="space-y-4">
               {/* Seção */}
               <div>
-                <label className="text-sm text-gray-300 mb-1 block">Seção a desbloquear</label>
+                <label className="text-sm text-(--color-text-muted) mb-1 block">Seção a desbloquear</label>
                 <select
                   value={unlockSection}
                   onChange={e => setUnlockSection(e.target.value)}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-yellow-500"
+                  className="w-full bg-(--color-surface-alt) border border-(--color-border) rounded-lg px-3 py-2 text-(--color-text) text-sm focus:outline-none focus:border-yellow-500"
                 >
                   <option value="">Selecione...</option>
                   <option value="frases">Frases em Francês</option>
@@ -262,7 +263,7 @@ export default function AdminPage() {
                 <div className={`text-sm px-3 py-2 rounded-lg border ${
                   currentUnlocks[unlockSection]
                     ? 'bg-green-900/40 text-green-300 border-green-700'
-                    : 'bg-gray-700/40 text-gray-400 border-gray-600'
+                    : 'bg-(--color-surface-alt)/40 text-(--color-text-muted) border-(--color-border)'
                 }`}>
                   <span>Status: {currentUnlocks[unlockSection] ? '🔓 Desbloqueada' : '🔒 Bloqueada'}</span>
                   {currentUnlocks[unlockSection] && expiryDates[unlockSection] && (
@@ -276,7 +277,7 @@ export default function AdminPage() {
               {/* Duração */}
               {!(unlockSection && currentUnlocks[unlockSection]) && (
                 <div>
-                  <label className="text-sm text-gray-300 mb-1 block">Duração do desbloqueio</label>
+                  <label className="text-sm text-(--color-text-muted) mb-1 block">Duração do desbloqueio</label>
                   <div className="flex gap-2">
                     <input
                       type="number"
@@ -284,12 +285,12 @@ export default function AdminPage() {
                       max={999}
                       value={unlockDuration}
                       onChange={e => setUnlockDuration(Math.max(1, Number(e.target.value)))}
-                      className="w-24 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-yellow-500"
+                      className="w-24 bg-(--color-surface-alt) border border-(--color-border) rounded-lg px-3 py-2 text-(--color-text) text-sm focus:outline-none focus:border-yellow-500"
                     />
                     <select
                       value={unlockUnit}
                       onChange={e => setUnlockUnit(e.target.value as UnlockDurationUnit)}
-                      className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-yellow-500"
+                      className="flex-1 bg-(--color-surface-alt) border border-(--color-border) rounded-lg px-3 py-2 text-(--color-text) text-sm focus:outline-none focus:border-yellow-500"
                     >
                       <option value="hours">Hora(s)</option>
                       <option value="days">Dia(s)</option>
@@ -297,7 +298,7 @@ export default function AdminPage() {
                     </select>
                   </div>
                   {unlockSection && (
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-(--color-text-muted) mt-1">
                       Expirará em: <span className="text-yellow-300">{formatExpiry(calcExpiryMs())}</span>
                     </p>
                   )}
@@ -380,14 +381,14 @@ export default function AdminPage() {
 
               {/* Resumo de todos os desbloqueios ativos */}
               {Object.keys(currentUnlocks).some(k => currentUnlocks[k]) && (
-                <div className="mt-4 border-t border-gray-700 pt-4">
-                  <p className="text-xs text-gray-400 mb-2 uppercase tracking-wider">Seções atualmente desbloqueadas</p>
+                <div className="mt-4 border-t border-(--color-border) pt-4">
+                  <p className="text-xs text-(--color-text-muted) mb-2 uppercase tracking-wider">Seções atualmente desbloqueadas</p>
                   <div className="space-y-1.5">
                     {Object.entries(currentUnlocks).filter(([, v]) => v).map(([key]) => (
                       <div key={key} className="flex items-center justify-between text-xs bg-green-900/20 border border-green-800/40 rounded-lg px-3 py-1.5">
                         <span className="text-green-300">🔓 {sectionLabels[key] || key}</span>
                         {expiryDates[key] && (
-                          <span className="text-gray-400">até {formatExpiry(expiryDates[key])}</span>
+                          <span className="text-(--color-text-muted)">até {formatExpiry(expiryDates[key])}</span>
                         )}
                       </div>
                     ))}
@@ -401,9 +402,9 @@ export default function AdminPage() {
         {/* === IMAGE MANAGEMENT TAB === */}
         {activeTab === 'images' && (
           <div className="max-w-5xl mx-auto">
-            <div className="bg-gray-800 rounded-2xl p-6 border border-purple-600/40 shadow-xl mb-6">
-              <h2 className="text-xl font-bold text-purple-300 mb-1">🖼️ Gerenciamento de Imagens</h2>
-              <p className="text-sm text-gray-400 mb-4">
+            <div className="bg-(--color-surface) rounded-2xl p-6 border border-(--color-accent)/40 shadow-xl mb-6">
+              <h2 className="text-xl font-bold text-(--color-accent) mb-1">🖼️ Gerenciamento de Imagens</h2>
+              <p className="text-sm text-(--color-text-muted) mb-4">
                 Visualize, valide ou remova imagens do banco de dados. Imagens marcadas como <span className="text-red-400">inválidas</span> não aparecem no jogo.
                 Use isso para remover imagens que não correspondem ao título exibido.
               </p>
@@ -411,11 +412,11 @@ export default function AdminPage() {
               {/* Filtros */}
               <div className="flex flex-wrap gap-3 mb-4">
                 <div>
-                  <label className="text-xs text-gray-400 block mb-1">Coleção</label>
+                  <label className="text-xs text-(--color-text-muted) block mb-1">Coleção</label>
                   <select
                     value={imgCollection}
                     onChange={e => setImgCollection(e.target.value as any)}
-                    className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-purple-500"
+                    className="bg-(--color-surface-alt) border border-(--color-border) rounded-lg px-3 py-1.5 text-(--color-text) text-sm focus:outline-none focus:border-(--color-accent)"
                   >
                     <option value="images">Jogo Principal</option>
                     <option value="frases">Frases</option>
@@ -423,20 +424,20 @@ export default function AdminPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs text-gray-400 block mb-1">Tema (opcional)</label>
+                  <label className="text-xs text-(--color-text-muted) block mb-1">Tema (opcional)</label>
                   <input
                     type="text"
                     value={imgTheme}
                     onChange={e => setImgTheme(e.target.value)}
                     placeholder="ex: família, natureza..."
-                    className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-purple-500 w-44"
+                    className="bg-(--color-surface-alt) border border-(--color-border) rounded-lg px-3 py-1.5 text-(--color-text) text-sm focus:outline-none focus:border-(--color-accent) w-44"
                   />
                 </div>
                 <div className="flex items-end">
                   <button
                     onClick={() => loadImages(1)}
                     disabled={imgLoading}
-                    className="bg-purple-600 hover:bg-purple-500 text-white font-semibold px-4 py-1.5 rounded-lg text-sm transition cursor-pointer disabled:opacity-50"
+                    className="bg-(--color-accent-strong) hover:bg-(--color-accent) text-white font-semibold px-4 py-1.5 rounded-lg text-sm transition cursor-pointer disabled:opacity-50"
                   >
                     {imgLoading ? 'Carregando...' : 'Buscar'}
                   </button>
@@ -448,7 +449,7 @@ export default function AdminPage() {
               )}
 
               {imgList.length > 0 && (
-                <p className="text-xs text-gray-400 mb-3">
+                <p className="text-xs text-(--color-text-muted) mb-3">
                   Mostrando {imgList.length} de {imgTotal} imagens
                 </p>
               )}
@@ -461,12 +462,12 @@ export default function AdminPage() {
                   {imgList.map((img) => (
                     <div
                       key={img._id}
-                      className={`bg-gray-800 rounded-xl overflow-hidden border shadow-lg ${
+                      className={`bg-(--color-surface) rounded-xl overflow-hidden border shadow-lg ${
                         img.validated === false
                           ? 'border-red-600/60'
                           : img.validated === true
                           ? 'border-green-600/60'
-                          : 'border-gray-700'
+                          : 'border-(--color-border)'
                       }`}
                     >
                       <div className="relative">
@@ -477,7 +478,7 @@ export default function AdminPage() {
                           onError={e => { (e.target as HTMLImageElement).src = '/placeholder.png'; }}
                         />
                         {img.source === 'ai' && (
-                          <span className="absolute top-1 right-1 text-[9px] bg-black/70 text-cyan-300 px-1.5 py-0.5 rounded-full">IA</span>
+                          <span className="absolute top-1 right-1 text-[9px] bg-black/70 text-(--color-accent) px-1.5 py-0.5 rounded-full">IA</span>
                         )}
                         {img.validated === false && (
                           <span className="absolute top-1 left-1 text-[9px] bg-red-900/80 text-red-300 px-1.5 py-0.5 rounded-full">Inválida</span>
@@ -487,8 +488,8 @@ export default function AdminPage() {
                         )}
                       </div>
                       <div className="p-2">
-                        <p className="text-xs font-semibold text-white truncate" title={img.title}>{img.title}</p>
-                        <p className="text-[10px] text-gray-400 mb-2">{img.theme}</p>
+                        <p className="text-xs font-semibold text-(--color-text) truncate" title={img.title}>{img.title}</p>
+                        <p className="text-[10px] text-(--color-text-muted) mb-2">{img.theme}</p>
                         <div className="flex gap-1">
                           <button
                             onClick={() => validateImage(img._id, true)}
@@ -523,15 +524,15 @@ export default function AdminPage() {
                     <button
                       onClick={() => loadImages(imgPage - 1)}
                       disabled={imgPage <= 1}
-                      className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm disabled:opacity-40 cursor-pointer"
+                      className="px-3 py-1.5 bg-(--color-surface-alt) hover:bg-(--color-surface-alt) rounded-lg text-sm disabled:opacity-40 cursor-pointer"
                     >
                       ← Anterior
                     </button>
-                    <span className="text-sm text-gray-400">Página {imgPage} de {totalPages}</span>
+                    <span className="text-sm text-(--color-text-muted)">Página {imgPage} de {totalPages}</span>
                     <button
                       onClick={() => loadImages(imgPage + 1)}
                       disabled={imgPage >= totalPages}
-                      className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm disabled:opacity-40 cursor-pointer"
+                      className="px-3 py-1.5 bg-(--color-surface-alt) hover:bg-(--color-surface-alt) rounded-lg text-sm disabled:opacity-40 cursor-pointer"
                     >
                       Próxima →
                     </button>
@@ -540,7 +541,7 @@ export default function AdminPage() {
               </>
             ) : (
               !imgLoading && (
-                <div className="text-center py-12 text-gray-500">
+                <div className="text-center py-12 text-(--color-text-muted)">
                   <Eye className="w-10 h-10 mx-auto mb-3 opacity-30" />
                   <p>Clique em "Buscar" para carregar as imagens.</p>
                 </div>

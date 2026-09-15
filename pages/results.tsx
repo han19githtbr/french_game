@@ -202,53 +202,53 @@ export default function ResultsPage() {
 
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
+    <div className="min-h-screen bg-(--color-bg) text-(--color-text) p-6">
       {/* Header com perfil */}
       <div className="flex justify-between items-center mb-6">
         <button 
           onClick={() => router.push('/game')} 
-          className="absolute flex border text-gray-300 border-blue items-center bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75 mt-50 cursor-pointer">
+          className="absolute flex border border-blue items-center bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-(--color-accent) focus:ring-opacity-75 mt-50 cursor-pointer">
           <ChevronLeft className="mr-2" color="blue" /> Voltar ao jogo
         </button>
         
       </div>      
            
       
-      <h1 className="text-3xl font-semibold text-gray-300 mt-40 mb-4 text-center">Seu Progresso</h1>
+      <h1 className="text-3xl font-semibold text-(--color-text-muted) mt-40 mb-4 text-center">Seu Progresso</h1>
 
       <div className="grid gap-4 max-w-5xl mx-auto mb-8 md:grid-cols-2">
-        <div className="rounded-3xl border border-gray-700 bg-zinc-950 p-6 shadow-xl">
+        <div className="rounded-3xl border border-(--color-border) bg-(--color-surface) p-6 shadow-xl">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs uppercase tracking-[0.2em] text-blue-300">Missão do dia</span>
             <span className={`text-xs font-semibold ${dailyMission?.completed ? 'text-green-300' : 'text-yellow-300'}`}>
               {dailyMission?.completed ? 'Concluída' : 'Em andamento'}
             </span>
           </div>
-          <h2 className="text-xl font-semibold text-white mb-2">{dailyMission?.title || 'Missão diária'}</h2>
-          <p className="text-sm text-gray-400 mb-4">{dailyMission?.description || 'Complete duas atividades diferentes hoje para avançar.'}</p>
-          <div className="rounded-full bg-gray-800 h-3 overflow-hidden mb-3">
+          <h2 className="text-xl font-semibold text-(--color-text) mb-2">{dailyMission?.title || 'Missão diária'}</h2>
+          <p className="text-sm text-(--color-text-muted) mb-4">{dailyMission?.description || 'Complete duas atividades diferentes hoje para avançar.'}</p>
+          <div className="rounded-full bg-(--color-surface) h-3 overflow-hidden mb-3">
             <div
               className="h-full bg-gradient-to-r from-blue-500 to-green-400"
               style={{ width: `${dailyMission ? Math.min(100, Math.round((dailyMission.progress / Math.max(1, dailyMission.target)) * 100)) : 0}%` }}
             />
           </div>
-          <p className="text-sm text-gray-300">{dailyMission?.progress ?? 0} / {dailyMission?.target ?? 1} concluído</p>
+          <p className="text-sm text-(--color-text-muted)">{dailyMission?.progress ?? 0} / {dailyMission?.target ?? 1} concluído</p>
         </div>
-        <div className="rounded-3xl border border-gray-700 bg-zinc-950 p-6 shadow-xl">
+        <div className="rounded-3xl border border-(--color-border) bg-(--color-surface) p-6 shadow-xl">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs uppercase tracking-[0.2em] text-pink-300">Nível atual</span>
-            <span className="text-xs text-gray-400">Próximo: {progressSummary.nextLevelName}</span>
+            <span className="text-xs text-(--color-text-muted)">Próximo: {progressSummary.nextLevelName}</span>
           </div>
-          <h2 className="text-2xl font-semibold text-white mb-2">{progressSummary.levelName}</h2>
-          <p className="text-sm text-gray-400 mb-4">Nível {progressSummary.currentLevel} • {progressSummary.totalXp} XP</p>
-          <div className="rounded-full bg-gray-800 h-3 overflow-hidden mb-3">
+          <h2 className="text-2xl font-semibold text-(--color-text) mb-2">{progressSummary.levelName}</h2>
+          <p className="text-sm text-(--color-text-muted) mb-4">Nível {progressSummary.currentLevel} • {progressSummary.totalXp} XP</p>
+          <div className="rounded-full bg-(--color-surface) h-3 overflow-hidden mb-3">
             <div
-              className="h-full bg-gradient-to-r from-green-400 to-cyan-500"
+              className="h-full bg-gradient-to-r from-green-400 to-(--color-accent)"
               style={{ width: `${progressSummary.levelProgress}%` }}
             />
           </div>
-          <p className="text-sm text-gray-300">{progressSummary.xpToNext} XP para o próximo nível</p>
-          <p className="mt-3 text-xs text-gray-500">{progressSummary.isPremium ? 'Premium ativo: +2 tentativas, missões especiais e desbloqueios extras' : 'Apoie o app para liberar Premium Pack e avanços exclusivos.'}</p>
+          <p className="text-sm text-(--color-text-muted)">{progressSummary.xpToNext} XP para o próximo nível</p>
+          <p className="mt-3 text-xs text-(--color-text-muted)">{progressSummary.isPremium ? 'Premium ativo: +2 tentativas, missões especiais e desbloqueios extras' : 'Apoie o app para liberar Premium Pack e avanços exclusivos.'}</p>
         </div>
       </div>
 
@@ -271,7 +271,7 @@ export default function ResultsPage() {
 
       {/* Barra de Progresso */}
       <div className="mb-6 max-w-md mx-auto">
-        <div className="bg-gray-800 rounded-full h-4 relative overflow-hidden animate-pulse-slow">
+        <div className="bg-(--color-surface) rounded-full h-4 relative overflow-hidden animate-pulse-slow">
           <div
             className={`bg-green h-full rounded-full transition-all duration-500 ease-out absolute left-0 top-0 ${
               isFlashing ? 'animate-progress-flash' : ''
@@ -282,11 +282,11 @@ export default function ResultsPage() {
             {progressSummary.totalXp} XP
           </span>
         </div>
-        <p className="text-sm text-gray-400 mt-3 text-center">Progresso para o próximo nível</p>
+        <p className="text-sm text-(--color-text-muted) mt-3 text-center">Progresso para o próximo nível</p>
       </div>
 
       {progressEntries.length === 0 ? (
-        <p className="text-center text-gray-400">Você ainda não fez nenhuma jogada.</p>
+        <p className="text-center text-(--color-text-muted)">Você ainda não fez nenhuma jogada.</p>
       ) : (
         <>
           <div className="max-w-md max-h-48 overflow-y-auto mx-auto space-y-4 mb-8">
@@ -329,11 +329,11 @@ export default function ResultsPage() {
               </button>
           </div>
 
-          <h2 className="text-2xl font-semibold text-center text-gray-300 flex items-center justify-center gap-2 mb-6">
+          <h2 className="text-2xl font-semibold text-center text-(--color-text-muted) flex items-center justify-center gap-2 mb-6">
             Estatísticas de Acertos
           </h2>
 
-          <div className="h-80 w-full max-w-4xl mx-auto rounded-2xl bg-white shadow-xl p-4 dark:bg-zinc-900 dark:shadow-none">
+          <div className="h-80 w-full max-w-4xl mx-auto rounded-2xl bg-(--color-surface) shadow-xl p-4">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={progressEntries}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -369,7 +369,7 @@ export default function ResultsPage() {
             </ResponsiveContainer>
           </div>
 
-          <div className="text-center mt-10 text-lg text-zinc-700 dark:text-zinc-300">
+          <div className="text-center mt-10 text-lg text-(--color-text-muted)">
             🏆 Melhor desempenho: <strong className="text-green dark:text-blue">{bestRound.score}</strong> acertos na jogada <strong className='text-green'>{bestRound.round}</strong>
           </div>
         </>
@@ -379,16 +379,16 @@ export default function ResultsPage() {
       {/* Exibição das Conquistas de Super Jogador */}
       {superPlayerRecords.length > 0 && (
         <div className="mt-12">
-          <h2 className="text-2xl font-semibold text-center text-gray-300 mb-4">Maiores pontuações acumuladas</h2>
+          <h2 className="text-2xl font-semibold text-center text-(--color-text-muted) mb-4">Maiores pontuações acumuladas</h2>
           <div className="max-h-32 overflow-y-auto"> {/* Adicionamos esta div com altura máxima e overflow */}
             <ul className="max-w-md mx-auto space-y-2">
               {superPlayerRecords.map((record, index) => (
                 <li
                   key={index}
-                  className="bg-zinc-800 rounded-md p-3 flex items-center justify-between shadow-md"
+                  className="bg-(--color-surface-alt) rounded-md p-3 flex items-center justify-between shadow-md"
                 >
                   <span className="font-semibold text-yellow">{record.username.length > 20 ? record.username.substring(0, 17) + '...': record.username}</span>
-                  <span className="text-sm text-gray-400">{record.totalPlays} acertos</span>
+                  <span className="text-sm text-(--color-text-muted)">{record.totalPlays} acertos</span>
                 </li>
               ))}
                                       

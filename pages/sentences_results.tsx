@@ -210,19 +210,19 @@ export default function ResultsPage() {
 
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
+    <div className="min-h-screen bg-(--color-bg) text-(--color-text) p-6">
       {/* Header com perfil */}
       <div className="flex justify-between items-center mb-6 mt-5">
         <button 
           onClick={() => router.push('/frases')} 
-          className="absolute flex border border-blue text-gray-300 items-center bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75 mt-50 cursor-pointer">
+          className="absolute flex border border-blue items-center bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-(--color-accent) focus:ring-opacity-75 mt-50 cursor-pointer">
           <ChevronLeft className="mr-2" color="blue" /> Voltar ao jogo
         </button>
         
       </div>      
       
 
-      <h1 className="text-3xl font-semibold text-gray-300 mt-40 mb-4 text-center">Seu Progresso</h1>
+      <h1 className="text-3xl font-semibold text-(--color-text-muted) mt-40 mb-4 text-center">Seu Progresso</h1>
       
 
       {globalRecord && (
@@ -245,7 +245,7 @@ export default function ResultsPage() {
 
       {/* Barra de Progresso */}
       <div className="mb-6 max-w-md mx-auto">
-        <div className="bg-gray-800 rounded-full h-4 relative overflow-hidden animate-pulse-slow">
+        <div className="bg-(--color-surface) rounded-full h-4 relative overflow-hidden animate-pulse-slow">
           <div
             className={`bg-green h-full rounded-full transition-all duration-500 ease-out absolute left-0 top-0 ${
               isFlashing ? 'animate-progress-flash' : ''
@@ -256,11 +256,11 @@ export default function ResultsPage() {
             {currentProgress} / 4
           </span>
         </div>
-        <p className="text-sm text-gray-400 mt-3 text-center">Progresso para a Medalha de Ouro</p>
+        <p className="text-sm text-(--color-text-muted) mt-3 text-center">Progresso para a Medalha de Ouro</p>
       </div>
 
       {progress_answers.length === 0 ? (
-        <p className="text-center text-gray-400">Você ainda não fez nenhuma jogada.</p>
+        <p className="text-center text-(--color-text-muted)">Você ainda não fez nenhuma jogada.</p>
       ) : (
         <>
           <div className="max-w-md max-h-48 overflow-y-auto mx-auto space-y-4 mb-8">
@@ -303,11 +303,11 @@ export default function ResultsPage() {
               </button>
           </div>
 
-          <h2 className="text-2xl font-semibold text-center text-gray-300 flex items-center justify-center gap-2 mb-6">
+          <h2 className="text-2xl font-semibold text-center text-(--color-text-muted) flex items-center justify-center gap-2 mb-6">
             Estatísticas de Acertos
           </h2>
           
-          <div className="h-80 w-full max-w-4xl mx-auto rounded-2xl bg-white shadow-xl p-4 dark:bg-zinc-900 dark:shadow-none">
+          <div className="h-80 w-full max-w-4xl mx-auto rounded-2xl bg-(--color-surface) shadow-xl p-4">
               <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={progress_answers}>
                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -343,7 +343,7 @@ export default function ResultsPage() {
               </ResponsiveContainer>
           </div>
           
-          <div className="text-center mt-10 text-lg text-zinc-700 dark:text-zinc-300">
+          <div className="text-center mt-10 text-lg text-(--color-text-muted)">
             🏆 Melhor desempenho: <strong className="text-green dark:text-blue">{bestRound.correct_answer}</strong> acertos na jogada <strong className='text-green'>{bestRound.round}</strong>
           </div>
         </>
@@ -353,16 +353,16 @@ export default function ResultsPage() {
       {/* Exibição das Conquistas de Super Jogador */}
       {superPlayerRecords.length > 0 && (
         <div className="mt-12">
-          <h2 className="text-2xl font-semibold text-center text-gray-300 mb-4">Maiores pontuações acumuladas</h2>
+          <h2 className="text-2xl font-semibold text-center text-(--color-text-muted) mb-4">Maiores pontuações acumuladas</h2>
           <div className="max-h-32 overflow-y-auto"> {/* Adicionamos esta div com altura máxima e overflow */}
             <ul className="max-w-md mx-auto space-y-2">
               {superPlayerRecords.map((record, index) => (
                 <li
                   key={index}
-                  className="bg-zinc-800 rounded-md p-3 flex items-center justify-between shadow-md"
+                  className="bg-(--color-surface-alt) rounded-md p-3 flex items-center justify-between shadow-md"
                 >
                   <span className="font-semibold text-yellow">{record.username.length > 20 ? record.username.substring(0, 17) + '...' : record.username}</span>
-                  <span className="text-sm text-gray-400">{record.totalPlays} acertos</span>
+                  <span className="text-sm text-(--color-text-muted)">{record.totalPlays} acertos</span>
                 </li>
               ))}
             </ul>

@@ -144,26 +144,26 @@ export default function Classes() {
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#0a0f1c] text-white relative overflow-hidden">
+    <div className="min-h-screen bg-(--color-bg) text-(--color-text) relative overflow-hidden">
 
       {/* Ambient gradient blobs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-32 -left-32 w-96 h-96 bg-cyan-900/20 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 -right-40 w-80 h-80 bg-blue-900/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-indigo-900/15 rounded-full blur-3xl" />
+        <div className="absolute -top-32 -left-32 w-96 h-96 bg-(--color-accent)/20 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 -right-40 w-80 h-80 bg-(--color-accent)/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-(--color-accent)/10 rounded-full blur-3xl" />
       </div>
 
       {/* ── Top bar ─────────────────────────────────────────────────────── */}
-      <div className="relative z-20 flex items-center justify-between px-4 py-3 border-b border-white/5 backdrop-blur-sm bg-black/20">
+      <div className="relative z-20 flex items-center justify-between px-4 py-3 border-b border-(--color-border) backdrop-blur-sm bg-(--color-surface)/70">
         <button
           onClick={() => router.push('/game')}
-          className="flex items-center gap-2 text-gray-400 hover:text-cyan-400 transition text-sm font-medium"
+          className="flex items-center gap-2 text-(--color-text-muted) hover:text-(--color-accent) transition text-sm font-medium"
         >
           <ChevronLeft size={18} />
           Voltar
         </button>
 
-        <span className="text-cyan-400 font-semibold text-sm tracking-wide">
+        <span className="text-(--color-accent) font-semibold text-sm tracking-wide">
           📚 Quero me Aprofundar
         </span>
 
@@ -175,10 +175,10 @@ export default function Classes() {
               className="flex items-center gap-2 cursor-pointer"
             >
               {session.user.image ? (
-                <img src={session.user.image} alt="Avatar" className="w-8 h-8 rounded-full border border-cyan-600/50" />
+                <img src={session.user.image} alt="Avatar" className="w-8 h-8 rounded-full border border-(--color-accent)/50" />
               ) : (
-                <div className="w-8 h-8 rounded-full bg-cyan-800 flex items-center justify-center">
-                  <User size={16} className="text-cyan-200" />
+                <div className="w-8 h-8 rounded-full bg-(--color-accent) flex items-center justify-center">
+                  <User size={16} className="text-(--color-accent)" />
                 </div>
               )}
             </button>
@@ -189,10 +189,10 @@ export default function Classes() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -8, scale: 0.95 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute right-0 mt-2 w-40 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden"
+                  className="absolute right-0 mt-2 w-40 bg-(--color-bg) border border-(--color-border) rounded-xl shadow-2xl overflow-hidden"
                 >
-                  <div className="px-3 py-2 border-b border-gray-800">
-                    <p className="text-xs text-gray-300 truncate font-medium">{session.user.name}</p>
+                  <div className="px-3 py-2 border-b border-(--color-border)">
+                    <p className="text-xs text-(--color-text-muted) truncate font-medium">{session.user.name}</p>
                   </div>
                   <button
                     onClick={() => signOut()}
@@ -225,20 +225,20 @@ export default function Classes() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center py-12"
           >
-            <div className="bg-gray-900/60 backdrop-blur-md rounded-2xl p-10 max-w-xl mx-auto border border-white/5 shadow-2xl">
+            <div className="bg-(--color-bg)/60 backdrop-blur-md rounded-2xl p-10 max-w-xl mx-auto border border-(--color-border) shadow-2xl">
               <div className="text-5xl mb-5">🇫🇷</div>
-              <h2 className="text-2xl font-bold text-white mb-2">Explore o Conteúdo</h2>
-              <p className="text-gray-400 mb-8 text-sm">Escolha um tema acima e mergulhe na cultura francesa através de publicações, vídeos e histórias.</p>
+              <h2 className="text-2xl font-bold text-(--color-text) mb-2">Explore o Conteúdo</h2>
+              <p className="text-(--color-text-muted) mb-8 text-sm">Escolha um tema acima e mergulhe na cultura francesa através de publicações, vídeos e histórias.</p>
 
               {/* Stats */}
               <div className="grid grid-cols-2 gap-4 mb-8">
-                <div className="bg-white/5 rounded-xl p-5 border border-white/5">
-                  <div className="text-3xl font-bold text-cyan-400 mb-1">{themes.length}</div>
-                  <div className="text-gray-400 text-sm">Temas</div>
+                <div className="bg-(--color-surface-alt) rounded-xl p-5 border border-(--color-border)">
+                  <div className="text-3xl font-bold text-(--color-accent) mb-1">{themes.length}</div>
+                  <div className="text-(--color-text-muted) text-sm">Temas</div>
                 </div>
-                <div className="bg-white/5 rounded-xl p-5 border border-white/5">
+                <div className="bg-(--color-surface-alt) rounded-xl p-5 border border-(--color-border)">
                   <div className="text-3xl font-bold text-green-400 mb-1">🎬</div>
-                  <div className="text-gray-400 text-sm">Publicações em vídeo</div>
+                  <div className="text-(--color-text-muted) text-sm">Publicações em vídeo</div>
                 </div>
               </div>
 
@@ -248,8 +248,8 @@ export default function Classes() {
                   <button
                     key={t}
                     onClick={() => setSelectedTheme(t)}
-                    className="py-2.5 px-3 rounded-xl bg-white/5 hover:bg-cyan-900/30 border border-white/5 hover:border-cyan-700/50
-                      text-sm text-gray-300 hover:text-cyan-300 transition font-medium cursor-pointer"
+                    className="py-2.5 px-3 rounded-xl bg-(--color-surface-alt) hover:bg-(--color-accent)/30 border border-(--color-border) hover:border-(--color-accent)/50
+                      text-sm text-(--color-text-muted) hover:text-(--color-accent) transition font-medium cursor-pointer"
                   >
                     {themeIcons[t] || '📂'} {t}
                   </button>
@@ -260,8 +260,8 @@ export default function Classes() {
         ) : loading ? (
           // Loading skeleton
           <div className="flex flex-col items-center justify-center py-24 gap-4">
-            <div className="w-10 h-10 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
-            <p className="text-gray-500 text-sm">Carregando publicações...</p>
+            <div className="w-10 h-10 border-2 border-(--color-accent) border-t-transparent rounded-full animate-spin" />
+            <p className="text-(--color-text-muted) text-sm">Carregando publicações...</p>
           </div>
         ) : posts.length === 0 ? (
           // No posts
@@ -270,13 +270,13 @@ export default function Classes() {
             animate={{ opacity: 1 }}
             className="text-center py-20"
           >
-            <div className="bg-gray-900/60 rounded-2xl p-8 max-w-md mx-auto border border-white/5">
+            <div className="bg-(--color-bg)/60 rounded-2xl p-8 max-w-md mx-auto border border-(--color-border)">
               <div className="text-5xl mb-4">📭</div>
               <h2 className="text-xl font-bold mb-2">Nenhuma publicação</h2>
-              <p className="text-gray-400 text-sm mb-6">Não há publicações para o tema &quot;{selectedTheme}&quot; ainda.</p>
+              <p className="text-(--color-text-muted) text-sm mb-6">Não há publicações para o tema &quot;{selectedTheme}&quot; ainda.</p>
               <button
                 onClick={() => setSelectedTheme('')}
-                className="bg-cyan-700 hover:bg-cyan-600 text-white px-5 py-2 rounded-xl text-sm transition"
+                className="bg-(--color-accent) hover:bg-(--color-accent) text-(--color-text) px-5 py-2 rounded-xl text-sm transition"
               >
                 Ver outros temas
               </button>
@@ -299,7 +299,7 @@ export default function Classes() {
                     exit="exit"
                     transition={{ duration: 0.3, ease: 'easeInOut' }}
                   >
-                    <div className="bg-gray-900/70 backdrop-blur-md rounded-2xl overflow-hidden border border-white/5 shadow-2xl">
+                    <div className="bg-(--color-bg)/70 backdrop-blur-md rounded-2xl overflow-hidden border border-(--color-border) shadow-2xl">
 
                       {/* Media */}
                       <div className="relative">
@@ -324,7 +324,7 @@ export default function Classes() {
                         )}
 
                         {/* Gradient overlay at bottom */}
-                        <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-gray-900/80 to-transparent pointer-events-none" />
+                        <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-(--color-bg)/80 to-transparent pointer-events-none" />
 
                         {/* Theme badge */}
                         <div className="absolute top-3 left-3 bg-blue-600/90 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
@@ -333,7 +333,7 @@ export default function Classes() {
 
                         {/* Video badge */}
                         {currentPost.videoUrl && (
-                          <div className="absolute top-3 right-3 bg-cyan-600/90 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs font-semibold">
+                          <div className="absolute top-3 right-3 bg-(--color-accent)/90 backdrop-blur-sm text-(--color-text) px-2 py-1 rounded-full text-xs font-semibold">
                             🎬 IA
                           </div>
                         )}
@@ -346,7 +346,7 @@ export default function Classes() {
 
                       {/* Caption with TypingEffect */}
                       <div className="p-5">
-                        <div className="text-gray-200 text-sm leading-relaxed text-justify min-h-[3.5rem]">
+                        <div className="text-(--color-text) text-sm leading-relaxed text-justify min-h-[3.5rem]">
                           <TypingEffect
                             text={currentPost.caption}
                             speed={60}
@@ -361,7 +361,7 @@ export default function Classes() {
                             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition cursor-pointer ${
                               isLiked
                                 ? 'bg-red-600/30 text-red-400 border border-red-600/50'
-                                : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
+                                : 'bg-(--color-surface-alt) text-(--color-text-muted) border border-(--color-border) hover:bg-(--color-border)'
                             }`}
                           >
                             <Heart size={16} className={isLiked ? 'fill-red-400' : ''} />
@@ -371,7 +371,7 @@ export default function Classes() {
                           {/* Comment toggle */}
                           <button
                             onClick={() => setShowComments(s => !s)}
-                            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10 transition cursor-pointer"
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-(--color-surface-alt) text-(--color-text-muted) border border-(--color-border) hover:bg-(--color-border) transition cursor-pointer"
                           >
                             <MessageCircle size={16} />
                             <span>{currentPost.comments.length} comentários</span>
@@ -382,14 +382,14 @@ export default function Classes() {
                             <button
                               onClick={goPrev}
                               disabled={!hasPrev}
-                              className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                              className="w-9 h-9 rounded-xl bg-(--color-surface-alt) border border-(--color-border) flex items-center justify-center text-(--color-text-muted) hover:text-(--color-text) hover:bg-(--color-border) transition disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                             >
                               <ChevronLeft size={16} />
                             </button>
                             <button
                               onClick={goNext}
                               disabled={!hasNext}
-                              className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                              className="w-9 h-9 rounded-xl bg-(--color-surface-alt) border border-(--color-border) flex items-center justify-center text-(--color-text-muted) hover:text-(--color-text) hover:bg-(--color-border) transition disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                             >
                               <ChevronRight size={16} />
                             </button>
@@ -409,11 +409,11 @@ export default function Classes() {
                       key={i}
                       onClick={() => { setDirection(i > currentIndex ? 1 : -1); setCurrentIndex(i); setShowComments(false); }}
                       className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                        i === currentIndex ? 'w-5 bg-cyan-400' : 'w-1.5 bg-white/20 hover:bg-white/40'
+                        i === currentIndex ? 'w-5 bg-(--color-accent)' : 'w-1.5 bg-white/20 hover:bg-white/40'
                       }`}
                     />
                   ))}
-                  {totalPosts > 10 && <span className="text-gray-600 text-xs self-center">+{totalPosts - 10}</span>}
+                  {totalPosts > 10 && <span className="text-(--color-text-muted) text-xs self-center">+{totalPosts - 10}</span>}
                 </div>
               )}
             </div>
@@ -426,10 +426,10 @@ export default function Classes() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ duration: 0.25 }}
-                  className="bg-gray-900/60 backdrop-blur-md rounded-2xl border border-white/5 shadow-2xl p-5 flex flex-col gap-4"
+                  className="bg-(--color-bg)/60 backdrop-blur-md rounded-2xl border border-(--color-border) shadow-2xl p-5 flex flex-col gap-4"
                 >
-                  <h3 className="text-base font-semibold text-white flex items-center gap-2">
-                    <MessageCircle size={16} className="text-cyan-400" />
+                  <h3 className="text-base font-semibold text-(--color-text) flex items-center gap-2">
+                    <MessageCircle size={16} className="text-(--color-accent)" />
                     Comentários ({currentPost.comments.length})
                   </h3>
 
@@ -447,10 +447,10 @@ export default function Classes() {
                     </>
                   ) : (
                     <div className="text-center py-8">
-                      <p className="text-gray-400 text-sm mb-3">Faça login para comentar</p>
+                      <p className="text-(--color-text-muted) text-sm mb-3">Faça login para comentar</p>
                       <button
                         onClick={() => router.push('/')}
-                        className="bg-cyan-700 hover:bg-cyan-600 text-white px-4 py-2 rounded-xl text-sm transition"
+                        className="bg-(--color-accent) hover:bg-(--color-accent) text-(--color-text) px-4 py-2 rounded-xl text-sm transition"
                       >
                         Entrar
                       </button>

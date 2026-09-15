@@ -3,6 +3,11 @@
 @tailwind utilities;*/
 @import "tailwindcss";
 
+/* Makes any remaining `dark:` utility follow the ThemeToggle (the .dark class
+   on <html>, see lib/theme-context.tsx) instead of the OS color-scheme
+   preference, which is Tailwind v4's default for `dark:`. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 
 @theme {
   --color-*: initial;
@@ -42,6 +47,42 @@
   --radius-xl: 0.625rem;
 }
 
+/*
+ * Appearance (light/dark) design tokens.
+ * These are plain CSS custom properties (not Tailwind @theme colors) so any
+ * component can opt in with bg-[var(--color-surface)] etc. Toggled by adding
+ * / removing the `dark` class on <html> — see lib/theme-context.tsx.
+ * Palette follows the indigo/purple "Pattern Checker" reference design.
+ */
+:root {
+  --color-bg: #f4f5fb;
+  --color-bg-elevated: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-alt: #eef0f9;
+  --color-border: rgba(15, 23, 42, 0.08);
+  --color-text: #14161f;
+  --color-text-muted: #5b6472;
+  --color-accent: #6d5ef8;
+  --color-accent-strong: #4f3ff0;
+  --color-accent-soft: rgba(109, 94, 248, 0.10);
+  --color-success: #16a34a;
+  --color-success-soft: rgba(22, 163, 74, 0.12);
+}
+
+.dark {
+  --color-bg: #0a0b10;
+  --color-bg-elevated: #111318;
+  --color-surface: #13161d;
+  --color-surface-alt: #191c25;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-text: #f5f6fa;
+  --color-text-muted: #9aa3b2;
+  --color-accent: #7c6cfb;
+  --color-accent-strong: #6d5ef8;
+  --color-accent-soft: rgba(124, 108, 251, 0.16);
+  --color-success: #22c55e;
+  --color-success-soft: rgba(34, 197, 94, 0.14);
+}
 
 html {
   scroll-behavior: smooth;
@@ -49,13 +90,14 @@ html {
 
 body {
   font-family: 'Segoe UI', sans-serif;
-  background-color: #020617;
-  color: white;
+  background-color: var(--color-bg);
+  color: var(--color-text);
   margin: 0;
   padding: 0;
   min-height: 100vh;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 * {

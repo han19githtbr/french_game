@@ -1573,7 +1573,8 @@ export default function Game({}: GameProps) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.16),_transparent_40%),linear-gradient(135deg,_#050816_0%,_#0f172a_50%,_#111827_100%)] text-white flex flex-col items-center p-4 relative mb-6">
+    <div className="relative min-h-screen bg-(--color-bg) text-(--color-text) flex flex-col items-center p-4 mb-6">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--color-accent-soft),_transparent_40%)]" />
       
       {session?.user && (
         <div 
@@ -1582,7 +1583,7 @@ export default function Game({}: GameProps) {
           onMouseLeave={handleMouseLeave}
         >
           <div className="flex items-center gap-2 cursor-pointer mt-4">
-            <span className="text-gray-300 font-medium hidden sm:inline">
+            <span className="text-(--color-text-muted) font-medium hidden sm:inline">
               {session && session.user && session.user.name
                 ? session.user.name.length > 20
                   ? session.user.name.substring(0, 17) + '....'
@@ -1605,7 +1606,7 @@ export default function Game({}: GameProps) {
                 pushSubscribed
                   ? 'border-green-400/70 text-green-300 bg-green-500/10'
                   : pushStatus === 'blocked' || pushStatus === 'unsupported'
-                    ? 'border-gray-700 text-gray-600 cursor-not-allowed'
+                    ? 'border-(--color-border) text-(--color-text-muted) cursor-not-allowed'
                     : 'border-yellow-400/50 text-yellow-300 hover:bg-yellow-400/10'
               }`}
             >
@@ -1614,11 +1615,11 @@ export default function Game({}: GameProps) {
             <button
               onClick={() => setNotificationCount(0)}
               title="Notificações"
-              className="relative text-gray-300 hover:text-yellow-300 transition ml-2"
+              className="relative text-(--color-text-muted) hover:text-yellow-300 transition ml-2"
             >
               <span className="text-xl">🔔</span>
               {notificationCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full border-2 border-gray-900 animate-pulse" />
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full border-2 border-(--color-bg) animate-pulse" />
               )}
             </button>
           </div>
@@ -1642,7 +1643,7 @@ export default function Game({}: GameProps) {
         <div className="fixed top-4 left-2 z-50">
           <button
             onClick={toggleRelaxSoundsVisibility}
-            className="relative border border-cyan-400/40 bg-slate-900/80 backdrop-blur-sm hover:bg-cyan-500/20 text-white rounded-full p-2 shadow-lg shadow-cyan-500/10 transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400 cursor-pointer mt-4"
+            className="relative border border-(--color-accent)/40 bg-(--color-surface)/80 backdrop-blur-sm hover:bg-(--color-accent-soft) text-(--color-text) rounded-full p-2 shadow-lg shadow-(--color-accent)/10 transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-(--color-accent) cursor-pointer mt-4"
           >
             <MusicalNoteIcon className="h-6 w-6 text-blue" />
           </button>
@@ -1652,18 +1653,18 @@ export default function Game({}: GameProps) {
         {showRelaxSounds && (
           <div 
             
-            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900 bg-opacity-90 rounded-xl shadow-lg p-6 z-50 border-2 border-gray-300 max-h-96 overflow-y-auto w-full sm:w-96"
+            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-(--color-bg) bg-opacity-90 rounded-xl shadow-lg p-6 z-50 border-2 border-(--color-border) max-h-96 overflow-y-auto w-full sm:w-96"
             style={{
               scrollbarWidth: 'thin', /* Para Firefox */
               scrollbarColor: '#lightblue #374151', /* Para Firefox (thumb track) */
             }}
           >
-            <h2 className="text-xl text-gray-300 font-semibold mb-4">Sons Relaxantes <span className='text-green'>(Freesound)</span></h2>
+            <h2 className="text-xl text-(--color-text-muted) font-semibold mb-4">Sons Relaxantes <span className='text-green'>(Freesound)</span></h2>
 
-            <div className="flex items-center justify-between bg-gray-700 rounded-md px-2 py-1 mb-4 w-full overflow-hidden">
+            <div className="flex items-center justify-between bg-(--color-surface-alt) rounded-md px-2 py-1 mb-4 w-full overflow-hidden">
                 <button
                   onClick={() => handleArrowSoundClick('left')}
-                  className="p-2 text-gray-300 hover:text-green transition cursor-pointer"
+                  className="p-2 text-(--color-text-muted) hover:text-green transition cursor-pointer"
                 >
                   {/* Setinha animada */}
                   <motion.div
@@ -1676,7 +1677,7 @@ export default function Game({}: GameProps) {
                       repeat: Infinity,
                       ease: "easeInOut",
                     }}
-                    className="text-gray-300 flex justify-center items-center"
+                    className="text-(--color-text-muted) flex justify-center items-center"
                   >
                     <ChevronLeft size={32} strokeWidth={1.5} />
                   </motion.div>
@@ -1686,8 +1687,8 @@ export default function Game({}: GameProps) {
                   <button
                     className={`py-1 px-4 rounded-md border font-semibold transition duration-300 ease-in-out ${
                       selectedTheme === themesSoundCarrossel[themeCarrosselIndex].id
-                        ? 'bg-gray-900 text-gray-200 border-b-green'
-                        : 'bg-gray-700 text-gray-200 hover:bg-gray-600 border-b-green'
+                        ? 'bg-(--color-bg) text-(--color-text) border-b-green'
+                        : 'bg-(--color-surface-alt) text-(--color-text) hover:bg-(--color-surface-alt) border-b-green'
                     }`}
                   >
                     {themesSoundCarrossel[themeCarrosselIndex].icon}
@@ -1697,7 +1698,7 @@ export default function Game({}: GameProps) {
 
                 <button
                   onClick={() => handleArrowSoundClick('right')}
-                  className="p-2 text-gray-300 hover:text-green transition cursor-pointer"
+                  className="p-2 text-(--color-text-muted) hover:text-green transition cursor-pointer"
                 >
                   {/* Setinha animada */}
                   <motion.div
@@ -1710,14 +1711,14 @@ export default function Game({}: GameProps) {
                       repeat: Infinity,
                       ease: "easeInOut",
                     }}
-                    className="text-gray-300 flex justify-center items-center"
+                    className="text-(--color-text-muted) flex justify-center items-center"
                   >
                     <ChevronRight size={32} strokeWidth={1.5} />
                   </motion.div>
                 </button>
             </div>
 
-            <div className="mb-4 text-white">
+            <div className="mb-4 text-(--color-text)">
               {selectedTheme && searchStatus === 'searching' && (
                 <div className="flex items-center space-x-2">
                   <FaSpinner className="animate-spin text-green" />
@@ -1726,10 +1727,10 @@ export default function Game({}: GameProps) {
               )}
               {selectedTheme && searchStatus === 'results' && searchResults.length > 0 && (
                 <div className="mb-4">
-                  <h3 className="text-lg text-gray-300 font-semibold mb-2">Resultados da Busca:</h3>
+                  <h3 className="text-lg text-(--color-text-muted) font-semibold mb-2">Resultados da Busca:</h3>
                   <ul>
                     {searchResults.map((sound) => (
-                      <li key={sound.id} className="flex items-center justify-between py-2 border-b border-gray-700">
+                      <li key={sound.id} className="flex items-center justify-between py-2 border-b border-(--color-border)">
                         <span className="text-blue text-sm font-thin">
                           {sound.name}
                           {/* Adicione a duração aqui */}
@@ -1767,7 +1768,7 @@ export default function Game({}: GameProps) {
                 )}
 
                 {currentSoundInfo.duration !== undefined && ( // Garante que a duração está disponível
-                  <p className="mt-2 text-white">
+                  <p className="mt-2 text-(--color-text)">
                     Tempo restante: <span className="font-semibold">{formatTime(Math.max(0, currentSoundInfo.duration - currentTime))}</span>
                   </p>
                 )}
@@ -1792,7 +1793,7 @@ export default function Game({}: GameProps) {
                 </button>
 
                 <div className="flex items-center space-x-2">
-                  <button onClick={toggleMute} className="text-white focus:outline-none">
+                  <button onClick={toggleMute} className="text-(--color-text) focus:outline-none">
                     {isMuted ? <BiVolumeMute className="h-5 w-5" /> : <BiVolumeFull className="h-5 w-5" />}
                   </button>
                   <input
@@ -1802,19 +1803,19 @@ export default function Game({}: GameProps) {
                     step="0.01"
                     value={volume}
                     onChange={handleVolumeChange}
-                    className="rounded-md bg-gray-700 cursor-pointer"
+                    className="rounded-md bg-(--color-surface-alt) cursor-pointer"
                   />
                 </div>
               </div>
             )}
 
             {!selectedTheme && (
-              <p className="text-gray-400 text-sm">Selecione um tema para buscar sons no Freesound.</p>
+              <p className="text-(--color-text-muted) text-sm">Selecione um tema para buscar sons no Freesound.</p>
             )}
 
             <button
               onClick={toggleRelaxSoundsVisibility}
-              className="absolute top-2 right-2 text-gray-400 hover:text-blue focus:outline-none cursor-pointer"
+              className="absolute top-2 right-2 text-(--color-text-muted) hover:text-blue focus:outline-none cursor-pointer"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1828,7 +1829,7 @@ export default function Game({}: GameProps) {
         <div className="fixed top-36 left-2 z-40">
           <button
             onClick={toggleVideosVisibility}
-            className="relative border border-fuchsia-400/40 bg-slate-900/80 backdrop-blur-sm hover:bg-fuchsia-500/20 text-white rounded-full p-2 shadow-lg shadow-fuchsia-500/10 transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-fuchsia-400 cursor-pointer mt-4"
+            className="relative border border-fuchsia-400/40 bg-(--color-surface)/80 backdrop-blur-sm hover:bg-fuchsia-500/20 text-white rounded-full p-2 shadow-lg shadow-fuchsia-500/10 transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-fuchsia-400 cursor-pointer mt-4"
           >
             <VideoCameraIcon className="h-6 w-6 text-blue" />
           </button>
@@ -1838,13 +1839,13 @@ export default function Game({}: GameProps) {
         <>
           {showYouTubeVideos && (
             <div
-              className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900 bg-opacity-90 rounded-xl shadow-lg p-6 z-50 border-2 border-gray-300 max-h-96 overflow-y-auto w-full sm:w-96"
+              className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-(--color-bg) bg-opacity-90 rounded-xl shadow-lg p-6 z-50 border-2 border-(--color-border) max-h-96 overflow-y-auto w-full sm:w-96"
               style={{
                 scrollbarWidth: 'thin',
                 scrollbarColor: '#lightblue #374151',
               }}
             >
-              <h2 className="text-xl text-gray-300 font-semibold mb-4">
+              <h2 className="text-xl text-(--color-text-muted) font-semibold mb-4">
                 Videos em Francês no: <span className="text-green">Youtube</span>
               </h2>
 
@@ -1858,10 +1859,10 @@ export default function Game({}: GameProps) {
               </motion.div>
                 
 
-              <div className="flex items-center justify-between bg-gray-800 rounded-md px-2 py-1 mb-4 w-full overflow-hidden">
+              <div className="flex items-center justify-between bg-(--color-surface) rounded-md px-2 py-1 mb-4 w-full overflow-hidden">
                 <button
                   onClick={() => handleArrowClick('left')}
-                  className="p-2 text-gray-300 hover:text-green transition cursor-pointer"
+                  className="p-2 text-(--color-text-muted) hover:text-green transition cursor-pointer"
                 >
                   {/* Setinha animada */}
                   <motion.div
@@ -1874,7 +1875,7 @@ export default function Game({}: GameProps) {
                       repeat: Infinity,
                       ease: "easeInOut",
                     }}
-                    className="text-gray-300 flex justify-center items-center"
+                    className="text-(--color-text-muted) flex justify-center items-center"
                   >
                     <ChevronLeft size={32} strokeWidth={1.5} />
                   </motion.div>
@@ -1884,8 +1885,8 @@ export default function Game({}: GameProps) {
                   <button
                     className={`py-1 px-4 rounded-md border font-semibold transition duration-300 ease-in-out ${
                       selectedThemeVideo === themesCarrossel[themeCarrosselIndex].id
-                        ? 'bg-transparent text-white border-b-green'
-                        : 'bg-gray-700 text-gray-200 hover:bg-gray-600 border-b-green'
+                        ? 'bg-transparent text-(--color-text) border-b-green'
+                        : 'bg-(--color-surface-alt) text-(--color-text) hover:bg-(--color-surface-alt) border-b-green'
                     }`}
                   >
                     {themesCarrossel[themeCarrosselIndex].icon}
@@ -1895,7 +1896,7 @@ export default function Game({}: GameProps) {
 
                 <button
                   onClick={() => handleArrowClick('right')}
-                  className="p-2 text-gray-300 hover:text-green transition cursor-pointer"
+                  className="p-2 text-(--color-text-muted) hover:text-green transition cursor-pointer"
                 >
                   {/* Setinha animada */}
                   <motion.div
@@ -1908,7 +1909,7 @@ export default function Game({}: GameProps) {
                       repeat: Infinity,
                       ease: "easeInOut",
                     }}
-                    className="text-gray-300 flex justify-center items-center"
+                    className="text-(--color-text-muted) flex justify-center items-center"
                   >
                     <ChevronRight size={32} strokeWidth={1.5} />
                   </motion.div>
@@ -1916,7 +1917,7 @@ export default function Game({}: GameProps) {
               </div>
 
 
-              <div className="mb-4 text-white">
+              <div className="mb-4 text-(--color-text)">
                 {selectedThemeVideo && searchStatusVideo === 'searching' && (
                   <div className="flex items-center space-x-2">
                     <FaSpinner className="animate-spin text-blue" />
@@ -1928,10 +1929,10 @@ export default function Game({}: GameProps) {
                 
                 {selectedThemeVideo && searchStatusVideo === 'results' && searchResultsVideo.length > 0 && (
                   <div className="mb-4">
-                    <h3 className="text-lg text-gray-300 font-semibold mb-2">Resultados da Busca:</h3>
+                    <h3 className="text-lg text-(--color-text-muted) font-semibold mb-2">Resultados da Busca:</h3>
                     <ul>
                       {searchResultsVideo.slice(0, DAILY_LIMIT).map((video) => (
-                        <li key={video.id} className="flex items-center justify-between py-2 border-b border-gray-700">
+                        <li key={video.id} className="flex items-center justify-between py-2 border-b border-(--color-border)">
                           
                           <span className="text-blue text-sm font-thin">
                             {video.name}
@@ -1964,7 +1965,7 @@ export default function Game({}: GameProps) {
 
               {currentVideoUrl && currentVideoInfo && (
                 <div className="mb-4 text-sm">
-                  <p className='text-white'>Tocando: {currentVideoInfo.name}</p>
+                  <p className='text-(--color-text)'>Tocando: {currentVideoInfo.name}</p>
                   {currentVideoInfo?.user?.username && <p className='text-green'>Autor: {currentVideoInfo.user.username}</p>}
                   {currentVideoInfo?.url && (
                     <a href={currentVideoInfo.url} target="_blank" rel="noopener noreferrer" className="text-blue hover:underline">
@@ -1992,12 +1993,12 @@ export default function Game({}: GameProps) {
               )}
 
               {!selectedThemeVideo && (
-                <p className="text-gray-400 text-sm">Selecione um tema para buscar sons no Youtube.</p>
+                <p className="text-(--color-text-muted) text-sm">Selecione um tema para buscar sons no Youtube.</p>
               )}
 
               <button
                 onClick={toggleVideosVisibility}
-                className="absolute top-2 right-2 text-gray-400 hover:text-blue focus:outline-none cursor-pointer"
+                className="absolute top-2 right-2 text-(--color-text-muted) hover:text-blue focus:outline-none cursor-pointer"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -2064,7 +2065,7 @@ export default function Game({}: GameProps) {
                     <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white p-1 text-xs text-center">
                       <span className='text-green text-md font-bold'>{conquest.user.length > 20 ? conquest.user.substring(0, 17) + '....' : conquest.user}</span>
                     </div>
-                    <div className="absolute top-1 right-1 bg-gray-800 bg-opacity-70 text-white rounded-md p-1 flex items-center text-xs ">
+                    <div className="absolute top-1 right-1 bg-(--color-surface) bg-opacity-70 text-(--color-text) rounded-md p-1 flex items-center text-xs ">
                       <BsEyeFill className="w-3 h-3 mr-1 text-green" />
                       <span>{conquest.views}</span>
                     </div>
@@ -2073,7 +2074,7 @@ export default function Game({}: GameProps) {
               </div>
               <button
                 onClick={closeConquestCarousel}
-                className="mt-6 bg-gray-800 hover:bg-lightblue text-white font-bold py-1 px-4 rounded focus:outline-none focus:shadow-outline cursor-pointer"
+                className="mt-6 bg-(--color-surface) hover:bg-lightblue text-white font-bold py-1 px-4 rounded focus:outline-none focus:shadow-outline cursor-pointer"
               >
                 Fechar
               </button>
@@ -2099,7 +2100,7 @@ export default function Game({}: GameProps) {
                 animate={{ scale: 1 }}
                 exit={{ scale: 0.8 }}
                 transition={{ type: 'spring', damping: 15, stiffness: 100 }}
-                className="bg-gray-900 rounded-2xl p-6 shadow-2xl text-center text-white w-full max-w-md" // Fundo escuro e largura máxima
+                className="bg-(--color-bg) rounded-2xl p-6 shadow-2xl text-center text-(--color-text) w-full max-w-md" // Fundo escuro e largura máxima
               >
                 <h3 className="text-sm font-bold mb-3">Replay de: <span className='text-green'>{currentConquest.user}</span></h3>
                 {currentReplayPlay ? (
@@ -2110,7 +2111,7 @@ export default function Game({}: GameProps) {
                       className="w-full h-auto block" // Largura total e altura automática
                       style={{ maxHeight: '400px', objectFit: 'contain' }} // Altura máxima e manter proporção
                     />
-                    <div className="absolute top-2 mb-4 right-2 bg-gray-800 bg-opacity-70 text-white rounded-md p-1 flex items-center text-xs animate-pulse-slow">
+                    <div className="absolute top-2 mb-4 right-2 bg-(--color-surface) bg-opacity-70 text-(--color-text) rounded-md p-1 flex items-center text-xs animate-pulse-slow">
                       <BsEyeFill className="w-4 h-4 mr-1 text-green" />
                       <span>{currentConquest?.views}</span>
                     </div>
@@ -2119,21 +2120,21 @@ export default function Game({}: GameProps) {
                         {currentReplayPlay.answer}
                       </span>
                     </div>
-                    <div className="text-xs text-gray-400">
+                    <div className="text-xs text-(--color-text-muted)">
                       Resposta correta: <span className="text-green">{currentReplayPlay.image.title}</span>
                     </div>
                     {replayIndex === currentConquest.plays.length - 1 && (
                       <div className="flex justify-center gap-3 mt-4 mb-6">
                         <button
                           onClick={closeConquestCarousel}
-                          className="flex items-center bg-transparent border-2 border-e-red hover:bg-gray-500 text-white font-bold py-1 px-3 rounded focus:outline-none focus:shadow-outline cursor-pointer text-sm"
+                          className="flex items-center bg-transparent border-2 border-e-red hover:bg-(--color-border) text-(--color-text) font-bold py-1 px-3 rounded focus:outline-none focus:shadow-outline cursor-pointer text-sm"
                         >
                           <X className='text-red mr-2' size={20} />
                           Fechar
                         </button>
                         <button
                           onClick={() => startAutomaticReplay(currentConquest.plays)}
-                          className="flex items-center bg-transparent border-2 border-e-lightblue hover:bg-gray-500 text-white font-bold py-1 px-3 rounded focus:outline-none focus:shadow-outline cursor-pointer text-sm"
+                          className="flex items-center bg-transparent border-2 border-e-lightblue hover:bg-(--color-border) text-(--color-text) font-bold py-1 px-3 rounded focus:outline-none focus:shadow-outline cursor-pointer text-sm"
                         >
                           <Play className='text-blue mr-2' size={20} />
                           Assistir Novamente
@@ -2156,7 +2157,7 @@ export default function Game({}: GameProps) {
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }} 
         transition={{ duration: 0.6 }}
-        className="text-4xl text-white font-semibold mb-8 mt-64 text-center drop-shadow-[0_0_18px_rgba(111,157,226,0.35)]"
+        className="text-4xl text-(--color-text) font-semibold mb-8 mt-64 text-center drop-shadow-[0_0_18px_rgba(111,157,226,0.35)]"
       >
         Jogo para treinar o Francês
       </motion.h1>
@@ -2170,7 +2171,7 @@ export default function Game({}: GameProps) {
 
         {/* Indicador de scroll — seta animada (desktop: direita; mobile: centralizada) */}
         <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1 z-10 pointer-events-none select-none carousel-hint">
-          <span className="text-[10px] text-gray-500 italic hidden md:inline">deslize</span>
+          <span className="text-[10px] text-(--color-text-muted) italic hidden md:inline">deslize</span>
           <svg
             className="carousel-arrow text-blue-400"
             width="18" height="18" viewBox="0 0 24 24"
@@ -2178,7 +2179,7 @@ export default function Game({}: GameProps) {
           >
             <path d="M9 18l6-6-6-6"/>
           </svg>
-          <span className="text-[10px] text-gray-500 italic md:hidden">deslize para ver mais</span>
+          <span className="text-[10px] text-(--color-text-muted) italic md:hidden">deslize para ver mais</span>
         </div>
 
         <div
@@ -2191,7 +2192,7 @@ export default function Game({}: GameProps) {
             {/* CARD 1 — Missão do Dia */}
             <div
               className={`
-                rounded-xl border bg-[#101722]/95 p-4 shadow-xl relative overflow-hidden
+                rounded-xl border bg-(--color-surface)/95 p-4 shadow-xl relative overflow-hidden
                 transition hover:-translate-y-1 cursor-pointer flex-shrink-0
                 flex flex-col justify-between
                 h-[160px] w-[88vw] md:h-[160px] md:w-[calc(33.333%-11px)]
@@ -2217,20 +2218,20 @@ export default function Game({}: GameProps) {
               </div>
               {/* Título */}
               <div>
-                <h2 className="text-base font-bold text-white leading-tight truncate">{dailyMission?.title || 'Carregando missão...'}</h2>
-                <p className="text-[11px] text-gray-400 truncate">{dailyMission?.description || 'Complete atividades de francês para avançar.'}</p>
+                <h2 className="text-base font-bold text-(--color-text) leading-tight truncate">{dailyMission?.title || 'Carregando missão...'}</h2>
+                <p className="text-[11px] text-(--color-text-muted) truncate">{dailyMission?.description || 'Complete atividades de francês para avançar.'}</p>
               </div>
               {/* Barra de progresso + recompensa */}
               <div>
                 <div className="rounded-full bg-white/5 h-1 overflow-hidden mb-1.5">
                   <div
-                    className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full transition-all duration-500"
+                    className="h-full bg-gradient-to-r from-blue-400 to-(--color-accent) rounded-full transition-all duration-500"
                     style={{ width: `${dailyMission ? Math.min(100, Math.round((dailyMission.progress / Math.max(1, dailyMission.target)) * 100)) : 0}%` }}
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <p className="text-[11px] text-gray-300">
-                    Progresso: <strong className="text-white">{dailyMission?.progress ?? 0}</strong> / {dailyMission?.target ?? 1}
+                  <p className="text-[11px] text-(--color-text-muted)">
+                    Progresso: <strong className="text-(--color-text)">{dailyMission?.progress ?? 0}</strong> / {dailyMission?.target ?? 1}
                   </p>
                   {dailyMission && !dailyMission.completed && (
                     <p className="text-[10px] text-yellow-400/80">🎁 +{dailyMission.rewardXp} XP</p>
@@ -2245,7 +2246,7 @@ export default function Game({}: GameProps) {
             {/* CARD 2 — Nível Atual */}
             <div
               className="
-                rounded-xl border border-fuchsia-500/30 bg-[#111321]/95 p-4 shadow-xl
+                rounded-xl border border-fuchsia-500/30 bg-(--color-surface)/95 p-4 shadow-xl
                 shadow-fuchsia-950/20 relative overflow-hidden
                 transition hover:-translate-y-1 hover:border-fuchsia-400/60 cursor-pointer flex-shrink-0
                 flex flex-col justify-between
@@ -2258,15 +2259,15 @@ export default function Game({}: GameProps) {
               {/* Linha topo */}
               <div className="flex items-center justify-between">
                 <span className="text-[10px] uppercase tracking-[0.25em] text-fuchsia-400 font-semibold">Nível atual</span>
-                <span className="text-[10px] text-gray-400">
+                <span className="text-[10px] text-(--color-text-muted)">
                   Próximo: <span className="text-fuchsia-300 font-semibold">{gameProgressSummary.nextLevelName}</span>
                 </span>
               </div>
               {/* Nível + badge */}
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0">
-                  <h2 className="text-2xl font-bold text-white leading-tight">{gameProgressSummary.levelName}</h2>
-                  <p className="text-[11px] text-gray-400">Nivel {gameProgressSummary.currentLevel} de 4 · {gameProgressSummary.totalXp} XP</p>
+                  <h2 className="text-2xl font-bold text-(--color-text) leading-tight">{gameProgressSummary.levelName}</h2>
+                  <p className="text-[11px] text-(--color-text-muted)">Nivel {gameProgressSummary.currentLevel} de 4 · {gameProgressSummary.totalXp} XP</p>
                 </div>
                 <span className="rounded-full border border-fuchsia-500/40 bg-fuchsia-500/10 px-2.5 py-1 text-[10px] font-bold text-fuchsia-200 whitespace-nowrap">
                   {gameProgressSummary.difficultyLabel}
@@ -2280,7 +2281,7 @@ export default function Game({}: GameProps) {
                     style={{ width: `${gameProgressSummary.levelProgress}%` }}
                   />
                 </div>
-                <p className="text-[11px] text-gray-300">
+                <p className="text-[11px] text-(--color-text-muted)">
                   {gameProgressSummary.currentLevel >= 4
                     ? 'Nível máximo alcançado 🏆'
                     : `${gameProgressSummary.xpToNext} XP até o próximo nível`}
@@ -2291,7 +2292,7 @@ export default function Game({}: GameProps) {
             {/* CARD 3 — Premium Pack */}
             <div
               className="
-                rounded-xl border border-emerald-500/30 bg-[#0f1714]/95 p-4 shadow-xl
+                rounded-xl border border-emerald-500/30 bg-(--color-surface)/95 p-4 shadow-xl
                 shadow-emerald-950/20 relative overflow-hidden
                 transition hover:-translate-y-1 hover:border-emerald-400/60 flex-shrink-0
                 flex flex-col justify-between
@@ -2308,10 +2309,10 @@ export default function Game({}: GameProps) {
               </div>
               {/* Título + descrição compacta */}
               <div className="min-w-0">
-                <h2 className="text-base font-bold text-white leading-tight">
+                <h2 className="text-base font-bold text-(--color-text) leading-tight">
                   {isPremium ? 'Bônus ativado' : (adminUnlockExpiry['frases'] || adminUnlockExpiry['ditados']) ? 'Conteúdo liberado!' : 'Suporte para liberar'}
                 </h2>
-                <p className="text-[11px] text-gray-400 line-clamp-2">
+                <p className="text-[11px] text-(--color-text-muted) line-clamp-2">
                   {isPremium
                     ? 'Você tem +2 tentativas por rodada e missões especiais.'
                     : (adminUnlockExpiry['frases'] || adminUnlockExpiry['ditados'])
@@ -2329,8 +2330,8 @@ export default function Game({}: GameProps) {
                     )}
                   </div>
                 )}
-                <p className="text-[11px] text-gray-300 mt-0.5">
-                  Tentativas: <strong className="text-white">{remainingAttempts}</strong> / {maxAttempts}
+                <p className="text-[11px] text-(--color-text-muted) mt-0.5">
+                  Tentativas: <strong className="text-(--color-text)">{remainingAttempts}</strong> / {maxAttempts}
                 </p>
               </div>
               {/* Botão compacto */}
@@ -2355,20 +2356,20 @@ export default function Game({}: GameProps) {
             {/* CARD 4 — Trilha de Estudo */}
             <div
               className="
-                rounded-xl border border-slate-700/80 bg-[#0b1017] p-4 shadow-2xl shadow-black/30
+                rounded-xl border border-(--color-border) bg-(--color-surface) p-4 shadow-2xl shadow-black/30
                 flex-shrink-0 overflow-y-auto hide-scrollbar
                 h-[160px] w-[88vw] md:h-[160px] md:w-[calc(66.666%-6px)]
               "
             >
               <div className="flex items-center justify-between mb-2">
                 <div>
-                  <span className="text-[10px] uppercase tracking-[0.2em] text-cyan-300">Trilha de estudo</span>
-                  <h2 className="text-base font-bold text-white leading-tight">Seu caminho no frances</h2>
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-(--color-accent)">Trilha de estudo</span>
+                  <h2 className="text-base font-bold text-(--color-text) leading-tight">Seu caminho no frances</h2>
                 </div>
                 <button
                   type="button"
                   onClick={() => router.push('/results')}
-                  className="rounded-lg border border-cyan-700 px-3 py-1 text-[11px] font-semibold text-cyan-200 transition hover:bg-cyan-950 whitespace-nowrap flex-shrink-0"
+                  className="rounded-lg border border-(--color-accent) px-3 py-1 text-[11px] font-semibold text-(--color-accent) transition hover:bg-(--color-accent-soft) whitespace-nowrap flex-shrink-0"
                 >
                   Ver evolução
                 </button>
@@ -2380,38 +2381,38 @@ export default function Game({}: GameProps) {
                     key={level.level}
                     className={`rounded-lg border px-2.5 py-1.5 flex-shrink-0 transition ${
                       gameProgressSummary.currentLevel === level.level
-                        ? 'border-cyan-400 bg-cyan-400/10'
+                        ? 'border-(--color-accent) bg-(--color-accent-soft)'
                         : gameProgressSummary.currentLevel > level.level
                           ? 'border-green-500/40 bg-green-500/10'
-                          : 'border-slate-700 bg-slate-900/70'
+                          : 'border-(--color-border) bg-(--color-surface)/70'
                     }`}
                   >
-                    <p className="text-[10px] font-bold text-white whitespace-nowrap">N{level.level} {level.name}</p>
-                    <p className="text-[9px] text-gray-400 whitespace-nowrap">{level.cardsPerRound}img · {level.optionsPerCard}op</p>
+                    <p className="text-[10px] font-bold text-(--color-text) whitespace-nowrap">N{level.level} {level.name}</p>
+                    <p className="text-[9px] text-(--color-text-muted) whitespace-nowrap">{level.cardsPerRound}img · {level.optionsPerCard}op</p>
                   </div>
                 ))}
               </div>
               {/* Módulos em linha */}
               <div className="flex gap-2 overflow-x-auto hide-scrollbar">
-                <div className="rounded-lg border border-blue-800/40 bg-[#0a0d14] px-2.5 py-1.5 flex-shrink-0 min-w-[120px]">
+                <div className="rounded-lg border border-blue-800/40 bg-(--color-surface-alt) px-2.5 py-1.5 flex-shrink-0 min-w-[120px]">
                   <div className="flex items-center justify-between gap-1 mb-0.5">
-                    <span className="text-[10px] font-semibold text-white">1. Visual</span>
+                    <span className="text-[10px] font-semibold text-(--color-text)">1. Visual</span>
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-green-900/40 text-green-300 border border-green-800/60">Aberto</span>
                   </div>
                   <p className="text-[9px] text-blue-400">{vocabProgress.uniqueThemes} temas</p>
                 </div>
-                <div className="rounded-lg border border-indigo-800/40 bg-[#0a0d14] px-2.5 py-1.5 flex-shrink-0 min-w-[120px]">
+                <div className="rounded-lg border border-indigo-800/40 bg-(--color-surface-alt) px-2.5 py-1.5 flex-shrink-0 min-w-[120px]">
                   <div className="flex items-center justify-between gap-1 mb-0.5">
-                    <span className="text-[10px] font-semibold text-white">2. Frases</span>
+                    <span className="text-[10px] font-semibold text-(--color-text)">2. Frases</span>
                     <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isPremium ? 'bg-green-900/40 text-green-300 border border-green-800/60' : 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/40'}`}>
                       {isPremium ? 'Premium' : 'Premium'}
                     </span>
                   </div>
                   <p className="text-[9px] text-indigo-300">{frasesProgress.perfectRounds} rodadas</p>
                 </div>
-                <div className="rounded-lg border border-emerald-800/40 bg-[#0a0d14] px-2.5 py-1.5 flex-shrink-0 min-w-[120px]">
+                <div className="rounded-lg border border-emerald-800/40 bg-(--color-surface-alt) px-2.5 py-1.5 flex-shrink-0 min-w-[120px]">
                   <div className="flex items-center justify-between gap-1 mb-0.5">
-                    <span className="text-[10px] font-semibold text-white">3. Ditados</span>
+                    <span className="text-[10px] font-semibold text-(--color-text)">3. Ditados</span>
                     <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isPremium ? 'bg-green-900/40 text-green-300 border border-green-800/60' : 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/40'}`}>
                       {isPremium ? 'Premium' : 'Premium'}
                     </span>
@@ -2439,23 +2440,23 @@ export default function Game({}: GameProps) {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.92, opacity: 0, y: 16 }}
               transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-              className="w-full max-w-sm rounded-2xl bg-[#0d1520] p-6 shadow-2xl border border-emerald-600/50 ring-1 ring-emerald-500/20"
+              className="w-full max-w-sm rounded-2xl bg-(--color-surface) p-6 shadow-2xl border border-emerald-600/50 ring-1 ring-emerald-500/20"
             >
               {/* Header */}
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <span className="text-[10px] uppercase tracking-[0.25em] text-emerald-400 font-semibold">Apoio ao Projeto</span>
-                  <h3 className="text-xl font-bold text-white mt-0.5">Premium Pack 🏆</h3>
+                  <h3 className="text-xl font-bold text-(--color-text) mt-0.5">Premium Pack 🏆</h3>
                 </div>
                 <button
                   onClick={() => setPremiumModalOpen(false)}
-                  className="text-gray-500 hover:text-white transition text-xl leading-none cursor-pointer"
+                  className="text-(--color-text-muted) hover:text-(--color-text) transition text-xl leading-none cursor-pointer"
                 >✕</button>
               </div>
 
               {/* Benefits */}
               <div className="space-y-2 mb-5">
-                <p className="text-xs text-gray-400 mb-3">Apoie e desbloqueie vantagens permanentes no jogo:</p>
+                <p className="text-xs text-(--color-text-muted) mb-3">Apoie e desbloqueie vantagens permanentes no jogo:</p>
                 {[
                   { icon: '🎯', text: '+2 tentativas por rodada (4 → 6)' },
                   { icon: '⭐', text: 'Missões especiais com XP bônus' },
@@ -2465,7 +2466,7 @@ export default function Game({}: GameProps) {
                 ].map((b, i) => (
                   <div key={i} className="flex items-center gap-2.5 bg-emerald-900/20 border border-emerald-800/30 rounded-lg px-3 py-2">
                     <span className="text-base">{b.icon}</span>
-                    <span className="text-sm text-gray-200">{b.text}</span>
+                    <span className="text-sm text-(--color-text)">{b.text}</span>
                   </div>
                 ))}
               </div>
@@ -2473,16 +2474,16 @@ export default function Game({}: GameProps) {
               {/* CTA */}
               <button
                 onClick={handleUnlockPremium}
-                className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 py-3 text-sm font-bold text-slate-950 hover:opacity-90 active:scale-95 transition-all mb-2 cursor-pointer"
+                className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-(--color-accent) py-3 text-sm font-bold text-slate-950 hover:opacity-90 active:scale-95 transition-all mb-2 cursor-pointer"
               >
                 🔓 Apoiar e desbloquear
               </button>
-              <p className="text-[10px] text-gray-500 text-center mb-3">
+              <p className="text-[10px] text-(--color-text-muted) text-center mb-3">
                 Pagamento seguro via Stripe · Você retorna automaticamente ao app
               </p>
               <button
                 onClick={() => setPremiumModalOpen(false)}
-                className="w-full rounded-xl border border-gray-700 bg-transparent py-2.5 text-sm text-gray-400 hover:bg-gray-800 hover:text-white transition cursor-pointer"
+                className="w-full rounded-xl border border-(--color-border) bg-transparent py-2.5 text-sm text-(--color-text-muted) hover:bg-(--color-surface) hover:text-(--color-text) transition cursor-pointer"
               >
                 Agora não
               </button>
@@ -2533,8 +2534,8 @@ export default function Game({}: GameProps) {
             className={`
               w-full flex items-center justify-between py-3 px-6 rounded-2xl border shadow-lg backdrop-blur-sm
               ${showRestart 
-                ? 'bg-gray-700/70 text-gray-400 cursor-not-allowed border-gray-600 shadow-none' 
-                : 'bg-slate-900/80 text-white border-cyan-400/40 shadow-cyan-500/10 hover:shadow-cyan-500/20 hover:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 cursor-pointer'
+                ? 'bg-(--color-surface-alt)/70 text-(--color-text-muted) cursor-not-allowed border-(--color-border) shadow-none' 
+                : 'bg-(--color-surface)/80 text-(--color-text) border-(--color-accent)/40 shadow-(--color-accent)/10 hover:shadow-(--color-accent)/20 hover:border-(--color-accent) focus:outline-none focus:ring-2 focus:ring-(--color-accent) focus:ring-offset-2 cursor-pointer'
               }
               text-lg tracking-wide font-semibold text-center transition-all duration-300 ease-out
             `}
@@ -2585,7 +2586,7 @@ export default function Game({}: GameProps) {
 
           {/* Lista de opções */}
           {open && (
-            <ul className="absolute mt-2 w-full rounded-2xl bg-slate-900/95 shadow-2xl border border-cyan-400/30 max-h-72 overflow-y-auto custom-scrollbar z-10">
+            <ul className="absolute mt-2 w-full rounded-2xl bg-(--color-surface)/95 shadow-2xl border border-(--color-accent)/30 max-h-72 overflow-y-auto custom-scrollbar z-10">
               
               {/* Opção padrão */}
               <li
@@ -2593,7 +2594,7 @@ export default function Game({}: GameProps) {
                   setTheme('');
                   setOpen(false);
                 }}
-                className="flex items-center justify-start gap-3 px-8 py-3 hover:bg-cyan-500/10 text-gray-300 text-lg font-semibold cursor-pointer transition-all duration-300"
+                className="flex items-center justify-start gap-3 px-8 py-3 hover:bg-(--color-accent-soft) text-(--color-text-muted) text-lg font-semibold cursor-pointer transition-all duration-300"
               >
                 <motion.div
                   initial={{ x: -10, opacity: 0 }}
@@ -2622,7 +2623,7 @@ export default function Game({}: GameProps) {
                     setTheme(t);
                     setOpen(false);
                   }}
-                  className="flex items-center justify-start gap-3 px-6 py-3 hover:bg-cyan-500/10 text-white text-lg font-semibold cursor-pointer transition-all duration-300"
+                  className="flex items-center justify-start gap-3 px-6 py-3 hover:bg-(--color-accent-soft) text-(--color-text) text-lg font-semibold cursor-pointer transition-all duration-300"
                 >
                   {/* Setinha animada */}
                   <motion.div
@@ -2647,13 +2648,13 @@ export default function Game({}: GameProps) {
         </div>
 
 
-        <div className="w-full max-w-5xl rounded-3xl border border-white/10 bg-slate-900/70 p-4 shadow-2xl shadow-black/20 backdrop-blur-xl">
+        <div className="w-full max-w-5xl rounded-3xl border border-white/10 bg-(--color-surface)/70 p-4 shadow-2xl shadow-black/20 backdrop-blur-xl">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.3em] text-cyan-300">Módulos do aprendizado</p>
-              <h3 className="text-lg font-semibold text-white">Escolha o caminho ideal para estudar</h3>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-(--color-accent)">Módulos do aprendizado</p>
+              <h3 className="text-lg font-semibold text-(--color-text)">Escolha o caminho ideal para estudar</h3>
             </div>
-            <div className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-[11px] font-medium text-cyan-200">
+            <div className="rounded-full border border-(--color-accent)/30 bg-(--color-accent-soft) px-3 py-1 text-[11px] font-medium text-(--color-accent)">
               Conteúdo premium e liberado pelo admin
             </div>
           </div>
@@ -2661,7 +2662,7 @@ export default function Game({}: GameProps) {
           <div className="grid gap-3 md:grid-cols-3">
             <div className="relative flex flex-col items-start rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4">
               {!isPremium && !isCuriosidadesUnlocked && (
-                <p className="mb-3 text-sm text-gray-400">
+                <p className="mb-3 text-sm text-(--color-text-muted)">
                   Este módulo fica disponível para assinantes Premium.
                 </p>
               )}
@@ -2676,7 +2677,7 @@ export default function Game({}: GameProps) {
                 className={`inline-flex w-full items-center justify-center rounded-2xl border px-4 py-3 text-sm font-semibold transition-all duration-300 ${
                   (isPremium || isCuriosidadesUnlocked)
                     ? 'border-emerald-400/50 bg-emerald-500/10 text-emerald-200 shadow-lg shadow-emerald-500/10 hover:border-emerald-300 cursor-pointer'
-                    : 'border-gray-600 bg-slate-900/70 text-gray-400 cursor-not-allowed'
+                    : 'border-(--color-border) bg-(--color-surface)/70 text-(--color-text-muted) cursor-not-allowed'
                 }`}
               >
                 {!isPremium && !isCuriosidadesUnlocked && <LockClosedIcon className="mr-2 h-5 w-5" />}
@@ -2689,15 +2690,15 @@ export default function Game({}: GameProps) {
               </button>
             </div>
 
-            <div className="relative flex flex-col items-start rounded-2xl border border-cyan-400/20 bg-cyan-500/10 p-4">
+            <div className="relative flex flex-col items-start rounded-2xl border border-(--color-accent)/20 bg-(--color-accent-soft) p-4">
               {!isFrasesUnlocked && (
-                <p className="mb-3 text-sm text-gray-400">Este módulo fica disponível para assinantes Premium.</p>
+                <p className="mb-3 text-sm text-(--color-text-muted)">Este módulo fica disponível para assinantes Premium.</p>
               )}
               <motion.button
-                className={`flex w-full items-center justify-center rounded-2xl border px-4 py-3 text-sm font-semibold transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-gray-900 active:scale-95 ${
+                className={`flex w-full items-center justify-center rounded-2xl border px-4 py-3 text-sm font-semibold transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-(--color-accent) focus:ring-offset-2 focus:ring-offset-(--color-bg) active:scale-95 ${
                   isFrasesUnlocked
-                    ? 'border-cyan-400/40 bg-slate-900/80 text-white shadow-lg shadow-cyan-500/10 hover:bg-cyan-500/10 cursor-pointer'
-                    : 'border-gray-700 bg-slate-900/70 text-gray-400 cursor-not-allowed shadow-sm'
+                    ? 'border-(--color-accent)/40 bg-(--color-surface)/80 text-(--color-text) shadow-lg shadow-(--color-accent)/10 hover:bg-(--color-accent-soft) cursor-pointer'
+                    : 'border-(--color-border) bg-(--color-surface)/70 text-(--color-text-muted) cursor-not-allowed shadow-sm'
                 }`}
                 onClick={handleFrasesClick}
                 disabled={!isFrasesUnlocked || isFrasesUnlocking}
@@ -2739,8 +2740,8 @@ export default function Game({}: GameProps) {
 
             {/* Ditados em revisão - componente temporariamente oculto */}
             {/*<div className="relative flex flex-col items-start rounded-2xl border border-fuchsia-400/20 bg-fuchsia-500/10 p-4 opacity-40 pointer-events-none">
-              <p className="mb-3 text-sm text-gray-400">Seção de ditados em revisão. Voltará em breve.</p>
-              <div className="inline-flex w-full items-center justify-center rounded-2xl border border-gray-700 bg-slate-900/70 py-3 text-sm font-semibold text-gray-400 shadow-sm">
+              <p className="mb-3 text-sm text-(--color-text-muted)">Seção de ditados em revisão. Voltará em breve.</p>
+              <div className="inline-flex w-full items-center justify-center rounded-2xl border border-(--color-border) bg-(--color-surface)/70 py-3 text-sm font-semibold text-(--color-text-muted) shadow-sm">
                 Em revisão
               </div>
             </div>*/}
@@ -2766,7 +2767,7 @@ export default function Game({}: GameProps) {
       {/* Difficulty Selector */}
       <div className="flex flex-col items-center gap-2 mb-6 mt-2">
         <div className="flex flex-wrap justify-center items-center gap-2">
-          <span className="inline-flex items-center gap-2 rounded-full border border-green-500/40 bg-gray-900/80 backdrop-blur-sm px-4 py-2 text-sm font-semibold text-green-200">
+          <span className="inline-flex items-center gap-2 rounded-full border border-green-500/40 bg-(--color-bg)/80 backdrop-blur-sm px-4 py-2 text-sm font-semibold text-green-200">
             🎯 Dificuldade:
           </span>
           <button
@@ -2775,7 +2776,7 @@ export default function Game({}: GameProps) {
             className={`rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 border ${
               optionsCount === null
                 ? 'bg-blue-600 border-blue-400 text-white shadow-lg shadow-blue-500/40 scale-105'
-                : 'bg-gray-800/80 border-gray-600/50 text-gray-300 hover:bg-gray-700 hover:border-gray-500'
+                : 'bg-(--color-surface)/80 border-(--color-border) text-(--color-text-muted) hover:bg-(--color-surface-alt) hover:border-(--color-border)'
             }`}
           >
             ⚡ Auto (nível {gameProgressSummary.currentLevel})
@@ -2792,7 +2793,7 @@ export default function Game({}: GameProps) {
               className={`rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 border ${
                 optionsCount === value
                   ? 'bg-fuchsia-600 border-fuchsia-400 text-white shadow-lg shadow-fuchsia-500/40 scale-105'
-                  : 'bg-gray-800/80 border-gray-600/50 text-gray-300 hover:bg-gray-700 hover:border-gray-500'
+                  : 'bg-(--color-surface)/80 border-(--color-border) text-(--color-text-muted) hover:bg-(--color-surface-alt) hover:border-(--color-border)'
               }`}
             >
               {icon} {label} ({value})
@@ -2801,16 +2802,16 @@ export default function Game({}: GameProps) {
         </div>
       </div>
 
-      {theme && <h2 className="text-2xl text-gray-300 font-semibold mt-2 mb-6 text-center">Opção: {theme}</h2>}
+      {theme && <h2 className="text-2xl text-(--color-text-muted) font-semibold mt-2 mb-6 text-center">Opção: {theme}</h2>}
 
-      <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-indigo-900 to-purple-900 min-h-screen text-gray-100">
+      <div className="flex flex-col items-center justify-center p-6 bg-(--color-bg) min-h-screen text-(--color-text)">
         
         <div className="mb-2 text-center">
           Rodada: <span className="font-semibold text-blue">{round}</span> | Acertos: <span className="font-semibold text-green">{correctAnswersCount} / {images.length}</span>
         </div>
 
         {loading ? (
-          <div ref={dropDownPageRef} className="text-center text-lg text-gray-300 animate-pulse">🔍 Procurando imagens...</div>
+          <div ref={dropDownPageRef} className="text-center text-lg text-(--color-text-muted) animate-pulse">🔍 Procurando imagens...</div>
         ) : (
           <>
             <div className="flex flex-wrap justify-center gap-6 w-full max-w-6xl mt-6 cursor-pointer">
@@ -2835,23 +2836,23 @@ export default function Game({}: GameProps) {
                       onClick={() => setZoomedImage(img.url)}
                     />
                     {img.aiGenerated && (
-                      <span className="absolute top-2 right-2 flex items-center gap-1 bg-black/70 backdrop-blur-sm text-cyan-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-cyan-500/50 shadow-[0_0_8px_rgba(34,211,238,0.4)]">
+                      <span className="absolute top-2 right-2 flex items-center gap-1 bg-black/70 backdrop-blur-sm text-(--color-accent) text-[10px] font-bold px-2 py-0.5 rounded-full border border-(--color-accent)/50 shadow-[0_0_8px_var(--color-accent)]">
                         🤖 IA
                       </span>
                     )}
                   </div>
-                  <div className="mt-2 text-gray-300">Escolha o título correto:</div>
+                  <div className="mt-2 text-(--color-text-muted)">Escolha o título correto:</div>
                   <div className="relative w-full mt-1">
                     <select
                       className={`
                         w-full p-4 rounded-xl border-2 border-neon-blue
-                        bg-gradient-to-br from-gray-900 to-neon-blue
-                        text-white font-bold text-lg tracking-wide
+                        bg-gradient-to-br from-(--color-bg) to-neon-blue
+                        text-(--color-text) font-bold text-lg tracking-wide
                         appearance-none cursor-pointer
                         shadow-[0_0_15px_rgba(0,255,255,0.6)] hover:shadow-[0_0_25px_rgba(0,255,255,0.8)]
                         active:scale-95
                         transition-all duration-300 ease-in-out
-                        focus:outline-none focus:ring-2 focus:ring-neon-pink focus:ring-offset-2 focus:ring-offset-gray-900
+                        focus:outline-none focus:ring-2 focus:ring-neon-pink focus:ring-offset-2 focus:ring-offset-(--color-bg)
                         animate-pulse-slow
                         sm:p-3 sm:text-base
                         touch-manipulation
@@ -2859,10 +2860,10 @@ export default function Game({}: GameProps) {
                       onChange={e => checkAnswer(index, e.target.value)}
                       disabled={!!currentResult}
                     >
-                      <option value="" className="bg-gray-900 text-white font-semibold cursor-pointer">✅ Selecione</option>
+                      <option value="" className="bg-(--color-bg) text-(--color-text) font-semibold cursor-pointer">✅ Selecione</option>
                       {img.options.map((opt: string, i: number) => (
                         <option
-                          className="bg-gray-900 text-white font-semibold hover:bg-neon-blue active:bg-neon-pink transition-colors duration-200 "
+                          className="bg-(--color-bg) text-white font-semibold hover:bg-neon-blue active:bg-neon-pink transition-colors duration-200 "
                           key={i}
                           value={opt}
                         >
@@ -2882,13 +2883,13 @@ export default function Game({}: GameProps) {
                           repeat: Infinity,
                           ease: "easeInOut",
                         }}
-                        className={`text-white flex justify-center items-center ${currentResult ? 'hidden' : ''}`} // Adiciona 'hidden' se a resposta já foi selecionada
+                        className={`text-(--color-text) flex justify-center items-center ${currentResult ? 'hidden' : ''}`} // Adiciona 'hidden' se a resposta já foi selecionada
                       >
                         <ChevronDown size={28} strokeWidth={2.5} />
                       </motion.div>
                     </div>
                     {currentResult && (
-                      <div className="w-full text-center font-bold text-lg tracking-wide text-white p-4">
+                      <div className="w-full text-center font-bold text-lg tracking-wide text-(--color-text) p-4">
                         {Object.values(currentResult)[0]} {/* Exibe o valor da opção selecionada */}
                       </div>
                     )}
@@ -2932,7 +2933,7 @@ export default function Game({}: GameProps) {
                       onChange={(e) => handleSpeedChange(index, parseFloat(e.target.value))}
                       className="w-34 h-3 rounded-full bg-transparent border-1 border-green cursor-pointer appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-lightblue [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer"
                     />
-                    <span className="ml-2 mb-1 text-sm text-white font-bold">{(speechSpeeds[index] ?? 1).toFixed(1)}x</span>
+                    <span className="ml-2 mb-1 text-sm text-(--color-text) font-bold">{(speechSpeeds[index] ?? 1).toFixed(1)}x</span>
                   </div>
                   
                   {currentResult && (
@@ -2966,8 +2967,8 @@ export default function Game({}: GameProps) {
                   disabled={!isReviewUnlocked || reviewHistory.length === 0}
                   className={`border flex items-center justify-center py-2 px-8 rounded-xl transition-colors font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 ${
                     isReviewUnlocked && reviewHistory.length > 0
-                      ? 'border-blue hover:border-green hover:text-white cursor-pointer text-blue animate-pulse-slow'
-                      : 'border-gray-300 bg-gray-800 text-gray-400 cursor-not-allowed animate-pulse-slow'
+                      ? 'border-blue hover:border-green hover:text-(--color-text) cursor-pointer text-blue animate-pulse-slow'
+                      : 'border-(--color-border) bg-(--color-surface) text-(--color-text-muted) cursor-not-allowed animate-pulse-slow'
                   }`}
                   variants={unlockButtonVariants}
                   animate={isReviewUnlocking ? 'unlocking' : 'locked'}
@@ -2981,7 +2982,7 @@ export default function Game({}: GameProps) {
                   Revisar os acertos
                   {isReviewAvailable && reviewHistory.length > 0 && (
                     <span
-                      className={`absolute top-[-10px] right-[-10px] bg-green text-gray-700 rounded-full w-5 h-5 flex items-center justify-center text-sm font-bold animate-pulse-slow ${isFlashing ? 'animate-ping-once' : ''}`}
+                      className={`absolute top-[-10px] right-[-10px] bg-green text-(--color-text-muted) rounded-full w-5 h-5 flex items-center justify-center text-sm font-bold animate-pulse-slow ${isFlashing ? 'animate-ping-once' : ''}`}
                     >
                       {availableReviews}
                     </span>
@@ -3065,7 +3066,7 @@ export default function Game({}: GameProps) {
                         whileHover={{ scale: 1.1, y: -2 }}
                         whileTap={{ scale: 0.9 }}
                     >
-                        <FaGithub size={28} className="text-gray-400" />
+                        <FaGithub size={28} className="text-(--color-text-muted)" />
                     </motion.a>
                 </div>
             </motion.div>
@@ -3111,12 +3112,12 @@ export default function Game({}: GameProps) {
                     exit={{ opacity: 0 }}
                   />
                   <motion.div
-                    className="bg-gray-900 from-blue to-lightblue rounded-xl shadow-lg p-8 text-center max-w-md w-[90%] z-50"
+                    className="bg-(--color-bg) from-blue to-lightblue rounded-xl shadow-lg p-8 text-center max-w-md w-[90%] z-50"
                     initial={{ scale: 0.9 }}
                     animate={{ scale: 1 }}
                     exit={{ scale: 0.9 }}
                   >
-                    {/*<h2 className="text-2xl font-bold text-white mb-4">Revisão dos Acertos</h2>*/}
+                    {/*<h2 className="text-2xl font-bold text-(--color-text) mb-4">Revisão dos Acertos</h2>*/}
                     <div className="relative">
                       <img
                         src={reviewHistory[currentReviewIndex]?.url}

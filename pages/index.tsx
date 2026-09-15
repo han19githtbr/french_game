@@ -3,7 +3,8 @@ import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { cn } from '../lib/utils';
-import { ShieldCheck, Sparkles, TrendingUp } from 'lucide-react';
+import { Sparkles, TrendingUp } from 'lucide-react';
+import ThemeToggle from '../components/ThemeToggle';
 
 interface Proverb {
   french: string;
@@ -39,8 +40,8 @@ const renderHighlightedTitle = (text: string, activeIndex: number) =>
       className={cn(
         'transition-all duration-100',
         index === activeIndex
-          ? 'text-cyan-300 drop-shadow-[0_0_18px_rgba(34,211,238,0.7)]'
-          : 'text-slate-200/90',
+          ? 'text-(--color-accent) drop-shadow-[0_0_18px_var(--color-accent-soft)]'
+          : 'text-(--color-text)/90',
       )}
     >
       {char === ' ' ? ' ' : char}
@@ -52,7 +53,6 @@ export default function Home() {
   const router = useRouter();
   const title = 'Aprenda Francês jogando';
   const titleGoogle = 'Entrar com conta Google';
-  const titleAdmin = 'Entrar como administrador';
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dailyAccessCount, setDailyAccessCount] = useState(0);
   const [dayName, setDayName] = useState('');
@@ -142,40 +142,47 @@ export default function Home() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.16),_transparent_35%),linear-gradient(135deg,_#020617_0%,_#111827_45%,_#0f172a_100%)] text-white">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,_rgba(56,189,248,0.12),_transparent_30%)]" />
+    <div className="relative min-h-screen overflow-hidden bg-(--color-bg) text-(--color-text) transition-colors duration-200">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--color-accent-soft),_transparent_40%)]" />
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mb-4 flex w-full max-w-5xl items-center justify-between">
+          <div className="inline-flex items-center gap-2 rounded-full border border-(--color-border) bg-(--color-surface) px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-(--color-text-muted)">
+            French Quest <span className="text-(--color-accent)">v2.0</span>
+          </div>
+          <ThemeToggle />
+        </div>
+
         <motion.div
           initial={{ opacity: 0, y: -18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45 }}
-          className="w-full max-w-5xl rounded-[28px] border border-white/10 bg-slate-900/75 p-6 shadow-2xl shadow-cyan-950/50 backdrop-blur-xl sm:p-8 lg:p-10"
+          className="w-full max-w-5xl rounded-[28px] border border-(--color-border) bg-(--color-surface) p-6 shadow-2xl shadow-black/10 backdrop-blur-xl sm:p-8 lg:p-10"
         >
           <div className="grid min-w-0 gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
             <div className="min-w-0 space-y-6">
-              <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-sm font-medium text-cyan-200">
+              <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-(--color-accent)/30 bg-(--color-accent-soft) px-3 py-1 text-sm font-medium text-(--color-accent)">
                 <Sparkles className="h-4 w-4 shrink-0" />
                 <span>Uma experiência de francês mais divertida e envolvente</span>
               </div>
 
               <div className="space-y-3">
-                <h1 className="break-words text-3xl font-semibold leading-tight text-white sm:text-4xl lg:text-5xl">
+                <h1 className="break-words text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl">
                   {renderHighlightedTitle(title, currentIndex)}
                 </h1>
-                <p className="max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
+                <p className="max-w-2xl text-base leading-7 text-(--color-text-muted) sm:text-lg">
                   Pratique vocabulário, frases e provérbios com uma interface moderna, sons, vídeos e desafios diários em um só lugar.
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-white/10 p-4 shadow-lg shadow-black/20">
+              <div className="rounded-2xl border border-(--color-border) bg-(--color-surface-alt) p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-medium uppercase tracking-[0.24em] text-slate-400">Hoje</p>
-                    <p className="text-xl font-semibold text-white">{dayName || 'Carregando...'}</p>
+                    <p className="text-sm font-medium uppercase tracking-[0.24em] text-(--color-text-muted)">Hoje</p>
+                    <p className="text-xl font-semibold">{dayName || 'Carregando...'}</p>
                   </div>
-                  <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-right">
-                    <p className="text-sm text-emerald-200">Acessos</p>
-                    <div className="flex items-center gap-2 text-2xl font-semibold text-emerald-300">
+                  <div className="rounded-2xl border border-(--color-success)/30 bg-(--color-success-soft) px-4 py-3 text-right">
+                    <p className="text-sm text-(--color-success)">Acessos</p>
+                    <div className="flex items-center gap-2 text-2xl font-semibold text-(--color-success)">
                       <TrendingUp className="h-5 w-5" />
                       {dailyAccessCount}
                     </div>
@@ -187,20 +194,20 @@ export default function Home() {
                 initial={{ opacity: 0, scale: 0.97 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.15, duration: 0.35 }}
-                className="rounded-2xl border border-white/10 bg-slate-950/60 p-4"
+                className="rounded-2xl border border-(--color-border) bg-(--color-bg) p-4"
               >
-                <p className="mb-2 text-sm font-semibold uppercase tracking-[0.24em] text-slate-400">Provérbio do momento</p>
-                <p className="text-lg font-medium italic text-cyan-100">
+                <p className="mb-2 text-sm font-semibold uppercase tracking-[0.24em] text-(--color-text-muted)">Provérbio do momento</p>
+                <p className="text-lg font-medium italic text-(--color-accent)">
                   {proverb ? `“${proverb.french}”` : 'Carregando provérbio...'}
                 </p>
-                {proverb && <p className="mt-2 text-sm text-slate-300">{proverb.portuguese}</p>}
+                {proverb && <p className="mt-2 text-sm text-(--color-text-muted)">{proverb.portuguese}</p>}
               </motion.div>
             </div>
 
             <div className="min-w-0 space-y-4">
               <button
                 onClick={handleSignInClick}
-                className="flex w-full items-center justify-center gap-3 rounded-2xl border border-cyan-400/40 bg-cyan-400/10 px-5 py-4 text-left font-semibold text-cyan-100 shadow-lg shadow-cyan-950/20 transition duration-300 hover:-translate-y-0.5 hover:border-cyan-300 hover:bg-cyan-400/20"
+                className="flex w-full items-center justify-center gap-3 rounded-2xl border border-(--color-accent)/40 bg-(--color-accent-soft) px-5 py-4 text-left font-semibold text-(--color-accent) shadow-lg shadow-black/5 transition duration-300 hover:-translate-y-0.5 hover:border-(--color-accent)"
               >
                 <svg className="h-6 w-10 shrink-0" viewBox="0 0 533.5 544.3" aria-hidden="true">
                   <path d="M533.5 278.4c0-17.4-1.5-34.1-4.4-50.4H272v95.3h147.1c-6.4 34.7-25.4 64-54 83.6v69h87.2c51-47 81.2-116.2 81.2-197.5z" fill="#4285f4" />
@@ -211,17 +218,8 @@ export default function Home() {
                 <span className="whitespace-normal break-words text-lg">{renderHighlightedTitle(titleGoogle, currentIndex)}</span>
               </button>
 
-              <button
-                onClick={handleAdminLogin}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl border border-amber-400/40 bg-amber-400/10 px-5 py-4 font-semibold text-amber-100 transition duration-300 hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-400/20"
-              >
-                <ShieldCheck className="h-5 w-5" />
-                <span>Entrar como Administrador</span>
-                <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-xs text-red-200">Restrito</span>
-              </button>
-
-              <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4 text-sm leading-7 text-slate-300">
-                <p className="font-semibold text-white">O que você encontra aqui</p>
+              <div className="rounded-2xl border border-(--color-border) bg-(--color-bg) p-4 text-sm leading-7 text-(--color-text-muted)">
+                <p className="font-semibold text-(--color-text)">O que você encontra aqui</p>
                 <ul className="mt-2 space-y-2">
                   <li>• Exercícios por tema e dificuldade.</li>
                   <li>• Frases e ditados em francês com contexto.</li>
@@ -231,6 +229,17 @@ export default function Home() {
             </div>
           </div>
         </motion.div>
+
+        {/* Admin sign-in is intentionally not a prominent CTA on the public marketing
+            page — it's a low-visibility link, since advertising a "restricted admin
+            login" to every visitor was more of a liability than a feature. The
+            middleware and API routes still enforce the ADMIN_EMAIL check either way. */}
+        <button
+          onClick={handleAdminLogin}
+          className="mt-6 text-xs text-(--color-text-muted) underline decoration-dotted underline-offset-4 hover:text-(--color-accent)"
+        >
+          Acesso administrativo
+        </button>
       </div>
     </div>
   );

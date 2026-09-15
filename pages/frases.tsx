@@ -1385,11 +1385,11 @@ export default function Frase({}: GameProps) {
 
 
   return (
-    <div className="min-h-screen bg-gray-900 from-slate-800 to-slate-900 text-white flex flex-col items-center p-4 relative mb-6">
+    <div className="min-h-screen bg-(--color-bg) from-(--color-surface) to-(--color-bg) text-(--color-text) flex flex-col items-center p-4 relative mb-6">
       <div className="absolute top-76 left-4 z-30">
         <button
             onClick={() => router.push('/game')}
-            className="flex border border-blue bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75 cursor-pointer"
+            className="flex border border-blue bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-(--color-accent) focus:ring-opacity-75 cursor-pointer"
         >
             <ChevronLeft className="mr-2" color="blue" /> Voltar para tela principal
         </button>
@@ -1401,7 +1401,7 @@ export default function Frase({}: GameProps) {
           onMouseLeave={handleMouseLeave}
         >
           <div className="flex items-center gap-2 cursor-pointer mt-6 mr-1">
-            <span className="text-gray-300 font-medium hidden sm:inline">
+            <span className="text-(--color-text-muted) font-medium hidden sm:inline">
               {session && session.user && session.user.name
                 ? session.user.name.length > 20
                   ? session.user.name.substring(0, 17) + '....'
@@ -1416,11 +1416,11 @@ export default function Frase({}: GameProps) {
                 localStorage.removeItem('hasNewAIContent_frases');
               }}
               title="Novo conteúdo gerado pela IA disponível"
-              className="relative text-gray-300 hover:text-yellow-300 transition ml-2"
+              className="relative text-(--color-text-muted) hover:text-yellow-300 transition ml-2"
             >
               <span className="text-xl">🔔</span>
               {hasNewAIContent && (
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full border-2 border-gray-900 animate-pulse" />
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full border-2 border-(--color-bg) animate-pulse" />
               )}
             </button>
           </div>
@@ -1453,18 +1453,18 @@ export default function Frase({}: GameProps) {
         
         {showRelaxSounds && (
           <div 
-            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900 bg-opacity-90 rounded-xl shadow-lg p-6 z-50 border-2 border-gray-300 max-h-96 overflow-y-auto w-full sm:w-96"
+            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-(--color-bg) bg-opacity-90 rounded-xl shadow-lg p-6 z-50 border-2 border-(--color-border) max-h-96 overflow-y-auto w-full sm:w-96"
             style={{
               scrollbarWidth: 'thin', /* Para Firefox */
               scrollbarColor: '#lightblue #374151', /* Para Firefox (thumb track) */
             }}
           >
-            <h2 className="text-xl text-gray-300 font-semibold mb-4">Sons Relaxantes <span className='text-green'>(Freesound)</span></h2>
+            <h2 className="text-xl text-(--color-text-muted) font-semibold mb-4">Sons Relaxantes <span className='text-green'>(Freesound)</span></h2>
 
-            <div className="flex items-center justify-between bg-gray-700 rounded-md px-2 py-1 mb-4 w-full overflow-hidden">
+            <div className="flex items-center justify-between bg-(--color-surface-alt) rounded-md px-2 py-1 mb-4 w-full overflow-hidden">
                 <button
                   onClick={() => handleArrowSoundClick('left')}
-                  className="p-2 text-gray-300 hover:text-green transition cursor-pointer"
+                  className="p-2 text-(--color-text-muted) hover:text-green transition cursor-pointer"
                 >
                   {/* Setinha animada */}
                   <motion.div
@@ -1477,7 +1477,7 @@ export default function Frase({}: GameProps) {
                       repeat: Infinity,
                       ease: "easeInOut",
                     }}
-                    className="text-gray-300 flex justify-center items-center"
+                    className="text-(--color-text-muted) flex justify-center items-center"
                   >
                     <ChevronLeft size={32} strokeWidth={1.5} />
                   </motion.div>
@@ -1487,8 +1487,8 @@ export default function Frase({}: GameProps) {
                   <button
                     className={`py-1 px-4 rounded-md border font-semibold transition duration-300 ease-in-out ${
                       selectedTheme === themesSoundCarrossel[themeCarrosselIndex].id
-                        ? 'bg-gray-900 text-gray-200 border-b-green'
-                        : 'bg-gray-900 text-gray-200 hover:bg-gray-600 border-b-green'
+                        ? 'bg-(--color-bg) text-(--color-text) border-b-green'
+                        : 'bg-(--color-bg) text-(--color-text) hover:bg-(--color-surface-alt) border-b-green'
                     }`}
                   >
                     {themesSoundCarrossel[themeCarrosselIndex].icon}
@@ -1498,7 +1498,7 @@ export default function Frase({}: GameProps) {
             
                 <button
                   onClick={() => handleArrowSoundClick('right')}
-                  className="p-2 text-gray-300 hover:text-green transition cursor-pointer"
+                  className="p-2 text-(--color-text-muted) hover:text-green transition cursor-pointer"
                 >
                   {/* Setinha animada */}
                   <motion.div
@@ -1511,14 +1511,14 @@ export default function Frase({}: GameProps) {
                       repeat: Infinity,
                       ease: "easeInOut",
                     }}
-                    className="text-gray-300 flex justify-center items-center"
+                    className="text-(--color-text-muted) flex justify-center items-center"
                   >
                     <ChevronRight size={32} strokeWidth={1.5} />
                   </motion.div>
                 </button>
             </div>
 
-            <div className="mb-4 text-white">
+            <div className="mb-4 text-(--color-text)">
               {selectedTheme && searchStatus === 'searching' && (
                 <div className="flex items-center space-x-2">
                   <FaSpinner className="animate-spin text-green" />
@@ -1527,10 +1527,10 @@ export default function Frase({}: GameProps) {
               )}
               {selectedTheme && searchStatus === 'results' && searchResults.length > 0 && (
                 <div className="mb-4">
-                  <h3 className="text-lg text-gray-300 font-semibold mb-2">Resultados da Busca:</h3>
+                  <h3 className="text-lg text-(--color-text-muted) font-semibold mb-2">Resultados da Busca:</h3>
                   <ul>
                     {searchResults.map((sound) => (
-                      <li key={sound.id} className="flex items-center justify-between py-2 border-b border-gray-700">
+                      <li key={sound.id} className="flex items-center justify-between py-2 border-b border-(--color-border)">
                         <span className="text-blue text-sm font-thin">
                           {sound.name}
                           {/* Adicione a duração aqui */}
@@ -1568,7 +1568,7 @@ export default function Frase({}: GameProps) {
                 )}
 
                 {currentSoundInfo.duration !== undefined && ( // Garante que a duração está disponível
-                  <p className="mt-2 text-white">
+                  <p className="mt-2 text-(--color-text)">
                     Tempo restante: <span className="font-semibold">{formatTime(Math.max(0, currentSoundInfo.duration - currentTime))}</span>
                   </p>
                 )}
@@ -1593,7 +1593,7 @@ export default function Frase({}: GameProps) {
                 </button>
 
                 <div className="flex items-center space-x-2">
-                  <button onClick={toggleMute} className="text-white focus:outline-none">
+                  <button onClick={toggleMute} className="text-(--color-text) focus:outline-none">
                     {isMuted ? <BiVolumeMute className="h-5 w-5" /> : <BiVolumeFull className="h-5 w-5" />}
                   </button>
                   <input
@@ -1603,19 +1603,19 @@ export default function Frase({}: GameProps) {
                     step="0.01"
                     value={volume}
                     onChange={handleVolumeChange}
-                    className="rounded-md bg-gray-700 cursor-pointer"
+                    className="rounded-md bg-(--color-surface-alt) cursor-pointer"
                   />
                 </div>
               </div>
             )}
 
             {!selectedTheme && (
-              <p className="text-gray-400 text-sm">Selecione um tema para buscar sons no Freesound.</p>
+              <p className="text-(--color-text-muted) text-sm">Selecione um tema para buscar sons no Freesound.</p>
             )}
 
             <button
               onClick={toggleRelaxSoundsVisibility}
-              className="absolute top-2 right-2 text-gray-300 hover:text-blue focus:outline-none cursor-pointer"
+              className="absolute top-2 right-2 text-(--color-text-muted) hover:text-blue focus:outline-none cursor-pointer"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1639,13 +1639,13 @@ export default function Frase({}: GameProps) {
         <>
           {showYouTubeVideos && (
             <div
-              className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900 bg-opacity-90 rounded-xl shadow-lg p-6 z-50 border-2 border-gray-300 max-h-96 overflow-y-auto w-full sm:w-96"
+              className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-(--color-bg) bg-opacity-90 rounded-xl shadow-lg p-6 z-50 border-2 border-(--color-border) max-h-96 overflow-y-auto w-full sm:w-96"
               style={{
                 scrollbarWidth: 'thin',
                 scrollbarColor: '#lightblue #374151',
               }}
             >
-              <h2 className="text-xl text-gray-300 font-semibold mb-4">
+              <h2 className="text-xl text-(--color-text-muted) font-semibold mb-4">
                 Videos em Francês no: <span className="text-green">Youtube</span>
               </h2>
 
@@ -1658,10 +1658,10 @@ export default function Frase({}: GameProps) {
                 Assista até <span className="font-bold text-green">{DAILY_LIMIT}</span> <span className='text-green font-bold'>vídeos por dia</span> para evitar exceder o limite de visualizações disponíveis.
               </motion.div>
 
-              <div className="flex items-center justify-between bg-gray-800 rounded-md px-2 py-1 mb-4 w-full overflow-hidden">
+              <div className="flex items-center justify-between bg-(--color-surface) rounded-md px-2 py-1 mb-4 w-full overflow-hidden">
                 <button
                   onClick={() => handleArrowClick('left')}
-                  className="p-2 text-gray-300 hover:text-green transition cursor-pointer"
+                  className="p-2 text-(--color-text-muted) hover:text-green transition cursor-pointer"
                 >
                   {/* Setinha animada */}
                   <motion.div
@@ -1674,7 +1674,7 @@ export default function Frase({}: GameProps) {
                       repeat: Infinity,
                       ease: "easeInOut",
                     }}
-                    className="text-gray-300 flex justify-center items-center"
+                    className="text-(--color-text-muted) flex justify-center items-center"
                   >
                     <ChevronLeft size={32} strokeWidth={1.5} />
                   </motion.div>
@@ -1684,8 +1684,8 @@ export default function Frase({}: GameProps) {
                   <button
                     className={`py-1 px-4 rounded-md border font-semibold transition duration-300 ease-in-out ${
                       selectedThemeVideo === themesCarrossel[themeCarrosselIndex].id
-                        ? 'bg-transparent text-white border-b-green'
-                        : 'bg-gray-700 text-gray-200 hover:bg-gray-600 border-b-green'
+                        ? 'bg-transparent text-(--color-text) border-b-green'
+                        : 'bg-(--color-surface-alt) text-(--color-text) hover:bg-(--color-surface-alt) border-b-green'
                     }`}
                   >
                     {themesCarrossel[themeCarrosselIndex].icon}
@@ -1695,7 +1695,7 @@ export default function Frase({}: GameProps) {
 
                 <button
                   onClick={() => handleArrowClick('right')}
-                  className="p-2 text-gray-300 hover:text-green transition cursor-pointer"
+                  className="p-2 text-(--color-text-muted) hover:text-green transition cursor-pointer"
                 >
                   {/* Setinha animada */}
                   <motion.div
@@ -1708,7 +1708,7 @@ export default function Frase({}: GameProps) {
                       repeat: Infinity,
                       ease: "easeInOut",
                     }}
-                    className="text-gray-300 flex justify-center items-center"
+                    className="text-(--color-text-muted) flex justify-center items-center"
                   >
                     <ChevronRight size={32} strokeWidth={1.5} />
                   </motion.div>
@@ -1716,7 +1716,7 @@ export default function Frase({}: GameProps) {
               </div>
 
 
-              <div className="mb-4 text-white">
+              <div className="mb-4 text-(--color-text)">
                 {selectedThemeVideo && searchStatusVideo === 'searching' && (
                   <div className="flex items-center space-x-2">
                     <FaSpinner className="animate-spin text-blue" />
@@ -1727,10 +1727,10 @@ export default function Frase({}: GameProps) {
                 )}
                 {selectedThemeVideo && searchStatusVideo === 'results' && searchResultsVideo.length > 0 && (
                   <div className="mb-4">
-                    <h3 className="text-lg text-gray-300 font-semibold mb-2">Resultados da Busca:</h3>
+                    <h3 className="text-lg text-(--color-text-muted) font-semibold mb-2">Resultados da Busca:</h3>
                     <ul>
                       {searchResultsVideo.slice(0, DAILY_LIMIT).map((video) => (
-                        <li key={video.id} className="flex items-center justify-between py-2 border-b border-gray-700">
+                        <li key={video.id} className="flex items-center justify-between py-2 border-b border-(--color-border)">
                           <span className="text-blue text-sm font-thin">
                             {video.name}
                             {/* Exibe a duração se existir */}
@@ -1761,7 +1761,7 @@ export default function Frase({}: GameProps) {
 
               {currentVideoUrl && currentVideoInfo && (
                 <div className="mb-4 text-sm">
-                  <p className='text-white'>Tocando: {currentVideoInfo.name}</p>
+                  <p className='text-(--color-text)'>Tocando: {currentVideoInfo.name}</p>
                   {currentVideoInfo?.user?.username && <p className='text-green'>Autor: {currentVideoInfo.user.username}</p>}
                   {currentVideoInfo?.url && (
                     <a href={currentVideoInfo.url} target="_blank" rel="noopener noreferrer" className="text-blue hover:underline">
@@ -1789,12 +1789,12 @@ export default function Frase({}: GameProps) {
               )}
 
               {!selectedThemeVideo && (
-                <p className="text-gray-400 text-sm">Selecione um tema para buscar sons no Youtube.</p>
+                <p className="text-(--color-text-muted) text-sm">Selecione um tema para buscar sons no Youtube.</p>
               )}
 
               <button
                 onClick={toggleVideosVisibility}
-                className="absolute top-2 right-2 text-gray-400 hover:text-blue focus:outline-none cursor-pointer"
+                className="absolute top-2 right-2 text-(--color-text-muted) hover:text-blue focus:outline-none cursor-pointer"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1861,7 +1861,7 @@ export default function Frase({}: GameProps) {
                     <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white p-1 text-xs text-center">
                       <span className='text-green text-md font-bold'>{conquest.user.length > 20 ? conquest.user.substring(0, 17) + '....' : conquest.user}</span>
                     </div>
-                    <div className="absolute top-1 right-1 bg-gray-800 bg-opacity-70 text-white rounded-md p-1 flex items-center text-xs">
+                    <div className="absolute top-1 right-1 bg-(--color-surface) bg-opacity-70 text-(--color-text) rounded-md p-1 flex items-center text-xs">
                       <BsEyeFill className="w-3 h-3 mr-1 text-green" />
                       <span>{conquest.views}</span>
                     </div>
@@ -1870,7 +1870,7 @@ export default function Frase({}: GameProps) {
               </div>
               <button
                 onClick={closeConquestCarousel}
-                className="mt-6 bg-gray-800 hover:bg-lightblue text-white font-bold py-1 px-4 rounded focus:outline-none focus:shadow-outline cursor-pointer"
+                className="mt-6 bg-(--color-surface) hover:bg-lightblue text-white font-bold py-1 px-4 rounded focus:outline-none focus:shadow-outline cursor-pointer"
               >
                 Fechar
               </button>
@@ -1896,7 +1896,7 @@ export default function Frase({}: GameProps) {
                 animate={{ scale: 1 }}
                 exit={{ scale: 0.8 }}
                 transition={{ type: 'spring', damping: 15, stiffness: 100 }}
-                className="bg-gray-900 rounded-2xl p-6 shadow-2xl text-center text-white w-full max-w-md" // Fundo escuro e largura máxima
+                className="bg-(--color-bg) rounded-2xl p-6 shadow-2xl text-center text-(--color-text) w-full max-w-md" // Fundo escuro e largura máxima
               >
                 <h3 className="text-sm font-bold mb-3">Replay de: <span className='text-green'>{currentConquest.user}</span></h3>
                 {currentReplayPlay ? (
@@ -1907,7 +1907,7 @@ export default function Frase({}: GameProps) {
                       className="w-full h-auto block" // Largura total e altura automática
                       style={{ maxHeight: '400px', objectFit: 'contain' }} // Altura máxima e manter proporção
                     />
-                    <div className="absolute top-2 mb-4 right-2 bg-gray-800 bg-opacity-70 text-white rounded-md p-1 flex items-center text-xs animate-pulse-slow">
+                    <div className="absolute top-2 mb-4 right-2 bg-(--color-surface) bg-opacity-70 text-(--color-text) rounded-md p-1 flex items-center text-xs animate-pulse-slow">
                       <BsEyeFill className="w-4 h-4 mr-1 text-green" />
                       <span>{currentConquest?.views}</span>
                     </div>
@@ -1916,14 +1916,14 @@ export default function Frase({}: GameProps) {
                         {currentReplayPlay.answer}
                       </span>
                     </div>
-                    <div className="text-xs text-gray-400">
+                    <div className="text-xs text-(--color-text-muted)">
                       Resposta correta: <span className="text-green">{currentReplayPlay.image.title}</span>
                     </div>
                     {replayIndex === currentConquest.plays.length - 1 && (
                       <div className="flex justify-center gap-3 mt-4 mb-6">
                         <button
                           onClick={closeConquestCarousel}
-                          className="flex items-center bg-transparent border-2 border-e-red hover:bg-gray-700 text-white font-bold py-1 px-3 rounded focus:outline-none focus:shadow-outline cursor-pointer text-sm"
+                          className="flex items-center bg-transparent border-2 border-e-red hover:bg-(--color-surface-alt) text-(--color-text) font-bold py-1 px-3 rounded focus:outline-none focus:shadow-outline cursor-pointer text-sm"
                         >
                           <X className='text-red mr-2' size={20} />
                           Fechar
@@ -1953,7 +1953,7 @@ export default function Frase({}: GameProps) {
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }} 
         transition={{ duration: 0.6 }}
-        className="text-3xl text-gray-300 font-thin mb-8 mt-104 text-center drop-shadow-md"
+        className="text-3xl text-(--color-text-muted) font-thin mb-8 mt-104 text-center drop-shadow-md"
       >
         Construa frases em Francês
       </motion.h1>
@@ -1965,7 +1965,7 @@ export default function Frase({}: GameProps) {
         >
           <div className="flex items-center">
             <svg
-              className="animate-spin h-6 w-6 text-white"
+              className="animate-spin h-6 w-6 text-(--color-text)"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
@@ -2037,7 +2037,7 @@ export default function Frase({}: GameProps) {
         
           {/* Lista de opções */}
           {open && (
-            <ul className="absolute mt-2 w-full rounded-xl bg-gray-900 shadow-lg border-2 border-e-lightblue max-h-72 overflow-y-auto custom-scrollbar z-10">
+            <ul className="absolute mt-2 w-full rounded-xl bg-(--color-bg) shadow-lg border-2 border-e-lightblue max-h-72 overflow-y-auto custom-scrollbar z-10">
                       
               {/* Opção padrão */}
               <li
@@ -2045,7 +2045,7 @@ export default function Frase({}: GameProps) {
                   setTheme('');
                   setOpen(false);
               }}
-                className="flex items-center justify-start gap-3 px-8 py-3 hover:bg-lightblue text-gray-400 text-lg font-semibold cursor-pointer transition-all duration-300"
+                className="flex items-center justify-start gap-3 px-8 py-3 hover:bg-lightblue text-(--color-text-muted) text-lg font-semibold cursor-pointer transition-all duration-300"
               >
                 <motion.div
                   initial={{ x: -10, opacity: 0 }}
@@ -2105,7 +2105,7 @@ export default function Frase({}: GameProps) {
               <svg
                 key={i}
                 className={`w-6 h-6 transition-colors duration-300 ${
-                  i < remainingAttempts ? 'text-green animate-pulse' : 'text-gray-700'
+                  i < remainingAttempts ? 'text-green animate-pulse' : 'text-(--color-text-muted)'
                 }`}
                 fill="currentColor"
                 viewBox="0 0 20 20"
@@ -2156,7 +2156,7 @@ export default function Frase({}: GameProps) {
       {/* Difficulty Selector */}
       <div className="flex flex-col items-center gap-2 mb-6 mt-2">
         <div className="flex flex-wrap justify-center items-center gap-2">
-          <span className="inline-flex items-center gap-2 rounded-full border border-blue-500/40 bg-gray-900/80 backdrop-blur-sm px-4 py-2 text-sm font-semibold text-blue-200">
+          <span className="inline-flex items-center gap-2 rounded-full border border-blue-500/40 bg-(--color-bg)/80 backdrop-blur-sm px-4 py-2 text-sm font-semibold text-blue-200">
             🎯 Dificuldade:
           </span>
           {[
@@ -2171,7 +2171,7 @@ export default function Frase({}: GameProps) {
               className={`rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 border ${
                 optionsCount === value
                   ? 'bg-fuchsia-600 border-fuchsia-400 text-white shadow-lg shadow-fuchsia-500/40 scale-105'
-                  : 'bg-gray-800/80 border-gray-600/50 text-gray-300 hover:bg-gray-700 hover:border-gray-500'
+                  : 'bg-(--color-surface)/80 border-(--color-border) text-(--color-text-muted) hover:bg-(--color-surface-alt) hover:border-(--color-border)'
               }`}
             >
               {icon} {label} ({value})
@@ -2180,9 +2180,9 @@ export default function Frase({}: GameProps) {
         </div>
       </div>
 
-      {theme && <h2 className="text-2xl font-semibold text-gray-300 mt-2 mb-6 text-center">Opção: {theme}</h2>}
+      {theme && <h2 className="text-2xl font-semibold text-(--color-text-muted) mt-2 mb-6 text-center">Opção: {theme}</h2>}
 
-      <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-indigo-900 to-purple-900 min-h-screen text-gray-100">
+      <div className="flex flex-col items-center justify-center p-6 bg-(--color-bg) min-h-screen text-(--color-text)">
         
         {/* Ampulheta com contagem regressiva */}
         {images.length > 0 && (
@@ -2196,7 +2196,7 @@ export default function Frase({}: GameProps) {
         </div>
 
         {loading ? (
-          <div className="text-center text-lg text-gray-300 animate-pulse">🔍 Procurando imagens...</div>
+          <div className="text-center text-lg text-(--color-text-muted) animate-pulse">🔍 Procurando imagens...</div>
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 w-full max-w-4xl mt-6 cursor-pointer">
@@ -2223,29 +2223,29 @@ export default function Frase({}: GameProps) {
                       onClick={() => setZoomedImage(img.url)}
                     />
                     {img.aiGenerated && (
-                      <span className="absolute top-2 right-2 flex items-center gap-1 bg-black/70 backdrop-blur-sm text-cyan-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-cyan-500/50 shadow-[0_0_8px_rgba(34,211,238,0.4)]">
+                      <span className="absolute top-2 right-2 flex items-center gap-1 bg-black/70 backdrop-blur-sm text-(--color-accent) text-[10px] font-bold px-2 py-0.5 rounded-full border border-(--color-accent)/50 shadow-[0_0_8px_var(--color-accent)]">
                         🤖 IA
                       </span>
                     )}
                     {timeLeft === 0 && !results[index] && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-black/60">
                         <span className="text-4xl">⏱️</span>
-                        <span className="text-white text-sm font-bold mt-1">Tempo esgotado</span>
+                        <span className="text-(--color-text) text-sm font-bold mt-1">Tempo esgotado</span>
                       </div>
                     )}
                   </div>
-                  <div className="mt-2 text-gray-300">Escolha o título correto:</div>
+                  <div className="mt-2 text-(--color-text-muted)">Escolha o título correto:</div>
                   <div className="relative w-full mt-1">
                     <select
                       className={`
                         w-full p-4 rounded-xl border-2 border-neon-blue
-                        bg-gradient-to-br from-gray-900 to-neon-blue
-                        text-white font-bold text-lg tracking-wide
+                        bg-gradient-to-br from-(--color-bg) to-neon-blue
+                        text-(--color-text) font-bold text-lg tracking-wide
                         appearance-none cursor-pointer
                         shadow-[0_0_15px_rgba(0,255,255,0.6)] hover:shadow-[0_0_25px_rgba(0,255,255,0.8)]
                         active:scale-95
                         transition-all duration-300 ease-in-out
-                        focus:outline-none focus:ring-2 focus:ring-neon-pink focus:ring-offset-2 focus:ring-offset-gray-900
+                        focus:outline-none focus:ring-2 focus:ring-neon-pink focus:ring-offset-2 focus:ring-offset-(--color-bg)
                         animate-pulse-slow
                         sm:p-3 sm:text-base
                         touch-manipulation
@@ -2253,10 +2253,10 @@ export default function Frase({}: GameProps) {
                       onChange={e => checkAnswer(index, e.target.value)}
                       disabled={!!results[index] || timeLeft === 0}
                     >
-                      <option value="" className="bg-gray-900 text-white font-semibold cursor-pointer">✅ Selecione</option>
+                      <option value="" className="bg-(--color-bg) text-(--color-text) font-semibold cursor-pointer">✅ Selecione</option>
                       {img.options.map((opt: string, i: number) => (
                         <option
-                          className="bg-gray-900 text-white font-semibold hover:bg-neon-blue active:bg-neon-pink transition-colors duration-200 "
+                          className="bg-(--color-bg) text-white font-semibold hover:bg-neon-blue active:bg-neon-pink transition-colors duration-200 "
                           key={i}
                           value={opt}
                         >
@@ -2276,13 +2276,13 @@ export default function Frase({}: GameProps) {
                           repeat: Infinity,
                           ease: "easeInOut",
                         }}
-                        className={`text-white flex justify-center items-center ${results[index] ? 'hidden' : ''}`} // Adiciona 'hidden' se a resposta já foi selecionada
+                        className={`text-(--color-text) flex justify-center items-center ${results[index] ? 'hidden' : ''}`} // Adiciona 'hidden' se a resposta já foi selecionada
                       >
                         <ChevronDown size={28} strokeWidth={2.5} />
                       </motion.div>
                     </div>
                     {results[index] && (
-                      <div className="w-full text-center font-bold text-lg tracking-wide text-white p-4">
+                      <div className="w-full text-center font-bold text-lg tracking-wide text-(--color-text) p-4">
                         {Object.values(results[index])[0]} {/* Exibe o valor da opção selecionada */}
                       </div>
                     )}
@@ -2325,7 +2325,7 @@ export default function Frase({}: GameProps) {
                       onChange={(e) => handleSpeedChange(index, parseFloat(e.target.value))}
                       className="w-34 h-3 rounded-full bg-transparent border-1 border-green cursor-pointer appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-lightblue [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer"
                     />
-                    <span className="ml-2 mb-1 text-sm text-white font-bold">{(speechSpeeds[index] ?? 1).toFixed(1)}x</span>
+                    <span className="ml-2 mb-1 text-sm text-(--color-text) font-bold">{(speechSpeeds[index] ?? 1).toFixed(1)}x</span>
                   </div>
 
                   {results[index] && (
@@ -2358,8 +2358,8 @@ export default function Frase({}: GameProps) {
                   disabled={!isReviewUnlocked || reviewHistory.length === 0}
                   className={`border flex items-center justify-center py-2 px-8 rounded-xl transition-colors font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 ${
                     isReviewUnlocked && reviewHistory.length > 0
-                      ? 'border-blue hover:border-green hover:text-white cursor-pointer text-blue animate-pulse-slow'
-                      : 'border-gray-300 bg-gray-800 text-gray-400 cursor-not-allowed animate-pulse-slow'
+                      ? 'border-blue hover:border-green hover:text-(--color-text) cursor-pointer text-blue animate-pulse-slow'
+                      : 'border-(--color-border) bg-(--color-surface) text-(--color-text-muted) cursor-not-allowed animate-pulse-slow'
                   }`}
                   variants={unlockButtonVariants}
                   animate={isReviewUnlocking ? 'unlocking' : 'locked'}
@@ -2373,7 +2373,7 @@ export default function Frase({}: GameProps) {
                   Revisar os acertos
                   {isReviewAvailable && reviewHistory.length > 0 && (
                     <span
-                      className={`absolute top-[-10px] right-[-10px] bg-green text-gray-700 rounded-full w-5 h-5 flex items-center justify-center text-sm font-bold ${isFlashing ? 'animate-ping-once' : ''}`}
+                      className={`absolute top-[-10px] right-[-10px] bg-green text-(--color-text-muted) rounded-full w-5 h-5 flex items-center justify-center text-sm font-bold ${isFlashing ? 'animate-ping-once' : ''}`}
                     >
                       {availableReviews}
                     </span>
@@ -2457,7 +2457,7 @@ export default function Frase({}: GameProps) {
                         whileHover={{ scale: 1.1, y: -2 }}
                         whileTap={{ scale: 0.9 }}
                     >
-                        <FaGithub size={28} className="text-gray-400" />
+                        <FaGithub size={28} className="text-(--color-text-muted)" />
                     </motion.a>
                 </div>
             </motion.div>
@@ -2503,12 +2503,12 @@ export default function Frase({}: GameProps) {
                     exit={{ opacity: 0 }}
                   />
                   <motion.div
-                    className="bg-gray-900 from-blue to-lightblue rounded-xl shadow-lg p-8 text-center max-w-md w-[90%] z-50"
+                    className="bg-(--color-bg) from-blue to-lightblue rounded-xl shadow-lg p-8 text-center max-w-md w-[90%] z-50"
                     initial={{ scale: 0.9 }}
                     animate={{ scale: 1 }}
                     exit={{ scale: 0.9 }}
                   >
-                    {/*<h2 className="text-2xl font-bold text-white mb-4">Revisão dos Acertos</h2>*/}
+                    {/*<h2 className="text-2xl font-bold text-(--color-text) mb-4">Revisão dos Acertos</h2>*/}
                     <div className="relative">
                       <img
                         src={reviewHistory[currentReviewIndex]?.url}
