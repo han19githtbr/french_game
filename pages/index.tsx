@@ -1,6 +1,6 @@
 import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { cn } from '../lib/utils';
 import { Sparkles, TrendingUp } from 'lucide-react';
@@ -166,6 +166,19 @@ export default function Home() {
               </div>
 
               <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span
+                    role="img"
+                    aria-label="Bandeira da França"
+                    title="Francês"
+                    className="text-2xl leading-none drop-shadow-sm"
+                  >
+                    🇫🇷
+                  </span>
+                  <span className="text-xs font-semibold uppercase tracking-[0.24em] text-(--color-text-muted)">
+                    Francês
+                  </span>
+                </div>
                 <h1 className="break-words text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl">
                   {renderHighlightedTitle(title, currentIndex)}
                 </h1>
@@ -197,10 +210,20 @@ export default function Home() {
                 className="rounded-2xl border border-(--color-border) bg-(--color-bg) p-4"
               >
                 <p className="mb-2 text-sm font-semibold uppercase tracking-[0.24em] text-(--color-text-muted)">Provérbio do momento</p>
-                <p className="text-lg font-medium italic text-(--color-accent)">
-                  {proverb ? `“${proverb.french}”` : 'Carregando provérbio...'}
-                </p>
-                {proverb && <p className="mt-2 text-sm text-(--color-text-muted)">{proverb.portuguese}</p>}
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={proverb ? proverb.french : 'loading'}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.4 }}
+                  >
+                    <p className="text-lg font-medium italic text-(--color-accent)">
+                      {proverb ? `“${proverb.french}”` : 'Carregando provérbio...'}
+                    </p>
+                    {proverb && <p className="mt-2 text-sm text-(--color-text-muted)">{proverb.portuguese}</p>}
+                  </motion.div>
+                </AnimatePresence>
               </motion.div>
             </div>
 

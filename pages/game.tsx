@@ -1120,18 +1120,12 @@ export default function Game({}: GameProps) {
       setImages(imagesToUse);
       imageRefs.current = []; // limpa os refs antigos
       setResults(Array(imagesToUse.length).fill(null));
-
-      // Notifica se há imagens geradas por IA nesta rodada
-      const hasAI = imagesToUse.some((img: any) => img.aiGenerated === true);
-      if (hasAI) {
-        toast.info('✨ Novas imagens geradas por IA disponíveis nesta rodada!', {
-          position: 'top-right',
-          autoClose: 4000,
-          icon: <span>🤖</span>,
-        });
-      }
     } catch (error) {
       console.error('❌ Erro ao carregar imagens:', error);
+      toast.error('Não foi possível carregar as imagens. Tente novamente em instantes.', {
+        position: 'top-right',
+        autoClose: 4000,
+      });
     } finally {
       setLoading(false)
     }
@@ -1656,7 +1650,7 @@ export default function Game({}: GameProps) {
             className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-(--color-bg) bg-opacity-90 rounded-xl shadow-lg p-6 z-50 border-2 border-(--color-border) max-h-96 overflow-y-auto w-full sm:w-96"
             style={{
               scrollbarWidth: 'thin', /* Para Firefox */
-              scrollbarColor: '#lightblue #374151', /* Para Firefox (thumb track) */
+              scrollbarColor: 'var(--color-lightblue) #374151', /* Para Firefox (thumb track) */
             }}
           >
             <h2 className="text-xl text-(--color-text-muted) font-semibold mb-4">Sons Relaxantes <span className='text-green'>(Freesound)</span></h2>
@@ -1842,7 +1836,7 @@ export default function Game({}: GameProps) {
               className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-(--color-bg) bg-opacity-90 rounded-xl shadow-lg p-6 z-50 border-2 border-(--color-border) max-h-96 overflow-y-auto w-full sm:w-96"
               style={{
                 scrollbarWidth: 'thin',
-                scrollbarColor: '#lightblue #374151',
+                scrollbarColor: 'var(--color-lightblue) #374151',
               }}
             >
               <h2 className="text-xl text-(--color-text-muted) font-semibold mb-4">
@@ -2811,7 +2805,18 @@ export default function Game({}: GameProps) {
         </div>
 
         {loading ? (
-          <div ref={dropDownPageRef} className="text-center text-lg text-(--color-text-muted) animate-pulse">🔍 Procurando imagens...</div>
+          <div ref={dropDownPageRef} className="w-full max-w-6xl mt-6">
+            <div className="mb-4 text-center text-sm text-(--color-text-muted)">🔍 Procurando imagens...</div>
+            <div className="flex flex-wrap justify-center gap-6">
+              {Array.from({ length: levelDifficulty.cardsPerRound }).map((_, i) => (
+                <div key={i} className="p-4 rounded-2xl flex-grow max-w-[250px] flex flex-col items-center">
+                  <div className="skeleton-image w-full h-48" />
+                  <div className="skeleton mt-3 h-4 w-3/4" />
+                  <div className="skeleton mt-3 h-11 w-full" />
+                </div>
+              ))}
+            </div>
+          </div>
         ) : (
           <>
             <div className="flex flex-wrap justify-center gap-6 w-full max-w-6xl mt-6 cursor-pointer">
@@ -2849,7 +2854,7 @@ export default function Game({}: GameProps) {
                         bg-gradient-to-br from-(--color-bg) to-neon-blue
                         text-(--color-text) font-bold text-lg tracking-wide
                         appearance-none cursor-pointer
-                        shadow-[0_0_15px_rgba(0,255,255,0.6)] hover:shadow-[0_0_25px_rgba(0,255,255,0.8)]
+                        shadow-[0_0_15px_var(--color-accent-soft)] hover:shadow-[0_0_25px_var(--color-accent)]
                         active:scale-95
                         transition-all duration-300 ease-in-out
                         focus:outline-none focus:ring-2 focus:ring-neon-pink focus:ring-offset-2 focus:ring-offset-(--color-bg)

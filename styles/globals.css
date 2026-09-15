@@ -212,20 +212,20 @@ body {
 
 @keyframes pulse-slow-customize {
   0%, 100% {
-    box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+    box-shadow: 0 0 15px var(--color-accent-soft);
   }
   50% {
-    box-shadow: 0 0 25px rgba(0, 255, 255, 0.8);
+    box-shadow: 0 0 25px var(--color-accent);
   }
 }
 
 
 @keyframes pulse-slow {
   0%, 100% {
-    box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+    box-shadow: 0 0 15px var(--color-accent-soft);
   }
   50% {
-    box-shadow: 0 0 25px rgba(0, 255, 255, 0.8);
+    box-shadow: 0 0 25px var(--color-accent);
   }
 }
 

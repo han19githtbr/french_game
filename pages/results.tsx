@@ -207,14 +207,12 @@ export default function ResultsPage() {
       <div className="flex justify-between items-center mb-6">
         <button 
           onClick={() => router.push('/game')} 
-          className="absolute flex border border-blue items-center bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-(--color-accent) focus:ring-opacity-75 mt-50 cursor-pointer">
-          <ChevronLeft className="mr-2" color="blue" /> Voltar ao jogo
+          className="flex items-center border border-(--color-border) bg-(--color-surface) hover:bg-(--color-surface-alt) text-(--color-text) font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-(--color-accent) focus:ring-opacity-75 cursor-pointer">
+          <ChevronLeft className="mr-2 text-(--color-accent)" /> Voltar ao jogo
         </button>
-        
-      </div>      
-           
-      
-      <h1 className="text-3xl font-semibold text-(--color-text-muted) mt-40 mb-4 text-center">Seu Progresso</h1>
+      </div>
+
+      <h1 className="text-3xl font-semibold text-(--color-text-muted) mb-4 text-center">Seu Progresso</h1>
 
       <div className="grid gap-4 max-w-5xl mx-auto mb-8 md:grid-cols-2">
         <div className="rounded-3xl border border-(--color-border) bg-(--color-surface) p-6 shadow-xl">
@@ -293,7 +291,7 @@ export default function ResultsPage() {
             {progressEntries.map((p, i) => (
               <div
               key={i}
-              className={`bg-white text-black p-4 rounded-xl shadow-md flex justify-between items-center ${
+              className={`bg-(--color-surface) text-(--color-text) p-4 rounded-xl shadow-md flex justify-between items-center ${
                 p.score === bestRound.score ? 'border-2 border-green ' : ''
               }`}
             >
@@ -353,18 +351,20 @@ export default function ResultsPage() {
                   contentStyle={{ backgroundColor: "#fff", borderColor: "#d1d5db", borderRadius: "8px", padding: "10px" }}
                   labelStyle={{ color: "#4b5563", fontWeight: "bold" }}
                 />
-                <Bar 
-                  dataKey="score"
-                  fill="#6366f1"
-                  radius={[6, 6, 0, 0]}
-                  animationDuration={800}
-                />
                 <defs>
                   <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#6366f1" stopOpacity={0.9} />
                     <stop offset="95%" stopColor="#a5b4fc" stopOpacity={0.5} />
                   </linearGradient>
                 </defs>
+
+                <Bar 
+                  dataKey="score"
+                  fill="url(#colorUv)"
+                  radius={[6, 6, 0, 0]}
+                  animationDuration={800}
+
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
