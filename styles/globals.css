@@ -3,6 +3,9 @@
 @tailwind utilities;*/
 @import "tailwindcss";
 
+/* Vision Studio design system fonts — see STYLE.md */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+
 /* Makes any remaining `dark:` utility follow the ThemeToggle (the .dark class
    on <html>, see lib/theme-context.tsx) instead of the OS color-scheme
    preference, which is Tailwind v4's default for `dark:`. */
@@ -41,47 +44,161 @@
   --color-gray-800: #13161b;
   --color-gray-900: #0f1216;
 
-  --font-heading: var(--font-oxanium);
-  --font-sans: var(--font-montserrat);
+  --font-heading: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 
   --radius-xl: 0.625rem;
 }
 
 /*
- * Appearance (light/dark) design tokens.
- * These are plain CSS custom properties (not Tailwind @theme colors) so any
- * component can opt in with bg-[var(--color-surface)] etc. Toggled by adding
- * / removing the `dark` class on <html> — see lib/theme-context.tsx.
- * Palette follows the indigo/purple "Pattern Checker" reference design.
+ * Appearance (light/dark) design tokens — "Vision Studio" system (see
+ * STYLE.md): dark-first cockpit look, glassmorphism cards, indigo→blue→cyan
+ * accent gradient. These are plain CSS custom properties (not Tailwind
+ * @theme colors) so any component can opt in with bg-(--color-surface) etc.
+ * Toggled by adding / removing the `dark` class on <html> — see
+ * lib/theme-context.tsx. The original variable names are kept so every
+ * existing component picks up the new palette automatically; the STYLE.md
+ * token names are added alongside as aliases for new component work.
  */
 :root {
-  --color-bg: #f4f5fb;
-  --color-bg-elevated: #ffffff;
-  --color-surface: #ffffff;
-  --color-surface-alt: #eef0f9;
-  --color-border: rgba(15, 23, 42, 0.08);
-  --color-text: #14161f;
-  --color-text-muted: #5b6472;
-  --color-accent: #6d5ef8;
-  --color-accent-strong: #4f3ff0;
-  --color-accent-soft: rgba(109, 94, 248, 0.10);
-  --color-success: #16a34a;
-  --color-success-soft: rgba(22, 163, 74, 0.12);
+  /* --- Vision Studio tokens (light) --- */
+  --accent-color: #4f46e5;
+  --accent-color-hover: #4338ca;
+  --accent-color-dark: #3730a3;
+  --accent-soft: rgba(79, 70, 229, .08);
+  --accent-soft-hover: rgba(79, 70, 229, .16);
+  --accent-border: rgba(79, 70, 229, .25);
+  --accent-glow: 0 0 24px rgba(79, 70, 229, .25);
+
+  --gradient-accent: linear-gradient(135deg, #4f46e5 0%, #2563eb 50%, #0891b2 100%);
+  --gradient-card: linear-gradient(180deg, rgba(255,255,255,.9) 0%, rgba(248,250,252,.9) 100%);
+  --gradient-button: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+  --gradient-button-hover: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+
+  --status-success: #10b981;  --status-success-soft: rgba(16,185,129,.12);  --status-success-border: rgba(16,185,129,.3);
+  --status-warning: #f59e0b;  --status-warning-soft: rgba(245,158,11,.12);  --status-warning-border: rgba(245,158,11,.3);
+  --status-danger:  #f43f5e;  --status-danger-soft:  rgba(244,63,94,.12);   --status-danger-border:  rgba(244,63,94,.3);
+  --status-info:    #0ea5e9;  --status-info-soft:    rgba(14,165,233,.12);  --status-info-border:    rgba(14,165,233,.3);
+
+  --bg-page: #f8fafc;
+  --bg-page-secondary: #eef1f8;
+  --bg-panel: rgba(255, 255, 255, .75);
+  --bg-panel-solid: #ffffff;
+  --bg-card: rgba(255, 255, 255, .9);
+  --bg-card-hover: rgba(248, 250, 252, .95);
+  --bg-card-active: rgba(241, 245, 249, 1);
+  --bg-input: #f1f5f9;
+  --bg-input-focus: #ffffff;
+
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-subtle: #94a3b8;
+  --heading-color: #090d16;
+
+  --border-subtle: rgba(15,23,42,.05);
+  --border-color: rgba(15,23,42,.1);
+  --border-hover: rgba(15,23,42,.2);
+  --border-focus: var(--accent-color);
+
+  --shadow-sm: 0 2px 8px rgba(15,23,42,.06);
+  --shadow: 0 10px 25px -3px rgba(15,23,42,.08);
+  --shadow-lg: 0 20px 48px -8px rgba(15,23,42,.12);
+  --shadow-glow: 0 0 20px rgba(79,70,229,.18);
+  --glow-accent: 0 0 0 3px var(--accent-soft);
+
+  --radius-xs: 6px;   --radius-sm: 10px; --radius-md: 14px;
+  --radius: 16px;     --radius-lg: 22px; --radius-xl: 28px;
+  --radius-full: 9999px;
+
+  --transition-fast: 140ms cubic-bezier(.4,0,.2,1);
+  --transition: 220ms cubic-bezier(.4,0,.2,1);
+  --transition-slow: 350ms cubic-bezier(.4,0,.2,1);
+
+  --backdrop-blur: blur(16px);
+
+  /* --- Existing app tokens, remapped onto the Vision Studio palette --- */
+  --color-bg: var(--bg-page);
+  --color-bg-elevated: var(--bg-panel-solid);
+  --color-surface: var(--bg-card);
+  --color-surface-alt: var(--bg-page-secondary);
+  --color-border: var(--border-color);
+  --color-text: var(--text-primary);
+  --color-text-muted: var(--text-muted);
+  --color-accent: var(--accent-color);
+  --color-accent-strong: var(--accent-color-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-success: var(--status-success);
+  --color-success-soft: var(--status-success-soft);
+}
+
+:root[data-theme='light'] {
+  /* alias for STYLE.md's `data-theme` toggle convention */
 }
 
 .dark {
-  --color-bg: #0a0b10;
-  --color-bg-elevated: #111318;
-  --color-surface: #13161d;
-  --color-surface-alt: #191c25;
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-text: #f5f6fa;
-  --color-text-muted: #9aa3b2;
-  --color-accent: #7c6cfb;
-  --color-accent-strong: #6d5ef8;
-  --color-accent-soft: rgba(124, 108, 251, 0.16);
-  --color-success: #22c55e;
-  --color-success-soft: rgba(34, 197, 94, 0.14);
+  /* --- Vision Studio tokens (dark, default reference look) --- */
+  --accent-color: #6366f1;
+  --accent-color-hover: #4f46e5;
+  --accent-color-dark: #4338ca;
+  --accent-soft: rgba(99, 102, 241, 0.12);
+  --accent-soft-hover: rgba(99, 102, 241, 0.2);
+  --accent-border: rgba(99, 102, 241, 0.3);
+  --accent-glow: 0 0 24px rgba(99, 102, 241, 0.35);
+
+  --gradient-accent: linear-gradient(135deg, #6366f1 0%, #3b82f6 50%, #06b6d4 100%);
+  --gradient-card: linear-gradient(180deg, rgba(255,255,255,.04) 0%, rgba(255,255,255,.01) 100%);
+  --gradient-button: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  --gradient-button-hover: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+
+  --status-success: #10b981;  --status-success-soft: rgba(16,185,129,.12);  --status-success-border: rgba(16,185,129,.3);
+  --status-warning: #f59e0b;  --status-warning-soft: rgba(245,158,11,.12);  --status-warning-border: rgba(245,158,11,.3);
+  --status-danger:  #f43f5e;  --status-danger-soft:  rgba(244,63,94,.12);   --status-danger-border:  rgba(244,63,94,.3);
+  --status-info:    #0ea5e9;  --status-info-soft:    rgba(14,165,233,.12);  --status-info-border:    rgba(14,165,233,.3);
+
+  --bg-page: #080b11;
+  --bg-page-secondary: #0d121c;
+  --bg-panel: rgba(18, 24, 38, 0.75);
+  --bg-panel-solid: #0f1624;
+  --bg-card: rgba(24, 32, 50, 0.6);
+  --bg-card-hover: rgba(30, 41, 64, 0.75);
+  --bg-card-active: rgba(36, 48, 74, 0.85);
+  --bg-input: rgba(15, 22, 35, 0.8);
+  --bg-input-focus: rgba(18, 27, 44, 0.95);
+
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #8292aa;
+  --text-subtle: #57657d;
+  --heading-color: #ffffff;
+
+  --border-subtle: rgba(255,255,255,.06);
+  --border-color: rgba(255,255,255,.1);
+  --border-hover: rgba(255,255,255,.2);
+  --border-focus: var(--accent-color);
+
+  --shadow-sm: 0 2px 8px rgba(0,0,0,.25);
+  --shadow: 0 10px 28px -4px rgba(0,0,0,.4);
+  --shadow-lg: 0 20px 48px -8px rgba(0,0,0,.55);
+  --shadow-glow: 0 0 20px rgba(99,102,241,.25);
+  --glow-accent: 0 0 0 3px var(--accent-soft);
+
+  --backdrop-blur: blur(16px);
+
+  /* --- Existing app tokens, remapped onto the Vision Studio palette --- */
+  --color-bg: var(--bg-page);
+  --color-bg-elevated: var(--bg-panel-solid);
+  --color-surface: var(--bg-card);
+  --color-surface-alt: var(--bg-page-secondary);
+  --color-border: var(--border-color);
+  --color-text: var(--text-primary);
+  --color-text-muted: var(--text-muted);
+  --color-accent: var(--accent-color);
+  --color-accent-strong: var(--accent-color-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-success: var(--status-success);
+  --color-success-soft: var(--status-success-soft);
 }
 
 html {
@@ -89,15 +206,176 @@ html {
 }
 
 body {
-  font-family: 'Segoe UI', sans-serif;
-  background-color: var(--color-bg);
-  color: var(--color-text);
+  font-family: var(--font-sans);
+  background-color: var(--bg-page);
+  color: var(--text-primary);
   margin: 0;
   padding: 0;
   min-height: 100vh;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.2s ease, color 0.2s ease;
+  /* Vision Studio signature background: base color + soft radial "ambient
+     light" gradients, fixed on scroll. */
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.15), transparent),
+    radial-gradient(circle at 100% 0%, rgba(6, 182, 212, 0.08), transparent 40%),
+    radial-gradient(circle at 0% 100%, rgba(99, 102, 241, 0.06), transparent 40%);
+  background-attachment: fixed;
+}
+
+.dark body,
+.dark {
+  background-color: var(--bg-page);
+}
+
+:root:not(.dark) body {
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(79, 70, 229, 0.08), transparent),
+    radial-gradient(circle at 100% 0%, rgba(8, 145, 178, 0.05), transparent 40%),
+    radial-gradient(circle at 0% 100%, rgba(79, 70, 229, 0.04), transparent 40%);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--heading-color);
+}
+
+.eyebrow {
+  font: 700 .72rem 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-muted);
+}
+
+.gradient-text {
+  color: transparent;
+  background: var(--gradient-accent);
+  background-clip: text;
+  -webkit-background-clip: text;
+}
+
+/* ── Vision Studio base components (see STYLE.md §6) ───────────────────── */
+
+.card-base {
+  background: var(--bg-panel);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  animation: rise-in 400ms ease both;
+}
+
+.card-inner {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-size: .92rem; font-weight: 700;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform var(--transition-fast), background var(--transition-fast),
+              border-color var(--transition-fast), box-shadow var(--transition-fast),
+              color var(--transition-fast);
+}
+.btn:active:not(:disabled) { transform: scale(.98); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+.btn-primary {
+  background: var(--gradient-button);
+  color: #fff;
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--gradient-button-hover);
+  box-shadow: var(--shadow-glow);
+}
+
+.btn-secondary {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+  background: var(--accent-soft);
+}
+
+.badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: .78rem; font-weight: 600;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  color: var(--accent-color);
+}
+.badge-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 6px currentColor;
+}
+.badge-success { background: var(--status-success-soft); border-color: var(--status-success-border); color: var(--status-success); }
+.badge-warning { background: var(--status-warning-soft); border-color: var(--status-warning-border); color: var(--status-warning); }
+.badge-danger  { background: var(--status-danger-soft);  border-color: var(--status-danger-border);  color: var(--status-danger); }
+.badge-info    { background: var(--status-info-soft);    border-color: var(--status-info-border);    color: var(--status-info); }
+
+.input-vs {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xs);
+  color: var(--text-primary);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.input-vs:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: var(--glow-accent);
+}
+
+.nav-btn {
+  border-radius: var(--radius-full);
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-size: .82rem; font-weight: 600;
+  padding: 8px 16px;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+  cursor: pointer;
+}
+.nav-btn:hover { color: var(--text-primary); background: var(--bg-card-hover); }
+.nav-btn.active {
+  color: #fff;
+  background: var(--gradient-button);
+  border-color: var(--accent-border);
+  box-shadow: var(--shadow-sm);
+}
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes result-in {
+  from { opacity: 0; transform: scale(.98) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 12px rgba(99,102,241,.2); }
+  50%      { box-shadow: 0 0 24px rgba(99,102,241,.45); }
+}
+.rise-in { animation: rise-in 400ms ease both; }
+.result-in { animation: result-in 450ms ease both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .card-base, .rise-in, .result-in { animation: none; }
 }
 
 * {
@@ -190,7 +468,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-accent, #6d5ef8);
+  background: var(--accent-color, #6366f1);
   border-radius: 4px;
 }
 

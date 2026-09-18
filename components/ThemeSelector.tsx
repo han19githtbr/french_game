@@ -11,11 +11,7 @@ export default function ThemeSelector({ themes, selectedTheme, onSelectTheme }: 
         <button
           key={theme}
           onClick={() => onSelectTheme(theme === selectedTheme ? '' : theme)}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
-            theme === selectedTheme 
-              ? 'bg-blue text-white' 
-              : 'border border-e-green text-white hover:bg-gray-900'
-          }`}
+          className={`nav-btn ${theme === selectedTheme ? 'active' : ''}`}
         >
           {theme}
         </button>
